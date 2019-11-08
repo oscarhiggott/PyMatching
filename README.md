@@ -12,7 +12,7 @@ pip install -e ./MWPM
 
 ## Usage
 
-In order to decode a parity check matrix `H` (a scipy.sparse matrix with) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `MWPM` object after importing it:
+In order to decode a parity check matrix `H` (a scipy.sparse matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `MWPM` object after importing it:
 ```
 from mwpm import MWPM
 m = MWPM(H)
@@ -21,7 +21,7 @@ This precomputes the all-pairs shortest paths in the stabiliser graph correspond
 ```
 c = m.decode(z)
 ```
-which outputs a bitstring `c`, which is a numpy array of dtype int. Note that the `mxn` parity check matrix `H` should correspond to the `Z` (or `X`) stabilisers of a CSS QECC with `n` qubits and `m` `Z` (or `X`) stabilisers.
+which outputs a bitstring `c`, which is a numpy array of dtype int. Note that the `m` by `n` parity check matrix `H` should correspond to the Z (or X) stabilisers of a CSS QECC with `n` qubits and `m` Z (or X) stabilisers.
 
 ## Licensing of Blossom V dependency
 
