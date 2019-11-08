@@ -3,10 +3,32 @@ import re
 import sys
 import platform
 import subprocess
+import urllib.request
+import shutil
+
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
+
+root_dir = os.path.dirname(os.path.realpath(__file__))
+
+blossom5_url = "https://pub.ist.ac.at/~vnk/software/blossom5-v2.05.src.tar.gz"
+blossom5_fn = os.path.join(root_dir, "blossom5-v2.05.src.tar.gz")
+lib_dir = os.path.join(root_dir, "lib")
+blossom5_dir = os.path.join(lib_dir, "blossom5-v2.05.src")
+
+if not os.path.isfile(os.path.join(blossom5_dir, "PerfectMatching.h")):
+    if not os.path.isfile(blossom5_fn):
+        try:
+            with urllib.request.urlopen(blossom5_url) as r, open(blossom5_fn, 'wb') as f:
+                shutil.copyfileobj(r, f)
+        except:
+            print("Failed to download Blossom5 dependency, aborting installation.")
+            raise
+    shutil.unpack_archive(blossom5_fn, lib_dir)
+    if os.path.isfile(blossom5_fn):
+        os.remove(blossom5_fn)
 
 
 class CMakeExtension(Extension):
