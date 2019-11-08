@@ -22,3 +22,7 @@ This precomputes the all-pairs shortest paths in the stabiliser graph correspond
 c = m.decode(z)
 ```
 which outputs a bitstring `c`, which is a numpy array of dtype int. Note that the `mxn` parity check matrix `H` should correspond to the `Z` (or `X`) stabilisers of a CSS QECC with `n` qubits and `m` `Z` (or `X`) stabilisers.
+
+## Licensing of Blossom V dependency
+
+This package uses the Blossom V implementation of minimum weight perfect matching (available [here](https://pub.ist.ac.at/~vnk/software.html)) which is licenced for research purposes only. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).
