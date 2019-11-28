@@ -15,4 +15,4 @@ target_include_directories(_cpp_mwpm PRIVATE
                           "${PROJECT_SOURCE_DIR}/lib/blossom5-v2.05.src"
                           )
                     
-target_compile_options(Blossom5 PRIVATE -O3)
+add_compile_options(-O3)
