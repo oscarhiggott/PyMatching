@@ -38,7 +38,19 @@ struct APSPResult{
 
 APSPResult AllPairsShortestPath(const graph& g);
 
-std::vector<int> ShortestPath(const std::vector<int>& parent, int dest);
+std::vector<int> GetShortestPath(const std::vector<int>& parent, int dest);
 
-py::array_t<int> Decode(const APSPResult& apsp, const py::array_t<int>& defects, 
-                        const EdgeData& qubit, int num_qubits);
+class StabiliserGraphCls{
+    public:
+    graph adj_list;
+    EdgeData qubit_ids;
+    APSPResult shortest_paths;
+    int num_qubits;
+    int num_stabilisers;
+    StabiliserGraphCls(const py::array_t<int>& indices, int num_stabilisers, int num_qubits);
+    int Distance(int i, int j) const;
+    std::vector<int> ShortestPath(int i, int j) const;
+    int QubitID(int i, int j) const;
+};
+
+py::array_t<int> Decode(const StabiliserGraphCls& sg, const py::array_t<int>& defects);

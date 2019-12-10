@@ -74,7 +74,7 @@ APSPResult AllPairsShortestPath(const graph& g){
 }
 
 
-std::vector<int> ShortestPath(const std::vector<int>& parent, int dest){
+std::vector<int> GetShortestPath(const std::vector<int>& parent, int dest){
     std::vector<int> path;
     int c = dest;
     path.push_back(c);
@@ -86,29 +86,63 @@ std::vector<int> ShortestPath(const std::vector<int>& parent, int dest){
 }
 
 
-py::array_t<int> Decode(const APSPResult& apsp, const py::array_t<int>& defects, 
-                           const EdgeData& qubit, int num_qubits){
+StabiliserGraphCls::StabiliserGraphCls(
+    const py::array_t<int>& indices, 
+    int num_stabilisers,
+    int num_qubits
+    ) : num_stabilisers(num_stabilisers), num_qubits(num_qubits) {
+        auto x = indices.unchecked<1>();
+        assert((x.shape(0) % 2)==0);
+        adj_list.resize(num_stabilisers);
+        for (py::ssize_t i=0; i<(x.shape(0)/2); i++){
+            AddEdge(adj_list, x[2*i], x[2*i+1]);
+            std::pair<int,int> edge = std::make_pair(std::min(x[2*i], x[2*i+1]),
+                                            std::max(x[2*i], x[2*i+1]));
+            qubit_ids.insert({edge, i});
+        }
+    shortest_paths = AllPairsShortestPath(adj_list);
+}
+
+
+int StabiliserGraphCls::Distance(int i, int j) const {
+    return shortest_paths.distances[i][j];
+};
+
+
+std::vector<int> StabiliserGraphCls::ShortestPath(int i, int j) const {
+    return GetShortestPath(shortest_paths.parents[i], j);
+};
+
+
+int StabiliserGraphCls::QubitID(int i, int j) const {
+    int s1 = std::min(i, j);
+    int s2 = std::max(i, j);
+    return qubit_ids.find(std::make_pair(s1, s2))->second;
+};
+
+
+py::array_t<int> Decode(const StabiliserGraphCls& sg, const py::array_t<int>& defects){
     auto d = defects.unchecked<1>();
     int num_nodes = d.shape(0);
     int num_edges = num_nodes*(num_nodes-1)/2;
     PerfectMatching *pm = new PerfectMatching(num_nodes, num_edges);
     for (py::size_t i = 0; i<num_nodes; i++){
+        std::cout<<"i: "<<i<<std::endl;
         for (py::size_t j=i+1; j<num_nodes; j++){
-            pm->AddEdge(i, j, apsp.distances[d(i)][d(j)]);
+            pm->AddEdge(i, j, sg.Distance(d(i), d(j)));
         }
     };
     pm->options.verbose = false;
     pm->Solve();
-   auto correction = new std::vector<int>(num_qubits, 0);
+   auto correction = new std::vector<int>(sg.num_qubits, 0);
 
     for (py::size_t i = 0; i<num_nodes; i++){
         int j = pm->GetMatch(i);
         if (i<j){
-            std::vector<int> path = ShortestPath(apsp.parents[d(i)], d(j));
+            std::vector<int> path = sg.ShortestPath(d(i), d(j));
             for (vi_size_t k=0; k<path.size()-1; k++){
-                int s1 = std::min(path[k],path[k+1]);
-                int s2 = std::max(path[k],path[k+1]);
-                int qid = qubit.find(std::make_pair(s1, s2))->second;
+                int qid = sg.QubitID(path[k], path[k+1]);
+                std::cout<<"qid "<<qid<<" is 1 "<<std::endl;
                 (*correction)[qid] = 1;
             }
         }
