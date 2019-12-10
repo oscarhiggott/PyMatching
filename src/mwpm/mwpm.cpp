@@ -5,30 +5,6 @@
 #include <PerfectMatching.h>
 
 
-void AddEdge(graph& g, int node1, int node2){
-    g[node1].push_back(node2);
-    g[node2].push_back(node1);
-}
-
-
-GraphData StabiliserGraph(const py::array_t<int>& indices, int num_stabilisers){
-    auto x = indices.unchecked<1>();
-    assert((x.shape(0) % 2)==0);
-    graph g(num_stabilisers);
-    EdgeData qubit;
-    for (py::ssize_t i=0; i<(x.shape(0)/2); i++){
-        AddEdge(g, x[2*i], x[2*i+1]);
-        std::pair<int,int> edge = std::make_pair(std::min(x[2*i], x[2*i+1]),
-                                        std::max(x[2*i], x[2*i+1]));
-        qubit.insert({edge, i});
-    }
-    GraphData gd;
-    gd.g = g;
-    gd.qubit = qubit;
-    return gd;
-}
-
-
 BFSResult BreadthFirstSearch(const graph& g, int source){
     std::vector<bool> visited(g.size(), false);
     std::list<int> queue;
@@ -86,7 +62,7 @@ std::vector<int> GetShortestPath(const std::vector<int>& parent, int dest){
 }
 
 
-StabiliserGraphCls::StabiliserGraphCls(
+StabiliserGraph::StabiliserGraph(
     const py::array_t<int>& indices, 
     int num_stabilisers,
     int num_qubits
@@ -95,7 +71,7 @@ StabiliserGraphCls::StabiliserGraphCls(
         assert((x.shape(0) % 2)==0);
         adj_list.resize(num_stabilisers);
         for (py::ssize_t i=0; i<(x.shape(0)/2); i++){
-            AddEdge(adj_list, x[2*i], x[2*i+1]);
+            AddEdge(x[2*i], x[2*i+1]);
             std::pair<int,int> edge = std::make_pair(std::min(x[2*i], x[2*i+1]),
                                             std::max(x[2*i], x[2*i+1]));
             qubit_ids.insert({edge, i});
@@ -104,46 +80,69 @@ StabiliserGraphCls::StabiliserGraphCls(
 }
 
 
-int StabiliserGraphCls::Distance(int i, int j) const {
-    return shortest_paths.distances[i][j];
+void StabiliserGraph::AddEdge(int node1, int node2){
+    adj_list[node1].push_back(node2);
+    adj_list[node2].push_back(node1);
 };
 
 
-std::vector<int> StabiliserGraphCls::ShortestPath(int i, int j) const {
-    return GetShortestPath(shortest_paths.parents[i], j);
+int StabiliserGraph::Distance(int node1, int node2) const {
+    return shortest_paths.distances[node1][node2];
 };
 
 
-int StabiliserGraphCls::QubitID(int i, int j) const {
-    int s1 = std::min(i, j);
-    int s2 = std::max(i, j);
+int StabiliserGraph::SpaceTimeDistance(int node1, int node2) const {
+    if ((node1 < num_stabilisers) && (node2 < num_stabilisers)){
+        return Distance(node1, node2);
+    };
+    int t1 = node1 / num_stabilisers;
+    int r1 = node1 % num_stabilisers;
+    int t2 = node2 / num_stabilisers;
+    int r2 = node2 % num_stabilisers;
+    return std::abs(t2-t1) + Distance(r1, r2);
+};
+
+
+std::vector<int> StabiliserGraph::ShortestPath(int node1, int node2) const {
+    return GetShortestPath(shortest_paths.parents[node2], node1);
+};
+
+
+std::vector<int> StabiliserGraph::SpaceTimeShortestPath(int node1, int node2) const {
+    int r1 = node1 % num_stabilisers;
+    int r2 = node2 % num_stabilisers;
+    return ShortestPath(r1, r2);
+};
+
+
+int StabiliserGraph::QubitID(int node1, int node2) const {
+    int s1 = std::min(node1, node2);
+    int s2 = std::max(node1, node2);
     return qubit_ids.find(std::make_pair(s1, s2))->second;
 };
 
 
-py::array_t<int> Decode(const StabiliserGraphCls& sg, const py::array_t<int>& defects){
+py::array_t<int> Decode(const StabiliserGraph& sg, const py::array_t<int>& defects){
     auto d = defects.unchecked<1>();
     int num_nodes = d.shape(0);
     int num_edges = num_nodes*(num_nodes-1)/2;
     PerfectMatching *pm = new PerfectMatching(num_nodes, num_edges);
     for (py::size_t i = 0; i<num_nodes; i++){
-        std::cout<<"i: "<<i<<std::endl;
         for (py::size_t j=i+1; j<num_nodes; j++){
-            pm->AddEdge(i, j, sg.Distance(d(i), d(j)));
+            pm->AddEdge(i, j, sg.SpaceTimeDistance(d(i), d(j)));
         }
     };
     pm->options.verbose = false;
     pm->Solve();
-   auto correction = new std::vector<int>(sg.num_qubits, 0);
+    auto correction = new std::vector<int>(sg.num_qubits, 0);
 
     for (py::size_t i = 0; i<num_nodes; i++){
         int j = pm->GetMatch(i);
         if (i<j){
-            std::vector<int> path = sg.ShortestPath(d(i), d(j));
+            std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
             for (vi_size_t k=0; k<path.size()-1; k++){
                 int qid = sg.QubitID(path[k], path[k+1]);
-                std::cout<<"qid "<<qid<<" is 1 "<<std::endl;
-                (*correction)[qid] = 1;
+                (*correction)[qid] = ((*correction)[qid] + 1) % 2;
             }
         }
     }

@@ -1,23 +1,25 @@
-import numpy as np
-from scipy.sparse import csc_matrix
+import os
 
-from quantumcode import load_css_from_hdf5
-from mwpm._cpp_mwpm import (_stabiliser_graph, breadth_first_search, 
+import numpy as np
+from scipy.sparse import csc_matrix, load_npz
+
+from mwpm._cpp_mwpm import (breadth_first_search, 
                             all_pairs_shortest_path, shortest_path,
-                            _decode)
+                            decode, StabiliserGraph)
 from mwpm import MWPM
+
+TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 def test_cpp_syndrome_graph():
-    fn = "css_toric_[[18,2,3]]_rank_deficient"
-    css = load_css_from_hdf5(fn)
-    H = csc_matrix(css.x_stabilisers)
+    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    H = csc_matrix(load_npz(os.path.join(TEST_DIR, 'data', fn)))
     assert(np.count_nonzero(H.indptr[1:]-H.indptr[0:-1]-2) == 0)
-    gd = _stabiliser_graph(H.indices, H.shape[0])
+    sg = StabiliserGraph(H.indices, H.shape[0], H.shape[1])
     expected = [[1, 2, 3, 6], [0, 2, 4, 7], [1, 0, 5, 8], 
                 [0, 4, 5, 6], [1, 3, 5, 7], [2, 4, 3, 8], 
                 [3, 7, 8, 0], [4, 6, 8, 1], [5, 7, 6, 2]]
-    assert(gd.g==expected)
+    assert(sg.adj_list==expected)
 
 
 def test_breadth_first_search():
@@ -48,28 +50,36 @@ def test_shortest_path():
     assert(path == expected_path)
 
 
-def test_cpp_decode():
-    fn = "css_toric_[[18,2,3]]_rank_deficient"
-    css = load_css_from_hdf5(fn)
-    H = csc_matrix(css.x_stabilisers)
-    gd = _stabiliser_graph(H.indices, H.shape[0])
-    apsp = all_pairs_shortest_path(gd.g)
-    n = np.zeros(H.shape[1], dtype=int)
-    n[5] = 1
-    n[10] = 1
-    z = H.dot(n)
-    defects = np.nonzero(z)[0]
-    c = _decode(apsp, defects, gd.qubit, H.shape[1])
-    assert(np.array_equal(c,n))
-
-
 def test_mwpm_decode_method():
-    fn = "css_toric_[[18,2,3]]_rank_deficient"
-    H = load_css_from_hdf5(fn).x_stabilisers
+    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    H = load_npz(os.path.join(TEST_DIR, 'data', fn))
     m = MWPM(H)
     n = np.zeros(H.shape[1], dtype=int)
     n[5] = 1
     n[10] = 1
-    z = H.dot(n)
+    z = H.dot(n) % 2
     c = m.decode(z)
     assert(np.array_equal(c,n))
+
+
+def test_mwpm_noisy_decode():
+    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    H = load_npz(os.path.join(TEST_DIR, 'data', fn))
+    m = MWPM(H)
+    n = np.array([
+        [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ])
+    n_all = np.cumsum(n, 0) % 2
+    z_noiseless = H.dot(n_all.T) % 2
+    z_err = np.array([
+        [0,0,0,0,0,0,0,1,0],
+        [0,0,0,0,0,0,1,0,0],
+        [0,0,0,0,0,0,0,0,0]
+    ]).T
+    z_noisy = (z_noiseless + z_err) % 2
+    z_noisy[:,1:] = (z_noisy[:,1:] - z_noisy[:,:-1]) % 2
+    c = m.decode(z_noisy)
+    c_expected = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+    assert(np.array_equal(c, c_expected))
