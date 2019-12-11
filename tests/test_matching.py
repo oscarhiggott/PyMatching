@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 from scipy.sparse import csc_matrix, load_npz
+import pytest
 
 from mwpm._cpp_mwpm import (breadth_first_search, 
                             all_pairs_shortest_path, shortest_path,
@@ -62,24 +63,75 @@ def test_mwpm_decode_method():
     assert(np.array_equal(c,n))
 
 
-def test_mwpm_noisy_decode():
+noisy_fixtures = [
+    (
+        np.array([
+            [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ]),
+        np.array([
+            [0,0,0,0,0,0,0,1,0],
+            [0,0,0,0,0,0,1,0,0],
+            [0,0,0,0,0,0,0,0,0]
+        ]).T,
+        np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])    
+    ),
+    (
+        np.array([
+            [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ]),
+        np.array([
+            [0,0,0,0,0,1,0,0,0],
+            [0,0,0,0,0,0,0,0,0],
+            [0,0,0,0,0,0,0,0,0]
+        ]).T,
+        np.array([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+    )
+]
+
+@pytest.mark.parametrize("n,z_err,c_expected", noisy_fixtures)
+def test_mwpm_noisy_decode(n, z_err, c_expected):
     fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
     m = MWPM(H)
-    n = np.array([
-        [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    ])
     n_all = np.cumsum(n, 0) % 2
     z_noiseless = H.dot(n_all.T) % 2
-    z_err = np.array([
-        [0,0,0,0,0,0,0,1,0],
-        [0,0,0,0,0,0,1,0,0],
-        [0,0,0,0,0,0,0,0,0]
-    ]).T
     z_noisy = (z_noiseless + z_err) % 2
     z_noisy[:,1:] = (z_noisy[:,1:] - z_noisy[:,:-1]) % 2
     c = m.decode(z_noisy)
-    c_expected = np.array([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
     assert(np.array_equal(c, c_expected))
+
+
+distance_fixtures = [
+    (2,11,1),
+    (3,13,2),
+    (2,8,1),
+    (2,98, 11)
+]
+
+
+@pytest.mark.parametrize("node1,node2,expected", distance_fixtures)
+def test_spacetime_distance(node1, node2, expected):
+    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    H = load_npz(os.path.join(TEST_DIR, 'data', fn))
+    m = MWPM(H)
+    d = m.stabiliser_graph.space_time_distance(node1, node2)
+    assert(d == expected)
+
+
+spacetime_path_fixtures = [
+    (1,184,[1,4]),
+    (2,62,[2,8])
+]
+
+
+@pytest.mark.parametrize("node1,node2,expected", spacetime_path_fixtures)
+def test_spacetime_shortest_path(node1, node2, expected):
+    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    H = load_npz(os.path.join(TEST_DIR, 'data', fn))
+    m = MWPM(H)
+    path = m.stabiliser_graph.space_time_shortest_path(node1, node2)
+    assert(path == expected)
