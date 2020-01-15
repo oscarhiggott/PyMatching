@@ -4,6 +4,7 @@ project(mwpm)
 file(GLOB SOURCES "src/mwpm/*.cpp")
 
 add_subdirectory(lib/blossom5-v2.05.src)
+target_compile_options(Blossom5 PRIVATE "-fPIC")
 
 add_subdirectory(lib/pybind11)
 pybind11_add_module(_cpp_mwpm ${SOURCES})
