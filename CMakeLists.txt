@@ -9,6 +9,8 @@ target_compile_options(Blossom5 PRIVATE "-fPIC")
 add_subdirectory(lib/pybind11)
 pybind11_add_module(_cpp_mwpm ${SOURCES})
 
+include_directories(${CMAKE_SOURCE_DIR}/lib/boost-graph)
+
 target_link_libraries(_cpp_mwpm PRIVATE Blossom5)
 
 target_include_directories(_cpp_mwpm PRIVATE
