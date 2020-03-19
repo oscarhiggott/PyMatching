@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix
 
-from mwpm._cpp_mwpm import all_pairs_shortest_path, decode, StabiliserGraph
+from mwpm._cpp_mwpm import all_pairs_shortest_path, decode, UnweightedStabiliserGraph
 
 
 def check_two_checks_per_qubit(H):
@@ -26,7 +26,7 @@ class MWPM:
         self.H = csc_matrix(H)
         check_two_checks_per_qubit(self.H)
         self.H.sort_indices()
-        self.stabiliser_graph = StabiliserGraph(self.H.indices, self.H.shape[0], self.H.shape[1])
+        self.stabiliser_graph = UnweightedStabiliserGraph(self.H.indices, self.H.shape[0], self.H.shape[1])
     
     def decode(self, z):
         if len(z.shape) == 1 and z.shape[0] == self.H.shape[0]:

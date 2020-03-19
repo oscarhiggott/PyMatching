@@ -2,6 +2,8 @@
 #include <pybind11/stl.h>
 #include"mwpm.h"
 #include <PerfectMatching.h>
+#include "stabiliser_graph.h"
+#include "unweighted_stabiliser_graph.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -36,19 +38,22 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def_readwrite("distances", &APSPResult::distances)
     .def_readwrite("parents", &APSPResult::parents);
 
-    py::class_<StabiliserGraph>(m, "StabiliserGraph")
+    py::class_<IStabiliserGraph>(m, "IStabiliserGraph")
+    .def("distance", &IStabiliserGraph::Distance, "node1"_a, "node2"_a)
+    .def("space_time_distance", &IStabiliserGraph::SpaceTimeDistance, "node1"_a, "node2"_a)
+    .def("shortest_path", &IStabiliserGraph::ShortestPath, "node1"_a, "node2"_a)
+    .def("space_time_shortest_path", &IStabiliserGraph::SpaceTimeShortestPath, "node1"_a, "node2"_a)
+    .def("qubit_id", &IStabiliserGraph::QubitID, "node1"_a, "node2"_a)
+    .def("get_num_qubits", &IStabiliserGraph::GetNumQubits);
+
+    py::class_<UnweightedStabiliserGraph, IStabiliserGraph>(m, "UnweightedStabiliserGraph")
     .def(py::init<const py::array_t<int>&, int, int>(), "indices"_a, "num_stabilisers"_a, "num_qubits"_a)
-    .def_readwrite("adj_list", &StabiliserGraph::adj_list)
-    .def_readwrite("qubit_ids", &StabiliserGraph::qubit_ids)
-    .def_readwrite("shortest_paths", &StabiliserGraph::shortest_paths)
-    .def_readwrite("num_qubits", &StabiliserGraph::num_qubits)
-    .def_readwrite("num_stabilisers", &StabiliserGraph::num_stabilisers)
-    .def("add_edge", &StabiliserGraph::AddEdge, "node1"_a, "node2"_a)
-    .def("distance", &StabiliserGraph::Distance, "node1"_a, "node2"_a)
-    .def("space_time_distance", &StabiliserGraph::SpaceTimeDistance, "node1"_a, "node2"_a)
-    .def("shortest_path", &StabiliserGraph::ShortestPath, "node1"_a, "node2"_a)
-    .def("space_time_shortest_path", &StabiliserGraph::SpaceTimeShortestPath, "node1"_a, "node2"_a)
-    .def("qubit_id", &StabiliserGraph::QubitID, "node1"_a, "node2"_a);
+    .def_readwrite("adj_list", &UnweightedStabiliserGraph::adj_list)
+    .def_readwrite("qubit_ids", &UnweightedStabiliserGraph::qubit_ids)
+    .def_readwrite("shortest_paths", &UnweightedStabiliserGraph::shortest_paths)
+    .def_readwrite("num_stabilisers", &UnweightedStabiliserGraph::num_stabilisers)
+    .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
+    .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a);
 
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
