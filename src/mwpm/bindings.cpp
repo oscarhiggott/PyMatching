@@ -4,6 +4,7 @@
 #include <PerfectMatching.h>
 #include "stabiliser_graph.h"
 #include "unweighted_stabiliser_graph.h"
+#include "weighted_stabiliser_graph.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -54,6 +55,14 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def_readwrite("num_stabilisers", &UnweightedStabiliserGraph::num_stabilisers)
     .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
     .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a);
+
+    py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
+    .def(py::init<int>(), "num_stabilisers"_a)
+    .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
+    .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
+    .def_readwrite("num_stabilisers", &WeightedStabiliserGraph::num_stabilisers)
+    .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, "weight"_a)
+    .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths);
 
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
