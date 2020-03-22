@@ -61,7 +61,7 @@ std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) con
 }
 
 int WeightedStabiliserGraph::GetNumQubits() const {
-    boost::num_edges(stabiliser_graph);
+    return boost::num_edges(stabiliser_graph);
 }
 
 int WeightedStabiliserGraph::GetNumStabilisers() const {
