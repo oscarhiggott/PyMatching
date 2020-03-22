@@ -45,9 +45,10 @@ class UnweightedStabiliserGraph : public IStabiliserGraph{
         UnweightedStabiliserGraph(const py::array_t<int>& indices, int num_stabilisers, int num_qubits);
         void AddEdge(int node1, int node2);
         virtual int Distance(int node1, int node2) const;
-        virtual int SpaceTimeDistance(int node1, int node2) const;
+        // virtual int SpaceTimeDistance(int node1, int node2) const;
         virtual std::vector<int> ShortestPath(int node1, int node2) const;
-        virtual std::vector<int> SpaceTimeShortestPath(int node1, int node2) const;
+        // virtual std::vector<int> SpaceTimeShortestPath(int node1, int node2) const;
         virtual int QubitID(int node1, int node2) const;
         virtual int GetNumQubits() const;
+        virtual int GetNumStabilisers() const;
 };

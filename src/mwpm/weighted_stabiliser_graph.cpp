@@ -17,7 +17,6 @@ void WeightedStabiliserGraph::AddEdge(
     int node2,
     int qubit_id,
     double weight){
-
         boost::add_edge(
             boost::vertex(node1, stabiliser_graph), 
             boost::vertex(node2, stabiliser_graph), 
@@ -48,22 +47,25 @@ int WeightedStabiliserGraph::Distance(int node1, int node2) const {
     return all_distances[node1][n2];
 }
 
-int WeightedStabiliserGraph::SpaceTimeDistance(int node1, int node2) const {
-    return 0;
-}
-
 std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) const {
-    std::vector<int> path(1);
-    return path;
-}
-
-std::vector<int> WeightedStabiliserGraph::SpaceTimeShortestPath(int node1, int node2) const {
-    std::vector<int> path(1);
+    std::vector<vertex_descriptor> parent = all_predecessors[node2];
+    auto index = boost::get(boost::vertex_index, stabiliser_graph);
+    int c = boost::vertex(node1, stabiliser_graph);
+    std::vector<int> path;
+    path.push_back(index[c]);
+    while (parent[c]!=c){
+        c = parent[c];
+        path.push_back(index[c]);
+    }
     return path;
 }
 
 int WeightedStabiliserGraph::GetNumQubits() const {
     boost::num_edges(stabiliser_graph);
+}
+
+int WeightedStabiliserGraph::GetNumStabilisers() const {
+    return num_stabilisers;
 };
 
 int WeightedStabiliserGraph::QubitID(int node1, int node2) const {
@@ -74,4 +76,4 @@ int WeightedStabiliserGraph::QubitID(int node1, int node2) const {
                         + std::to_string((int)node2) + ").");
     }
     return stabiliser_graph[e.first].qubit_id;
-};
+}

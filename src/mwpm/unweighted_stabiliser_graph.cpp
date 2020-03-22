@@ -81,44 +81,27 @@ UnweightedStabiliserGraph::UnweightedStabiliserGraph(
 void UnweightedStabiliserGraph::AddEdge(int node1, int node2){
     adj_list[node1].push_back(node2);
     adj_list[node2].push_back(node1);
-};
+}
 
 
 int UnweightedStabiliserGraph::Distance(int node1, int node2) const {
     return shortest_paths.distances[node1][node2];
-};
-
-
-int UnweightedStabiliserGraph::SpaceTimeDistance(int node1, int node2) const {
-    if ((node1 < num_stabilisers) && (node2 < num_stabilisers)){
-        return Distance(node1, node2);
-    };
-    int t1 = node1 / num_stabilisers;
-    int r1 = node1 % num_stabilisers;
-    int t2 = node2 / num_stabilisers;
-    int r2 = node2 % num_stabilisers;
-    return std::abs(t2-t1) + Distance(r1, r2);
-};
-
+}
 
 std::vector<int> UnweightedStabiliserGraph::ShortestPath(int node1, int node2) const {
     return GetShortestPath(shortest_paths.parents[node2], node1);
-};
-
-
-std::vector<int> UnweightedStabiliserGraph::SpaceTimeShortestPath(int node1, int node2) const {
-    int r1 = node1 % num_stabilisers;
-    int r2 = node2 % num_stabilisers;
-    return ShortestPath(r1, r2);
-};
-
+}
 
 int UnweightedStabiliserGraph::QubitID(int node1, int node2) const {
     int s1 = std::min(node1, node2);
     int s2 = std::max(node1, node2);
     return qubit_ids.find(std::make_pair(s1, s2))->second;
-};
+}
 
-int UnweightedStabiliserGraph::GetNumQubits() const{
+int UnweightedStabiliserGraph::GetNumQubits() const {
     return num_qubits;
-};
+}
+
+int UnweightedStabiliserGraph::GetNumStabilisers() const {
+    return num_stabilisers;
+}

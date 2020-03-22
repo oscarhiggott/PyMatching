@@ -45,14 +45,14 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("shortest_path", &IStabiliserGraph::ShortestPath, "node1"_a, "node2"_a)
     .def("space_time_shortest_path", &IStabiliserGraph::SpaceTimeShortestPath, "node1"_a, "node2"_a)
     .def("qubit_id", &IStabiliserGraph::QubitID, "node1"_a, "node2"_a)
-    .def("get_num_qubits", &IStabiliserGraph::GetNumQubits);
+    .def("get_num_qubits", &IStabiliserGraph::GetNumQubits)
+    .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers);
 
     py::class_<UnweightedStabiliserGraph, IStabiliserGraph>(m, "UnweightedStabiliserGraph")
     .def(py::init<const py::array_t<int>&, int, int>(), "indices"_a, "num_stabilisers"_a, "num_qubits"_a)
     .def_readwrite("adj_list", &UnweightedStabiliserGraph::adj_list)
     .def_readwrite("qubit_ids", &UnweightedStabiliserGraph::qubit_ids)
     .def_readwrite("shortest_paths", &UnweightedStabiliserGraph::shortest_paths)
-    .def_readwrite("num_stabilisers", &UnweightedStabiliserGraph::num_stabilisers)
     .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
     .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a);
 
