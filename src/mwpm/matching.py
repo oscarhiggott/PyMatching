@@ -1,8 +1,12 @@
 import numpy as np
 import networkx as nx
-from scipy.sparse import csc_matrix
+from scipy.sparse import csc_matrix, spmatrix
+import numpy as np
 
-from mwpm._cpp_mwpm import all_pairs_shortest_path, decode, UnweightedStabiliserGraph
+from mwpm._cpp_mwpm import (all_pairs_shortest_path, 
+                            decode, 
+                            UnweightedStabiliserGraph,
+                            WeightedStabiliserGraph)
 
 
 def check_two_checks_per_qubit(H):
@@ -22,18 +26,34 @@ def syndrome_graph_from_check_matrix(H):
 
 
 class MWPM:
-    def __init__(self, H):
-        self.H = csc_matrix(H)
-        check_two_checks_per_qubit(self.H)
-        self.H.sort_indices()
-        self.stabiliser_graph = UnweightedStabiliserGraph(self.H.indices, self.H.shape[0], self.H.shape[1])
+    def __init__(self, H, weights=None):
+        if not isinstance(H, nx.Graph):
+            H = csc_matrix(H)
+            check_two_checks_per_qubit(H)
+            H.sort_indices()
+            self.num_stabilisers = H.shape[0]
+            self.num_qubits = H.shape[1]
+            if weights is None:
+                self.stabiliser_graph = UnweightedStabiliserGraph(
+                    H.indices, 
+                    self.num_stabilisers, 
+                    self.num_qubits
+                )
+            else:
+                weights = np.asarray(weights)
+                self.stabiliser_graph = WeightedStabiliserGraph(
+                    H.indices,
+                    weights,
+                    self.num_stabilisers,
+                    self.num_qubits
+                )
     
     def decode(self, z):
-        if len(z.shape) == 1 and z.shape[0] == self.H.shape[0]:
+        if len(z.shape) == 1 and z.shape[0] == self.num_stabilisers:
             defects = z.nonzero()[0]
-        elif len(z.shape) == 2 and z.shape[0] == self.H.shape[0]:
+        elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
             times, checks = z.T.nonzero()
-            defects = times*self.H.shape[0] + checks
+            defects = times*self.num_stabilisers + checks
         else:
             raise ValueError(f"The shape ({z.shape}) of the syndrome vector z is not valid.")
         if (len(defects) % 2) != 0:

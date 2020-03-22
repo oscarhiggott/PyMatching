@@ -6,11 +6,29 @@
 #include <stdexcept>
 
 
-WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers) 
-: num_stabilisers(num_stabilisers){
+WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers){
     wgraph_t sgraph = wgraph_t(num_stabilisers);
     this->stabiliser_graph = sgraph;
-};
+}
+
+WeightedStabiliserGraph::WeightedStabiliserGraph(
+            const py::array_t<int>& indices, 
+            const py::array_t<double>& weights, 
+            int num_stabilisers, 
+            int num_qubits
+){
+    wgraph_t sgraph = wgraph_t(num_stabilisers);
+    this->stabiliser_graph = sgraph;
+    auto x = indices.unchecked<1>();
+    auto w = weights.unchecked<1>();
+    assert((x.shape(0) % 2) ==0 );
+    assert(x.shape(0)/2 == num_qubits);
+    assert(w.shape(0) == num_qubits);
+    for (py::ssize_t i=0; i<num_qubits; i++){
+        AddEdge(x[2*i], x[2*i+1], (int) i, w[i]);
+    }
+    ComputeAllPairsShortestPaths();
+}
 
 void WeightedStabiliserGraph::AddEdge(
     int node1, 
@@ -65,7 +83,7 @@ int WeightedStabiliserGraph::GetNumQubits() const {
 }
 
 int WeightedStabiliserGraph::GetNumStabilisers() const {
-    return num_stabilisers;
+    return boost::num_vertices(stabiliser_graph);
 };
 
 int WeightedStabiliserGraph::QubitID(int node1, int node2) const {

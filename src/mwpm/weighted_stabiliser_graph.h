@@ -1,8 +1,12 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include <memory>
 #include "stabiliser_graph.h"
+
+namespace py = pybind11;
 
 struct WeightedEdgeData {
     int qubit_id;
@@ -19,6 +23,12 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
     public:
         wgraph_t stabiliser_graph;
         WeightedStabiliserGraph(int num_stabilisers);
+        WeightedStabiliserGraph(
+            const py::array_t<int>& indices, 
+            const py::array_t<double>& weights, 
+            int num_stabilisers, 
+            int num_qubits
+        );
         void AddEdge(int node1, int node2, int qubit_id, double weight);
         void ComputeAllPairsShortestPaths();
         virtual int Distance(int node1, int node2) const;
@@ -28,6 +38,4 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         virtual int GetNumStabilisers() const;
         std::vector<std::vector<double>> all_distances;
         std::vector<std::vector<vertex_descriptor>> all_predecessors;
-        int num_stabilisers;
-
 };
