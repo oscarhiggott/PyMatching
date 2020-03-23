@@ -49,6 +49,14 @@ class MWPM:
                 )
         else:
             self.num_stabilisers = H.number_of_nodes()
+            g = WeightedStabiliserGraph(self.num_stabilisers)
+            for (u, v, attr) in H.edges(data=True):
+                if ('qubit_id' not in attr) or ('weight' not in attr):
+                    raise ValueError("Graph edges must have 'qubit_id' and 'weight' attributes."
+                                f" Instead attr={attr}")
+                g.add_edge(u, v, attr['qubit_id'], attr['weight'])
+            g.compute_all_pairs_shortest_paths()
+            self.stabiliser_graph = g
     
     @property
     def num_qubits(self):

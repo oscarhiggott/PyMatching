@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from scipy.sparse import csc_matrix, load_npz
 import pytest
+import networkx as nx
 
 from mwpm._cpp_mwpm import (breadth_first_search, 
                             all_pairs_shortest_path, shortest_path,
@@ -175,3 +176,20 @@ def test_weighted_num_qubits_and_stabilisers():
     w.compute_all_pairs_shortest_paths()
     assert(w.get_num_qubits() == 7)
     assert(w.get_num_stabilisers() == 6)
+
+def test_unweighted_stabiliser_graph_from_networkx():
+    w = nx.Graph()
+    w.add_edge(0, 1, qubit_id=0, weight=7.0)
+    w.add_edge(0, 5, qubit_id=1, weight=14.0)
+    w.add_edge(0, 2, qubit_id=2, weight=9.0)
+    w.add_edge(1, 2, qubit_id=-1, weight=10.0)
+    w.add_edge(1, 3, qubit_id=3, weight=15.0)
+    w.add_edge(2, 5, qubit_id=4, weight=2.0)
+    w.add_edge(2, 3, qubit_id=-1, weight=11.0)
+    w.add_edge(3, 4, qubit_id=5, weight=6.0)
+    w.add_edge(4, 5, qubit_id=6, weight=9.0)
+    m = MWPM(w)
+    assert(m.num_qubits == 7)
+    assert(m.num_stabilisers == 6)
+    assert(m.stabiliser_graph.shortest_path(3, 5) == [3, 2, 5])
+    assert(m.stabiliser_graph.distance(5, 0) == pytest.approx(11.0))
