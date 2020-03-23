@@ -159,3 +159,19 @@ def test_weighted_spacetime_shortest_path():
     assert(w.shortest_path(4, 2) == [4, 5, 2])
     assert(w.get_num_qubits() == 9)
     assert(w.get_num_stabilisers() == 6)
+
+
+def test_weighted_num_qubits_and_stabilisers():
+    w = WeightedStabiliserGraph(6)
+    w.add_edge(0, 1, 0, 7.0)
+    w.add_edge(0, 5, 1, 14.0)
+    w.add_edge(0, 2, 2, 9.0)
+    w.add_edge(1, 2, -1, 10.0)
+    w.add_edge(1, 3, 3, 15.0)
+    w.add_edge(2, 5, 4, 2.0)
+    w.add_edge(2, 3, -1, 11.0)
+    w.add_edge(3, 4, 5, 6.0)
+    w.add_edge(4, 5, 6, 9.0)
+    w.compute_all_pairs_shortest_paths()
+    assert(w.get_num_qubits() == 7)
+    assert(w.get_num_stabilisers() == 6)
