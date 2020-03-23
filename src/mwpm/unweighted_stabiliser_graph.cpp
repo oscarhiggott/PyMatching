@@ -59,6 +59,11 @@ std::vector<int> GetShortestPath(const std::vector<int>& parent, int dest){
     return path;
 }
 
+UnweightedStabiliserGraph::UnweightedStabiliserGraph(
+    int num_stabilisers
+) : num_stabilisers(num_stabilisers), num_qubits(0) {
+    adj_list.resize(num_stabilisers);
+}
 
 UnweightedStabiliserGraph::UnweightedStabiliserGraph(
     const py::array_t<int>& indices
@@ -72,7 +77,7 @@ UnweightedStabiliserGraph::UnweightedStabiliserGraph(
             }
         }
         this->num_stabilisers = smax+1;
-        this->num_qubits = x.shape(0)/2;
+        this->num_qubits = 0;
         adj_list.resize(num_stabilisers);
         for (py::ssize_t i=0; i<(x.shape(0)/2); i++){
             AddEdge(x[2*i], x[2*i+1], i);
@@ -82,26 +87,35 @@ UnweightedStabiliserGraph::UnweightedStabiliserGraph(
 
 
 void UnweightedStabiliserGraph::AddEdge(int node1, int node2, int qubit_id){
+    assert(node1 < num_stabilisers);
+    assert(node2 < num_stabilisers);
     adj_list[node1].push_back(node2);
     adj_list[node2].push_back(node1);
     std::pair<int,int> edge = std::make_pair(std::min(node1, node2),
                                     std::max(node1, node2));
     qubit_ids.insert({edge, qubit_id});
+    num_qubits++;
 }
 
 
 int UnweightedStabiliserGraph::Distance(int node1, int node2) const {
+    assert(node1 < num_stabilisers);
+    assert(node2 < num_stabilisers);
     return shortest_paths.distances[node1][node2];
 }
 
 std::vector<int> UnweightedStabiliserGraph::ShortestPath(int node1, int node2) const {
+    assert(node1 < num_stabilisers);
+    assert(node2 < num_stabilisers);
     return GetShortestPath(shortest_paths.parents[node2], node1);
 }
 
 int UnweightedStabiliserGraph::QubitID(int node1, int node2) const {
     int s1 = std::min(node1, node2);
     int s2 = std::max(node1, node2);
-    return qubit_ids.find(std::make_pair(s1, s2))->second;
+    int qid = qubit_ids.find(std::make_pair(s1, s2))->second;
+    assert(qid < num_qubits);
+    return qid;
 }
 
 int UnweightedStabiliserGraph::GetNumQubits() const {
@@ -110,4 +124,8 @@ int UnweightedStabiliserGraph::GetNumQubits() const {
 
 int UnweightedStabiliserGraph::GetNumStabilisers() const {
     return num_stabilisers;
+}
+
+void UnweightedStabiliserGraph::ComputeAllPairsShortestPaths(){
+    shortest_paths = AllPairsShortestPath(adj_list);
 }

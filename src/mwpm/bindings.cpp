@@ -49,15 +49,18 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers);
 
     py::class_<UnweightedStabiliserGraph, IStabiliserGraph>(m, "UnweightedStabiliserGraph")
+    .def(py::init<int>(), "num_stabilisers"_a)
     .def(py::init<const py::array_t<int>&>(), "indices"_a)
     .def_readwrite("adj_list", &UnweightedStabiliserGraph::adj_list)
     .def_readwrite("qubit_ids", &UnweightedStabiliserGraph::qubit_ids)
     .def_readwrite("shortest_paths", &UnweightedStabiliserGraph::shortest_paths)
     .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
-    .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a);
+    .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a)
+    .def("compute_all_pairs_shortest_paths", &UnweightedStabiliserGraph::ComputeAllPairsShortestPaths);
 
     py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
     .def(py::init<int>(), "num_stabilisers"_a)
+    .def(py::init<const py::array_t<int>&, const py::array_t<double>&>(), "indices"_a, "weights"_a)
     .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
     .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
     .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, "weight"_a)

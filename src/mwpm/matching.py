@@ -49,12 +49,32 @@ class MWPM:
                 )
         else:
             self.num_stabilisers = H.number_of_nodes()
-            g = WeightedStabiliserGraph(self.num_stabilisers)
-            for (u, v, attr) in H.edges(data=True):
-                if ('qubit_id' not in attr) or ('weight' not in attr):
-                    raise ValueError("Graph edges must have 'qubit_id' and 'weight' attributes."
-                                f" Instead attr={attr}")
-                g.add_edge(u, v, attr['qubit_id'], attr['weight'])
+            attr0 = list(H.edges(data=True))[0][2]
+            if 'weight' in attr0:
+                g = WeightedStabiliserGraph(self.num_stabilisers)
+                if 'qubit_id' in attr0:
+                    for (u, v, attr) in H.edges(data=True):
+                        if ('qubit_id' not in attr) or ('weight' not in attr):
+                            raise ValueError("Expected all edges to have 'qubit_id' and 'weight' attributes."
+                                        f" Instead attr={attr}")
+                        g.add_edge(u, v, attr['qubit_id'], attr['weight'])
+                else:
+                    for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
+                        if 'weight' not in attr:
+                            raise ValueError("Expected all edges to have 'weight' attributes."
+                                        f" Instead attr={attr}")
+                        g.add_edge(u, v, i, attr['weight'])
+            else:
+                g = UnweightedStabiliserGraph(self.num_stabilisers)
+                if 'qubit_id' in attr0:
+                    for (u, v, attr) in H.edges(data=True):
+                        if 'qubit_id' not in attr:
+                            raise ValueError("Expected all edges to have 'qubit_id' attributes."
+                                        f" Instead attr={attr}")
+                        g.add_edge(u, v, attr['qubit_id'])
+                else:
+                    for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
+                        g.add_edge(u, v, i)
             g.compute_all_pairs_shortest_paths()
             self.stabiliser_graph = g
     

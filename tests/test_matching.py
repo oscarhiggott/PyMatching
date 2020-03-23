@@ -177,6 +177,7 @@ def test_weighted_num_qubits_and_stabilisers():
     assert(w.get_num_qubits() == 7)
     assert(w.get_num_stabilisers() == 6)
 
+
 def test_unweighted_stabiliser_graph_from_networkx():
     w = nx.Graph()
     w.add_edge(0, 1, qubit_id=0, weight=7.0)
@@ -193,3 +194,15 @@ def test_unweighted_stabiliser_graph_from_networkx():
     assert(m.num_stabilisers == 6)
     assert(m.stabiliser_graph.shortest_path(3, 5) == [3, 2, 5])
     assert(m.stabiliser_graph.distance(5, 0) == pytest.approx(11.0))
+    assert(np.array_equal(
+        m.decode(np.array([1,0,1,0,0,0])),
+        np.array([0,0,1,0,0,0,0]))
+    )
+    assert(np.array_equal(
+        m.decode(np.array([1,0,0,0,0,1])),
+        np.array([0,0,1,0,1,0,0]))
+    )
+    assert(np.array_equal(
+        m.decode(np.array([0,1,0,0,0,1])),
+        np.array([0,0,0,0,1,0,0]))
+    )
