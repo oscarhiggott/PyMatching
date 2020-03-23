@@ -17,14 +17,17 @@ py::array_t<int> Decode(const IStabiliserGraph& sg, const py::array_t<int>& defe
     };
     pm->options.verbose = false;
     pm->Solve();
-    auto correction = new std::vector<int>(sg.GetNumQubits(), 0);
+    int N = sg.GetNumQubits();
+    auto correction = new std::vector<int>(N, 0);
     for (py::size_t i = 0; i<num_nodes; i++){
         int j = pm->GetMatch(i);
         if (i<j){
             std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
                 int qid = sg.QubitID(path[k], path[k+1]);
-                (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+                if ((qid != -1) && (qid >= 0) && (qid < N)){
+                    (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+                }
             }
         }
     }
