@@ -25,9 +25,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         WeightedStabiliserGraph(int num_stabilisers);
         WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
-            const py::array_t<double>& weights, 
-            int num_stabilisers, 
-            int num_qubits
+            const py::array_t<double>& weights
         );
         void AddEdge(int node1, int node2, int qubit_id, double weight);
         void ComputeAllPairsShortestPaths();

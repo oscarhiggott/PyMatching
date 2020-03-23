@@ -49,12 +49,12 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers);
 
     py::class_<UnweightedStabiliserGraph, IStabiliserGraph>(m, "UnweightedStabiliserGraph")
-    .def(py::init<const py::array_t<int>&, int, int>(), "indices"_a, "num_stabilisers"_a, "num_qubits"_a)
+    .def(py::init<const py::array_t<int>&>(), "indices"_a)
     .def_readwrite("adj_list", &UnweightedStabiliserGraph::adj_list)
     .def_readwrite("qubit_ids", &UnweightedStabiliserGraph::qubit_ids)
     .def_readwrite("shortest_paths", &UnweightedStabiliserGraph::shortest_paths)
     .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
-    .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a);
+    .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a);
 
     py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
     .def(py::init<int>(), "num_stabilisers"_a)

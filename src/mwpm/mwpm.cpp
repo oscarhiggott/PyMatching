@@ -17,7 +17,6 @@ py::array_t<int> Decode(const IStabiliserGraph& sg, const py::array_t<int>& defe
     };
     pm->options.verbose = false;
     pm->Solve();
-    std::cout<<sg.GetNumQubits()<<std::endl;
     auto correction = new std::vector<int>(sg.GetNumQubits(), 0);
     for (py::size_t i = 0; i<num_nodes; i++){
         int j = pm->GetMatch(i);

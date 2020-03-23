@@ -61,26 +61,32 @@ std::vector<int> GetShortestPath(const std::vector<int>& parent, int dest){
 
 
 UnweightedStabiliserGraph::UnweightedStabiliserGraph(
-    const py::array_t<int>& indices, 
-    int num_stabilisers,
-    int num_qubits
-    ) : num_stabilisers(num_stabilisers), num_qubits(num_qubits) {
+    const py::array_t<int>& indices
+    ){
         auto x = indices.unchecked<1>();
         assert((x.shape(0) % 2)==0);
+        int smax = 0;
+        for (py::ssize_t i=0; i<(x.shape(0)); i++){
+            if (x[i] > smax){
+                smax = x[i];
+            }
+        }
+        this->num_stabilisers = smax+1;
+        this->num_qubits = x.shape(0)/2;
         adj_list.resize(num_stabilisers);
         for (py::ssize_t i=0; i<(x.shape(0)/2); i++){
-            AddEdge(x[2*i], x[2*i+1]);
-            std::pair<int,int> edge = std::make_pair(std::min(x[2*i], x[2*i+1]),
-                                            std::max(x[2*i], x[2*i+1]));
-            qubit_ids.insert({edge, i});
+            AddEdge(x[2*i], x[2*i+1], i);
         }
     shortest_paths = AllPairsShortestPath(adj_list);
 }
 
 
-void UnweightedStabiliserGraph::AddEdge(int node1, int node2){
+void UnweightedStabiliserGraph::AddEdge(int node1, int node2, int qubit_id){
     adj_list[node1].push_back(node2);
     adj_list[node2].push_back(node1);
+    std::pair<int,int> edge = std::make_pair(std::min(node1, node2),
+                                    std::max(node1, node2));
+    qubit_ids.insert({edge, qubit_id});
 }
 
 

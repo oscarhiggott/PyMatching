@@ -18,7 +18,7 @@ def test_cpp_syndrome_graph():
     fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
     H = csc_matrix(load_npz(os.path.join(TEST_DIR, 'data', fn)))
     assert(np.count_nonzero(H.indptr[1:]-H.indptr[0:-1]-2) == 0)
-    sg = UnweightedStabiliserGraph(H.indices, H.shape[0], H.shape[1])
+    sg = UnweightedStabiliserGraph(H.indices)
     expected = [[1, 2, 3, 6], [0, 2, 4, 7], [1, 0, 5, 8], 
                 [0, 4, 5, 6], [1, 3, 5, 7], [2, 4, 3, 8], 
                 [3, 7, 8, 0], [4, 6, 8, 1], [5, 7, 6, 2]]

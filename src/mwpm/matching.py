@@ -32,21 +32,27 @@ class MWPM:
             check_two_checks_per_qubit(H)
             H.sort_indices()
             self.num_stabilisers = H.shape[0]
-            self.num_qubits = H.shape[1]
+            num_qubits = H.shape[1]
             if weights is None:
                 self.stabiliser_graph = UnweightedStabiliserGraph(
-                    H.indices, 
-                    self.num_stabilisers, 
-                    self.num_qubits
+                    H.indices
                 )
             else:
                 weights = np.asarray(weights)
+                if weights.shape[0] != self.num_qubits:
+                    raise ValueError("Weights array must have num_qubits elements")
+                if np.any(weights >= 0.):
+                    raise ValueError("All weights must be non-negative.")
                 self.stabiliser_graph = WeightedStabiliserGraph(
                     H.indices,
-                    weights,
-                    self.num_stabilisers,
-                    self.num_qubits
+                    weights
                 )
+        else:
+            self.num_stabilisers = H.number_of_nodes()
+    
+    @property
+    def num_qubits(self):
+        return self.stabiliser_graph.get_num_qubits()
     
     def decode(self, z):
         if len(z.shape) == 1 and z.shape[0] == self.num_stabilisers:
