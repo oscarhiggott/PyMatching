@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(mwpm)
 
+add_compile_definitions(PERFECT_MATCHING_DOUBLE)
+
 file(GLOB SOURCES "src/mwpm/*.cpp")
 
 add_subdirectory(lib/blossom5-v2.05.src)

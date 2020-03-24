@@ -25,6 +25,11 @@ def syndrome_graph_from_check_matrix(H):
     return G
 
 
+def raise_error_for_edge_attribute(u, v, attr0, attr):
+    raise ValueError(f"Edge ({u},{v}) has attributes {tuple(attr.keys())} but expected "
+                     f"same attributes as first edge: {tuple(attr0.keys())}.")
+
+
 class MWPM:
     def __init__(self, H, weights=None):
         if not isinstance(H, nx.Graph):
@@ -55,22 +60,19 @@ class MWPM:
                 if 'qubit_id' in attr0:
                     for (u, v, attr) in H.edges(data=True):
                         if ('qubit_id' not in attr) or ('weight' not in attr):
-                            raise ValueError("Expected all edges to have 'qubit_id' and 'weight' attributes."
-                                        f" Instead attr={attr}")
+                            raise_error_for_edge_attribute(u, v, attr0, attr)
                         g.add_edge(u, v, attr['qubit_id'], attr['weight'])
                 else:
                     for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
                         if 'weight' not in attr:
-                            raise ValueError("Expected all edges to have 'weight' attributes."
-                                        f" Instead attr={attr}")
+                            raise_error_for_edge_attribute(u, v, attr0, attr)
                         g.add_edge(u, v, i, attr['weight'])
             else:
                 g = UnweightedStabiliserGraph(self.num_stabilisers)
                 if 'qubit_id' in attr0:
                     for (u, v, attr) in H.edges(data=True):
                         if 'qubit_id' not in attr:
-                            raise ValueError("Expected all edges to have 'qubit_id' attributes."
-                                        f" Instead attr={attr}")
+                            raise_error_for_edge_attribute(u, v, attr0, attr)
                         g.add_edge(u, v, attr['qubit_id'])
                 else:
                     for (i, (u, v, attr)) in enumerate(H.edges(data=True)):

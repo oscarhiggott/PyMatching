@@ -70,7 +70,7 @@ void WeightedStabiliserGraph::ComputeAllPairsShortestPaths(){
     }
 }
 
-int WeightedStabiliserGraph::Distance(int node1, int node2) const {
+double WeightedStabiliserGraph::Distance(int node1, int node2) const {
     vertex_descriptor n2 = boost::vertex(node2, stabiliser_graph);
     return all_distances[node1][n2];
 }

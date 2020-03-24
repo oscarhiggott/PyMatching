@@ -29,7 +29,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         );
         void AddEdge(int node1, int node2, int qubit_id, double weight);
         void ComputeAllPairsShortestPaths();
-        virtual int Distance(int node1, int node2) const;
+        virtual double Distance(int node1, int node2) const;
         virtual std::vector<int> ShortestPath(int node1, int node2) const;
         virtual int QubitID(int node1, int node2) const;
         virtual int GetNumQubits() const;

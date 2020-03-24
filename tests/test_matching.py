@@ -206,3 +206,50 @@ def test_unweighted_stabiliser_graph_from_networkx():
         m.decode(np.array([0,1,0,0,0,1])),
         np.array([0,0,0,0,1,0,0]))
     )
+
+
+def test_mwmpm_from_networkx():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(0, 2, qubit_id=1)
+    g.add_edge(1, 2, qubit_id=2)
+    m = MWPM(g)
+    assert(isinstance(m.stabiliser_graph, UnweightedStabiliserGraph))
+    assert(m.num_stabilisers == 3)
+    assert(m.num_qubits == 3)
+    assert(m.stabiliser_graph.distance(0,2) == 1)
+    assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+
+    g = nx.Graph()
+    g.add_edge(0, 1)
+    g.add_edge(0, 2)
+    g.add_edge(1, 2)
+    m = MWPM(g)
+    assert(isinstance(m.stabiliser_graph, UnweightedStabiliserGraph))
+    assert(m.num_stabilisers == 3)
+    assert(m.num_qubits == 3)
+    assert(m.stabiliser_graph.distance(0,2) == 1)
+    assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+
+    g = nx.Graph()
+    g.add_edge(0, 1, weight=1.5)
+    g.add_edge(0, 2, weight=1.7)
+    g.add_edge(1, 2, weight=1.2)
+    m = MWPM(g)
+    assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
+    assert(m.num_stabilisers == 3)
+    assert(m.num_qubits == 3)
+    assert(m.stabiliser_graph.distance(0,2) == pytest.approx(1.7))
+    assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+
+
+def test_double_weight_matching():
+    w = nx.Graph()
+    w.add_edge(0, 1, qubit_id=0, weight=0.97)
+    w.add_edge(2, 3, qubit_id=1, weight=1.98)
+    w.add_edge(0, 2, qubit_id=2, weight=1.1)
+    w.add_edge(1, 3, qubit_id=3, weight=1.2)
+    m = MWPM(w)
+    assert(
+        list(m.decode(np.array([1,1,1,1]))) == list(np.array([0,0,1,1]))
+        )

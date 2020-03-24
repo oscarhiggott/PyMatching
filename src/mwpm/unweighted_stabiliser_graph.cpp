@@ -98,10 +98,10 @@ void UnweightedStabiliserGraph::AddEdge(int node1, int node2, int qubit_id){
 }
 
 
-int UnweightedStabiliserGraph::Distance(int node1, int node2) const {
+double UnweightedStabiliserGraph::Distance(int node1, int node2) const {
     assert(node1 < num_stabilisers);
     assert(node2 < num_stabilisers);
-    return shortest_paths.distances[node1][node2];
+    return (double) shortest_paths.distances[node1][node2];
 }
 
 std::vector<int> UnweightedStabiliserGraph::ShortestPath(int node1, int node2) const {
