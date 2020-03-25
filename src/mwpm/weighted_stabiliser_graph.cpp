@@ -3,6 +3,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include "weighted_stabiliser_graph.h"
 #include <memory>
+#include <set>
 #include <stdexcept>
 
 
@@ -91,15 +92,23 @@ std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) con
 int WeightedStabiliserGraph::GetNumQubits() const {
     auto qid = boost::get(&WeightedEdgeData::qubit_id, stabiliser_graph);
     int num_edges = boost::num_edges(stabiliser_graph);
-    int num_qubits = 0;
+    int maxid = 0;
+    std::set<int> qubits;
     auto es = boost::edges(stabiliser_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
         int qubit = qid[*eit];
+        if (qubit >= maxid){
+            maxid = qubit;
+        }
         if (qubit >=0){
-            num_qubits++;
+            qubits.insert(qubit);
         } else if (qubit != -1){
             throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
         }
+    }
+    int num_qubits = qubits.size();
+    if (maxid + 1 != num_qubits){
+        throw std::runtime_error("Qubit ids must be numbered 0...N.");
     }
     return num_qubits;
 }
