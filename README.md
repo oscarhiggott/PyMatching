@@ -25,4 +25,4 @@ which outputs a bitstring `c`, which is a numpy array of dtype int. Note that th
 
 ## Licensing of Blossom V dependency
 
-This package uses the Blossom V implementation of minimum weight perfect matching (available [here](https://pub.ist.ac.at/~vnk/software.html)) which is licenced for research purposes only. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).
+This package uses the Blossom V implementation of minimum weight perfect matching (downloaded from [here](https://pub.ist.ac.at/~vnk/software.html) upon installation) which is licenced for research purposes only. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).
