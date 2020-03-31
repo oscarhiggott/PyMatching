@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "stabiliser_graph.h"
 
 double IStabiliserGraph::SpaceTimeDistance(int node1, int node2) const {
