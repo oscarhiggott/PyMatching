@@ -14,7 +14,7 @@ pip install -e ./MWPM
 
 ## Usage
 
-In order to decode a parity check matrix `H` (a scipy.sparse matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `MWPM` object after importing it:
+In order to decode a parity check matrix `H` (a `scipy.sparse` matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `MWPM` object after importing it:
 ```
 from mwpm import MWPM
 m = MWPM(H)
