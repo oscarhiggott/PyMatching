@@ -1,7 +1,6 @@
 import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix, spmatrix
-import numpy as np
 
 from mwpm._cpp_mwpm import (all_pairs_shortest_path, 
                             decode, 
@@ -21,7 +20,7 @@ def syndrome_graph_from_check_matrix(H):
     H.sort_indices()
     G = nx.Graph()
     for i in range(len(H.indices)//2):
-        G.add_edge(H.indices[2*i], H.indices[2*i+1], id=i)
+        G.add_edge(H.indices[2*i], H.indices[2*i+1], qubit_id=i)
     return G
 
 
@@ -44,9 +43,9 @@ class MWPM:
                 )
             else:
                 weights = np.asarray(weights)
-                if weights.shape[0] != self.num_qubits:
+                if weights.shape[0] != num_qubits:
                     raise ValueError("Weights array must have num_qubits elements")
-                if np.any(weights >= 0.):
+                if np.any(weights < 0.):
                     raise ValueError("All weights must be non-negative.")
                 self.stabiliser_graph = WeightedStabiliserGraph(
                     H.indices,

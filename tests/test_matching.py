@@ -2,7 +2,7 @@ import os
 
 import pytest
 import numpy as np
-from scipy.sparse import csc_matrix, load_npz
+from scipy.sparse import csc_matrix, load_npz, csr_matrix
 import pytest
 import networkx as nx
 
@@ -10,7 +10,9 @@ from mwpm._cpp_mwpm import (breadth_first_search,
                             all_pairs_shortest_path, shortest_path,
                             decode, UnweightedStabiliserGraph,
                             WeightedStabiliserGraph)
-from mwpm import MWPM
+from mwpm import (MWPM, check_two_checks_per_qubit,
+                    syndrome_graph_from_check_matrix,
+                    raise_error_for_edge_attribute)
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -178,6 +180,17 @@ def test_weighted_num_qubits_and_stabilisers():
     assert(w.get_num_stabilisers() == 6)
 
 
+def test_weighted_mwpm_from_array():
+    H = csc_matrix([[1,0],[1,1],[0,1]])
+    m = MWPM(H, weights=np.array([1., 2.]))
+    assert m.stabiliser_graph.distance(0, 1) == 1.
+    assert m.stabiliser_graph.distance(1, 2) == 2.
+    with pytest.raises(ValueError):
+        m = MWPM(H, weights=np.array([1.]))
+    with pytest.raises(ValueError):
+        m = MWPM(H, weights=np.array([1., -2.]))
+
+
 def test_unweighted_stabiliser_graph_from_networkx():
     w = nx.Graph()
     w.add_edge(0, 1, qubit_id=0, weight=7.0)
@@ -198,6 +211,10 @@ def test_unweighted_stabiliser_graph_from_networkx():
         m.decode(np.array([1,0,1,0,0,0])),
         np.array([0,0,1,0,0,0,0]))
     )
+    with pytest.raises(ValueError):
+        m.decode(np.array([1,1,0]))
+    with pytest.raises(ValueError):
+        m.decode(np.array([1,1,1,0,0,0]))
     assert(np.array_equal(
         m.decode(np.array([1,0,0,0,0,1])),
         np.array([0,0,1,0,1,0,0]))
@@ -219,6 +236,9 @@ def test_mwmpm_from_networkx():
     assert(m.num_qubits == 3)
     assert(m.stabiliser_graph.distance(0,2) == 1)
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+    with pytest.raises(ValueError):
+        g.add_edge(2, 3)
+        m = MWPM(g)
 
     g = nx.Graph()
     g.add_edge(0, 1)
@@ -241,6 +261,9 @@ def test_mwmpm_from_networkx():
     assert(m.num_qubits == 3)
     assert(m.stabiliser_graph.distance(0,2) == pytest.approx(1.7))
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+    with pytest.raises(ValueError):
+        g.add_edge(2,3)
+        m = MWPM(g)
 
 
 def test_double_weight_matching():
@@ -253,3 +276,27 @@ def test_double_weight_matching():
     assert(
         list(m.decode(np.array([1,1,1,1]))) == list(np.array([0,0,1,1]))
         )
+    with pytest.raises(ValueError):
+        w.add_edge(3, 4, weight=2.3)
+        m = MWPM(w)
+
+
+def test_not_two_checks_per_qubit_raises_value_error():
+    H1 = csr_matrix([[1,1],[1,0],[1,1]])
+    H2 = csc_matrix([[1,1],[0,0]])
+    with pytest.raises(ValueError):
+        check_two_checks_per_qubit(H1)
+        check_two_checks_per_qubit(H2)
+
+
+def test_syndrome_graph_from_check_matrix():
+    H = csr_matrix([[1,0,1],[1,0,0],[0,1,1],[0,1,0]])
+    G = syndrome_graph_from_check_matrix(H)
+    assert G[0][1]['qubit_id'] == 0
+    assert G[2][3]['qubit_id'] == 1
+    assert G[0][2]['qubit_id'] == 2
+
+
+def test_raise_error_for_edge_attributes():
+    with pytest.raises(ValueError):
+        raise_error_for_edge_attribute(0, 1, {'qubit_id':0, 'weight': 2}, {'qubit_id':1})

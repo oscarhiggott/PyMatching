@@ -1,0 +1,19 @@
+language: python
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.8-dev"
+  - "nightly"
+install:
+  - pip install pytest
+  - pip install pytest-cov
+  - pip install -e .
+
+script:
+  - pytest tests --cov=src --cov-report term
+
+after_success:
+  - codecov

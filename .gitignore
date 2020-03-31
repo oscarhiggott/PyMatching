@@ -75,3 +75,5 @@ MANIFEST
 Session.vim
 Sessionx.vim
 
+### Pytest ####
+.coverage

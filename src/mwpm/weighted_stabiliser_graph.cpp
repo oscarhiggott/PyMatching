@@ -108,7 +108,7 @@ int WeightedStabiliserGraph::GetNumQubits() const {
     }
     int num_qubits = qubits.size();
     if (maxid + 1 != num_qubits){
-        throw std::runtime_error("Qubit ids must be numbered 0...N.");
+        throw std::runtime_error("Qubit ids must be numbered 0...(N-1).");
     }
     return num_qubits;
 }
