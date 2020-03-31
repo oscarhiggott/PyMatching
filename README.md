@@ -2,6 +2,8 @@
 
 A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching decoder.
 
+[![Build Status](https://travis-ci.com/oscarhiggott/MWPM.svg?branch=master)](https://travis-ci.com/oscarhiggott/MWPM)
+
 ## Installation
 
 Clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule). Make sure you have cmake installed, and then use `pip` to install:
