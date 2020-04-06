@@ -32,7 +32,7 @@ This package uses the Blossom V implementation of minimum weight perfect matchin
 
 ## Attribution
 
-When using MWPM for research, please consider citing:
+When using PyMWPM for research, please consider citing:
 ```
 @misc{higgott2020pymwpm,
   author = {Higgott, Oscar},
