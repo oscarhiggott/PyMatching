@@ -32,7 +32,12 @@ This package uses the Blossom V implementation of minimum weight perfect matchin
 
 ## Attribution
 
-When using PyMWPM for research, please consider citing:
+When using PyMWPM for research, please cite the BlossomV dependency:
+
+        Vladimir Kolmogorov. "Blossom V: A new implementation of a minimum cost perfect matching algorithm."
+        In Mathematical Programming Computation (MPC), July 2009, 1(1):43-67.
+        
+and please also consider citing:
 ```
 @misc{higgott2020pymwpm,
   author = {Higgott, Oscar},
