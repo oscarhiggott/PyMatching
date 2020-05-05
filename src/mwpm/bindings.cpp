@@ -5,6 +5,7 @@
 #include "stabiliser_graph.h"
 #include "unweighted_stabiliser_graph.h"
 #include "weighted_stabiliser_graph.h"
+#include "rand_gen.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -63,11 +64,16 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def(py::init<const py::array_t<int>&, const py::array_t<double>&>(), "indices"_a, "weights"_a)
     .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
     .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
-    .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, "weight"_a)
-    .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths);
+    .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, 
+         "weight"_a, "error_probability"_a=-1.0)
+    .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths)
+    .def("add_noise", &WeightedStabiliserGraph::AddNoise);
 
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
     m.def("shortest_path", &GetShortestPath, "parent"_a, "dest"_a);
     m.def("decode", &Decode, "sg"_a, "defects"_a);
+    m.def("randomize", &randomize);
+    m.def("set_seed", &set_seed, "s"_a);
+    m.def("rand_float", &rand_float, "from"_a, "to"_a);
 }

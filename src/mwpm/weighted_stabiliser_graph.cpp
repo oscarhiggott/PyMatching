@@ -4,7 +4,9 @@
 #include "weighted_stabiliser_graph.h"
 #include <memory>
 #include <set>
+#include <utility>
 #include <stdexcept>
+#include "rand_gen.h"
 
 
 WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers){
@@ -42,14 +44,15 @@ void WeightedStabiliserGraph::AddEdge(
     int node1, 
     int node2,
     int qubit_id,
-    double weight){
+    double weight,
+    double error_probability){
         if (qubit_id < -1){
             throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
         }
         boost::add_edge(
             boost::vertex(node1, stabiliser_graph), 
             boost::vertex(node2, stabiliser_graph), 
-            {qubit_id, weight}, 
+            {qubit_id, weight, error_probability}, 
             stabiliser_graph);
 }
 
@@ -125,4 +128,32 @@ int WeightedStabiliserGraph::QubitID(int node1, int node2) const {
                         + std::to_string((int)node2) + ").");
     }
     return stabiliser_graph[e.first].qubit_id;
+}
+
+std::pair<py::array_t<int>,py::array_t<int>> WeightedStabiliserGraph::AddNoise() const {
+    auto syndrome = new std::vector<int>(GetNumStabilisers(), 0);
+    auto error = new std::vector<int>(GetNumQubits(), 0);
+    double p;
+    int qid;
+    vertex_descriptor s, t;
+    bool to_flip;
+    auto es = boost::edges(stabiliser_graph);
+    for (auto eit = es.first; eit != es.second; ++eit) {
+        p = stabiliser_graph[*eit].error_probability;
+        if ((p >= 0) && (rand_float(0.0, 1.0) < p)){
+            s = boost::source(*eit, stabiliser_graph);
+            t = boost::target(*eit, stabiliser_graph);
+            (*syndrome)[s] = ((*syndrome)[s] + 1) % 2;
+            (*syndrome)[t] = ((*syndrome)[t] + 1) % 2;
+            qid = stabiliser_graph[*eit].qubit_id;
+            if (qid >= 0){
+                (*error)[qid] = ((*error)[qid] + 1) % 2;
+            }
+        }
+    }
+    auto capsule = py::capsule(syndrome, [](void *syndrome) { delete reinterpret_cast<std::vector<int>*>(syndrome); });
+    py::array_t<int> syndrome_arr = py::array_t<int>(syndrome->size(), syndrome->data(), capsule);
+    auto err_capsule = py::capsule(error, [](void *error) { delete reinterpret_cast<std::vector<int>*>(error); });
+    py::array_t<int> error_arr = py::array_t<int>(error->size(), error->data(), err_capsule);
+    return {error_arr, syndrome_arr};
 }

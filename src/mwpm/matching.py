@@ -60,11 +60,13 @@ class MWPM:
                     for (u, v, attr) in H.edges(data=True):
                         if ('qubit_id' not in attr) or ('weight' not in attr):
                             raise_error_for_edge_attribute(u, v, attr0, attr)
-                        g.add_edge(u, v, attr['qubit_id'], attr['weight'])
+                        e_prob = attr.get('error_probability', -1.)
+                        g.add_edge(u, v, attr['qubit_id'], attr['weight'], e_prob)
                 else:
                     for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
                         if 'weight' not in attr:
                             raise_error_for_edge_attribute(u, v, attr0, attr)
+                        e_prob = attr.get('error_probability', -1.)
                         g.add_edge(u, v, i, attr['weight'])
             else:
                 g = UnweightedStabiliserGraph(self.num_stabilisers)
@@ -94,3 +96,23 @@ class MWPM:
         if (len(defects) % 2) != 0:
             raise ValueError(f"There must be an even number of nonzero syndrome elements.")
         return decode(self.stabiliser_graph, defects)
+    
+    def add_noise(self):
+        """Add noise by flipping edges in the stabiliser graph
+
+        Add noise by flipping edges in the stabiliser graph with 
+        a probability given by the error_probility edge attribute.
+        This is currently only supported for weighted matching graphs
+        initialised using a NetworkX graph.
+
+        Returns
+        -------
+        numpy.ndarray of dtype int
+            Noise vector (binary numpy int array of length self.num_qubits)
+        numpy.ndarray of dtype int
+            Syndrome vector (binary numpy int array of length self.num_stabilisers)
+        """
+        if isinstance(self.stabiliser_graph, WeightedStabiliserGraph):
+            return self.stabiliser_graph.add_noise()
+        else:
+            return None
