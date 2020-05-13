@@ -9,50 +9,68 @@
 #include "rand_gen.h"
 
 
-WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers){
+WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers)
+    : all_edges_weighted(true), all_edges_have_error_probabilities(true) {
     wgraph_t sgraph = wgraph_t(num_stabilisers);
     this->stabiliser_graph = sgraph;
 }
 
-WeightedStabiliserGraph::WeightedStabiliserGraph(
-            const py::array_t<int>& indices, 
-            const py::array_t<double>& weights
-){
-    auto x = indices.unchecked<1>();
-    assert((x.shape(0) % 2) == 0);
+int ArrayMax(const py::array_t<int>& arr){
+    auto x = arr.unchecked<1>();
     int smax = 0;
     for (py::ssize_t i=0; i<(x.shape(0)); i++){
         if (x[i] > smax){
             smax = x[i];
         }
     }
-    int num_stabilisers = smax+1;
+    return smax;
+}
+
+WeightedStabiliserGraph::WeightedStabiliserGraph(
+            const py::array_t<int>& indices, 
+            const py::array_t<double>& weights
+) : all_edges_weighted(true), all_edges_have_error_probabilities(true) {
+    auto x = indices.unchecked<1>();
+    assert((x.shape(0) % 2) == 0);
+
+    int num_stabilisers = ArrayMax(indices)+1;
 
     wgraph_t sgraph = wgraph_t(num_stabilisers);
     this->stabiliser_graph = sgraph;
 
     auto w = weights.unchecked<1>();
-    
     assert(w.shape(0) == x.shape(0)/2);
+
     for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], (int) i, w[i]);
+        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], true, -1.0, false);
     }
     ComputeAllPairsShortestPaths();
 }
 
 void WeightedStabiliserGraph::AddEdge(
     int node1, 
-    int node2,
-    int qubit_id,
-    double weight,
-    double error_probability){
-        if (qubit_id < -1){
-            throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
+    int node2, 
+    int qubit_id, 
+    double weight, 
+    bool has_weight, 
+    double error_probability, 
+    bool has_error_probability){
+        if (!has_weight){
+            all_edges_weighted = false;
         }
+        if (!has_error_probability){
+            all_edges_have_error_probabilities = false;
+        }
+        WeightedEdgeData data;
+        data.qubit_id = qubit_id;
+        data.weight = weight;
+        data.has_weight = has_weight;
+        data.error_probability = error_probability;
+        data.has_error_probability = has_error_probability;
         boost::add_edge(
             boost::vertex(node1, stabiliser_graph), 
             boost::vertex(node2, stabiliser_graph), 
-            {qubit_id, weight, error_probability}, 
+            data, 
             stabiliser_graph);
 }
 

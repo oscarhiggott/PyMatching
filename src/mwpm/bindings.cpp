@@ -65,7 +65,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
     .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
     .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, 
-         "weight"_a, "error_probability"_a=-1.0)
+         "weight"_a, "has_weight"_a=true, "error_probability"_a=-1.0, "has_error_probability"_a=false)
     .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths)
     .def("add_noise", &WeightedStabiliserGraph::AddNoise);
 

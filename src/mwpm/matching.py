@@ -61,13 +61,13 @@ class MWPM:
                         if ('qubit_id' not in attr) or ('weight' not in attr):
                             raise_error_for_edge_attribute(u, v, attr0, attr)
                         e_prob = attr.get('error_probability', -1.)
-                        g.add_edge(u, v, attr['qubit_id'], attr['weight'], e_prob)
+                        g.add_edge(u, v, attr['qubit_id'], attr['weight'], True, e_prob, True)
                 else:
                     for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
                         if 'weight' not in attr:
                             raise_error_for_edge_attribute(u, v, attr0, attr)
-                        e_prob = attr.get('error_probability', -1.)
-                        g.add_edge(u, v, i, attr['weight'])
+                        e_prob = attr.get('error_probability', -1)
+                        g.add_edge(u, v, i, attr['weight'], True, e_prob, 0<=e_prob<=1)
             else:
                 g = UnweightedStabiliserGraph(self.num_stabilisers)
                 if 'qubit_id' in attr0:
