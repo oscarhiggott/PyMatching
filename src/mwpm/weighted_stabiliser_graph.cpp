@@ -8,9 +8,8 @@
 #include <stdexcept>
 #include "rand_gen.h"
 
-
 WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers)
-    : all_edges_weighted(true), all_edges_have_error_probabilities(true) {
+    : all_edges_have_error_probabilities(true) {
     wgraph_t sgraph = wgraph_t(num_stabilisers);
     this->stabiliser_graph = sgraph;
 }
@@ -29,7 +28,7 @@ int ArrayMax(const py::array_t<int>& arr){
 WeightedStabiliserGraph::WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
             const py::array_t<double>& weights
-) : all_edges_weighted(true), all_edges_have_error_probabilities(true) {
+) : all_edges_have_error_probabilities(true) {
     auto x = indices.unchecked<1>();
     assert((x.shape(0) % 2) == 0);
 
@@ -42,9 +41,8 @@ WeightedStabiliserGraph::WeightedStabiliserGraph(
     assert(w.shape(0) == x.shape(0)/2);
 
     for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], true, -1.0, false);
+        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], -1.0, false);
     }
-    ComputeAllPairsShortestPaths();
 }
 
 void WeightedStabiliserGraph::AddEdge(
@@ -52,19 +50,14 @@ void WeightedStabiliserGraph::AddEdge(
     int node2, 
     int qubit_id, 
     double weight, 
-    bool has_weight, 
     double error_probability, 
     bool has_error_probability){
-        if (!has_weight){
-            all_edges_weighted = false;
-        }
         if (!has_error_probability){
             all_edges_have_error_probabilities = false;
         }
         WeightedEdgeData data;
         data.qubit_id = qubit_id;
         data.weight = weight;
-        data.has_weight = has_weight;
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
         boost::add_edge(
@@ -75,9 +68,6 @@ void WeightedStabiliserGraph::AddEdge(
 }
 
 void WeightedStabiliserGraph::ComputeAllPairsShortestPaths(){
-    if (!all_edges_weighted){
-        throw std::runtime_error("Not all edges are weighted.");
-    }
     int n = boost::num_vertices(stabiliser_graph);
     all_distances.clear();
     all_predecessors.clear();

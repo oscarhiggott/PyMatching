@@ -11,7 +11,6 @@ namespace py = pybind11;
 struct WeightedEdgeData {
     int qubit_id;
     double weight;
-    bool has_weight;
     double error_probability;
     bool has_error_probability;
 };
@@ -35,7 +34,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
             const py::array_t<double>& weights
         );
         void AddEdge(int node1, int node2, int qubit_id,
-                     double weight, bool has_weight, double error_probability,
+                     double weight, double error_probability,
                      bool has_error_probability);
         void ComputeAllPairsShortestPaths();
         virtual double Distance(int node1, int node2) const;
@@ -46,6 +45,5 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         std::pair<py::array_t<int>,py::array_t<int>> AddNoise() const;
         std::vector<std::vector<double>> all_distances;
         std::vector<std::vector<vertex_descriptor>> all_predecessors;
-        bool all_edges_weighted;
         bool all_edges_have_error_probabilities;
 };

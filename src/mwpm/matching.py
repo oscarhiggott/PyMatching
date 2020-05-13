@@ -51,38 +51,18 @@ class MWPM:
                     H.indices,
                     weights
                 )
+            self.stabiliser_graph.compute_all_pairs_shortest_paths()
         else:
             self.num_stabilisers = H.number_of_nodes()
             attr0 = list(H.edges(data=True))[0][2]
-            if 'weight' in attr0:
-                g = WeightedStabiliserGraph(self.num_stabilisers)
-                for (u, v, attr) in H.edges(data=True):
-                    qubit_id = attr.get("qubit_id", -1)
-                    weight = attr.get("weight", -1)
-                    e_prob = attr.get("error_probability", -1)
-                    g.add_edge(u, v, qubit_id, weight, weight>=0, e_prob, 0<=e_prob<=1)
-                # if 'qubit_id' in attr0:
-                #     for (u, v, attr) in H.edges(data=True):
-                #         if ('qubit_id' not in attr) or ('weight' not in attr):
-                #             raise_error_for_edge_attribute(u, v, attr0, attr)
-                #         e_prob = attr.get('error_probability', -1.)
-                #         g.add_edge(u, v, attr['qubit_id'], attr['weight'], True, e_prob, True)
-                # else:
-                #     for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
-                #         if 'weight' not in attr:
-                #             raise_error_for_edge_attribute(u, v, attr0, attr)
-                #         e_prob = attr.get('error_probability', -1)
-                #         g.add_edge(u, v, i, attr['weight'], True, e_prob, 0<=e_prob<=1)
-            else:
-                g = UnweightedStabiliserGraph(self.num_stabilisers)
-                if 'qubit_id' in attr0:
-                    for (u, v, attr) in H.edges(data=True):
-                        if 'qubit_id' not in attr:
-                            raise_error_for_edge_attribute(u, v, attr0, attr)
-                        g.add_edge(u, v, attr['qubit_id'])
-                else:
-                    for (i, (u, v, attr)) in enumerate(H.edges(data=True)):
-                        g.add_edge(u, v, i)
+            g = WeightedStabiliserGraph(self.num_stabilisers)
+            for (u, v, attr) in H.edges(data=True):
+                qubit_id = attr.get("qubit_id", -1)
+                weight = attr.get("weight", 1) # Default weight is 1 if not provided
+                if weight < 0:
+                    raise ValueError("Weights cannot be negative.")
+                e_prob = attr.get("error_probability", -1)
+                g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
             g.compute_all_pairs_shortest_paths()
             self.stabiliser_graph = g
     

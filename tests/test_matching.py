@@ -231,23 +231,20 @@ def test_mwmpm_from_networkx():
     g.add_edge(0, 2, qubit_id=1)
     g.add_edge(1, 2, qubit_id=2)
     m = MWPM(g)
-    assert(isinstance(m.stabiliser_graph, UnweightedStabiliserGraph))
+    assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
     assert(m.num_stabilisers == 3)
     assert(m.num_qubits == 3)
     assert(m.stabiliser_graph.distance(0,2) == 1)
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
-    with pytest.raises(ValueError):
-        g.add_edge(2, 3)
-        m = MWPM(g)
 
     g = nx.Graph()
     g.add_edge(0, 1)
     g.add_edge(0, 2)
     g.add_edge(1, 2)
     m = MWPM(g)
-    assert(isinstance(m.stabiliser_graph, UnweightedStabiliserGraph))
+    assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
     assert(m.num_stabilisers == 3)
-    assert(m.num_qubits == 3)
+    assert(m.num_qubits == 0)
     assert(m.stabiliser_graph.distance(0,2) == 1)
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
 
@@ -261,9 +258,6 @@ def test_mwmpm_from_networkx():
     assert(m.num_qubits == 0)
     assert(m.stabiliser_graph.distance(0,2) == pytest.approx(1.7))
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
-    with pytest.raises(Exception):
-        g.add_edge(2,3)
-        m = MWPM(g)
 
 
 def test_double_weight_matching():
