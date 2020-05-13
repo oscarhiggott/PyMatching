@@ -75,6 +75,9 @@ void WeightedStabiliserGraph::AddEdge(
 }
 
 void WeightedStabiliserGraph::ComputeAllPairsShortestPaths(){
+    if (!all_edges_weighted){
+        throw std::runtime_error("Not all edges are weighted.");
+    }
     int n = boost::num_vertices(stabiliser_graph);
     all_distances.clear();
     all_predecessors.clear();
@@ -113,7 +116,7 @@ std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) con
 int WeightedStabiliserGraph::GetNumQubits() const {
     auto qid = boost::get(&WeightedEdgeData::qubit_id, stabiliser_graph);
     int num_edges = boost::num_edges(stabiliser_graph);
-    int maxid = 0;
+    int maxid = -1;
     std::set<int> qubits;
     auto es = boost::edges(stabiliser_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
