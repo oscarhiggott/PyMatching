@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include "stabiliser_graph.h"
 
+
 double IStabiliserGraph::SpaceTimeDistance(int node1, int node2) const {
     int num_stab = GetNumStabilisers();
     if ((node1 < num_stab) && (node2 < num_stab)){

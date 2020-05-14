@@ -15,10 +15,6 @@ struct WeightedEdgeData {
     bool has_error_probability;
 };
 
-struct StabiliserNodeData {
-    bool is_boundary;
-};
-
 typedef boost::adjacency_list < boost::listS, boost::vecS, boost::undirectedS,
     boost::no_property, WeightedEdgeData > wgraph_t;
 typedef boost::graph_traits < wgraph_t >::vertex_descriptor vertex_descriptor;
@@ -28,10 +24,20 @@ typedef boost::graph_traits < wgraph_t >::edge_descriptor edge_descriptor;
 class WeightedStabiliserGraph : public IStabiliserGraph{
     public:
         wgraph_t stabiliser_graph;
-        WeightedStabiliserGraph(int num_stabilisers);
+        WeightedStabiliserGraph(
+            int num_stabilisers,
+            int boundary = -1
+            );
         WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
-            const py::array_t<double>& weights
+            const py::array_t<double>& weights,
+            int boundary = -1
+        );
+        WeightedStabiliserGraph(
+            const py::array_t<int>& indices, 
+            const py::array_t<double>& weights,
+            const py::array_t<double>& error_probabilies,
+            int boundary = -1
         );
         void AddEdge(int node1, int node2, int qubit_id,
                      double weight, double error_probability,
@@ -46,4 +52,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         std::vector<std::vector<double>> all_distances;
         std::vector<std::vector<vertex_descriptor>> all_predecessors;
         bool all_edges_have_error_probabilities;
+        virtual int GetBoundaryVertex() const;
+        virtual void SetBoundaryVertex(int boundary);
+        int boundary;
 };

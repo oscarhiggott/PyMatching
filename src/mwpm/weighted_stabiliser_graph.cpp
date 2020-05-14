@@ -8,8 +8,12 @@
 #include <stdexcept>
 #include "rand_gen.h"
 
-WeightedStabiliserGraph::WeightedStabiliserGraph(int num_stabilisers)
-    : all_edges_have_error_probabilities(true) {
+
+WeightedStabiliserGraph::WeightedStabiliserGraph(
+    int num_stabilisers,
+    int boundary)
+    : all_edges_have_error_probabilities(true),
+    boundary(boundary) {
     wgraph_t sgraph = wgraph_t(num_stabilisers);
     this->stabiliser_graph = sgraph;
 }
@@ -27,8 +31,10 @@ int ArrayMax(const py::array_t<int>& arr){
 
 WeightedStabiliserGraph::WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
-            const py::array_t<double>& weights
-) : all_edges_have_error_probabilities(true) {
+            const py::array_t<double>& weights,
+            int boundary
+) : all_edges_have_error_probabilities(true),
+boundary(boundary) {
     auto x = indices.unchecked<1>();
     assert((x.shape(0) % 2) == 0);
 
@@ -42,6 +48,32 @@ WeightedStabiliserGraph::WeightedStabiliserGraph(
 
     for (py::ssize_t i=0; i<x.shape(0)/2; i++){
         AddEdge(x[2*i], x[2*i+1], (int) i, w[i], -1.0, false);
+    }
+}
+
+WeightedStabiliserGraph::WeightedStabiliserGraph(
+            const py::array_t<int>& indices, 
+            const py::array_t<double>& weights,
+            const py::array_t<double>& error_probabilities,
+            int boundary
+) : all_edges_have_error_probabilities(true),
+boundary(boundary){
+    auto x = indices.unchecked<1>();
+    assert((x.shape(0) % 2) == 0);
+
+    int num_stabilisers = ArrayMax(indices)+1;
+
+    wgraph_t sgraph = wgraph_t(num_stabilisers);
+    this->stabiliser_graph = sgraph;
+
+    auto w = weights.unchecked<1>();
+    assert(w.shape(0) == x.shape(0)/2);
+
+    auto ep = error_probabilities.unchecked<1>();
+    assert(ep.shape(0) == x.shape(0)/2);
+
+    for (py::ssize_t i=0; i<x.shape(0)/2; i++){
+        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], ep[i], true);
     }
 }
 
@@ -167,4 +199,13 @@ std::pair<py::array_t<int>,py::array_t<int>> WeightedStabiliserGraph::AddNoise()
     auto err_capsule = py::capsule(error, [](void *error) { delete reinterpret_cast<std::vector<int>*>(error); });
     py::array_t<int> error_arr = py::array_t<int>(error->size(), error->data(), err_capsule);
     return {error_arr, syndrome_arr};
+}
+
+int WeightedStabiliserGraph::GetBoundaryVertex() const {
+    return boundary;
+}
+
+void WeightedStabiliserGraph::SetBoundaryVertex(int boundary) {
+    this->boundary = boundary;
+    return;
 }

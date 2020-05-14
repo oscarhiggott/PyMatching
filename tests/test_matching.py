@@ -10,9 +10,7 @@ from mwpm._cpp_mwpm import (breadth_first_search,
                             all_pairs_shortest_path, shortest_path,
                             decode, UnweightedStabiliserGraph,
                             WeightedStabiliserGraph)
-from mwpm import (MWPM, check_two_checks_per_qubit,
-                    syndrome_graph_from_check_matrix,
-                    raise_error_for_edge_attribute)
+from mwpm import (MWPM, check_two_checks_per_qubit)
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -140,6 +138,11 @@ def test_spacetime_shortest_path(node1, node2, expected):
     m = MWPM(H)
     path = m.stabiliser_graph.space_time_shortest_path(node1, node2)
     assert(path == expected)
+
+
+def test_error_probability_from_array():
+    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    H = load_npz(os.path.join(TEST_DIR, 'data', fn))
 
 
 def test_weighted_spacetime_shortest_path():
@@ -278,16 +281,3 @@ def test_not_two_checks_per_qubit_raises_value_error():
     with pytest.raises(ValueError):
         check_two_checks_per_qubit(H1)
         check_two_checks_per_qubit(H2)
-
-
-def test_syndrome_graph_from_check_matrix():
-    H = csr_matrix([[1,0,1],[1,0,0],[0,1,1],[0,1,0]])
-    G = syndrome_graph_from_check_matrix(H)
-    assert G[0][1]['qubit_id'] == 0
-    assert G[2][3]['qubit_id'] == 1
-    assert G[0][2]['qubit_id'] == 2
-
-
-def test_raise_error_for_edge_attributes():
-    with pytest.raises(ValueError):
-        raise_error_for_edge_attribute(0, 1, {'qubit_id':0, 'weight': 2}, {'qubit_id':1})
