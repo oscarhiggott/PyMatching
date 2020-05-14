@@ -3,8 +3,8 @@
 
 A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching decoder.
 
-[![Build Status](https://travis-ci.com/oscarhiggott/MWPM.svg?branch=master)](https://travis-ci.com/oscarhiggott/MWPM)
-[![codecov](https://codecov.io/gh/oscarhiggott/MWPM/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/MWPM)
+[![Build Status](https://travis-ci.com/oscarhiggott/PyMatching.svg?branch=master)](https://travis-ci.com/oscarhiggott/MWPM)
+[![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/MWPM)
 
 ## Installation
 
