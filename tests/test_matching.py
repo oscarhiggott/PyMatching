@@ -16,7 +16,7 @@ TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 def test_cpp_syndrome_graph():
-    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = csc_matrix(load_npz(os.path.join(TEST_DIR, 'data', fn)))
     assert(np.count_nonzero(H.indptr[1:]-H.indptr[0:-1]-2) == 0)
     sg = UnweightedStabiliserGraph(H.indices)
@@ -55,7 +55,7 @@ def test_shortest_path():
 
 
 def test_mwpm_decode_method():
-    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
     m = MWPM(H)
     n = np.zeros(H.shape[1], dtype=int)
@@ -97,7 +97,7 @@ noisy_fixtures = [
 
 @pytest.mark.parametrize("n,z_err,c_expected", noisy_fixtures)
 def test_mwpm_noisy_decode(n, z_err, c_expected):
-    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
     m = MWPM(H)
     n_all = np.cumsum(n, 0) % 2
@@ -118,7 +118,7 @@ distance_fixtures = [
 
 @pytest.mark.parametrize("node1,node2,expected", distance_fixtures)
 def test_spacetime_distance(node1, node2, expected):
-    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
     m = MWPM(H)
     d = m.stabiliser_graph.space_time_distance(node1, node2)
@@ -133,15 +133,42 @@ spacetime_path_fixtures = [
 
 @pytest.mark.parametrize("node1,node2,expected", spacetime_path_fixtures)
 def test_spacetime_shortest_path(node1, node2, expected):
-    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
     m = MWPM(H)
     path = m.stabiliser_graph.space_time_shortest_path(node1, node2)
     assert(path == expected)
 
 
+def test_boundary_from_check_matrix():
+    H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
+                             [0,0,1,1,0],[0,0,0,1,1]]))
+    m = MWPM(H)
+    assert m.boundary == 4
+    assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
+
+
+def test_boundary_from_networkx():
+    g = nx.Graph()
+    g.add_edge(4,0, qubit_id=0)
+    g.add_edge(0,1, qubit_id=1)
+    g.add_edge(1,2, qubit_id=2)
+    g.add_edge(2,3, qubit_id=3)
+    g.add_edge(3,4, qubit_id=4)
+    g.nodes()[4]['is_boundary'] = True
+    m = MWPM(g)
+    assert m.boundary == 4
+    assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
+
+
 def test_error_probability_from_array():
-    fn = "css_toric_[[18,2,3]]_rank_deficient_Hx.npz"
+    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
 
 

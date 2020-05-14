@@ -77,3 +77,4 @@ Sessionx.vim
 
 ### Pytest ####
 .coverage
+htmlcov

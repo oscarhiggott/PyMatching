@@ -6,6 +6,7 @@
 #include <set>
 #include <utility>
 #include <stdexcept>
+#include <cstdint>
 #include "rand_gen.h"
 
 
@@ -173,7 +174,7 @@ int WeightedStabiliserGraph::QubitID(int node1, int node2) const {
     return stabiliser_graph[e.first].qubit_id;
 }
 
-std::pair<py::array_t<int>,py::array_t<int>> WeightedStabiliserGraph::AddNoise() const {
+std::pair<py::array_t<std::uint8_t>,py::array_t<int>> WeightedStabiliserGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumStabilisers(), 0);
     auto error = new std::vector<int>(GetNumQubits(), 0);
     double p;

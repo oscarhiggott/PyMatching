@@ -44,7 +44,7 @@ def find_boundary_node(G):
     
 
 class MWPM:
-    def __init__(self, H, weights=None, error_probabilities=None, add_boundary='auto'):
+    def __init__(self, H, weights=None, error_probabilities=None):
         if not isinstance(H, nx.Graph):
             H = csc_matrix(H)
             unique_elements = np.unique(H.data)
@@ -65,7 +65,7 @@ class MWPM:
             H = csc_matrix(H)
             H.eliminate_zeros()
             H.sort_indices()
-            self.num_stabilisers = H.shape[0]
+            self.num_stabilisers = H.shape[0] if boundary == -1 else H.shape[0]-1
             num_qubits = H.shape[1]
             if weights is None:
                 self.stabiliser_graph = UnweightedStabiliserGraph(
@@ -78,16 +78,25 @@ class MWPM:
                     raise ValueError("Weights array must have num_qubits elements")
                 if np.any(weights < 0.):
                     raise ValueError("All weights must be non-negative.")
-                self.stabiliser_graph = WeightedStabiliserGraph(
-                    H.indices,
-                    weights,
-                    boundary
-                )
+                if error_probabilities is None:
+                    self.stabiliser_graph = WeightedStabiliserGraph(
+                        H.indices,
+                        weights,
+                        boundary
+                    )
+                else:
+                    self.stabiliser_graph = WeightedStabiliserGraph(
+                        H.indices,
+                        weights,
+                        error_probabilities,
+                        boundary
+                    )
             self.stabiliser_graph.compute_all_pairs_shortest_paths()
         else:
             boundary = find_boundary_node(H)
-            self.num_stabilisers = H.number_of_nodes()
-            g = WeightedStabiliserGraph(self.num_stabilisers)
+            num_nodes = H.number_of_nodes()
+            self.num_stabilisers = num_nodes if boundary == -1 else num_nodes-1
+            g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
             for (u, v, attr) in H.edges(data=True):
                 qubit_id = attr.get("qubit_id", -1)
                 weight = attr.get("weight", 1) # Default weight is 1 if not provided
@@ -108,13 +117,14 @@ class MWPM:
         return b
     
     def decode(self, z):
-        if len(z.shape) == 1 and z.shape[0] == self.num_stabilisers:
+        if len(z.shape) == 1 and (z.shape[0] == self.num_stabilisers or 
+            z.shape[0] == self.num_stabilisers+1):
             defects = z.nonzero()[0]
             if len(defects) % 2 != 0:
                 if self.boundary < 0:
                     raise ValueError("Syndrome must contain an even number of defects "
                                      "if no boundary vertex is given.")
-                defects = np.setdiff1d(defects, np.array([self.boundary]))
+                defects = np.setxor1d(defects, np.array([self.boundary]))
         elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
             times, checks = z.T.nonzero()
             defects = times*self.num_stabilisers + checks

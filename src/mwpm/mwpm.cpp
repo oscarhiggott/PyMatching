@@ -3,9 +3,10 @@
 #include "stabiliser_graph.h"
 #include "unweighted_stabiliser_graph.h"
 #include <iostream>
+#include <cstdint>
 
 
-py::array_t<int> Decode(const IStabiliserGraph& sg, const py::array_t<int>& defects){
+py::array_t<std::uint8_t> Decode(const IStabiliserGraph& sg, const py::array_t<int>& defects){
     auto d = defects.unchecked<1>();
     int num_nodes = d.shape(0);
     int num_edges = num_nodes*(num_nodes-1)/2;
