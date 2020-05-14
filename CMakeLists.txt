@@ -3,7 +3,7 @@ project(mwpm)
 
 add_compile_definitions(PERFECT_MATCHING_DOUBLE)
 
-file(GLOB SOURCES "src/mwpm/*.cpp")
+file(GLOB SOURCES "src/pymatching/*.cpp")
 
 add_subdirectory(lib/blossom5-v2.05.src)
 target_compile_options(Blossom5 PRIVATE "-fPIC")

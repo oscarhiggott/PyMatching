@@ -1,4 +1,4 @@
-# MWPM
+# PyMatching
 
 A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching decoder.
 
@@ -17,8 +17,8 @@ pip install -e ./MWPM
 
 In order to decode a parity check matrix `H` (a `scipy.sparse` matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `MWPM` object after importing it:
 ```
-from mwpm import MWPM
-m = MWPM(H)
+from pymatching import Matching
+m = Matching(H)
 ```
 This precomputes the all-pairs shortest paths in the stabiliser graph corresponding to the parity check matrix H. Now to decode, simply run:
 ```

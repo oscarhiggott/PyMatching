@@ -79,11 +79,11 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
 setup(
-    name='mwpm',
+    name='PyMatching',
     version='0.0.1',
     author='Oscar Higgott',
     description='A C++ implementation of the Minimum Weight Perfect Matching decoder, with Python bindings.',
-    ext_modules=[CMakeExtension('mwpm._cpp_mwpm')],
+    ext_modules=[CMakeExtension('pymatching._cpp_mwpm')],
     packages=find_packages("src"),
     package_dir={'':'src'},
     cmdclass=dict(build_ext=CMakeBuild),

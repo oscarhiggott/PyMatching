@@ -6,11 +6,11 @@ from scipy.sparse import csc_matrix, load_npz, csr_matrix
 import pytest
 import networkx as nx
 
-from mwpm._cpp_mwpm import (breadth_first_search, 
+from pymatching._cpp_mwpm import (breadth_first_search, 
                             all_pairs_shortest_path, shortest_path,
                             decode, UnweightedStabiliserGraph,
                             WeightedStabiliserGraph)
-from mwpm import (MWPM, check_two_checks_per_qubit)
+from pymatching import (Matching, check_two_checks_per_qubit)
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -57,7 +57,7 @@ def test_shortest_path():
 def test_mwpm_decode_method():
     fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
-    m = MWPM(H)
+    m = Matching(H)
     n = np.zeros(H.shape[1], dtype=int)
     n[5] = 1
     n[10] = 1
@@ -99,7 +99,7 @@ noisy_fixtures = [
 def test_mwpm_noisy_decode(n, z_err, c_expected):
     fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
-    m = MWPM(H)
+    m = Matching(H)
     n_all = np.cumsum(n, 0) % 2
     z_noiseless = H.dot(n_all.T) % 2
     z_noisy = (z_noiseless + z_err) % 2
@@ -120,7 +120,7 @@ distance_fixtures = [
 def test_spacetime_distance(node1, node2, expected):
     fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
-    m = MWPM(H)
+    m = Matching(H)
     d = m.stabiliser_graph.space_time_distance(node1, node2)
     assert(d == expected)
 
@@ -135,7 +135,7 @@ spacetime_path_fixtures = [
 def test_spacetime_shortest_path(node1, node2, expected):
     fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
-    m = MWPM(H)
+    m = Matching(H)
     path = m.stabiliser_graph.space_time_shortest_path(node1, node2)
     assert(path == expected)
 
@@ -143,7 +143,7 @@ def test_spacetime_shortest_path(node1, node2, expected):
 def test_boundary_from_check_matrix():
     H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
                              [0,0,1,1,0],[0,0,0,1,1]]))
-    m = MWPM(H)
+    m = Matching(H)
     assert m.boundary == 4
     assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
@@ -159,7 +159,7 @@ def test_boundary_from_networkx():
     g.add_edge(2,3, qubit_id=3)
     g.add_edge(3,4, qubit_id=4)
     g.nodes()[4]['is_boundary'] = True
-    m = MWPM(g)
+    m = Matching(g)
     assert m.boundary == 4
     assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
@@ -173,51 +173,51 @@ def test_multiple_boundaries_raises_value_error():
     g.nodes()[0]['is_boundary'] = True
     g.nodes()[1]['is_boundary'] = True
     with pytest.raises(ValueError):
-        MWPM(g)
+        Matching(g)
 
 
 def test_nonzero_matrix_elements_not_one_raises_value_error():
     H = csr_matrix(np.array([[0,1.01,1.01],[1.01,1.01,0]]))
     with pytest.raises(ValueError):
-        MWPM(H)
+        Matching(H)
 
 
 def test_too_many_checks_per_qubit_raises_value_error():
     H = csr_matrix(np.array([[1,1,0,0],[1,0,1,0],[1,0,0,1]]))
     with pytest.raises(ValueError):
-        MWPM(H)
+        Matching(H)
 
 
 def test_negative_weight_raises_value_error():
     g = nx.Graph()
     g.add_edge(0,1,weight=-1)
     with pytest.raises(ValueError):
-        MWPM(g)
+        Matching(g)
     with pytest.raises(ValueError):
-        MWPM(csr_matrix([[1,1,0],[0,1,1]]), weights=np.array([1,1,-1]))
+        Matching(csr_matrix([[1,1,0],[0,1,1]]), weights=np.array([1,1,-1]))
 
 
 def test_odd_3d_syndrome_raises_value_error():
     H = csr_matrix(np.array([[1,1,0],[0,1,1]]))
-    m = MWPM(H)
+    m = Matching(H)
     with pytest.raises(ValueError):
         m.decode(np.array([[1,0],[0,0]]))
 
 
 def test_add_noise_to_unweighted_returns_none():
-    m = MWPM(csr_matrix(np.array([[1,1,0],[0,1,1]])))
+    m = Matching(csr_matrix(np.array([[1,1,0],[0,1,1]])))
     assert m.add_noise() == None
-    m = MWPM(csr_matrix(np.array([[1,1,0],[0,1,1]])), 
+    m = Matching(csr_matrix(np.array([[1,1,0],[0,1,1]])), 
              error_probabilities=np.array([0.5,0.7,-0.1]))
     assert m.add_noise() == None
 
 def test_error_probability_from_array():
     H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
                              [0,0,1,1,0],[0,0,0,1,1]]))
-    m = MWPM(H, error_probabilities=np.array([0.,0.,0.,0.,1.]))
+    m = Matching(H, error_probabilities=np.array([0.,0.,0.,0.,1.]))
     assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,1]))
     assert np.array_equal(m.add_noise()[1], np.array([0,0,0,1,1]))
-    m = MWPM(H, error_probabilities=np.array([0.,0.,0.,0.,0.]))
+    m = Matching(H, error_probabilities=np.array([0.,0.,0.,0.,0.]))
     assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,0]))
     assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
 
@@ -262,13 +262,13 @@ def test_weighted_num_qubits_and_stabilisers():
 
 def test_weighted_mwpm_from_array():
     H = csc_matrix([[1,0],[1,1],[0,1]])
-    m = MWPM(H, weights=np.array([1., 2.]))
+    m = Matching(H, weights=np.array([1., 2.]))
     assert m.stabiliser_graph.distance(0, 1) == 1.
     assert m.stabiliser_graph.distance(1, 2) == 2.
     with pytest.raises(ValueError):
-        m = MWPM(H, weights=np.array([1.]))
+        m = Matching(H, weights=np.array([1.]))
     with pytest.raises(ValueError):
-        m = MWPM(H, weights=np.array([1., -2.]))
+        m = Matching(H, weights=np.array([1., -2.]))
 
 
 def test_unweighted_stabiliser_graph_from_networkx():
@@ -282,7 +282,7 @@ def test_unweighted_stabiliser_graph_from_networkx():
     w.add_edge(2, 3, qubit_id=-1, weight=11.0)
     w.add_edge(3, 4, qubit_id=5, weight=6.0)
     w.add_edge(4, 5, qubit_id=6, weight=9.0)
-    m = MWPM(w)
+    m = Matching(w)
     assert(m.num_qubits == 7)
     assert(m.num_stabilisers == 6)
     assert(m.stabiliser_graph.shortest_path(3, 5) == [3, 2, 5])
@@ -310,7 +310,7 @@ def test_mwmpm_from_networkx():
     g.add_edge(0, 1, qubit_id=0)
     g.add_edge(0, 2, qubit_id=1)
     g.add_edge(1, 2, qubit_id=2)
-    m = MWPM(g)
+    m = Matching(g)
     assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
     assert(m.num_stabilisers == 3)
     assert(m.num_qubits == 3)
@@ -321,7 +321,7 @@ def test_mwmpm_from_networkx():
     g.add_edge(0, 1)
     g.add_edge(0, 2)
     g.add_edge(1, 2)
-    m = MWPM(g)
+    m = Matching(g)
     assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
     assert(m.num_stabilisers == 3)
     assert(m.num_qubits == 0)
@@ -332,7 +332,7 @@ def test_mwmpm_from_networkx():
     g.add_edge(0, 1, weight=1.5)
     g.add_edge(0, 2, weight=1.7)
     g.add_edge(1, 2, weight=1.2)
-    m = MWPM(g)
+    m = Matching(g)
     assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
     assert(m.num_stabilisers == 3)
     assert(m.num_qubits == 0)
@@ -346,7 +346,7 @@ def test_double_weight_matching():
     w.add_edge(2, 3, qubit_id=1, weight=1.98)
     w.add_edge(0, 2, qubit_id=2, weight=1.1)
     w.add_edge(1, 3, qubit_id=3, weight=1.2)
-    m = MWPM(w)
+    m = Matching(w)
     assert(
         list(m.decode(np.array([1,1,1,1]))) == list(np.array([0,0,1,1]))
         )

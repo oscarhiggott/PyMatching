@@ -2,7 +2,7 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix, spmatrix, vstack
 
-from mwpm._cpp_mwpm import (all_pairs_shortest_path, 
+from pymatching._cpp_mwpm import (all_pairs_shortest_path, 
                             decode, 
                             UnweightedStabiliserGraph,
                             WeightedStabiliserGraph)
@@ -43,7 +43,7 @@ def find_boundary_node(G):
                          "or one boundary vertices.")
     
 
-class MWPM:
+class Matching:
     def __init__(self, H, weights=None, error_probabilities=None):
         if not isinstance(H, nx.Graph):
             H = csc_matrix(H)

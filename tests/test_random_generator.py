@@ -1,4 +1,4 @@
-from mwpm import rand_float
+from pymatching import rand_float
 
 
 def test_rand_float():

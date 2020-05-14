@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 
-from mwpm import MWPM
+from pymatching import Matching
 
 
 def test_add_noise():
@@ -11,7 +11,7 @@ def test_add_noise():
     g = nx.Graph()
     for i in range(N):
         g.add_edge(i, i+1, qubit_id=i, weight=-np.log(p), error_probability=p)
-    m = MWPM(g)
+    m = Matching(g)
     for i in range(5):
         noise, syndrome = m.add_noise()
         assert (sum(syndrome) % 2) == 0
