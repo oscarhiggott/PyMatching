@@ -67,13 +67,13 @@ class MWPM:
             H.sort_indices()
             self.num_stabilisers = H.shape[0] if boundary == -1 else H.shape[0]-1
             num_qubits = H.shape[1]
-            if weights is None:
+            if weights is None and error_probabilities is None:
                 self.stabiliser_graph = UnweightedStabiliserGraph(
                     H.indices,
                     boundary
                 )
             else:
-                weights = np.asarray(weights)
+                weights = np.asarray(weights) if weights is not None else np.ones(H.shape[1])
                 if weights.shape[0] != num_qubits:
                     raise ValueError("Weights array must have num_qubits elements")
                 if np.any(weights < 0.):
@@ -91,7 +91,6 @@ class MWPM:
                         error_probabilities,
                         boundary
                     )
-            self.stabiliser_graph.compute_all_pairs_shortest_paths()
         else:
             boundary = find_boundary_node(H)
             num_nodes = H.number_of_nodes()
@@ -104,8 +103,8 @@ class MWPM:
                     raise ValueError("Weights cannot be negative.")
                 e_prob = attr.get("error_probability", -1)
                 g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
-            g.compute_all_pairs_shortest_paths()
             self.stabiliser_graph = g
+        self.stabiliser_graph.compute_all_pairs_shortest_paths()
     
     @property
     def num_qubits(self):
@@ -148,9 +147,13 @@ class MWPM:
         numpy.ndarray of dtype int
             Noise vector (binary numpy int array of length self.num_qubits)
         numpy.ndarray of dtype int
-            Syndrome vector (binary numpy int array of length self.num_stabilisers)
+            Syndrome vector (binary numpy int array of length 
+            self.num_stabilisers if there is no boundary, or self.num_stabilisers+1
+            if there is a boundary)
         """
         if isinstance(self.stabiliser_graph, WeightedStabiliserGraph):
+            if not self.stabiliser_graph.all_edges_have_error_probabilities:
+                return None
             return self.stabiliser_graph.add_noise()
         else:
             return None

@@ -167,9 +167,59 @@ def test_boundary_from_networkx():
     assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
 
 
+def test_multiple_boundaries_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0,1)
+    g.nodes()[0]['is_boundary'] = True
+    g.nodes()[1]['is_boundary'] = True
+    with pytest.raises(ValueError):
+        MWPM(g)
+
+
+def test_nonzero_matrix_elements_not_one_raises_value_error():
+    H = csr_matrix(np.array([[0,1.01,1.01],[1.01,1.01,0]]))
+    with pytest.raises(ValueError):
+        MWPM(H)
+
+
+def test_too_many_checks_per_qubit_raises_value_error():
+    H = csr_matrix(np.array([[1,1,0,0],[1,0,1,0],[1,0,0,1]]))
+    with pytest.raises(ValueError):
+        MWPM(H)
+
+
+def test_negative_weight_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0,1,weight=-1)
+    with pytest.raises(ValueError):
+        MWPM(g)
+    with pytest.raises(ValueError):
+        MWPM(csr_matrix([[1,1,0],[0,1,1]]), weights=np.array([1,1,-1]))
+
+
+def test_odd_3d_syndrome_raises_value_error():
+    H = csr_matrix(np.array([[1,1,0],[0,1,1]]))
+    m = MWPM(H)
+    with pytest.raises(ValueError):
+        m.decode(np.array([[1,0],[0,0]]))
+
+
+def test_add_noise_to_unweighted_returns_none():
+    m = MWPM(csr_matrix(np.array([[1,1,0],[0,1,1]])))
+    assert m.add_noise() == None
+    m = MWPM(csr_matrix(np.array([[1,1,0],[0,1,1]])), 
+             error_probabilities=np.array([0.5,0.7,-0.1]))
+    assert m.add_noise() == None
+
 def test_error_probability_from_array():
-    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
-    H = load_npz(os.path.join(TEST_DIR, 'data', fn))
+    H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
+                             [0,0,1,1,0],[0,0,0,1,1]]))
+    m = MWPM(H, error_probabilities=np.array([0.,0.,0.,0.,1.]))
+    assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,1]))
+    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,1,1]))
+    m = MWPM(H, error_probabilities=np.array([0.,0.,0.,0.,0.]))
+    assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,0]))
+    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
 
 
 def test_weighted_spacetime_shortest_path():

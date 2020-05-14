@@ -74,7 +74,7 @@ boundary(boundary){
     assert(ep.shape(0) == x.shape(0)/2);
 
     for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], ep[i], true);
+        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], ep[i], (ep[i]>=0)&&(ep[i]<=1));
     }
 }
 
