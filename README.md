@@ -1,5 +1,6 @@
 # PyMatching
 
+
 A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching decoder.
 
 [![Build Status](https://travis-ci.com/oscarhiggott/MWPM.svg?branch=master)](https://travis-ci.com/oscarhiggott/MWPM)
@@ -29,3 +30,22 @@ which outputs a bitstring `c`, which is a numpy array of dtype int. Note that th
 ## Licensing of Blossom V dependency
 
 This package uses the Blossom V implementation of minimum weight perfect matching (downloaded from [here](https://pub.ist.ac.at/~vnk/software.html) upon installation) which is licenced for research purposes only. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).
+
+## Attribution
+
+When using PyMWPM for research, please cite the BlossomV dependency:
+
+        Vladimir Kolmogorov. "Blossom V: A new implementation of a minimum cost perfect matching algorithm."
+        In Mathematical Programming Computation (MPC), July 2009, 1(1):43-67.
+        
+and please also consider citing:
+```
+@misc{higgott2020pymwpm,
+  author = {Higgott, Oscar},
+  title = {{PyMWPM}: A package for decoding quantum error correcting codes using minimum-weight perfect matching},
+  year = {2020},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/oscarhiggott/MWPM}}
+}
+```
