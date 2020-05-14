@@ -10,8 +10,8 @@ A library for decoding quantum error correcting codes (QECC) using the Minimum W
 
 Clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule). Make sure you have cmake installed, and then use `pip` to install:
 ```
-git clone --recursive https://github.com/oscarhiggott/MWPM.git
-pip install -e ./MWPM
+git clone --recursive https://github.com/oscarhiggott/PyMatching.git
+pip install -e ./PyMatching
 ```
 
 ## Usage
@@ -40,12 +40,12 @@ When using PyMWPM for research, please cite the BlossomV dependency:
         
 and please also consider citing:
 ```
-@misc{higgott2020pymwpm,
+@misc{higgott2020pymatching,
   author = {Higgott, Oscar},
-  title = {{PyMWPM}: A package for decoding quantum error correcting codes using minimum-weight perfect matching},
+  title = {{PyMatching}: A package for decoding quantum error correcting codes using minimum-weight perfect matching},
   year = {2020},
   publisher = {GitHub},
   journal = {GitHub repository},
-  howpublished = {\url{https://github.com/oscarhiggott/MWPM}}
+  howpublished = {\url{https://github.com/oscarhiggott/PyMatching}}
 }
 ```
