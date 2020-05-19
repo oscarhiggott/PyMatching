@@ -19,7 +19,7 @@ def test_cpp_syndrome_graph():
     fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = csc_matrix(load_npz(os.path.join(TEST_DIR, 'data', fn)))
     assert(np.count_nonzero(H.indptr[1:]-H.indptr[0:-1]-2) == 0)
-    sg = UnweightedStabiliserGraph(H.indices)
+    sg = UnweightedStabiliserGraph(H.indices, [])
     expected = [[1, 2, 3, 6], [0, 2, 4, 7], [1, 0, 5, 8], 
                 [0, 4, 5, 6], [1, 3, 5, 7], [2, 4, 3, 8], 
                 [3, 7, 8, 0], [4, 6, 8, 1], [5, 7, 6, 2]]
@@ -144,7 +144,7 @@ def test_boundary_from_check_matrix():
     H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
                              [0,0,1,1,0],[0,0,0,1,1]]))
     m = Matching(H)
-    assert m.boundary == 4
+    assert m.boundary == [4]
     assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
@@ -160,20 +160,11 @@ def test_boundary_from_networkx():
     g.add_edge(3,4, qubit_id=4)
     g.nodes()[4]['is_boundary'] = True
     m = Matching(g)
-    assert m.boundary == 4
+    assert m.boundary == [4]
     assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
     assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
-
-
-def test_multiple_boundaries_raises_value_error():
-    g = nx.Graph()
-    g.add_edge(0,1)
-    g.nodes()[0]['is_boundary'] = True
-    g.nodes()[1]['is_boundary'] = True
-    with pytest.raises(ValueError):
-        Matching(g)
 
 
 def test_nonzero_matrix_elements_not_one_raises_value_error():
@@ -223,7 +214,7 @@ def test_error_probability_from_array():
 
 
 def test_weighted_spacetime_shortest_path():
-    w = WeightedStabiliserGraph(6)
+    w = WeightedStabiliserGraph(6, [])
     w.add_edge(0, 1, 0, 7.0)
     w.add_edge(0, 5, 1, 14.0)
     w.add_edge(0, 2, 2, 9.0)
@@ -245,7 +236,7 @@ def test_weighted_spacetime_shortest_path():
 
 
 def test_weighted_num_qubits_and_stabilisers():
-    w = WeightedStabiliserGraph(6)
+    w = WeightedStabiliserGraph(6, [])
     w.add_edge(0, 1, 0, 7.0)
     w.add_edge(0, 5, 1, 14.0)
     w.add_edge(0, 2, 2, 9.0)
@@ -358,3 +349,10 @@ def test_not_two_checks_per_qubit_raises_value_error():
     with pytest.raises(ValueError):
         check_two_checks_per_qubit(H1)
         check_two_checks_per_qubit(H2)
+
+
+def test_unweighted_stabiliser_graph_boundary():
+    H = csc_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
+                             [0,0,1,1,0],[0,0,0,1,1]]))
+    m = UnweightedStabiliserGraph(H.indices, [4])
+    assert m.get_boundary() == [4]

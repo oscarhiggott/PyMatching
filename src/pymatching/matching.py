@@ -14,7 +14,7 @@ def check_two_checks_per_qubit(H):
                             "non-zero entries per column")
 
 
-def find_boundary_node(G):
+def find_boundary_nodes(G):
     """Find the boundary vertex in G, if present
 
     Find the boundary vertex in G, which has the attribute
@@ -32,15 +32,8 @@ def find_boundary_node(G):
         The index of the boundary vertex in G (or -1 if 
         no boundary is present).
     """
-    boundaries = [i for i, attr in G.nodes(data=True) 
-                  if attr.get("is_boundary", False)]
-    if len(boundaries) == 0:
-        return -1
-    elif len(boundaries) == 1:
-        return boundaries[0]
-    else:
-        raise ValueError("Stabiliser graph must contain either zero "
-                         "or one boundary vertices.")
+    return [i for i, attr in G.nodes(data=True) 
+            if attr.get("is_boundary", False)]
     
 
 class Matching:
@@ -59,13 +52,13 @@ class Matching:
             if 1 in unique_column_weights:
                 # Add boundary and connect it to all weight-1 stabilisers
                 H = vstack([H, csc_matrix((column_weights==1).astype(np.uint8))])
-                boundary = H.shape[0]-1
+                boundary = [H.shape[0]-1]
             else:
-                boundary = -1
+                boundary = []
             H = csc_matrix(H)
             H.eliminate_zeros()
             H.sort_indices()
-            self.num_stabilisers = H.shape[0] if boundary == -1 else H.shape[0]-1
+            self.num_stabilisers = H.shape[0] if len(boundary) == 0 else H.shape[0]-1
             num_qubits = H.shape[1]
             if weights is None and error_probabilities is None:
                 self.stabiliser_graph = UnweightedStabiliserGraph(
@@ -92,9 +85,9 @@ class Matching:
                         boundary
                     )
         else:
-            boundary = find_boundary_node(H)
+            boundary = find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
-            self.num_stabilisers = num_nodes if boundary == -1 else num_nodes-1
+            self.num_stabilisers = num_nodes if len(boundary) == 0 else num_nodes-1
             g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
             for (u, v, attr) in H.edges(data=True):
                 qubit_id = attr.get("qubit_id", -1)
@@ -112,18 +105,17 @@ class Matching:
     
     @property
     def boundary(self):
-        b = self.stabiliser_graph.get_boundary_vertex()
-        return b
+        return self.stabiliser_graph.get_boundary()
     
     def decode(self, z):
         if len(z.shape) == 1 and (z.shape[0] == self.num_stabilisers or 
             z.shape[0] == self.num_stabilisers+1):
             defects = z.nonzero()[0]
             if len(defects) % 2 != 0:
-                if self.boundary < 0:
+                if len(self.boundary) == 0:
                     raise ValueError("Syndrome must contain an even number of defects "
                                      "if no boundary vertex is given.")
-                defects = np.setxor1d(defects, np.array([self.boundary]))
+                defects = np.setxor1d(defects, np.array(self.boundary))
         elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
             times, checks = z.T.nonzero()
             defects = times*self.num_stabilisers + checks

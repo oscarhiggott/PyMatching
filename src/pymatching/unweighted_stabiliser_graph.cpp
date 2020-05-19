@@ -60,13 +60,13 @@ std::vector<int> GetShortestPath(const std::vector<int>& parent, int dest){
 }
 
 UnweightedStabiliserGraph::UnweightedStabiliserGraph(
-    int num_stabilisers, int boundary
+    int num_stabilisers, std::vector<int>& boundary
 ) : num_stabilisers(num_stabilisers), num_qubits(0), boundary(boundary) {
     adj_list.resize(num_stabilisers);
 }
 
 UnweightedStabiliserGraph::UnweightedStabiliserGraph(
-    const py::array_t<int>& indices, int boundary
+    const py::array_t<int>& indices, std::vector<int>& boundary
     ) : boundary(boundary){
         auto x = indices.unchecked<1>();
         assert((x.shape(0) % 2)==0);
@@ -130,11 +130,11 @@ void UnweightedStabiliserGraph::ComputeAllPairsShortestPaths(){
     shortest_paths = AllPairsShortestPath(adj_list);
 }
 
-int UnweightedStabiliserGraph::GetBoundaryVertex() const {
+std::vector<int> UnweightedStabiliserGraph::GetBoundary() const {
     return boundary;
 }
 
-void UnweightedStabiliserGraph::SetBoundaryVertex(int boundary) {
+void UnweightedStabiliserGraph::SetBoundary(std::vector<int>& boundary) {
     this->boundary = boundary;
     return;
 }

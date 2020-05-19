@@ -12,7 +12,7 @@
 
 WeightedStabiliserGraph::WeightedStabiliserGraph(
     int num_stabilisers,
-    int boundary)
+    std::vector<int>& boundary)
     : all_edges_have_error_probabilities(true),
     boundary(boundary) {
     wgraph_t sgraph = wgraph_t(num_stabilisers);
@@ -33,7 +33,7 @@ int ArrayMax(const py::array_t<int>& arr){
 WeightedStabiliserGraph::WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
             const py::array_t<double>& weights,
-            int boundary
+            std::vector<int>& boundary
 ) : all_edges_have_error_probabilities(true),
 boundary(boundary) {
     auto x = indices.unchecked<1>();
@@ -56,7 +56,7 @@ WeightedStabiliserGraph::WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
             const py::array_t<double>& weights,
             const py::array_t<double>& error_probabilities,
-            int boundary
+            std::vector<int>& boundary
 ) : all_edges_have_error_probabilities(true),
 boundary(boundary){
     auto x = indices.unchecked<1>();
@@ -202,11 +202,11 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<int>> WeightedStabiliserGraph::A
     return {error_arr, syndrome_arr};
 }
 
-int WeightedStabiliserGraph::GetBoundaryVertex() const {
+std::vector<int> WeightedStabiliserGraph::GetBoundary() const {
     return boundary;
 }
 
-void WeightedStabiliserGraph::SetBoundaryVertex(int boundary) {
+void WeightedStabiliserGraph::SetBoundary(std::vector<int>& boundary) {
     this->boundary = boundary;
     return;
 }

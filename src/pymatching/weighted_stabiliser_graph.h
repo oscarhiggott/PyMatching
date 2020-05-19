@@ -27,18 +27,18 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         wgraph_t stabiliser_graph;
         WeightedStabiliserGraph(
             int num_stabilisers,
-            int boundary = -1
+            std::vector<int>& boundary
             );
         WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
             const py::array_t<double>& weights,
-            int boundary = -1
+            std::vector<int>& boundary
         );
         WeightedStabiliserGraph(
             const py::array_t<int>& indices, 
             const py::array_t<double>& weights,
             const py::array_t<double>& error_probabilies,
-            int boundary = -1
+            std::vector<int>& boundary
         );
         void AddEdge(int node1, int node2, int qubit_id,
                      double weight, double error_probability,
@@ -53,7 +53,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         std::vector<std::vector<double>> all_distances;
         std::vector<std::vector<vertex_descriptor>> all_predecessors;
         bool all_edges_have_error_probabilities;
-        virtual int GetBoundaryVertex() const;
-        virtual void SetBoundaryVertex(int boundary);
-        int boundary;
+        virtual std::vector<int> GetBoundary() const;
+        virtual void SetBoundary(std::vector<int>& boundary);
+        std::vector<int> boundary;
 };

@@ -42,8 +42,10 @@ class UnweightedStabiliserGraph : public IStabiliserGraph{
         APSPResult shortest_paths;
         int num_qubits;
         int num_stabilisers;
-        UnweightedStabiliserGraph(const py::array_t<int>& indices, int boundary=-1);
-        UnweightedStabiliserGraph(int num_stabilisers, int boundary=-1);
+        UnweightedStabiliserGraph(const py::array_t<int>& indices, 
+            std::vector<int>& boundary);
+        UnweightedStabiliserGraph(int num_stabilisers, 
+            std::vector<int>& boundary);
         void AddEdge(int node1, int node2, int qubit_id);
         virtual double Distance(int node1, int node2) const;
         // virtual int SpaceTimeDistance(int node1, int node2) const;
@@ -53,7 +55,7 @@ class UnweightedStabiliserGraph : public IStabiliserGraph{
         virtual int GetNumQubits() const;
         virtual int GetNumStabilisers() const;
         void ComputeAllPairsShortestPaths();
-        virtual int GetBoundaryVertex() const;
-        virtual void SetBoundaryVertex(int boundary);
-        int boundary;
+        virtual std::vector<int> GetBoundary() const;
+        virtual void SetBoundary(std::vector<int>& boundary);
+        std::vector<int> boundary;
 };

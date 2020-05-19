@@ -50,24 +50,24 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers);
 
     py::class_<UnweightedStabiliserGraph, IStabiliserGraph>(m, "UnweightedStabiliserGraph")
-    .def(py::init<int, int>(), "num_stabilisers"_a, "boundary"_a=-1)
-    .def(py::init<const py::array_t<int>&, int>(), "indices"_a, "boundary"_a=-1)
+    .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
+    .def(py::init<const py::array_t<int>&, std::vector<int>&>(), "indices"_a, "boundary"_a)
     .def_readwrite("adj_list", &UnweightedStabiliserGraph::adj_list)
     .def_readwrite("qubit_ids", &UnweightedStabiliserGraph::qubit_ids)
     .def_readwrite("shortest_paths", &UnweightedStabiliserGraph::shortest_paths)
     .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
     .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a)
     .def("compute_all_pairs_shortest_paths", &UnweightedStabiliserGraph::ComputeAllPairsShortestPaths)
-    .def("get_boundary_vertex", &UnweightedStabiliserGraph::GetBoundaryVertex)
-    .def("set_boundary_vertex", &UnweightedStabiliserGraph::SetBoundaryVertex, "boundary"_a);
+    .def("get_boundary", &UnweightedStabiliserGraph::GetBoundary)
+    .def("set_boundary", &UnweightedStabiliserGraph::SetBoundary, "boundary"_a);
 
     py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
-    .def(py::init<int, int>(), "num_stabilisers"_a, "boundary"_a=-1)
-    .def(py::init<const py::array_t<int>&, const py::array_t<double>&, int>(), 
-        "indices"_a, "weights"_a, "boundary"_a=-1)
+    .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
+    .def(py::init<const py::array_t<int>&, const py::array_t<double>&, std::vector<int>&>(), 
+        "indices"_a, "weights"_a, "boundary"_a)
     .def(py::init<const py::array_t<int>&, const py::array_t<double>&, 
-            const py::array_t<double>&, int>(), 
-            "indices"_a, "weights"_a, "error_probabilities"_a, "boundary"_a=-1)
+            const py::array_t<double>&, std::vector<int>&>(), 
+            "indices"_a, "weights"_a, "error_probabilities"_a, "boundary"_a)
     .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
     .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
     .def_readwrite("all_edges_have_error_probabilities", 
@@ -76,8 +76,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
          "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false)
     .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths)
     .def("add_noise", &WeightedStabiliserGraph::AddNoise)
-    .def("get_boundary_vertex", &WeightedStabiliserGraph::GetBoundaryVertex)
-    .def("set_boundary_vertex", &WeightedStabiliserGraph::SetBoundaryVertex, "boundary"_a);
+    .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)
+    .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a);
 
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
