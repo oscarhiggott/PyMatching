@@ -202,6 +202,7 @@ def test_add_noise_to_unweighted_returns_none():
              error_probabilities=np.array([0.5,0.7,-0.1]))
     assert m.add_noise() == None
 
+
 def test_error_probability_from_array():
     H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
                              [0,0,1,1,0],[0,0,0,1,1]]))

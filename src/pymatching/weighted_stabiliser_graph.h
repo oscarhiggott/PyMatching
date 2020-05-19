@@ -49,7 +49,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         virtual int QubitID(int node1, int node2) const;
         virtual int GetNumQubits() const;
         virtual int GetNumStabilisers() const;
-        std::pair<py::array_t<std::uint8_t>,py::array_t<int>> AddNoise() const;
+        std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> AddNoise() const;
         std::vector<std::vector<double>> all_distances;
         std::vector<std::vector<vertex_descriptor>> all_predecessors;
         bool all_edges_have_error_probabilities;

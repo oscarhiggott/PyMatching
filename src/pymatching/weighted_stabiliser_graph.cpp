@@ -174,7 +174,7 @@ int WeightedStabiliserGraph::QubitID(int node1, int node2) const {
     return stabiliser_graph[e.first].qubit_id;
 }
 
-std::pair<py::array_t<std::uint8_t>,py::array_t<int>> WeightedStabiliserGraph::AddNoise() const {
+std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabiliserGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumStabilisers(), 0);
     auto error = new std::vector<int>(GetNumQubits(), 0);
     double p;
@@ -195,6 +195,16 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<int>> WeightedStabiliserGraph::A
             }
         }
     }
+    std::uint8_t parity = 0;
+    int i = 0;
+    for (auto b : boundary){
+        parity = (parity + (*syndrome)[b]) % 2;
+        (*syndrome)[b] = 0;
+    }
+    if (parity == 1){
+        (*syndrome)[boundary[0]] = 1;
+    }
+
     auto capsule = py::capsule(syndrome, [](void *syndrome) { delete reinterpret_cast<std::vector<int>*>(syndrome); });
     py::array_t<int> syndrome_arr = py::array_t<int>(syndrome->size(), syndrome->data(), capsule);
     auto err_capsule = py::capsule(error, [](void *error) { delete reinterpret_cast<std::vector<int>*>(error); });
