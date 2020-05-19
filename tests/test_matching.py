@@ -167,6 +167,24 @@ def test_boundary_from_networkx():
     assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
 
 
+def test_boundaries_from_networkx():
+    g = nx.Graph()
+    g.add_edge(0,1, qubit_id=0)
+    g.add_edge(1,2, qubit_id=1)
+    g.add_edge(2,3, qubit_id=2)
+    g.add_edge(3,4, qubit_id=3)
+    g.add_edge(4,5, qubit_id=4)
+    g.add_edge(0,5, qubit_id=-1, weight=0.0)
+    g.nodes()[0]['is_boundary'] = True
+    g.nodes()[5]['is_boundary'] = True
+    m = Matching(g)
+    assert m.boundary == [0,5]
+    assert np.array_equal(m.decode(np.array([0,1,0,0,0,0])), np.array([1,0,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,0,0])), np.array([1,1,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,1,0])), np.array([0,0,1,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,0,1,0])), np.array([0,0,0,1,1]))
+
+
 def test_nonzero_matrix_elements_not_one_raises_value_error():
     H = csr_matrix(np.array([[0,1.01,1.01],[1.01,1.01,0]]))
     with pytest.raises(ValueError):

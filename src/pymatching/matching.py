@@ -87,7 +87,7 @@ class Matching:
         else:
             boundary = find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
-            self.num_stabilisers = num_nodes if len(boundary) == 0 else num_nodes-1
+            self.num_stabilisers = num_nodes - len(boundary)
             g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
             for (u, v, attr) in H.edges(data=True):
                 qubit_id = attr.get("qubit_id", -1)
@@ -108,14 +108,14 @@ class Matching:
         return self.stabiliser_graph.get_boundary()
     
     def decode(self, z):
-        if len(z.shape) == 1 and (z.shape[0] == self.num_stabilisers or 
-            z.shape[0] == self.num_stabilisers+1):
+        if len(z.shape) == 1 and (self.num_stabilisers <= z.shape[0]
+                <= self.num_stabilisers+len(self.boundary)):
             defects = z.nonzero()[0]
             if len(defects) % 2 != 0:
                 if len(self.boundary) == 0:
                     raise ValueError("Syndrome must contain an even number of defects "
                                      "if no boundary vertex is given.")
-                defects = np.setxor1d(defects, np.array(self.boundary))
+                defects = np.setxor1d(defects, np.array(self.boundary[0:1]))
         elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
             times, checks = z.T.nonzero()
             defects = times*self.num_stabilisers + checks
