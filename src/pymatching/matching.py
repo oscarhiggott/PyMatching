@@ -15,22 +15,21 @@ def check_two_checks_per_qubit(H):
 
 
 def find_boundary_nodes(G):
-    """Find the boundary vertex in G, if present
+    """Find all boundary nodes in G
 
-    Find the boundary vertex in G, which has the attribute
-    `is_boundary' set to `True'. Return the index of the 
-    boundary node, or -1 if no boundary is present.
+    Find the boundary nodes in G, each of which have the attribute
+    `is_boundary' set to `True'. Return the indices of the 
+    boundary nodes.
 
     Parameters
     ----------
     G : NetworkX graph
-        The graph to be contracted
+        The stabiliser graph.
 
     Returns
     -------
-    boundary
-        The index of the boundary vertex in G (or -1 if 
-        no boundary is present).
+    list of int
+        The indices of the boundary nodes in G.
     """
     return [i for i, attr in G.nodes(data=True) 
             if attr.get("is_boundary", False)]
@@ -105,6 +104,13 @@ class Matching:
     
     @property
     def boundary(self):
+        """Return the indices of the boundary nodes
+
+        Returns
+        -------
+        list of int
+            The indices of the boundary nodes
+        """
         return self.stabiliser_graph.get_boundary()
     
     def decode(self, z):
