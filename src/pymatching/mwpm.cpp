@@ -7,12 +7,20 @@
 #include <cstdint>
 #include <algorithm>
 #include <stdexcept>
+#include <ctime>
 
 
 py::array_t<std::uint8_t> Decode(const IStabiliserGraph& sg, const py::array_t<int>& defects){
     auto d = defects.unchecked<1>();
     int num_nodes = d.shape(0);
     int num_edges = num_nodes*(num_nodes-1)/2;
+
+    // std::clock_t start, before_solve, after_solve, end;
+    // double create_matching, solve_matching, make_correction;
+
+    // start = std::clock();
+
+
     PerfectMatching *pm = new PerfectMatching(num_nodes, num_edges);
     for (py::size_t i = 0; i<num_nodes; i++){
         for (py::size_t j=i+1; j<num_nodes; j++){
@@ -20,7 +28,9 @@ py::array_t<std::uint8_t> Decode(const IStabiliserGraph& sg, const py::array_t<i
         }
     };
     pm->options.verbose = false;
+    // before_solve = std::clock();
     pm->Solve();
+    // after_solve = std::clock();
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     for (py::size_t i = 0; i<num_nodes; i++){
@@ -36,6 +46,14 @@ py::array_t<std::uint8_t> Decode(const IStabiliserGraph& sg, const py::array_t<i
         }
     }
     delete pm;
+    // end = std::clock();
+    // create_matching = ( before_solve - start ) / (double) CLOCKS_PER_SEC;
+    // solve_matching = ( after_solve - before_solve ) / (double) CLOCKS_PER_SEC;
+    // make_correction = ( end - after_solve ) / (double) CLOCKS_PER_SEC;
+    // std::cout<<"Create matching: "<<create_matching<<std::endl;
+    // std::cout<<"Solve matching: "<<solve_matching<<std::endl;
+    // std::cout<<"Make Correction: "<<make_correction<<std::endl;
+
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     return py::array_t<int>(correction->size(), correction->data(), capsule);
 }
@@ -75,6 +93,7 @@ py::array_t<std::uint8_t> Decode(const IStabiliserGraph& sg, const py::array_t<i
 //         }
 //     }
 
+//     std::vector<int> path = sg.NeighbourhoodShortestPath(d(i), d(j));
 
 //     delete pm;
 // }

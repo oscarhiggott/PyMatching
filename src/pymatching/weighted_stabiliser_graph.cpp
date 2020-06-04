@@ -1,6 +1,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
 #include <boost/graph/breadth_first_search.hpp>
 #include "weighted_stabiliser_graph.h"
 #include <memory>
@@ -9,6 +10,7 @@
 #include <stdexcept>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include "rand_gen.h"
 
 
@@ -147,8 +149,81 @@ std::vector<int> WeightedStabiliserGraph::NearestBFSNeighbours(int source, int n
 }
 
 
-// std::vector<int>
+class DijkstraNeighbourVisitor : public boost::default_dijkstra_visitor
+{
+    public:
+        DijkstraNeighbourVisitor(std::vector<int>& defect_id, 
+            int num_defects, std::vector<int>& examined_defects,
+            std::vector<int>& discovered_nodes) : 
+        defect_id(defect_id), num_defects(num_defects), 
+        examined_defects(examined_defects), num_found(0),
+        discovered_nodes(discovered_nodes) {}
 
+        void examine_vertex(wgraph_t::vertex_descriptor v, const wgraph_t &g)
+        {
+            if (defect_id[v] > -1){
+                num_found++;
+                examined_defects.push_back(v);
+                if (num_found >= num_defects) {
+                    throw exit_search();
+                }
+            }   
+        }
+        void discover_vertex(wgraph_t::vertex_descriptor v, const wgraph_t &g){
+            discovered_nodes.push_back(v);
+        }
+        std::vector<int>& defect_id;
+        int num_defects;
+        std::vector<int>& examined_defects;
+        std::vector<int>& discovered_nodes;
+        int num_found;
+};
+
+
+std::vector<std::pair<int, double>> WeightedStabiliserGraph::GetNearestNeighbours(
+    int source, int num_neighbours, std::vector<int>& defect_id){
+    int n = boost::num_vertices(stabiliser_graph);
+    assert(defect_id.size() == n);
+    double inf = std::numeric_limits<double>::max();
+    if (_distances.size() < n){
+        _distances.resize(n, inf);
+    }
+    if (_predecessors.size() < n){
+        _predecessors.resize(n);
+        for (int i=0; i<_predecessors.size(); i++){
+            _predecessors[i] = i;
+        }
+    }
+    _distances[source] = 0;
+    std::vector<int> examined_defects;
+    std::vector<int> discovered_nodes;
+    DijkstraNeighbourVisitor vis = DijkstraNeighbourVisitor(
+        defect_id, num_neighbours, examined_defects, discovered_nodes);
+    vertex_descriptor from = boost::vertex(source, stabiliser_graph);
+    try {
+        boost::dijkstra_shortest_paths_no_color_map_no_init(stabiliser_graph, from, 
+                &_predecessors[0], boost::make_iterator_property_map(_distances.begin(),
+                boost::get(boost::vertex_index, stabiliser_graph)), 
+                boost::get(&WeightedEdgeData::weight, stabiliser_graph),
+                boost::get(boost::vertex_index, stabiliser_graph), 
+                std::less<double>(),
+                boost::closed_plus<double>(),
+                inf, //(std::numeric_limits<double>::max)(), 
+                0,
+                vis);
+    } catch (exit_search e) {}
+    
+    std::vector<std::pair<int, double>> neighbours;
+    for (auto d : examined_defects){
+        neighbours.push_back({d, _distances[d]});
+    }
+
+    for (auto n : discovered_nodes){
+        _distances[n] = inf;
+        _predecessors[n] = n;
+    }
+    return neighbours;    
+}
 
 // void WeightedStabiliserGraph::ComputeSortedAllPairsShortestPaths(){
 //     int n = boost::num_vertices(stabiliser_graph);
