@@ -77,8 +77,10 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths)
     .def("add_noise", &WeightedStabiliserGraph::AddNoise)
     .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)
-    .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a);
-
+    .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a)
+    .def("nearest_bfs_neighbours", &WeightedStabiliserGraph::NearestBFSNeighbours,
+         "source"_a, "num_neighbours"_a);
+    
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
     m.def("shortest_path", &GetShortestPath, "parent"_a, "dest"_a);

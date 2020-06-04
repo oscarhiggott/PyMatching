@@ -1,12 +1,14 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+#include <boost/graph/breadth_first_search.hpp>
 #include "weighted_stabiliser_graph.h"
 #include <memory>
 #include <set>
 #include <utility>
 #include <stdexcept>
 #include <cstdint>
+#include <iostream>
 #include "rand_gen.h"
 
 
@@ -117,6 +119,56 @@ void WeightedStabiliserGraph::ComputeAllPairsShortestPaths(){
         all_predecessors.push_back(p);
     }
 }
+
+class exit_search{};
+
+
+NeighbourVisitor::NeighbourVisitor(int num_neighbours, std::vector<int>& neighbours): 
+    num_neighbours(num_neighbours), neighbours(neighbours) {}
+
+
+void NeighbourVisitor::discover_vertex(wgraph_t::vertex_descriptor s, const wgraph_t &g) {
+        if (neighbours.size()<num_neighbours){
+            neighbours.push_back(s);
+        } else {
+            throw exit_search();
+        }
+}
+
+
+std::vector<int> WeightedStabiliserGraph::NearestBFSNeighbours(int source, int num_neighbours){
+    std::vector<int> neighbours;
+    NeighbourVisitor bfs_visitor = NeighbourVisitor(num_neighbours, neighbours);
+    try { 
+        auto s = boost::vertex(source, stabiliser_graph);
+        boost::breadth_first_search(stabiliser_graph, s, boost::visitor(bfs_visitor)); 
+    } catch (exit_search e) {} 
+    return neighbours;
+}
+
+
+// std::vector<int>
+
+
+// void WeightedStabiliserGraph::ComputeSortedAllPairsShortestPaths(){
+//     int n = boost::num_vertices(stabiliser_graph);
+//     all_distances.clear();
+//     all_predecessors.clear();
+//     for (int i=0; i<n; i++){
+//         std::vector<double> distances(n);
+//         std::vector<vertex_descriptor> p(n);
+//         vertex_descriptor from = boost::vertex(i, stabiliser_graph);
+//         boost::dijkstra_shortest_paths(stabiliser_graph, from,
+//             boost::weight_map(boost::get(&WeightedEdgeData::weight, stabiliser_graph))
+//             .distance_map(boost::make_iterator_property_map(distances.begin(),
+//                             boost::get(boost::vertex_index, stabiliser_graph)))
+//             .predecessor_map(&p[0]));
+//         // Sort distances
+//         all_distances.push_back(distances);
+//         all_predecessors.push_back(p);
+//     }
+// }
+
 
 double WeightedStabiliserGraph::Distance(int node1, int node2) const {
     vertex_descriptor n2 = boost::vertex(node2, stabiliser_graph);
