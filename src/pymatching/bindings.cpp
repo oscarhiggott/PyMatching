@@ -78,8 +78,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("add_noise", &WeightedStabiliserGraph::AddNoise)
     .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)
     .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a)
-    .def("nearest_bfs_neighbours", &WeightedStabiliserGraph::NearestBFSNeighbours,
-         "source"_a, "num_neighbours"_a)
     .def("get_nearest_neighbours", &WeightedStabiliserGraph::GetNearestNeighbours,
          "source"_a, "num_neighbours"_a, "defect_id"_a)
     .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);

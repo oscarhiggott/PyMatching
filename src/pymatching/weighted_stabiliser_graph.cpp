@@ -125,30 +125,6 @@ void WeightedStabiliserGraph::ComputeAllPairsShortestPaths(){
 class exit_search{};
 
 
-NeighbourVisitor::NeighbourVisitor(int num_neighbours, std::vector<int>& neighbours): 
-    num_neighbours(num_neighbours), neighbours(neighbours) {}
-
-
-void NeighbourVisitor::discover_vertex(wgraph_t::vertex_descriptor s, const wgraph_t &g) {
-        if (neighbours.size()<num_neighbours){
-            neighbours.push_back(s);
-        } else {
-            throw exit_search();
-        }
-}
-
-
-std::vector<int> WeightedStabiliserGraph::NearestBFSNeighbours(int source, int num_neighbours){
-    std::vector<int> neighbours;
-    NeighbourVisitor bfs_visitor = NeighbourVisitor(num_neighbours, neighbours);
-    try { 
-        auto s = boost::vertex(source, stabiliser_graph);
-        boost::breadth_first_search(stabiliser_graph, s, boost::visitor(bfs_visitor)); 
-    } catch (exit_search e) {} 
-    return neighbours;
-}
-
-
 class DijkstraNeighbourVisitor : public boost::default_dijkstra_visitor
 {
     public:

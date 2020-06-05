@@ -22,15 +22,6 @@ typedef boost::graph_traits < wgraph_t >::vertex_descriptor vertex_descriptor;
 typedef boost::graph_traits < wgraph_t >::edge_descriptor edge_descriptor;
 
 
-class NeighbourVisitor : public boost::default_bfs_visitor{
-    public:
-        NeighbourVisitor(int num_neighbours, std::vector<int>& neighbours);
-        void discover_vertex(wgraph_t::vertex_descriptor s, const wgraph_t &g);
-        std::vector<int>& neighbours;
-        int num_neighbours;
-};
-
-
 class WeightedStabiliserGraph : public IStabiliserGraph{
     public:
         wgraph_t stabiliser_graph;
@@ -64,7 +55,6 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         bool all_edges_have_error_probabilities;
         virtual std::vector<int> GetBoundary() const;
         virtual void SetBoundary(std::vector<int>& boundary);
-        std::vector<int> NearestBFSNeighbours(int source, int num_neighbours);
         void ResetDijkstraNeighbours();
         std::vector<std::pair<int, double>> GetNearestNeighbours(
             int source, int num_neighbours, std::vector<int>& defect_id);
