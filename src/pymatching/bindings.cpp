@@ -81,7 +81,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("nearest_bfs_neighbours", &WeightedStabiliserGraph::NearestBFSNeighbours,
          "source"_a, "num_neighbours"_a)
     .def("get_nearest_neighbours", &WeightedStabiliserGraph::GetNearestNeighbours,
-         "source"_a, "num_neighbours"_a, "defect_id"_a);
+         "source"_a, "num_neighbours"_a, "defect_id"_a)
+    .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
     m.def("shortest_path", &GetShortestPath, "parent"_a, "dest"_a);

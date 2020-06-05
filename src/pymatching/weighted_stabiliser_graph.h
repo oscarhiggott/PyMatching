@@ -65,8 +65,11 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         virtual std::vector<int> GetBoundary() const;
         virtual void SetBoundary(std::vector<int>& boundary);
         std::vector<int> NearestBFSNeighbours(int source, int num_neighbours);
+        void ResetDijkstraNeighbours();
         std::vector<std::pair<int, double>> GetNearestNeighbours(
             int source, int num_neighbours, std::vector<int>& defect_id);
+        std::vector<int> GetPath(
+            int source, int target);
         std::vector<int> boundary;
         std::vector<double> _distances;
         std::vector<int> _predecessors;
