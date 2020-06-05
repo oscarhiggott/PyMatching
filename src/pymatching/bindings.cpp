@@ -85,6 +85,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
     m.def("shortest_path", &GetShortestPath, "parent"_a, "dest"_a);
     m.def("decode", &Decode, "sg"_a, "defects"_a);
+    m.def("decode_match_neighbourhood", &DecodeMatchNeighbourhood,
+          "sg"_a ,"defects"_a, "num_neighbours"_a);
     m.def("randomize", &randomize);
     m.def("set_seed", &set_seed, "s"_a);
     m.def("rand_float", &rand_float, "from"_a, "to"_a);
