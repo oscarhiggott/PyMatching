@@ -47,15 +47,16 @@ class UnweightedStabiliserGraph : public IStabiliserGraph{
         UnweightedStabiliserGraph(int num_stabilisers, 
             std::vector<int>& boundary);
         void AddEdge(int node1, int node2, int qubit_id);
-        virtual double Distance(int node1, int node2) const;
+        virtual double Distance(int node1, int node2);
         // virtual int SpaceTimeDistance(int node1, int node2) const;
-        virtual std::vector<int> ShortestPath(int node1, int node2) const;
+        virtual std::vector<int> ShortestPath(int node1, int node2);
         // virtual std::vector<int> SpaceTimeShortestPath(int node1, int node2) const;
         virtual int QubitID(int node1, int node2) const;
         virtual int GetNumQubits() const;
         virtual int GetNumStabilisers() const;
-        void ComputeAllPairsShortestPaths();
+        virtual void ComputeAllPairsShortestPaths();
         virtual std::vector<int> GetBoundary() const;
         virtual void SetBoundary(std::vector<int>& boundary);
+        virtual bool HasComputedAllPairsShortestPaths() const;
         std::vector<int> boundary;
 };

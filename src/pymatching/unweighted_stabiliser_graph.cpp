@@ -98,13 +98,19 @@ void UnweightedStabiliserGraph::AddEdge(int node1, int node2, int qubit_id){
 }
 
 
-double UnweightedStabiliserGraph::Distance(int node1, int node2) const {
+double UnweightedStabiliserGraph::Distance(int node1, int node2){
+    if (!HasComputedAllPairsShortestPaths()){
+        ComputeAllPairsShortestPaths();
+    }
     assert(node1 < num_stabilisers);
     assert(node2 < num_stabilisers);
     return (double) shortest_paths.distances[node1][node2];
 }
 
-std::vector<int> UnweightedStabiliserGraph::ShortestPath(int node1, int node2) const {
+std::vector<int> UnweightedStabiliserGraph::ShortestPath(int node1, int node2) {
+    if (!HasComputedAllPairsShortestPaths()){
+        ComputeAllPairsShortestPaths();
+    }
     assert(node1 < num_stabilisers);
     assert(node2 < num_stabilisers);
     return GetShortestPath(shortest_paths.parents[node2], node1);
@@ -137,4 +143,10 @@ std::vector<int> UnweightedStabiliserGraph::GetBoundary() const {
 void UnweightedStabiliserGraph::SetBoundary(std::vector<int>& boundary) {
     this->boundary = boundary;
     return;
+}
+
+bool UnweightedStabiliserGraph::HasComputedAllPairsShortestPaths() const {
+    bool has_distances = adj_list.size() == shortest_paths.distances.size();
+    bool has_paths = adj_list.size() == shortest_paths.parents.size();
+    return has_distances && has_paths;
 }

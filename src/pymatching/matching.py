@@ -4,6 +4,7 @@ from scipy.sparse import csc_matrix, spmatrix, vstack
 
 from pymatching._cpp_mwpm import (all_pairs_shortest_path, 
                             decode, 
+                            decode_match_neighbourhood,
                             UnweightedStabiliserGraph,
                             WeightedStabiliserGraph)
 
@@ -36,7 +37,17 @@ def find_boundary_nodes(G):
     
 
 class Matching:
-    def __init__(self, H, weights=None, error_probabilities=None):
+    def __init__(self, H, weights=None, error_probabilities=None, 
+                 precompute_shortest_paths=False):
+        if not isinstance(H, nx.Graph):
+            num_edges = H.shape[1]
+        else:
+            num_edges = nx.number_of_edges(H)
+        if weights is not None and isinstance(weights, (int, float)):
+            weights = np.array([weights]*num_edges)
+        if error_probabilities is not None and isinstance(error_probabilities, (int, float)):
+            error_probabilities = np.array([error_probabilities]*num_edges)
+
         if not isinstance(H, nx.Graph):
             H = csc_matrix(H)
             unique_elements = np.unique(H.data)
@@ -96,7 +107,8 @@ class Matching:
                 e_prob = attr.get("error_probability", -1)
                 g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
             self.stabiliser_graph = g
-        self.stabiliser_graph.compute_all_pairs_shortest_paths()
+        if precompute_shortest_paths:
+            self.stabiliser_graph.compute_all_pairs_shortest_paths()
     
     @property
     def num_qubits(self):
@@ -113,7 +125,7 @@ class Matching:
         """
         return self.stabiliser_graph.get_boundary()
     
-    def decode(self, z):
+    def decode(self, z, num_neighbours=20):
         if len(z.shape) == 1 and (self.num_stabilisers <= z.shape[0]
                 <= self.num_stabilisers+len(self.boundary)):
             defects = z.nonzero()[0]
@@ -130,7 +142,12 @@ class Matching:
                                  "for 2D syndromes).")
         else:
             raise ValueError(f"The shape ({z.shape}) of the syndrome vector z is not valid.")
-        return decode(self.stabiliser_graph, defects)
+        if (num_neighbours is None or 
+            max(defects) > self.stabiliser_graph.get_num_stabilisers() - 1
+            or isinstance(self.stabiliser_graph, UnweightedStabiliserGraph)):
+            return decode(self.stabiliser_graph, defects)
+        else:
+            return decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours)
     
     def add_noise(self):
         """Add noise by flipping edges in the stabiliser graph

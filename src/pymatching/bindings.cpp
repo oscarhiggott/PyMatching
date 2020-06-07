@@ -47,7 +47,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("space_time_shortest_path", &IStabiliserGraph::SpaceTimeShortestPath, "node1"_a, "node2"_a)
     .def("qubit_id", &IStabiliserGraph::QubitID, "node1"_a, "node2"_a)
     .def("get_num_qubits", &IStabiliserGraph::GetNumQubits)
-    .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers);
+    .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers)
+    .def("compute_all_pairs_shortest_paths", &IStabiliserGraph::ComputeAllPairsShortestPaths);
 
     py::class_<UnweightedStabiliserGraph, IStabiliserGraph>(m, "UnweightedStabiliserGraph")
     .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
@@ -57,7 +58,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def_readwrite("shortest_paths", &UnweightedStabiliserGraph::shortest_paths)
     .def_readwrite("num_qubits", &UnweightedStabiliserGraph::num_qubits)
     .def("add_edge", &UnweightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a)
-    .def("compute_all_pairs_shortest_paths", &UnweightedStabiliserGraph::ComputeAllPairsShortestPaths)
     .def("get_boundary", &UnweightedStabiliserGraph::GetBoundary)
     .def("set_boundary", &UnweightedStabiliserGraph::SetBoundary, "boundary"_a);
 
@@ -74,13 +74,13 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
                     &WeightedStabiliserGraph::all_edges_have_error_probabilities)
     .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, 
          "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false)
-    .def("compute_all_pairs_shortest_paths", &WeightedStabiliserGraph::ComputeAllPairsShortestPaths)
     .def("add_noise", &WeightedStabiliserGraph::AddNoise)
     .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)
     .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a)
     .def("get_nearest_neighbours", &WeightedStabiliserGraph::GetNearestNeighbours,
          "source"_a, "num_neighbours"_a, "defect_id"_a)
     .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
+
     m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
     m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
     m.def("shortest_path", &GetShortestPath, "parent"_a, "dest"_a);

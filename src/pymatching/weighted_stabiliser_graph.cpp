@@ -272,12 +272,18 @@ std::vector<int> WeightedStabiliserGraph::GetPath(
 }
 
 
-double WeightedStabiliserGraph::Distance(int node1, int node2) const {
+double WeightedStabiliserGraph::Distance(int node1, int node2) {
+    if (!HasComputedAllPairsShortestPaths()){
+        ComputeAllPairsShortestPaths();
+    }
     vertex_descriptor n2 = boost::vertex(node2, stabiliser_graph);
     return all_distances[node1][n2];
 }
 
-std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) const {
+std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) {
+    if (!HasComputedAllPairsShortestPaths()){
+        ComputeAllPairsShortestPaths();
+    }
     std::vector<vertex_descriptor> parent = all_predecessors[node2];
     auto index = boost::get(boost::vertex_index, stabiliser_graph);
     int c = boost::vertex(node1, stabiliser_graph);
@@ -373,4 +379,11 @@ std::vector<int> WeightedStabiliserGraph::GetBoundary() const {
 void WeightedStabiliserGraph::SetBoundary(std::vector<int>& boundary) {
     this->boundary = boundary;
     return;
+}
+
+bool WeightedStabiliserGraph::HasComputedAllPairsShortestPaths() const {
+    int n = boost::num_vertices(stabiliser_graph);
+    bool has_distances = all_distances.size() == n;
+    bool has_preds = all_predecessors.size() == n;
+    return has_distances && has_preds;
 }

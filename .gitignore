@@ -78,3 +78,7 @@ Sessionx.vim
 ### Pytest ####
 .coverage
 htmlcov
+
+
+### Timing ###
+timing

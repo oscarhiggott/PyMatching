@@ -11,7 +11,10 @@
 #include <set>
 
 
-py::array_t<std::uint8_t> Decode(const IStabiliserGraph& sg, const py::array_t<int>& defects){
+py::array_t<std::uint8_t> Decode(IStabiliserGraph& sg, const py::array_t<int>& defects){
+    if (!sg.HasComputedAllPairsShortestPaths()){
+        sg.ComputeAllPairsShortestPaths();
+    }
     auto d = defects.unchecked<1>();
     int num_nodes = d.shape(0);
     int num_edges = num_nodes*(num_nodes-1)/2;
@@ -72,8 +75,8 @@ py::array_t<std::uint8_t> DecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, 
     }
 
     num_neighbours = std::min(num_neighbours, num_defects-1) + 1;
-    int num_edges = (num_defects * num_neighbours)/2;
-    PerfectMatching *pm = new PerfectMatching(num_defects, num_edges);
+    int num_edges_max = (num_defects * num_neighbours);
+    PerfectMatching *pm = new PerfectMatching(num_defects, num_edges_max);
     std::vector<std::pair<int, double>> neighbours;
     std::vector<std::set<int>> adj_list(num_defects);
     int j;

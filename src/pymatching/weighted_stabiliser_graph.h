@@ -45,9 +45,9 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         void AddEdge(int node1, int node2, int qubit_id,
                      double weight, double error_probability,
                      bool has_error_probability);
-        void ComputeAllPairsShortestPaths();
-        virtual double Distance(int node1, int node2) const;
-        virtual std::vector<int> ShortestPath(int node1, int node2) const;
+        virtual void ComputeAllPairsShortestPaths();
+        virtual double Distance(int node1, int node2);
+        virtual std::vector<int> ShortestPath(int node1, int node2);
         virtual int QubitID(int node1, int node2) const;
         virtual int GetNumQubits() const;
         virtual int GetNumStabilisers() const;
@@ -57,6 +57,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         bool all_edges_have_error_probabilities;
         virtual std::vector<int> GetBoundary() const;
         virtual void SetBoundary(std::vector<int>& boundary);
+        virtual bool HasComputedAllPairsShortestPaths() const;
         void ResetDijkstraNeighbours();
         std::vector<std::pair<int, double>> GetNearestNeighbours(
             int source, int num_neighbours, std::vector<int>& defect_id);
