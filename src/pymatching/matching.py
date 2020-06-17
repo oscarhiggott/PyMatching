@@ -143,7 +143,7 @@ class Matching:
         else:
             raise ValueError(f"The shape ({z.shape}) of the syndrome vector z is not valid.")
         if (num_neighbours is None or 
-            max(defects) > self.stabiliser_graph.get_num_stabilisers() - 1
+            np.amax(defects, initial=0) > self.stabiliser_graph.get_num_stabilisers() - 1
             or isinstance(self.stabiliser_graph, UnweightedStabiliserGraph)):
             return decode(self.stabiliser_graph, defects)
         else:
