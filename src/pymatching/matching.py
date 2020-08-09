@@ -5,7 +5,6 @@ from scipy.sparse import csc_matrix, spmatrix, vstack
 from pymatching._cpp_mwpm import (all_pairs_shortest_path, 
                             decode, 
                             decode_match_neighbourhood,
-                            UnweightedStabiliserGraph,
                             WeightedStabiliserGraph)
 
 
@@ -39,21 +38,33 @@ def find_boundary_nodes(G):
 class Matching:
     def __init__(self, H, weights=None, error_probabilities=None, 
                  precompute_shortest_paths=False):
+
         if not isinstance(H, nx.Graph):
+            try:
+                H = csc_matrix(H)
+                unique_elements = np.unique(H.data)
+                if len(unique_elements)>1 or unique_elements[0] != 1:
+                    raise ValueError("Nonzero elements in the parity check matrix"
+                                    f" must be 1, not {unique_elements}.")
+                H = H.astype(np.uint8)
+            except:
+                raise ValueError("H must be a NetworkX graph or convertible "
+                                 "to a scipy.csc_matrix")
+
+        if isinstance(H, csc_matrix):
             num_edges = H.shape[1]
         else:
             num_edges = nx.number_of_edges(H)
-        if weights is not None and isinstance(weights, (int, float)):
-            weights = np.array([weights]*num_edges)
+        
+        weights = 1.0 if weights is None else weights
+        if isinstance(weights, (int, float)):
+            weights = np.array([weights]*num_edges).astype(float)
+        weights = np.asarray(weights)
+        
         if error_probabilities is not None and isinstance(error_probabilities, (int, float)):
             error_probabilities = np.array([error_probabilities]*num_edges)
 
-        if not isinstance(H, nx.Graph):
-            H = csc_matrix(H)
-            unique_elements = np.unique(H.data)
-            if len(unique_elements)>1 or unique_elements[0] != 1:
-                raise ValueError("Nonzero elements in the parity check matrix"
-                                 f" must be 1, not {unique_elements}.")
+        if isinstance(H, csc_matrix):
             column_weights = np.asarray(H.sum(axis=0))[0]
             unique_column_weights = np.unique(column_weights)
             if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
@@ -63,37 +74,31 @@ class Matching:
                 # Add boundary and connect it to all weight-1 stabilisers
                 H = vstack([H, csc_matrix((column_weights==1).astype(np.uint8))])
                 boundary = [H.shape[0]-1]
+                H = csc_matrix(H)
             else:
                 boundary = []
-            H = csc_matrix(H)
             H.eliminate_zeros()
             H.sort_indices()
-            self.num_stabilisers = H.shape[0] if len(boundary) == 0 else H.shape[0]-1
+            self.num_stabilisers = H.shape[0] - len(boundary)
             num_qubits = H.shape[1]
-            if weights is None and error_probabilities is None:
-                self.stabiliser_graph = UnweightedStabiliserGraph(
+
+            if weights.shape[0] != num_qubits:
+                raise ValueError("Weights array must have num_qubits elements")
+            if np.any(weights < 0.):
+                raise ValueError("All weights must be non-negative.")
+            if error_probabilities is None:
+                self.stabiliser_graph = WeightedStabiliserGraph(
                     H.indices,
+                    weights,
                     boundary
                 )
             else:
-                weights = np.asarray(weights) if weights is not None else np.ones(H.shape[1])
-                if weights.shape[0] != num_qubits:
-                    raise ValueError("Weights array must have num_qubits elements")
-                if np.any(weights < 0.):
-                    raise ValueError("All weights must be non-negative.")
-                if error_probabilities is None:
-                    self.stabiliser_graph = WeightedStabiliserGraph(
-                        H.indices,
-                        weights,
-                        boundary
-                    )
-                else:
-                    self.stabiliser_graph = WeightedStabiliserGraph(
-                        H.indices,
-                        weights,
-                        error_probabilities,
-                        boundary
-                    )
+                self.stabiliser_graph = WeightedStabiliserGraph(
+                    H.indices,
+                    weights,
+                    error_probabilities,
+                    boundary
+                )
         else:
             boundary = find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
@@ -143,8 +148,7 @@ class Matching:
         else:
             raise ValueError(f"The shape ({z.shape}) of the syndrome vector z is not valid.")
         if (num_neighbours is None or 
-            np.amax(defects, initial=0) > self.stabiliser_graph.get_num_stabilisers() - 1
-            or isinstance(self.stabiliser_graph, UnweightedStabiliserGraph)):
+            np.amax(defects, initial=0) > self.stabiliser_graph.get_num_stabilisers() - 1):
             return decode(self.stabiliser_graph, defects)
         else:
             return decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours)
