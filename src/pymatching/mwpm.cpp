@@ -1,7 +1,6 @@
 #include "mwpm.h"
 #include <PerfectMatching.h>
 #include "stabiliser_graph.h"
-#include "unweighted_stabiliser_graph.h"
 #include "weighted_stabiliser_graph.h"
 #include <iostream>
 #include <cstdint>

@@ -3,7 +3,6 @@
 #include"mwpm.h"
 #include <PerfectMatching.h>
 #include "stabiliser_graph.h"
-#include "unweighted_stabiliser_graph.h"
 #include "weighted_stabiliser_graph.h"
 #include "rand_gen.h"
 
@@ -29,16 +28,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def_readwrite("update_duals_after", &PerfectMatching::Options::update_duals_after)
     .def_readwrite("single_tree_threshold", &PerfectMatching::Options::single_tree_threshold)
     .def_readwrite("verbose", &PerfectMatching::Options::verbose);
-
-    py::class_<BFSResult>(m, "BFSResult")
-    .def(py::init<>())
-    .def_readwrite("distance", &BFSResult::distance)
-    .def_readwrite("parent", &BFSResult::parent);
-
-    py::class_<APSPResult>(m, "APSPResult")
-    .def(py::init<>())
-    .def_readwrite("distances", &APSPResult::distances)
-    .def_readwrite("parents", &APSPResult::parents);
 
     py::class_<IStabiliserGraph>(m, "IStabiliserGraph")
     .def("distance", &IStabiliserGraph::Distance, "node1"_a, "node2"_a)
@@ -70,9 +59,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
          "source"_a, "num_neighbours"_a, "defect_id"_a)
     .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
 
-    m.def("breadth_first_search", &BreadthFirstSearch, "g"_a, "source"_a);
-    m.def("all_pairs_shortest_path", &AllPairsShortestPath, "g"_a);
-    m.def("shortest_path", &GetShortestPath, "parent"_a, "dest"_a);
     m.def("decode", &Decode, "sg"_a, "defects"_a);
     m.def("decode_match_neighbourhood", &DecodeMatchNeighbourhood,
           "sg"_a ,"defects"_a, "num_neighbours"_a);

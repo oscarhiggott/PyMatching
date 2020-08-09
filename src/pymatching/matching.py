@@ -2,8 +2,7 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix, spmatrix, vstack
 
-from pymatching._cpp_mwpm import (all_pairs_shortest_path, 
-                            decode, 
+from pymatching._cpp_mwpm import (decode, 
                             decode_match_neighbourhood,
                             WeightedStabiliserGraph)
 
