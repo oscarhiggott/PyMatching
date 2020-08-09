@@ -34,7 +34,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("space_time_distance", &IStabiliserGraph::SpaceTimeDistance, "node1"_a, "node2"_a)
     .def("shortest_path", &IStabiliserGraph::ShortestPath, "node1"_a, "node2"_a)
     .def("space_time_shortest_path", &IStabiliserGraph::SpaceTimeShortestPath, "node1"_a, "node2"_a)
-    .def("qubit_id", &IStabiliserGraph::QubitID, "node1"_a, "node2"_a)
+    .def("qubit_ids", &IStabiliserGraph::QubitIDs, "node1"_a, "node2"_a)
     .def("get_num_qubits", &IStabiliserGraph::GetNumQubits)
     .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers)
     .def("compute_all_pairs_shortest_paths", &IStabiliserGraph::ComputeAllPairsShortestPaths);
@@ -50,7 +50,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
     .def_readwrite("all_edges_have_error_probabilities", 
                     &WeightedStabiliserGraph::all_edges_have_error_probabilities)
-    .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_id"_a, 
+    .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a, 
          "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false)
     .def("add_noise", &WeightedStabiliserGraph::AddNoise)
     .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)

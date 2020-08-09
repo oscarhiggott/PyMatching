@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <set>
 
 class IStabiliserGraph{
     public:
@@ -8,7 +9,7 @@ class IStabiliserGraph{
         virtual double SpaceTimeDistance(int node1, int node2);
         virtual std::vector<int> ShortestPath(int node1, int node2) = 0;
         virtual std::vector<int> SpaceTimeShortestPath(int node1, int node2);
-        virtual int QubitID(int node1, int node2) const = 0;
+        virtual std::set<int> QubitIDs(int node1, int node2) const = 0;
         virtual int GetNumQubits() const = 0;
         virtual int GetNumStabilisers() const = 0;
         virtual std::vector<int> GetBoundary() const = 0;

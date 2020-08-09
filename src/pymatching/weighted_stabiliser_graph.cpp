@@ -52,7 +52,7 @@ boundary(boundary) {
     assert(w.shape(0) == x.shape(0)/2);
 
     for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], -1.0, false);
+        AddEdge(x[2*i], x[2*i+1], {(int) i}, w[i], -1.0, false);
     }
 }
 
@@ -78,14 +78,14 @@ boundary(boundary){
     assert(ep.shape(0) == x.shape(0)/2);
 
     for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], (int) i, w[i], ep[i], (ep[i]>=0)&&(ep[i]<=1));
+        AddEdge(x[2*i], x[2*i+1], {(int) i}, w[i], ep[i], (ep[i]>=0)&&(ep[i]<=1));
     }
 }
 
 void WeightedStabiliserGraph::AddEdge(
     int node1, 
     int node2, 
-    int qubit_id, 
+    std::set<int> qubit_ids, 
     double weight, 
     double error_probability, 
     bool has_error_probability){
@@ -93,7 +93,7 @@ void WeightedStabiliserGraph::AddEdge(
             all_edges_have_error_probabilities = false;
         }
         WeightedEdgeData data;
-        data.qubit_id = qubit_id;
+        data.qubit_ids = qubit_ids;
         data.weight = weight;
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
@@ -297,20 +297,23 @@ std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) {
 }
 
 int WeightedStabiliserGraph::GetNumQubits() const {
-    auto qid = boost::get(&WeightedEdgeData::qubit_id, stabiliser_graph);
+    auto qid = boost::get(&WeightedEdgeData::qubit_ids, stabiliser_graph);
     int num_edges = boost::num_edges(stabiliser_graph);
     int maxid = -1;
     std::set<int> qubits;
+    std::set<int> edge_qubits;
     auto es = boost::edges(stabiliser_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
-        int qubit = qid[*eit];
-        if (qubit >= maxid){
-            maxid = qubit;
-        }
-        if (qubit >=0){
-            qubits.insert(qubit);
-        } else if (qubit != -1){
-            throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
+        edge_qubits = qid[*eit];
+        for (auto qubit : edge_qubits){
+            if (qubit >= maxid){
+                maxid = qubit;
+            }
+            if (qubit >=0){
+                qubits.insert(qubit);
+            } else if (qubit != -1){
+                throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
+            }
         }
     }
     int num_qubits = qubits.size();
@@ -324,21 +327,21 @@ int WeightedStabiliserGraph::GetNumStabilisers() const {
     return boost::num_vertices(stabiliser_graph);
 };
 
-int WeightedStabiliserGraph::QubitID(int node1, int node2) const {
+std::set<int> WeightedStabiliserGraph::QubitIDs(int node1, int node2) const {
     auto e = boost::edge(node1, node2, stabiliser_graph);
     if (!e.second){
         std::runtime_error("Graph does not contain edge (" 
                         + std::to_string((int)node1)
                         + std::to_string((int)node2) + ").");
     }
-    return stabiliser_graph[e.first].qubit_id;
+    return stabiliser_graph[e.first].qubit_ids;
 }
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabiliserGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumStabilisers(), 0);
     auto error = new std::vector<int>(GetNumQubits(), 0);
     double p;
-    int qid;
+    std::set<int> qids;
     vertex_descriptor s, t;
     bool to_flip;
     auto es = boost::edges(stabiliser_graph);
@@ -349,9 +352,11 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabilise
             t = boost::target(*eit, stabiliser_graph);
             (*syndrome)[s] = ((*syndrome)[s] + 1) % 2;
             (*syndrome)[t] = ((*syndrome)[t] + 1) % 2;
-            qid = stabiliser_graph[*eit].qubit_id;
-            if (qid >= 0){
-                (*error)[qid] = ((*error)[qid] + 1) % 2;
+            qids = stabiliser_graph[*eit].qubit_ids;
+            for (auto qid : qids){
+                if (qid >= 0){
+                    (*error)[qid] = ((*error)[qid] + 1) % 2;
+                }
             }
         }
     }

@@ -6,13 +6,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <memory>
+#include <set>
 #include <cstdint>
 #include "stabiliser_graph.h"
 
 namespace py = pybind11;
 
 struct WeightedEdgeData {
-    int qubit_id;
+    std::set<int> qubit_ids;
     double weight;
     double error_probability;
     bool has_error_probability;
@@ -42,13 +43,13 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
             const py::array_t<double>& error_probabilies,
             std::vector<int>& boundary
         );
-        void AddEdge(int node1, int node2, int qubit_id,
+        void AddEdge(int node1, int node2, std::set<int> qubit_ids,
                      double weight, double error_probability,
                      bool has_error_probability);
         virtual void ComputeAllPairsShortestPaths();
         virtual double Distance(int node1, int node2);
         virtual std::vector<int> ShortestPath(int node1, int node2);
-        virtual int QubitID(int node1, int node2) const;
+        virtual std::set<int> QubitIDs(int node1, int node2) const;
         virtual int GetNumQubits() const;
         virtual int GetNumStabilisers() const;
         std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> AddNoise() const;

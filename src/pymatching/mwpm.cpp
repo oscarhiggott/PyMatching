@@ -36,14 +36,17 @@ py::array_t<std::uint8_t> Decode(IStabiliserGraph& sg, const py::array_t<int>& d
     // after_solve = std::clock();
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
+    std::set<int> qids;
     for (py::size_t i = 0; i<num_nodes; i++){
         int j = pm->GetMatch(i);
         if (i<j){
             std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
-                int qid = sg.QubitID(path[k], path[k+1]);
-                if ((qid != -1) && (qid >= 0) && (qid < N)){
-                    (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+                qids = sg.QubitIDs(path[k], path[k+1]);
+                for (auto qid : qids){
+                    if ((qid != -1) && (qid >= 0) && (qid < N)){
+                        (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+                    }
                 }
             }
         }
@@ -106,6 +109,7 @@ py::array_t<std::uint8_t> DecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, 
 
     std::vector<int> path;
     int i;
+    std::set<int> qids;
     while (remaining_defects.size() > 0){
         i = *remaining_defects.begin();
         remaining_defects.erase(remaining_defects.begin());
@@ -113,9 +117,11 @@ py::array_t<std::uint8_t> DecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, 
         remaining_defects.erase(j);
         path = sg.GetPath(d(i), d(j));
         for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
-            int qid = sg.QubitID(path[k], path[k+1]);
-            if ((qid != -1) && (qid >= 0) && (qid < N)){
-                (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+            qids = sg.QubitIDs(path[k], path[k+1]);
+            for (auto qid : qids){
+                if ((qid != -1) && (qid >= 0) && (qid < N)){
+                    (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+                }
             }
         }
     }
