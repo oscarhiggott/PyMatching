@@ -8,22 +8,10 @@ import networkx as nx
 
 from pymatching._cpp_mwpm import (breadth_first_search, 
                             all_pairs_shortest_path, shortest_path,
-                            decode, UnweightedStabiliserGraph,
-                            WeightedStabiliserGraph)
+                            decode, WeightedStabiliserGraph)
 from pymatching import (Matching, check_two_checks_per_qubit)
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
-
-
-def test_cpp_syndrome_graph():
-    fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
-    H = csc_matrix(load_npz(os.path.join(TEST_DIR, 'data', fn)))
-    assert(np.count_nonzero(H.indptr[1:]-H.indptr[0:-1]-2) == 0)
-    sg = UnweightedStabiliserGraph(H.indices, [])
-    expected = [[1, 2, 3, 6], [0, 2, 4, 7], [1, 0, 5, 8], 
-                [0, 4, 5, 6], [1, 3, 5, 7], [2, 4, 3, 8], 
-                [3, 7, 8, 0], [4, 6, 8, 1], [5, 7, 6, 2]]
-    assert(sg.adj_list==expected)
 
 
 def test_breadth_first_search():
@@ -368,10 +356,3 @@ def test_not_two_checks_per_qubit_raises_value_error():
     with pytest.raises(ValueError):
         check_two_checks_per_qubit(H1)
         check_two_checks_per_qubit(H2)
-
-
-def test_unweighted_stabiliser_graph_boundary():
-    H = csc_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
-                             [0,0,1,1,0],[0,0,0,1,1]]))
-    m = UnweightedStabiliserGraph(H.indices, [4])
-    assert m.get_boundary() == [4]
