@@ -105,14 +105,14 @@ class Matching:
             g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
             for (u, v, attr) in H.edges(data=True):
                 qubit_id = attr.get("qubit_id", set())
-                if isinstance(qubit_id, int):
-                    qubit_id = {qubit_id} if qubit_id != -1 else set()
+                if isinstance(qubit_id, (int, np.integer)):
+                    qubit_id = {int(qubit_id)} if qubit_id != -1 else set()
                 else:
                     try:
                         qubit_id = set(qubit_id)
                     except:
                         raise ValueError("qubit_id property must be an int or a set"
-                                " (or convertible to a set)")
+                                f" (or convertible to a set), not {type(qubit_id)}")
                 weight = attr.get("weight", 1) # Default weight is 1 if not provided
                 if weight < 0:
                     raise ValueError("Weights cannot be negative.")
