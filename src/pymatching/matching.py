@@ -35,8 +35,11 @@ def find_boundary_nodes(G):
     
 
 class Matching:
-    def __init__(self, H, weights=None, error_probabilities=None, 
-                 precompute_shortest_paths=False):
+    def __init__(self, H, weights=None, 
+                 error_probabilities=None, 
+                 precompute_shortest_paths=False,
+                 repetitions=None,
+                 measurement_error_probability=None):
 
         if not isinstance(H, nx.Graph):
             try:
@@ -59,11 +62,12 @@ class Matching:
         if isinstance(weights, (int, float)):
             weights = np.array([weights]*num_edges).astype(float)
         weights = np.asarray(weights)
-        
-        if error_probabilities is not None and isinstance(error_probabilities, (int, float)):
-            error_probabilities = np.array([error_probabilities]*num_edges)
 
         if isinstance(H, csc_matrix):
+            if error_probabilities is None:
+                error_probabilities = np.array([-1]*num_edges)
+            elif isinstance(error_probabilities, (int, float)):
+                error_probabilities = np.array([error_probabilities]*num_edges)
             column_weights = np.asarray(H.sum(axis=0))[0]
             unique_column_weights = np.unique(column_weights)
             if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
@@ -85,19 +89,11 @@ class Matching:
                 raise ValueError("Weights array must have num_qubits elements")
             if np.any(weights < 0.):
                 raise ValueError("All weights must be non-negative.")
-            if error_probabilities is None:
-                self.stabiliser_graph = WeightedStabiliserGraph(
-                    H.indices,
-                    weights,
-                    boundary
-                )
-            else:
-                self.stabiliser_graph = WeightedStabiliserGraph(
-                    H.indices,
-                    weights,
-                    error_probabilities,
-                    boundary
-                )
+            
+            self.stabiliser_graph = WeightedStabiliserGraph(self.num_stabilisers, boundary=boundary)
+            for i in range(len(H.indices)//2):
+                self.stabiliser_graph.add_edge(H.indices[2*i], H.indices[2*i+1], 
+                            {i}, weights[i], error_probabilities[i], error_probabilities[i] >= 0)
         else:
             boundary = find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
