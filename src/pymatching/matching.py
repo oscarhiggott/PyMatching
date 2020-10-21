@@ -39,6 +39,7 @@ class Matching:
                  error_probabilities=None, 
                  precompute_shortest_paths=False,
                  repetitions=None,
+                 timelike_weight=None,
                  measurement_error_probability=None):
 
         if not isinstance(H, nx.Graph):
@@ -73,7 +74,6 @@ class Matching:
             if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
                 raise ValueError("Each qubit must be contained in either "
                                  "1 or 2 check operators.")
-            boundary = [H.shape[0]] if 1 in unique_column_weights else []
             H.eliminate_zeros()
             H.sort_indices()
             self.num_stabilisers = H.shape[0]
@@ -84,12 +84,22 @@ class Matching:
             if np.any(weights < 0.):
                 raise ValueError("All weights must be non-negative.")
             
-            self.stabiliser_graph = WeightedStabiliserGraph(self.num_stabilisers, boundary=boundary)
-            for i in range(len(H.indptr)-1):
-                s, e = H.indptr[i:i+2]
-                v2 = H.indices[e-1] if e-s == 2 else boundary[0]
-                self.stabiliser_graph.add_edge(H.indices[s], v2, 
-                        {i}, weights[i], error_probabilities[i], error_probabilities[i] >= 0)
+            timelike_weight = 1.0 if timelike_weight is None else timelike_weight
+            repetitions = 1 if repetitions is None else repetitions
+            p_meas = measurement_error_probability if measurement_error_probability is not None else -1
+            boundary = [H.shape[0]*repetitions] if 1 in unique_column_weights else []
+            self.stabiliser_graph = WeightedStabiliserGraph(H.shape[0]*repetitions, boundary=boundary)
+            for t in range(repetitions):
+                for i in range(len(H.indptr)-1):
+                    s, e = H.indptr[i:i+2]
+                    v1 = H.indices[s] + H.shape[0]*t
+                    v2 = H.indices[e-1] + H.shape[0]*t if e-s == 2 else boundary[0]
+                    self.stabiliser_graph.add_edge(v1, v2, {i}, weights[i], 
+                            error_probabilities[i], error_probabilities[i] >= 0)
+            for t in range(repetitions-1):
+                for i in range(H.shape[0]):
+                    self.stabiliser_graph.add_edge(i+t*H.shape[0], i+(t+1)*H.shape[0], 
+                            set(), timelike_weight, p_meas, p_meas >= 0)
         else:
             boundary = find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
@@ -133,21 +143,22 @@ class Matching:
         if len(z.shape) == 1 and (self.num_stabilisers <= z.shape[0]
                 <= self.num_stabilisers+len(self.boundary)):
             defects = z.nonzero()[0]
-            if len(defects) % 2 != 0:
-                if len(self.boundary) == 0:
-                    raise ValueError("Syndrome must contain an even number of defects "
-                                     "if no boundary vertex is given.")
-                defects = np.setxor1d(defects, np.array(self.boundary[0:1]))
         elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
+            num_stabs = self.stabiliser_graph.get_num_stabilisers()
+            max_num_defects = z.shape[0]*z.shape[1]
+            if max_num_defects > num_stabs:
+                raise ValueError(f"Syndrome size {z.shape[0]}x{z.shape[1]} exceeds" \
+                        f" the number of stabilisers ({num_stabs})")
             times, checks = z.T.nonzero()
             defects = times*self.num_stabilisers + checks
-            if len(defects) % 2 != 0:
-                raise ValueError("Number of defects is odd (boundaries not yet supported "
-                                 "for 2D syndromes).")
         else:
             raise ValueError(f"The shape ({z.shape}) of the syndrome vector z is not valid.")
-        if (num_neighbours is None or 
-            np.amax(defects, initial=0) > self.stabiliser_graph.get_num_stabilisers() - 1):
+        if len(defects) % 2 != 0:
+            if len(self.boundary) == 0:
+                raise ValueError("Syndrome must contain an even number of defects "
+                                    "if no boundary vertex is given.")
+            defects = np.setxor1d(defects, np.array(self.boundary[0:1]))
+        if num_neighbours is None:
             return decode(self.stabiliser_graph, defects)
         else:
             return decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours)

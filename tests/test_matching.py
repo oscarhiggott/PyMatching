@@ -57,7 +57,7 @@ noisy_fixtures = [
 def test_mwpm_noisy_decode(n, z_err, c_expected):
     fn = "css_2D-toric_(4,4)_[[18,2,3]]_Hx.npz"
     H = load_npz(os.path.join(TEST_DIR, 'data', fn))
-    m = Matching(H)
+    m = Matching(H, repetitions=z_err.shape[1])
     n_all = np.cumsum(n, 0) % 2
     z_noiseless = H.dot(n_all.T) % 2
     z_noisy = (z_noiseless + z_err) % 2
