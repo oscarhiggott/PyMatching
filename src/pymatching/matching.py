@@ -73,13 +73,7 @@ class Matching:
             if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
                 raise ValueError("Each qubit must be contained in either "
                                  "1 or 2 check operators.")
-            if 1 in unique_column_weights:
-                # Add boundary and connect it to all weight-1 stabilisers
-                H = vstack([H, csc_matrix((column_weights==1).astype(np.uint8))])
-                boundary = [H.shape[0]-1]
-                H = csc_matrix(H)
-            else:
-                boundary = []
+            boundary = [H.shape[0]] if 1 in unique_column_weights else []
             H.eliminate_zeros()
             H.sort_indices()
             self.num_stabilisers = H.shape[0] - len(boundary)
@@ -91,9 +85,11 @@ class Matching:
                 raise ValueError("All weights must be non-negative.")
             
             self.stabiliser_graph = WeightedStabiliserGraph(self.num_stabilisers, boundary=boundary)
-            for i in range(len(H.indices)//2):
-                self.stabiliser_graph.add_edge(H.indices[2*i], H.indices[2*i+1], 
-                            {i}, weights[i], error_probabilities[i], error_probabilities[i] >= 0)
+            for i in range(len(H.indptr)-1):
+                s, e = H.indptr[i:i+2]
+                v2 = H.indices[e-1] if e-s == 2 else boundary[0]
+                self.stabiliser_graph.add_edge(H.indices[s], v2, 
+                        {i}, weights[i], error_probabilities[i], error_probabilities[i] >= 0)
         else:
             boundary = find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
