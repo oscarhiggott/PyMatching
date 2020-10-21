@@ -76,7 +76,7 @@ class Matching:
             boundary = [H.shape[0]] if 1 in unique_column_weights else []
             H.eliminate_zeros()
             H.sort_indices()
-            self.num_stabilisers = H.shape[0] - len(boundary)
+            self.num_stabilisers = H.shape[0]
             num_qubits = H.shape[1]
 
             if weights.shape[0] != num_qubits:

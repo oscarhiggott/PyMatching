@@ -19,7 +19,7 @@ WeightedStabiliserGraph::WeightedStabiliserGraph(
     std::vector<int>& boundary)
     : all_edges_have_error_probabilities(true),
     boundary(boundary) {
-    wgraph_t sgraph = wgraph_t(num_stabilisers);
+    wgraph_t sgraph = wgraph_t(num_stabilisers+boundary.size());
     this->stabiliser_graph = sgraph;
 }
 
