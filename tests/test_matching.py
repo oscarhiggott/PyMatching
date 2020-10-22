@@ -66,6 +66,45 @@ def test_mwpm_noisy_decode(n, z_err, c_expected):
     assert(np.array_equal(c, c_expected))
 
 
+def test_bad_qubit_id_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0,1, qubit_id='test')
+    with pytest.raises(ValueError):
+        m = Matching(g)
+    g = nx.Graph()
+    g.add_edge(0,1, qubit_id=[[1],[2]])
+    with pytest.raises(ValueError):
+        m = Matching(g)
+
+
+def test_precompute_shortest_paths():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(1, 2, qubit_id=1)
+    m = Matching(g)
+    assert not m.stabiliser_graph.has_computed_all_pairs_shortest_paths()
+    m2 = Matching(g, precompute_shortest_paths=True)
+    assert m2.stabiliser_graph.has_computed_all_pairs_shortest_paths()
+
+
+def test_decode_all_neighbours():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(1, 2, qubit_id=1)
+    m = Matching(g)
+    noise = m.decode([1,0,1], num_neighbours=None)
+    assert np.array_equal(noise, np.array([1,1]))
+
+
+def test_bad_syndrome_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(1, 2, qubit_id=1)
+    m = Matching(g)
+    with pytest.raises(ValueError):
+        noise = m.decode('test')
+
+
 distance_fixtures = [
     (2,11,1),
     (3,13,2),
@@ -187,6 +226,12 @@ def test_error_probability_from_array():
     assert np.array_equal(m.add_noise()[1], np.array([0,0,0,1,1]))
     m = Matching(H, error_probabilities=np.array([0.,0.,0.,0.,0.]))
     assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,0]))
+    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
+    m = Matching(H, error_probabilities=0.0)
+    assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,0]))
+    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
+    m = Matching(H, error_probabilities=1.0)
+    assert np.array_equal(m.add_noise()[0], np.array([1,1,1,1,1]))
     assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
 
 

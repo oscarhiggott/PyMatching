@@ -37,10 +37,10 @@ def find_boundary_nodes(G):
 class Matching:
     def __init__(self, H, weights=None, 
                  error_probabilities=None, 
-                 precompute_shortest_paths=False,
                  repetitions=None,
                  timelike_weight=None,
-                 measurement_error_probability=None):
+                 measurement_error_probability=None,
+                 precompute_shortest_paths=False):
 
         if not isinstance(H, nx.Graph):
             try:
@@ -112,9 +112,11 @@ class Matching:
                 else:
                     try:
                         qubit_id = set(qubit_id)
+                        if not all(isinstance(q, (int, np.integer)) for q in qubit_id):
+                            raise ValueError(f"qubit_id must be a set of ints, not {qubit_id}")
                     except:
-                        raise ValueError("qubit_id property must be an int or a set"
-                                f" (or convertible to a set), not {type(qubit_id)}")
+                        raise ValueError("qubit_id property must be an int or a set of int"
+                                f" (or convertible to a set), not {qubit_id}")
                 weight = attr.get("weight", 1) # Default weight is 1 if not provided
                 if weight < 0:
                     raise ValueError("Weights cannot be negative.")
@@ -140,6 +142,11 @@ class Matching:
         return self.stabiliser_graph.get_boundary()
     
     def decode(self, z, num_neighbours=20):
+        try:
+            z = np.array(z, dtype=np.uint8)
+        except:
+            raise ValueError("Syndrome must be of type numpy.ndarray or "\
+                             f"convertible to numpy.ndarray, not {z}")
         if len(z.shape) == 1 and (self.num_stabilisers <= z.shape[0]
                 <= self.num_stabilisers+len(self.boundary)):
             defects = z.nonzero()[0]
@@ -180,9 +187,6 @@ class Matching:
             self.num_stabilisers if there is no boundary, or self.num_stabilisers+1
             if there is a boundary)
         """
-        if isinstance(self.stabiliser_graph, WeightedStabiliserGraph):
-            if not self.stabiliser_graph.all_edges_have_error_probabilities:
-                return None
-            return self.stabiliser_graph.add_noise()
-        else:
+        if not self.stabiliser_graph.all_edges_have_error_probabilities:
             return None
+        return self.stabiliser_graph.add_noise()
