@@ -23,65 +23,6 @@ WeightedStabiliserGraph::WeightedStabiliserGraph(
     this->stabiliser_graph = sgraph;
 }
 
-int ArrayMax(const py::array_t<int>& arr){
-    auto x = arr.unchecked<1>();
-    int smax = 0;
-    for (py::ssize_t i=0; i<(x.shape(0)); i++){
-        if (x[i] > smax){
-            smax = x[i];
-        }
-    }
-    return smax;
-}
-
-WeightedStabiliserGraph::WeightedStabiliserGraph(
-            const py::array_t<int>& indices, 
-            const py::array_t<double>& weights,
-            std::vector<int>& boundary
-) : all_edges_have_error_probabilities(true),
-boundary(boundary) {
-    auto x = indices.unchecked<1>();
-    assert((x.shape(0) % 2) == 0);
-
-    int num_stabilisers = ArrayMax(indices)+1;
-
-    wgraph_t sgraph = wgraph_t(num_stabilisers);
-    this->stabiliser_graph = sgraph;
-
-    auto w = weights.unchecked<1>();
-    assert(w.shape(0) == x.shape(0)/2);
-
-    for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], {(int) i}, w[i], -1.0, false);
-    }
-}
-
-WeightedStabiliserGraph::WeightedStabiliserGraph(
-            const py::array_t<int>& indices, 
-            const py::array_t<double>& weights,
-            const py::array_t<double>& error_probabilities,
-            std::vector<int>& boundary
-) : all_edges_have_error_probabilities(true),
-boundary(boundary){
-    auto x = indices.unchecked<1>();
-    assert((x.shape(0) % 2) == 0);
-
-    int num_stabilisers = ArrayMax(indices)+1;
-
-    wgraph_t sgraph = wgraph_t(num_stabilisers);
-    this->stabiliser_graph = sgraph;
-
-    auto w = weights.unchecked<1>();
-    assert(w.shape(0) == x.shape(0)/2);
-
-    auto ep = error_probabilities.unchecked<1>();
-    assert(ep.shape(0) == x.shape(0)/2);
-
-    for (py::ssize_t i=0; i<x.shape(0)/2; i++){
-        AddEdge(x[2*i], x[2*i+1], {(int) i}, w[i], ep[i], (ep[i]>=0)&&(ep[i]<=1));
-    }
-}
-
 void WeightedStabiliserGraph::AddEdge(
     int node1, 
     int node2, 

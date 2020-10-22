@@ -42,11 +42,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
 
     py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
     .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
-    .def(py::init<const py::array_t<int>&, const py::array_t<double>&, std::vector<int>&>(), 
-        "indices"_a, "weights"_a, "boundary"_a)
-    .def(py::init<const py::array_t<int>&, const py::array_t<double>&, 
-            const py::array_t<double>&, std::vector<int>&>(), 
-            "indices"_a, "weights"_a, "error_probabilities"_a, "boundary"_a)
     .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
     .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)
     .def_readwrite("all_edges_have_error_probabilities", 
