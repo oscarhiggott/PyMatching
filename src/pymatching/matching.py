@@ -73,7 +73,7 @@ class Matching:
             unique_column_weights = np.unique(column_weights)
             if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
                 raise ValueError("Each qubit must be contained in either "
-                                 "1 or 2 check operators.")
+                                 f"1 or 2 check operators, not {unique_column_weights}")
             H.eliminate_zeros()
             H.sort_indices()
             self.num_stabilisers = H.shape[0]
