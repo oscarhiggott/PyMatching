@@ -31,7 +31,7 @@ To decode instead in the presence of measurement errors, each stabiliser measure
 ```
 m = Matching(H, repetitions=L)
 ```
-and then decoded from an `m` by `L` numpy array syndrome vector `z` using:
+and then decoded from an `m` by `L` numpy array syndrome `z` using:
 ```
 c = m.decode(z)
 ```
