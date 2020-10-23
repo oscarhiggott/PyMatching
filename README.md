@@ -27,6 +27,10 @@ c = m.decode(z)
 ```
 which outputs a bitstring `c`, which is a numpy array of dtype int. Note that the `m` by `n` parity check matrix `H` should correspond to the Z (or X) stabilisers of a CSS QECC with `n` qubits and `m` Z (or X) stabilisers.
 
+## Performance
+
+![performance](images/pymatching_vs_networkx.pdf)
+
 ## Licensing of Blossom V dependency
 
 This package uses the Blossom V implementation of minimum weight perfect matching (downloaded from [here](https://pub.ist.ac.at/~vnk/software.html) upon installation) which is licenced for research purposes only. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).

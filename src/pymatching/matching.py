@@ -7,13 +7,7 @@ from pymatching._cpp_mwpm import (decode,
                             WeightedStabiliserGraph)
 
 
-def check_two_checks_per_qubit(H):
-    if np.count_nonzero(H.indptr[1:]-H.indptr[0:-1]-2) != 0:
-        raise ValueError("Parity check matrix does not have two "
-                            "non-zero entries per column")
-
-
-def find_boundary_nodes(G):
+def _find_boundary_nodes(G):
     """Find all boundary nodes in G
 
     Find the boundary nodes in G, each of which have the attribute
@@ -35,13 +29,41 @@ def find_boundary_nodes(G):
     
 
 class Matching:
+    """A class for constructing matching graphs and decoding
+        using the minimum-weight perfect matching decoder
+
+    [extended_summary]
+    """
     def __init__(self, H, weights=None, 
                  error_probabilities=None, 
                  repetitions=None,
                  timelike_weight=None,
                  measurement_error_probability=None,
                  precompute_shortest_paths=False):
+        """Constructor for the Matching class
 
+        [extended_summary]
+
+        Parameters
+        ----------
+        H : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` object
+            The quantum code to be decoded with minimum-weight perfect
+            matching, given either as a binary check matrix (scipy sparse 
+            matrix or numpy.ndarray), or as a matching grap (NetworkX graph).
+        weights : float or numpy.ndarray, optional
+            If `H` is given as a scipy or numpy array, `weights` gives the weights
+            of edges in the matching graph. by default None
+        error_probabilities : float or numpy.ndarray, optional
+            [description], by default None
+        repetitions : int, optional
+            [description], by default None
+        timelike_weight : float, optional
+            [description], by default None
+        measurement_error_probability : float, optional
+            [description], by default None
+        precompute_shortest_paths : bool, optional
+            [description], by default False
+        """
         if not isinstance(H, nx.Graph):
             try:
                 H = csc_matrix(H)
@@ -101,7 +123,7 @@ class Matching:
                     self.stabiliser_graph.add_edge(i+t*H.shape[0], i+(t+1)*H.shape[0], 
                             set(), timelike_weight, p_meas, p_meas >= 0)
         else:
-            boundary = find_boundary_nodes(H)
+            boundary = _find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
             self.num_stabilisers = num_nodes - len(boundary)
             g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
