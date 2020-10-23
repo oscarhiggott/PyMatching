@@ -1,7 +1,7 @@
 # PyMatching
 
 
-A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching decoder.
+A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching (MWPM) decoder.
 
 [![Build Status](https://travis-ci.org/oscarhiggott/PyMatching.svg?branch=master)](https://travis-ci.org/github/oscarhiggott/PyMatching)
 [![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/PyMatching)
@@ -16,12 +16,12 @@ pip install -e ./PyMatching
 
 ## Usage
 
-In order to decode a parity check matrix `H` (a `scipy.sparse` matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `MWPM` object after importing it:
+In order to decode a parity check matrix `H` (a `scipy.sparse` matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `Matching` object after importing it:
 ```
 from pymatching import Matching
 m = Matching(H)
 ```
-This precomputes the all-pairs shortest paths in the stabiliser graph corresponding to the parity check matrix H. Now to decode, simply run:
+Now to decode, simply run:
 ```
 c = m.decode(z)
 ```
@@ -29,7 +29,9 @@ which outputs a bitstring `c`, which is a numpy array of dtype int. Note that th
 
 ## Performance
 
-<img src="images/pymatching_vs_networkx.png" width="500">
+While all the functionality of PyMatching is available via the Python bindings, the core algorithms and data structures are implemented in C++, with the help of the [BlossomV](https://pub.ist.ac.at/~vnk/software.html) and [Boost Graph](https://www.boost.org/doc/libs/1_74_0/libs/graph/doc/index.html) libraries. PyMatching also uses a local variant of the MWPM decoder (explained in the Appendix of [this paper](https://arxiv.org/abs/2010.09626)) that has a runtime that is approximately linear, rather than quadratic, in the number of nodes. As a result, PyMatching is orders of magnitude faster than a standard pure Python [NetworkX](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html) implementation, as shown here for decoding the toric code under an independent noise model with p=0.05 and noiseless syndrome measurements:
+
+<img src="images/pymatching_vs_networkx.png" width="400">
 
 ## Licensing of Blossom V dependency
 
@@ -37,7 +39,7 @@ This package uses the Blossom V implementation of minimum weight perfect matchin
 
 ## Attribution
 
-When using PyMWPM for research, please cite the BlossomV dependency:
+When using PyMatching for research, please cite the BlossomV dependency:
 
         Vladimir Kolmogorov. "Blossom V: A new implementation of a minimum cost perfect matching algorithm."
         In Mathematical Programming Computation (MPC), July 2009, 1(1):43-67.
