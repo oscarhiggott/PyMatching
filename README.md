@@ -42,7 +42,7 @@ and please also consider citing:
 ```
 @misc{higgott2020pymatching,
   author = {Higgott, Oscar},
-  title = {{PyMatching}: A package for decoding quantum error correcting codes using minimum-weight perfect matching},
+  title = {{PyMatching}: A library for decoding quantum error correcting codes using minimum-weight perfect matching},
   year = {2020},
   publisher = {GitHub},
   journal = {GitHub repository},
