@@ -29,7 +29,7 @@ which outputs a bitstring `c`, which is a numpy array of dtype int. Note that th
 
 ## Performance
 
-<img src="images/pymatching_vs_networkx.png" width="48">
+<img src="images/pymatching_vs_networkx.png" width="500">
 
 ## Licensing of Blossom V dependency
 
