@@ -29,8 +29,7 @@ def _find_boundary_nodes(G):
     
 
 class Matching:
-    """A class for constructing matching graphs and decoding
-        using the minimum-weight perfect matching decoder
+    """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder
 
     [extended_summary]
     """
@@ -54,15 +53,29 @@ class Matching:
             If `H` is given as a scipy or numpy array, `weights` gives the weights
             of edges in the matching graph. by default None
         error_probabilities : float or numpy.ndarray, optional
-            [description], by default None
+            The probabilities with which an error occurs on each qubit. If a 
+            single float is given, the same error probability is used for each 
+            qubit. If a numpy.ndarray of floats is given, it must have a 
+            length equal to the number of qubits. This parameter is only 
+            needed for the Matching.add_noise method, and not for decoding. 
+            By default None
         repetitions : int, optional
-            [description], by default None
+            The number of times the stabiliser measurements are repeated, if 
+            the measurements are noisy. This option is only used if `H` is 
+            provided as a check matrix, not a NetworkX graph. By default None
         timelike_weight : float, optional
-            [description], by default None
+            If `H` is given as a scipy or numpy array and `repetitions>1`, 
+            `timelike_weight` gives the weight of timelike edges, by default None
         measurement_error_probability : float, optional
-            [description], by default None
+            If `H` is given as a scipy or numpy array and `repetitions>1`, 
+            gives the probability of a measurement error to be used for 
+            the add_noise method. By default None
         precompute_shortest_paths : bool, optional
-            [description], by default False
+            It is almost always recommended to leave this as False. If 
+            the exact matching is used for decoding (setting 
+            `num_neighbours=None` in `decode`), then setting this option
+            to True will precompute the all-pairs shortest paths.
+            By default False
         """
         if not isinstance(H, nx.Graph):
             try:
@@ -164,6 +177,42 @@ class Matching:
         return self.stabiliser_graph.get_boundary()
     
     def decode(self, z, num_neighbours=20):
+        """Decode the syndrome `z` using minimum-weight perfect matching
+
+        [extended_summary]
+
+        Parameters
+        ----------
+        z : numpy.ndarray
+            A binary syndrome vector to decode. The number of elements in 
+            `z` should equal the number of nodes in the matching graph. If 
+            `z` is a 1D array, then `z[i]` is the syndrome at node `i` of 
+            the matching graph. If `z` is 2D then `z[i,j]` is the syndrome 
+            of stabiliser `i` in time step `j` (when `repetitions>1`).
+        num_neighbours : int, optional
+            Number of closest neighbours of each matching graph node to consider 
+            when decoding. If `num_neighbours` is set (as it is by default), 
+            then the local matching decoder in the Appendix of 
+            https://arxiv.org/abs/2010.09626 is used, and `num_neighbours` 
+            corresponds to the parameter `m` in the paper. It is recommended 
+            to leave `num_neighbours` set to 20, and not to set it to less 
+            than 10. If `num_neighbours=None`, then instead full matching is 
+            performed, with the all-pairs shortest paths precomputed and 
+            cached the first time it is used. Since full matching is more 
+            memory intensive, it is only recommended for matching graphs 
+            with less than around 10,000 nodes, and is only faster than 
+            local matching for matching graphs with less than around 1,000 
+            nodes. By default 20
+
+        Returns
+        -------
+        numpy.ndarray
+            A 1D numpy array of ints giving the minimum-weight correction 
+            operator. The number of elements equals the number of qubits, 
+            and an element is 1 if the corresponding qubit should be flipped, 
+            and otherwise 0.
+
+        """
         try:
             z = np.array(z, dtype=np.uint8)
         except:
