@@ -1,7 +1,7 @@
 # PyMatching
 
 
-A library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching (MWPM) decoder.
+PyMatching is a fast library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching (MWPM) decoder. PyMatching can decode codes for which each error generates a pair of syndrome defects (or only a single defect at a boundary). Codes that satisfy these properties include two-dimensional topological codes such as the [toric code](https://en.wikipedia.org/wiki/Toric_code), the [surface code](https://arxiv.org/abs/quant-ph/0110143) and [hyperbolic codes](https://arxiv.org/abs/1506.04029). PyMatching can handle boundaries, measurement errors and weighted edges in the matching graph. Since the core algorithms are written in C++, PyMatching is much faster than a pure Python NetworkX implementation.
 
 [![Build Status](https://travis-ci.org/oscarhiggott/PyMatching.svg?branch=master)](https://travis-ci.org/github/oscarhiggott/PyMatching)
 [![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/PyMatching)
@@ -25,7 +25,18 @@ Now to decode, simply run:
 ```
 c = m.decode(z)
 ```
-which outputs a bitstring `c`, which is a numpy array of dtype int. Note that the `m` by `n` parity check matrix `H` should correspond to the Z (or X) stabilisers of a CSS QECC with `n` qubits and `m` Z (or X) stabilisers.
+which outputs a bitstring `c`, which is a numpy array of ints corresponding to the minimum-weight correction. Note that the `m` by `n` parity check matrix `H` should correspond to the Z (or X) stabilisers of a CSS code with `n` qubits, `m` Z (or X) stabilisers, and with either one or two non-zero entries per column.
+
+To decode instead in the presence of measurement errors, each stabiliser measurement is repeated `L` times, and decoding then takes place over a 3D matching graph (see Section IV B of [this paper](https://arxiv.org/abs/quant-ph/0110143)), which can be constructed directly from the check matrix `H` using:
+```
+m = Matching(H, repetitions=L)
+```
+and then decoded from an `m` by `L` numpy array syndrome `z` using:
+```
+c = m.decode(z)
+```
+
+The Matching object can also be constructed from a NetworkX graph instead of a check matrix, and can handle weighted edges. For full details see the documentation.
 
 ## Performance
 
