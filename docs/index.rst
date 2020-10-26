@@ -10,7 +10,8 @@ Welcome to PyMatching's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   getting_started
+   installation
+   usage.ipynb
    api
    
 

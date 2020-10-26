@@ -31,27 +31,44 @@ def _find_boundary_nodes(G):
 class Matching:
     """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder
 
-    [extended_summary]
+    The Matching class provides most of the core functionality of PyMatching. 
+    A PyMatching object can be constructed from the :math:`Z` or 
+    :math:`X` check matrix of the quantum code, given as a `scipy.sparse` 
+    matrix or `numpy.ndarray`, along with additional argument specifying the 
+    edge weights, error probabilities and number of repetitions.
+    Alternatively, a Matching object can be constructed from a NetworkX 
+    graph, with node and edge attributes used to specify edge weights,
+    qubit ids, boundaries and error probabilities.
     """
-    def __init__(self, H, weights=None, 
+    def __init__(self, H, spacelike_weights=None, 
                  error_probabilities=None, 
                  repetitions=None,
-                 timelike_weight=None,
+                 timelike_weights=None,
                  measurement_error_probability=None,
                  precompute_shortest_paths=False):
         """Constructor for the Matching class
-
-        [extended_summary]
 
         Parameters
         ----------
         H : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` object
             The quantum code to be decoded with minimum-weight perfect
             matching, given either as a binary check matrix (scipy sparse 
-            matrix or numpy.ndarray), or as a matching grap (NetworkX graph).
-        weights : float or numpy.ndarray, optional
-            If `H` is given as a scipy or numpy array, `weights` gives the weights
-            of edges in the matching graph. by default None
+            matrix or numpy.ndarray), or as a matching graph (NetworkX graph).
+            If `H` is given as a NetworkX graph with `M` nodes, each node 
+            `m` in `H` should be an integer :math:`0<m<M-1`, and each node should 
+            be unique. Each edge in the NetworkX graph can have optional 
+            attributes ``qubit_id``, ``weight`` and ``error_probability``. 
+            ``qubit_id`` should be an int or a set of ints. If there 
+            are :math:`N` qubits then the union of all ints in the ``qubit_id`` 
+            attributes in the graph should be the integers :math:`0\ldots N-1`.  
+            Each ``weight`` attribute should be a non-negative float. If 
+            every edge is assigned an error_probability between zero and one, 
+            then the ``add_noise`` method can be used to simulate noise and 
+            flip edges independently in the graph.
+        spacelike_weights : float or numpy.ndarray, optional
+            If `H` is given as a scipy or numpy array, `spacelike_weights` gives the weights
+            of edges in the matching graph. By default None, in which case 
+            all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each qubit. If a 
             single float is given, the same error probability is used for each 
@@ -63,9 +80,10 @@ class Matching:
             The number of times the stabiliser measurements are repeated, if 
             the measurements are noisy. This option is only used if `H` is 
             provided as a check matrix, not a NetworkX graph. By default None
-        timelike_weight : float, optional
+        timelike_weights : float, optional
             If `H` is given as a scipy or numpy array and `repetitions>1`, 
-            `timelike_weight` gives the weight of timelike edges, by default None
+            `timelike_weights` gives the weight of timelike edges. By default 
+            None, in which case all weights are set to 1.0
         measurement_error_probability : float, optional
             If `H` is given as a scipy or numpy array and `repetitions>1`, 
             gives the probability of a measurement error to be used for 
@@ -94,7 +112,7 @@ class Matching:
         else:
             num_edges = nx.number_of_edges(H)
         
-        weights = 1.0 if weights is None else weights
+        weights = 1.0 if spacelike_weights is None else spacelike_weights
         if isinstance(weights, (int, float)):
             weights = np.array([weights]*num_edges).astype(float)
         weights = np.asarray(weights)
@@ -119,7 +137,7 @@ class Matching:
             if np.any(weights < 0.):
                 raise ValueError("All weights must be non-negative.")
             
-            timelike_weight = 1.0 if timelike_weight is None else timelike_weight
+            timelike_weights = 1.0 if timelike_weights is None else timelike_weights
             repetitions = 1 if repetitions is None else repetitions
             p_meas = measurement_error_probability if measurement_error_probability is not None else -1
             boundary = [H.shape[0]*repetitions] if 1 in unique_column_weights else []
@@ -134,7 +152,7 @@ class Matching:
             for t in range(repetitions-1):
                 for i in range(H.shape[0]):
                     self.stabiliser_graph.add_edge(i+t*H.shape[0], i+(t+1)*H.shape[0], 
-                            set(), timelike_weight, p_meas, p_meas >= 0)
+                            set(), timelike_weights, p_meas, p_meas >= 0)
         else:
             boundary = _find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
@@ -179,8 +197,6 @@ class Matching:
     def decode(self, z, num_neighbours=20):
         """Decode the syndrome `z` using minimum-weight perfect matching
 
-        [extended_summary]
-
         Parameters
         ----------
         z : numpy.ndarray
@@ -199,8 +215,8 @@ class Matching:
             than 10. If `num_neighbours=None`, then instead full matching is 
             performed, with the all-pairs shortest paths precomputed and 
             cached the first time it is used. Since full matching is more 
-            memory intensive, it is only recommended for matching graphs 
-            with less than around 10,000 nodes, and is only faster than 
+            memory intensive, it is not recommended to be used for matching graphs 
+            with more than around 10,000 nodes, and is only faster than 
             local matching for matching graphs with less than around 1,000 
             nodes. By default 20
 
@@ -242,9 +258,7 @@ class Matching:
             return decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours)
     
     def add_noise(self):
-        """Add noise by flipping edges in the stabiliser graph
-
-        Add noise by flipping edges in the stabiliser graph with 
+        """Add noise by flipping edges in the stabiliser graph with 
         a probability given by the error_probility edge attribute.
         This is currently only supported for weighted matching graphs
         initialised using a NetworkX graph.
@@ -261,3 +275,6 @@ class Matching:
         if not self.stabiliser_graph.all_edges_have_error_probabilities:
             return None
         return self.stabiliser_graph.add_noise()
+    
+    def __repr__(self):
+        return f"<pymatching.Matching object with {self.num_qubits} qubits and {self.num_stabilisers} stabilisers>"

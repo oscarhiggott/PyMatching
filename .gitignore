@@ -82,3 +82,6 @@ htmlcov
 
 ### Timing ###
 timing
+
+### Jupyter ###
+.ipynb_checkpoints
