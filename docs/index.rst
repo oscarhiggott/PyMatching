@@ -3,8 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to PyMatching's documentation!
-======================================
+PyMatching
+==========
+
+PyMatching is a Python library for decoding quantum codes with the 
+minimum-weight perfect matching decoder.
 
 .. toctree::
    :maxdepth: 2
