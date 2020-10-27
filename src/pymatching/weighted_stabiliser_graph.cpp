@@ -237,6 +237,12 @@ std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) {
     return path;
 }
 
+
+int WeightedStabiliserGraph::GetNumEdges() const {
+    return boost::num_edges(stabiliser_graph);
+}
+
+
 int WeightedStabiliserGraph::GetNumQubits() const {
     auto qid = boost::get(&WeightedEdgeData::qubit_ids, stabiliser_graph);
     int num_edges = boost::num_edges(stabiliser_graph);

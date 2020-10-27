@@ -37,6 +37,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("qubit_ids", &IStabiliserGraph::QubitIDs, "node1"_a, "node2"_a)
     .def("get_num_qubits", &IStabiliserGraph::GetNumQubits)
     .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers)
+    .def("get_num_edges", &IStabiliserGraph::GetNumEdges)
     .def("compute_all_pairs_shortest_paths", &IStabiliserGraph::ComputeAllPairsShortestPaths)
     .def("has_computed_all_pairs_shortest_paths", &IStabiliserGraph::HasComputedAllPairsShortestPaths);
 

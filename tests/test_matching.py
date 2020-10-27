@@ -7,7 +7,7 @@ import pytest
 import networkx as nx
 
 from pymatching._cpp_mwpm import (decode, WeightedStabiliserGraph)
-from pymatching import (Matching, check_two_checks_per_qubit)
+from pymatching import Matching
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -200,7 +200,7 @@ def test_negative_weight_raises_value_error():
     with pytest.raises(ValueError):
         Matching(g)
     with pytest.raises(ValueError):
-        Matching(csr_matrix([[1,1,0],[0,1,1]]), weights=np.array([1,1,-1]))
+        Matching(csr_matrix([[1,1,0],[0,1,1]]), spacelike_weights=np.array([1,1,-1]))
 
 
 def test_odd_3d_syndrome_raises_value_error():
@@ -275,13 +275,13 @@ def test_weighted_num_qubits_and_stabilisers():
 
 def test_weighted_mwpm_from_array():
     H = csc_matrix([[1,0],[1,1],[0,1]])
-    m = Matching(H, weights=np.array([1., 2.]))
+    m = Matching(H, spacelike_weights=np.array([1., 2.]))
     assert m.stabiliser_graph.distance(0, 1) == 1.
     assert m.stabiliser_graph.distance(1, 2) == 2.
     with pytest.raises(ValueError):
-        m = Matching(H, weights=np.array([1.]))
+        m = Matching(H, spacelike_weights=np.array([1.]))
     with pytest.raises(ValueError):
-        m = Matching(H, weights=np.array([1., -2.]))
+        m = Matching(H, spacelike_weights=np.array([1., -2.]))
 
 
 def test_unweighted_stabiliser_graph_from_networkx():
@@ -365,9 +365,14 @@ def test_double_weight_matching():
         )
 
 
-def test_not_two_checks_per_qubit_raises_value_error():
-    H1 = csr_matrix([[1,1],[1,0],[1,1]])
-    H2 = csc_matrix([[1,1],[0,0]])
-    with pytest.raises(ValueError):
-        check_two_checks_per_qubit(H1)
-        check_two_checks_per_qubit(H2)
+def test_repr():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(1, 2, qubit_id=1)
+    g.add_edge(2, 3, qubit_id=2)
+    g.nodes[0]['is_boundary'] = True
+    g.nodes[3]['is_boundary'] = True
+    g.add_edge(0, 3, weight=0.0)
+    m = Matching(g)
+    assert m.__repr__() == ("<pymatching.Matching object with 3 qubits, "
+                            "2 stabilisers, 2 boundary nodes, and 4 edges>")

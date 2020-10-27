@@ -197,6 +197,10 @@ class Matching:
     def decode(self, z, num_neighbours=20):
         """Decode the syndrome `z` using minimum-weight perfect matching
 
+        If the parity of `z` is odd, then the first boundary node in 
+        ``self.boundary`` is flipped, and all other stabiliser and 
+        boundary nodes are left unchanged.
+
         Parameters
         ----------
         z : numpy.ndarray
@@ -260,8 +264,12 @@ class Matching:
     def add_noise(self):
         """Add noise by flipping edges in the stabiliser graph with 
         a probability given by the error_probility edge attribute.
-        This is currently only supported for weighted matching graphs
-        initialised using a NetworkX graph.
+        The ``error_probability`` must be set for all edges for this 
+        method to run, otherwise it returns `None`.
+        If boundary nodes are present, then the first boundary in 
+        ``self.boundary`` is given a 1 syndrome only if the syndrome 
+        of the stabilisers has odd parity, and all other boundary 
+        nodes are always given a 0 syndrome.
 
         Returns
         -------
@@ -277,4 +285,12 @@ class Matching:
         return self.stabiliser_graph.add_noise()
     
     def __repr__(self):
-        return f"<pymatching.Matching object with {self.num_qubits} qubits and {self.num_stabilisers} stabilisers>"
+        N = self.num_qubits
+        M = self.num_stabilisers
+        B = len(self.boundary)
+        E = self.stabiliser_graph.get_num_edges()
+        return (f"<pymatching.Matching object with "
+                f"{N} qubit{'s' if N != 1 else ''},"
+                f" {M} stabiliser{'s' if M != 1 else ''}, "
+                f"{B} boundary node{'s' if B != 1 else ''}, and "
+                f"{E} edge{'s' if E != 1 else ''}>")
