@@ -11,3 +11,6 @@ python:
     - method: pip
       path: .
   system_packages: true
+
+submodules:
+  include: all
