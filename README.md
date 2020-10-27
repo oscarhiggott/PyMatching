@@ -46,7 +46,7 @@ While all the functionality of PyMatching is available via the Python bindings, 
 
 ## Licensing of Blossom V dependency
 
-This package uses the Blossom V implementation of minimum weight perfect matching (downloaded from [here](https://pub.ist.ac.at/~vnk/software.html) upon installation) which is licenced for research purposes only. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).
+This package uses the Blossom V implementation of minimum weight perfect matching (downloaded from [here](https://pub.ist.ac.at/~vnk/software.html) upon installation). Please check the terms of its non-commercial research-only license carefully. Commercial licensing options for Blossom V are available [here](https://xip.uclb.com/i/software/BlossomV.html).
 
 ## Attribution
 
