@@ -3,3 +3,4 @@ nbsphinx
 numpy
 scipy
 networkx
+cmake
