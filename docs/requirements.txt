@@ -1,0 +1,5 @@
+ipykernel
+nbsphinx
+numpy
+scipy
+networkx
