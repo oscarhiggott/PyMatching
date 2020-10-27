@@ -50,7 +50,7 @@ This package uses the Blossom V implementation of minimum weight perfect matchin
 
 ## Attribution
 
-When using PyMatching for research, please cite the BlossomV dependency:
+When using PyMatching for research, you should cite the BlossomV dependency:
 
         Vladimir Kolmogorov. "Blossom V: A new implementation of a minimum cost perfect matching algorithm."
         In Mathematical Programming Computation (MPC), July 2009, 1(1):43-67.
