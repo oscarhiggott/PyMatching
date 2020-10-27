@@ -3,6 +3,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
 #include <boost/graph/breadth_first_search.hpp>
+#include <boost/graph/connected_components.hpp>
 #include "weighted_stabiliser_graph.h"
 #include <memory>
 #include <set>
@@ -338,4 +339,9 @@ bool WeightedStabiliserGraph::HasComputedAllPairsShortestPaths() const {
     bool has_distances = all_distances.size() == n;
     bool has_preds = all_predecessors.size() == n;
     return has_distances && has_preds;
+}
+
+int WeightedStabiliserGraph::GetNumConnectedComponents() const {
+    std::vector<int> component(boost::num_vertices(stabiliser_graph));
+    return boost::connected_components(stabiliser_graph, &component[0]);
 }

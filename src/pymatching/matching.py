@@ -46,7 +46,7 @@ class Matching:
                  timelike_weights=None,
                  measurement_error_probability=None,
                  precompute_shortest_paths=False):
-        """Constructor for the Matching class
+        r"""Constructor for the Matching class
 
         Parameters
         ----------
@@ -94,7 +94,7 @@ class Matching:
             `num_neighbours=None` in `decode`), then setting this option
             to True will precompute the all-pairs shortest paths.
             By default False
-        """
+            """
         if not isinstance(H, nx.Graph):
             try:
                 H = csc_matrix(H)
@@ -176,6 +176,10 @@ class Matching:
                 e_prob = attr.get("error_probability", -1)
                 g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
             self.stabiliser_graph = g
+        num_components = self.stabiliser_graph.get_num_connected_components()
+        if num_components != 1:
+            raise ValueError("Matching graph must have 1 connected component"
+                             f"but instead has {num_components}")
         if precompute_shortest_paths:
             self.stabiliser_graph.compute_all_pairs_shortest_paths()
     
@@ -215,8 +219,9 @@ class Matching:
             then the local matching decoder in the Appendix of 
             https://arxiv.org/abs/2010.09626 is used, and `num_neighbours` 
             corresponds to the parameter `m` in the paper. It is recommended 
-            to leave `num_neighbours` set to 20, and not to set it to less 
-            than 10. If `num_neighbours=None`, then instead full matching is 
+            to leave `num_neighbours` set to 20. Setting num_neighbours to 
+            less than than 10 is numerically unstable, and not permitted. 
+            If `num_neighbours=None`, then instead full matching is 
             performed, with the all-pairs shortest paths precomputed and 
             cached the first time it is used. Since full matching is more 
             memory intensive, it is not recommended to be used for matching graphs 
@@ -233,6 +238,10 @@ class Matching:
             and otherwise 0.
 
         """
+        if num_neighbours is not None and num_neighbours < 10:
+            raise ValueError("num_neighbours can be either None, or an"
+                             " integer greater than or equal to 10, "
+                             f"not {num_neighbours}.")
         try:
             z = np.array(z, dtype=np.uint8)
         except:

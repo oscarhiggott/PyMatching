@@ -6,7 +6,7 @@ from scipy.sparse import csc_matrix, load_npz, csr_matrix
 import pytest
 import networkx as nx
 
-from pymatching._cpp_mwpm import (decode, WeightedStabiliserGraph)
+from pymatching._cpp_mwpm import WeightedStabiliserGraph
 from pymatching import Matching
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -235,44 +235,6 @@ def test_error_probability_from_array():
     assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
 
 
-def test_weighted_spacetime_shortest_path():
-    w = WeightedStabiliserGraph(6, [])
-    w.add_edge(0, 1, {0}, 7.0)
-    w.add_edge(0, 5, {1}, 14.0)
-    w.add_edge(0, 2, {2}, 9.0)
-    w.add_edge(1, 2, {3}, 10.0)
-    w.add_edge(1, 3, {4}, 15.0)
-    w.add_edge(2, 5, {5}, 2.0)
-    w.add_edge(2, 3, {6}, 11.0)
-    w.add_edge(3, 4, {7}, 6.0)
-    w.add_edge(4, 5, {8}, 9.0)
-    w.compute_all_pairs_shortest_paths()
-
-    assert(w.qubit_ids(3, 1) == {4})
-    assert(w.distance(1, 2) == pytest.approx(10.0))
-    assert(w.distance(5, 0) == pytest.approx(11.0))
-    assert(w.shortest_path(3, 5) == [3, 2, 5])
-    assert(w.shortest_path(4, 2) == [4, 5, 2])
-    assert(w.get_num_qubits() == 9)
-    assert(w.get_num_stabilisers() == 6)
-
-
-def test_weighted_num_qubits_and_stabilisers():
-    w = WeightedStabiliserGraph(6, [])
-    w.add_edge(0, 1, {0}, 7.0)
-    w.add_edge(0, 5, {1}, 14.0)
-    w.add_edge(0, 2, {2}, 9.0)
-    w.add_edge(1, 2, set(), 10.0)
-    w.add_edge(1, 3, {3}, 15.0)
-    w.add_edge(2, 5, {4}, 2.0)
-    w.add_edge(2, 3, set(), 11.0)
-    w.add_edge(3, 4, {5}, 6.0)
-    w.add_edge(4, 5, {6}, 9.0)
-    w.compute_all_pairs_shortest_paths()
-    assert(w.get_num_qubits() == 7)
-    assert(w.get_num_stabilisers() == 6)
-
-
 def test_weighted_mwpm_from_array():
     H = csc_matrix([[1,0],[1,1],[0,1]])
     m = Matching(H, spacelike_weights=np.array([1., 2.]))
@@ -376,3 +338,35 @@ def test_repr():
     m = Matching(g)
     assert m.__repr__() == ("<pymatching.Matching object with 3 qubits, "
                             "2 stabilisers, 2 boundary nodes, and 4 edges>")
+
+
+def test_wrong_connected_components_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(1, 2, qubit_id=1)
+    g.add_edge(2, 0, qubit_id=2)
+    g.add_edge(3, 4, qubit_id=3)
+    g.add_edge(4, 5, qubit_id=4)
+    g.add_edge(5, 3, qubit_id=5)
+    with pytest.raises(ValueError):
+        Matching(g)
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0)
+    g.add_edge(1, 2, qubit_id=1)
+    g.add_edge(2, 0, qubit_id=2)
+    m = Matching(g)
+    assert m.stabiliser_graph.get_num_connected_components() == 1
+
+
+def test_small_num_neighbours_raises_value_error():
+    m = Matching(np.array([
+        [1,1,0,0],
+        [0,1,1,0],
+        [0,0,1,1]
+    ]))
+    min_num_neighbours = 10
+    for i in range(min_num_neighbours):
+        with pytest.raises(ValueError):
+            m.decode([0,1,1], num_neighbours=i)
+    for i in range(min_num_neighbours, 2*min_num_neighbours):
+        m.decode([0,1,1], num_neighbours=i)

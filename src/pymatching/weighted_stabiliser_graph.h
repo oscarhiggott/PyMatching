@@ -65,6 +65,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
             int source, int num_neighbours, std::vector<int>& defect_id);
         std::vector<int> GetPath(
             int source, int target);
+        virtual int GetNumConnectedComponents() const;
         std::vector<int> boundary;
         std::vector<double> _distances;
         std::vector<int> _predecessors;

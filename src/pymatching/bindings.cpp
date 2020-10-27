@@ -39,7 +39,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("get_num_stabilisers", &IStabiliserGraph::GetNumStabilisers)
     .def("get_num_edges", &IStabiliserGraph::GetNumEdges)
     .def("compute_all_pairs_shortest_paths", &IStabiliserGraph::ComputeAllPairsShortestPaths)
-    .def("has_computed_all_pairs_shortest_paths", &IStabiliserGraph::HasComputedAllPairsShortestPaths);
+    .def("has_computed_all_pairs_shortest_paths", &IStabiliserGraph::HasComputedAllPairsShortestPaths)
+    .def("get_num_connected_components", &IStabiliserGraph::GetNumConnectedComponents);
 
     py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
     .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
