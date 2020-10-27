@@ -157,8 +157,14 @@ class Matching:
             boundary = _find_boundary_nodes(H)
             num_nodes = H.number_of_nodes()
             self.num_stabilisers = num_nodes - len(boundary)
+            all_qubits = set()
             g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
             for (u, v, attr) in H.edges(data=True):
+                u, v = int(u), int(v)
+                if u >= num_nodes or v>= num_nodes:
+                    raise ValueError("Every node id must be less "
+                        "than the number of nodes, but edge "
+                        f"({u},{v}) was present.")
                 qubit_id = attr.get("qubit_id", set())
                 if isinstance(qubit_id, (int, np.integer)):
                     qubit_id = {int(qubit_id)} if qubit_id != -1 else set()
@@ -170,15 +176,19 @@ class Matching:
                     except:
                         raise ValueError("qubit_id property must be an int or a set of int"
                                 f" (or convertible to a set), not {qubit_id}")
+                all_qubits = all_qubits | qubit_id
                 weight = attr.get("weight", 1) # Default weight is 1 if not provided
                 if weight < 0:
                     raise ValueError("Weights cannot be negative.")
                 e_prob = attr.get("error_probability", -1)
                 g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
             self.stabiliser_graph = g
+            if max(all_qubits, default=-1) != len(all_qubits) - 1:
+                raise ValueError(f"The maximum qubit id ({max(all_qubits, default=0)}) should "
+                        f"equal the number of qubits ({len(all_qubits)}) minus one.")
         num_components = self.stabiliser_graph.get_num_connected_components()
         if num_components != 1:
-            raise ValueError("Matching graph must have 1 connected component"
+            raise ValueError("Matching graph must have 1 connected component, "
                              f"but instead has {num_components}")
         if precompute_shortest_paths:
             self.stabiliser_graph.compute_all_pairs_shortest_paths()

@@ -370,3 +370,17 @@ def test_small_num_neighbours_raises_value_error():
             m.decode([0,1,1], num_neighbours=i)
     for i in range(min_num_neighbours, 2*min_num_neighbours):
         m.decode([0,1,1], num_neighbours=i)
+
+
+def test_high_qubit_id_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0,1,qubit_id=1)
+    with pytest.raises(ValueError):
+        Matching(g)
+
+
+def test_high_node_id_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(1, 2)
+    with pytest.raises(ValueError):
+        Matching(g)
