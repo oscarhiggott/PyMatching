@@ -23,10 +23,10 @@ than a few thousand nodes, since the average complexity is
 empirically roughly quadratic in the number of nodes. 
 PyMatching is intended to provide the best of both 
 worlds: the algorithms and data structures are implemented 
-in C++ for speed (with the help of BlossomV and the Boost Graph library), using a local variant 
-of the matching decoder given in the Appendix 
-of https://arxiv.org/abs/2010.09626, which empirically has 
-an average runtime roughly linear in the number of nodes 
+in C++ for good performance (with the help of BlossomV and the Boost Graph library), 
+using a local variant of the matching decoder given in the 
+Appendix of https://arxiv.org/abs/2010.09626, which empirically 
+has an average runtime roughly linear in the number of nodes 
 and gives the same output as full matching in practice.
 Furthermore, Python bindings are provided for all the 
 core functionality of PyMatching, making it easy to use 
