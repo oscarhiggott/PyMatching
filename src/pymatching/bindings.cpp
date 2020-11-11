@@ -5,6 +5,7 @@
 #include "stabiliser_graph.h"
 #include "weighted_stabiliser_graph.h"
 #include "rand_gen.h"
+#include "boost_mwpm.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -63,4 +64,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     m.def("randomize", &randomize);
     m.def("set_seed", &set_seed, "s"_a);
     m.def("rand_float", &rand_float, "from"_a, "to"_a);
+
+    m.def("decode_boost_match_neighbourhood", &DecodeBoostMatchNeighbourhood, "sg"_a ,"defects"_a, "num_neighbours"_a);
 }

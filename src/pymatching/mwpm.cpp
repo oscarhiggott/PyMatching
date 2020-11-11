@@ -26,6 +26,7 @@ py::array_t<std::uint8_t> Decode(IStabiliserGraph& sg, const py::array_t<int>& d
     };
     pm->options.verbose = false;
     pm->Solve();
+    // after_solve = std::clock();
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
