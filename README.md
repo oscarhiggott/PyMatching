@@ -8,6 +8,8 @@ PyMatching is a fast library for decoding quantum error correcting codes (QECC) 
 
 ## Installation
 
+Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/)
+
 Clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule). Make sure you have cmake installed, and then use `pip` to install:
 ```
 git clone --recursive https://github.com/oscarhiggott/PyMatching.git
@@ -36,7 +38,7 @@ and then decoded from an `m` by `L` numpy array syndrome `z` using:
 c = m.decode(z)
 ```
 
-The Matching object can also be constructed from a NetworkX graph instead of a check matrix, and can handle weighted edges. For full details see the documentation.
+The Matching object can also be constructed from a NetworkX graph instead of a check matrix, and can handle weighted edges. For full details see [the documentation](https://pymatching.readthedocs.io/).
 
 ## Performance
 
