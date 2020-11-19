@@ -60,7 +60,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
 
     m.def("decode", &Decode, "sg"_a, "defects"_a);
-    m.def("decode_match_neighbourhood", &DecodeMatchNeighbourhood,
+    m.def("decode_match_neighbourhood_old", &DecodeMatchNeighbourhood,
           "sg"_a ,"defects"_a, "num_neighbours"_a);
     m.def("randomize", &randomize);
     m.def("set_seed", &set_seed, "s"_a);
@@ -69,4 +69,6 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
     m.def("decode_boost_match_neighbourhood", &DecodeBoostMatchNeighbourhood, "sg"_a ,"defects"_a, "num_neighbours"_a);
 
     m.def("lemon_test", &LemonTest);
+    m.def("lemon_matching_test", &LemonMatchingTest);
+    m.def("decode_match_neighbourhood", &DecodeLemonMatchNeighbourhood);
 }
