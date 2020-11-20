@@ -4,6 +4,5 @@
 #include <pybind11/numpy.h>
 
 
-int LemonTest();
-double LemonMatchingTest();
-py::array_t<std::uint8_t> DecodeLemonMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, int num_neighbours);
+py::array_t<std::uint8_t> LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects);
+py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, int num_neighbours);
