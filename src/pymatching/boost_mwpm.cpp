@@ -17,7 +17,7 @@ typedef boost::adjacency_list< boost::vecS, boost::vecS,
         boost::undirectedS, boost::no_property, Weight >
     defect_graph;
 
-py::array_t<std::uint8_t> DecodeBoostMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, int num_neighbours){
+py::array_t<std::uint8_t> BoostDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, int num_neighbours){
     auto d = defects.unchecked<1>();
     int num_defects = d.shape(0);
 
@@ -29,10 +29,8 @@ py::array_t<std::uint8_t> DecodeBoostMatchNeighbourhood(WeightedStabiliserGraph&
     }
 
     num_neighbours = std::min(num_neighbours, num_defects-1) + 1;
-    // int num_edges_max = (num_defects * num_neighbours);
     defect_graph g(num_defects);
     std::vector< boost::graph_traits< defect_graph >::vertex_descriptor > match(num_defects);
-    // PerfectMatching *pm = new PerfectMatching(num_defects, num_edges_max);
     std::vector<std::pair<int, double>> neighbours;
     std::vector<std::set<int>> adj_list(num_defects);
     int j;
@@ -78,6 +76,47 @@ py::array_t<std::uint8_t> DecodeBoostMatchNeighbourhood(WeightedStabiliserGraph&
             }
         }
     }
+    auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
+    return py::array_t<int>(correction->size(), correction->data(), capsule);
+}
+
+py::array_t<std::uint8_t> BoostDecode(IStabiliserGraph& sg, const py::array_t<int>& defects){
+    if (!sg.HasComputedAllPairsShortestPaths()){
+        sg.ComputeAllPairsShortestPaths();
+    }
+    auto d = defects.unchecked<1>();
+    int num_nodes = d.shape(0);
+    int num_edges = num_nodes*(num_nodes-1)/2;
+
+    defect_graph g(num_nodes);
+    std::vector< boost::graph_traits< defect_graph >::vertex_descriptor > match(num_nodes);
+
+    for (py::size_t i = 0; i<num_nodes; i++){
+        for (py::size_t j=i+1; j<num_nodes; j++){
+            boost::add_edge(i, j, Weight(1.0/(1.0+sg.SpaceTimeDistance(d(i), d(j)))), g);
+        }
+    };
+
+    boost::maximum_weighted_matching(g, &match[0]);
+
+    int N = sg.GetNumQubits();
+    auto correction = new std::vector<int>(N, 0);
+    std::set<int> qids;
+    for (py::size_t i = 0; i<num_nodes; i++){
+        int j = match[i];
+        if (i<j){
+            std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
+            for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
+                qids = sg.QubitIDs(path[k], path[k+1]);
+                for (auto qid : qids){
+                    if ((qid != -1) && (qid >= 0) && (qid < N)){
+                        (*correction)[qid] = ((*correction)[qid] + 1) % 2;
+                    }
+                }
+            }
+        }
+    }
+
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     return py::array_t<int>(correction->size(), correction->data(), capsule);
 }

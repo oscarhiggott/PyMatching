@@ -59,15 +59,16 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
          "source"_a, "num_neighbours"_a, "defect_id"_a)
     .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
 
-    m.def("decode_old", &Decode, "sg"_a, "defects"_a);
-    m.def("decode_match_neighbourhood_old", &DecodeMatchNeighbourhood,
+    m.def("bv_decode", &Decode, "sg"_a, "defects"_a);
+    m.def("bv_decode_match_neighbourhood", &DecodeMatchNeighbourhood,
           "sg"_a ,"defects"_a, "num_neighbours"_a);
     m.def("randomize", &randomize);
     m.def("set_seed", &set_seed, "s"_a);
     m.def("rand_float", &rand_float, "from"_a, "to"_a);
 
-    m.def("decode_boost_match_neighbourhood", &DecodeBoostMatchNeighbourhood, "sg"_a ,"defects"_a, "num_neighbours"_a);
+    m.def("decode_match_neighbourhood", &BoostDecodeMatchNeighbourhood, "sg"_a ,"defects"_a, "num_neighbours"_a);
+     m.def("decode", &BoostDecode, "sg"_a, "defects"_a);
 
-    m.def("decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood);
-     m.def("decode", &LemonDecode);
+    m.def("lemon_decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood);
+     m.def("lemon_decode", &LemonDecode);
 }
