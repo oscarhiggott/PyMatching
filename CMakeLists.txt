@@ -5,9 +5,6 @@ add_compile_definitions(PERFECT_MATCHING_DOUBLE)
 
 file(GLOB SOURCES "src/pymatching/*.cpp")
 
-add_subdirectory(lib/blossom5-v2.05.src)
-target_compile_options(Blossom5 PRIVATE "-fPIC")
-
 add_subdirectory(lib/pybind11)
 pybind11_add_module(_cpp_mwpm ${SOURCES})
 
@@ -19,11 +16,8 @@ target_link_libraries(_cpp_mwpm PRIVATE lemon)
 
 include_directories(${CMAKE_SOURCE_DIR}/lib/boost_1_72_0)
 
-target_link_libraries(_cpp_mwpm PRIVATE Blossom5)
-
 target_include_directories(_cpp_mwpm PRIVATE
                           "${PROJECT_BINARY_DIR}"
-                          "${PROJECT_SOURCE_DIR}/lib/blossom5-v2.05.src"
                           "${CMAKE_SOURCE_DIR}/lib/lemon"
                           "${CMAKE_BINARY_DIR}/lib/lemon"
                           )

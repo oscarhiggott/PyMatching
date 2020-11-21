@@ -29,13 +29,6 @@ def download_and_extract(pkg_url, pkg_fn, pkg_orig_dir=None, pkg_new_dir=None):
     if os.path.isfile(pkg_fn):
         os.remove(pkg_fn)
 
-blossom5_url = "https://pub.ist.ac.at/~vnk/software/blossom5-v2.05.src.tar.gz"
-blossom5_fn = os.path.join(root_dir, "blossom5-v2.05.src.tar.gz")
-blossom5_dir = os.path.join(lib_dir, "blossom5-v2.05.src")
-
-if not os.path.isfile(os.path.join(blossom5_dir, "PerfectMatching.h")):
-    download_and_extract(blossom5_url, blossom5_fn)
-
 lemon_url = "http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
 lemon_fn = os.path.join(root_dir, "lemon-1.3.1.tar.gz")
 lemon_old_dir = os.path.join(lib_dir, "lemon-1.3.1")

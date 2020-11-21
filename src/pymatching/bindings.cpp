@@ -1,36 +1,14 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include"mwpm.h"
-#include <PerfectMatching.h>
 #include "stabiliser_graph.h"
 #include "weighted_stabiliser_graph.h"
 #include "rand_gen.h"
-#include "boost_mwpm.h"
 #include "lemon_mwpm.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(_cpp_mwpm, m) {
-     py::class_<PerfectMatching>(m, "PerfectMatching")
-     .def(py::init<int, int>(), "nodeNum"_a, "edgeNumMax"_a)
-     .def("add_edge", &PerfectMatching::AddEdge, 
-          "i"_a, "j"_a, "cost"_a)
-     .def("solve", &PerfectMatching::Solve, "finish"_a=true)
-     .def("get_match", &PerfectMatching::GetMatch, "i"_a)
-     .def("get_solution", &PerfectMatching::GetSolution, "e"_a)
-     .def_readwrite("options", &PerfectMatching::options);
-
-     py::class_<PerfectMatching::Options>(m, "Options")
-     .def(py::init<>())
-     .def_readwrite("fractional_jumpstart", &PerfectMatching::Options::fractional_jumpstart)
-     .def_readwrite("dual_greedy_update_option", &PerfectMatching::Options::dual_greedy_update_option)
-     .def_readwrite("dual_LP_threshold", &PerfectMatching::Options::dual_LP_threshold)
-     .def_readwrite("update_duals_before", &PerfectMatching::Options::update_duals_before)
-     .def_readwrite("update_duals_after", &PerfectMatching::Options::update_duals_after)
-     .def_readwrite("single_tree_threshold", &PerfectMatching::Options::single_tree_threshold)
-     .def_readwrite("verbose", &PerfectMatching::Options::verbose);
-
      py::class_<IStabiliserGraph>(m, "IStabiliserGraph")
      .def("distance", &IStabiliserGraph::Distance, "node1"_a, "node2"_a)
      .def("space_time_distance", &IStabiliserGraph::SpaceTimeDistance, "node1"_a, "node2"_a)
@@ -59,15 +37,9 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           "source"_a, "num_neighbours"_a, "defect_id"_a)
      .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
 
-     m.def("bv_decode", &Decode, "sg"_a, "defects"_a);
-     m.def("bv_decode_match_neighbourhood", &DecodeMatchNeighbourhood,
-          "sg"_a ,"defects"_a, "num_neighbours"_a);
      m.def("randomize", &randomize);
      m.def("set_seed", &set_seed, "s"_a);
      m.def("rand_float", &rand_float, "from"_a, "to"_a);
-
-     m.def("boost_decode_match_neighbourhood", &BoostDecodeMatchNeighbourhood, "sg"_a ,"defects"_a, "num_neighbours"_a);
-     m.def("boost_decode", &BoostDecode, "sg"_a, "defects"_a);
 
      m.def("decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood);
      m.def("decode", &LemonDecode);
