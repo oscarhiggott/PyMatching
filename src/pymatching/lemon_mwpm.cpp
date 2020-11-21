@@ -2,6 +2,7 @@
 #include "lemon_mwpm.h"
 #include <lemon/list_graph.h>
 #include <lemon/matching.h>
+#include <lemon/connectivity.h>
 #include <vector>
 #include <string>
 #include "weighted_stabiliser_graph.h"
@@ -107,6 +108,9 @@ py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph&
         }
     }
 
+    if (!lemon::connected(g)){
+        throw std::runtime_error("Graph must have only one connected component");
+    }
     typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
     MWPM pm(g, length);
     pm.run();
