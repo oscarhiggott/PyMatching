@@ -12,24 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <random>
-#include "rand_gen.h"
+#include "weighted_stabiliser_graph.h"
+#include "stabiliser_graph.h"
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
-std::mt19937 & global_urng( ) {
-static std::mt19937 u{}; return u;
-}
 
-void randomize( ) {
-static std::random_device rd{};
-global_urng().seed( rd() );
-}
-
-void set_seed( unsigned s) { 
-    global_urng().seed(s); 
-}
-
-double rand_float(double from, double to) {
-    static std::uniform_real_distribution<> d{};
-    using parm_t = decltype(d)::param_type;
-    return d( global_urng(), parm_t{from, to} ); 
-}
+py::array_t<std::uint8_t> LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects);
+py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, int num_neighbours);
