@@ -10,7 +10,7 @@ PyMatching is a fast Python/C++ library for decoding quantum error correcting co
 
 Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/)
 
-Clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule). Make sure you have cmake installed, and then use `pip` to install:
+Clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule), and then use `pip` to install:
 ```
 git clone --recursive https://github.com/oscarhiggott/PyMatching.git
 pip install -e ./PyMatching
