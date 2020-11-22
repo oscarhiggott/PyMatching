@@ -51,7 +51,7 @@ py::array_t<std::uint8_t> LemonDecode(IStabiliserGraph& sg, const py::array_t<in
     for (py::size_t i = 0; i<num_nodes; i++){
         for (py::size_t j=i+1; j<num_nodes; j++){
             UGraph::Edge e = g.addEdge(node_list[i], node_list[j]);
-            length[e] = 1.0/(1.0+sg.SpaceTimeDistance(d(i), d(j)));
+            length[e] = -1.0*sg.SpaceTimeDistance(d(i), d(j));
         }
     };
     typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
@@ -115,7 +115,7 @@ py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph&
             is_in = adj_list[i].find(j) != adj_list[i].end();
             if (!is_in && i!=j){
                 UGraph::Edge e = g.addEdge(node_list[i], node_list[j]);
-                length[e] = 1.0/(1.0+neighbour.second);
+                length[e] = -1.0*neighbour.second;
                 adj_list[i].insert(j);
                 adj_list[j].insert(i);
             }
