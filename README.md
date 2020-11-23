@@ -16,8 +16,7 @@ git clone --recursive https://github.com/oscarhiggott/PyMatching.git
 pip install -e ./PyMatching
 ```
 
-Note this installation may take a few minutes since the C++ extension has to be compiled. If you'd also 
-like to run the tests, first install [pytest](https://docs.pytest.org/en/stable/), and then run:
+Note that PyMatching requires Python 3.6 or later. The installation may take a few minutes since the C++ extension has to be compiled. If you'd also like to run the tests, first install [pytest](https://docs.pytest.org/en/stable/), and then run:
 ```
 pytest ./PyMatching/tests
 ```
