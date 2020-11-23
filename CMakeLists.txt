@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(mwpm)
 
-add_compile_definitions(PERFECT_MATCHING_DOUBLE)
-
 file(GLOB SOURCES "src/pymatching/*.cpp")
 
 add_subdirectory(lib/pybind11)
