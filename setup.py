@@ -99,9 +99,16 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
+
+version = {}
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here,"src/pymatching/_version.py")) as fp:
+    exec(fp.read(), version)
+
+
 setup(
     name='PyMatching',
-    version='0.0.1',
+    version=version['__version__'],
     author='Oscar Higgott',
     description='A C++ implementation of the Minimum Weight Perfect Matching decoder, with Python bindings.',
     ext_modules=[CMakeExtension('pymatching._cpp_mwpm')],
@@ -109,5 +116,6 @@ setup(
     package_dir={'':'src'},
     cmdclass=dict(build_ext=CMakeBuild),
     install_requires=['scipy', 'numpy', 'networkx', 'cmake'],
+    python_requires='>=3.6',
     zip_safe=False,
 )
