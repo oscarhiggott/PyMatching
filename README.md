@@ -16,6 +16,12 @@ git clone --recursive https://github.com/oscarhiggott/PyMatching.git
 pip install -e ./PyMatching
 ```
 
+Note this installation may take a few minutes since the C++ extension has to be compiled. If you'd also 
+like to run the tests, first install [pytest](https://docs.pytest.org/en/stable/), and then run:
+```
+pytest ./PyMatching/tests
+```
+
 ## Usage
 
 In order to decode a parity check matrix `H` (a `scipy.sparse` matrix) with syndrome vector `z` (a bitstring which is a numpy array of dtype int), first construct the `Matching` object after importing it:
@@ -48,7 +54,7 @@ While all the functionality of PyMatching is available via the Python bindings, 
 
 ## Attribution
 
-When using PyMatching for research, please consider citing:
+When using PyMatching for research, please cite:
 ```
 @misc{higgott2020pymatching,
   author = {Higgott, Oscar},
