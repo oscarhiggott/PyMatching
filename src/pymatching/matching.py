@@ -243,8 +243,7 @@ class Matching:
             then the local matching decoder in the Appendix of 
             https://arxiv.org/abs/2010.09626 is used, and `num_neighbours` 
             corresponds to the parameter `m` in the paper. It is recommended 
-            to leave `num_neighbours` set to 20. Setting num_neighbours to 
-            less than than 10 is numerically unstable, and not permitted. 
+            to leave `num_neighbours` set to at least 20.
             If `num_neighbours=None`, then instead full matching is 
             performed, with the all-pairs shortest paths precomputed and 
             cached the first time it is used. Since full matching is more 
@@ -262,10 +261,6 @@ class Matching:
             and otherwise 0.
 
         """
-        if num_neighbours is not None and num_neighbours < 10:
-            raise ValueError("num_neighbours can be either None, or an"
-                             " integer greater than or equal to 10, "
-                             f"not {num_neighbours}.")
         try:
             z = np.array(z, dtype=np.uint8)
         except:

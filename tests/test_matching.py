@@ -372,20 +372,6 @@ def test_wrong_connected_components_raises_value_error():
     assert m.stabiliser_graph.get_num_connected_components() == 1
 
 
-def test_small_num_neighbours_raises_value_error():
-    m = Matching(np.array([
-        [1,1,0,0],
-        [0,1,1,0],
-        [0,0,1,1]
-    ]))
-    min_num_neighbours = 10
-    for i in range(min_num_neighbours):
-        with pytest.raises(ValueError):
-            m.decode([0,1,1], num_neighbours=i)
-    for i in range(min_num_neighbours, 2*min_num_neighbours):
-        m.decode([0,1,1], num_neighbours=i)
-
-
 def test_high_qubit_id_raises_value_error():
     g = nx.Graph()
     g.add_edge(0,1,qubit_id=1)
@@ -439,3 +425,19 @@ def test_matching_correct():
     z[15] = 1
     assert np.array_equal(m.decode(z, num_neighbours=20).nonzero()[0], np.array([0,4,12,16,23]))
     assert np.array_equal(m.decode(z, num_neighbours=None).nonzero()[0], np.array([0,4,12,16,23]))
+
+
+@pytest.mark.parametrize("cluster_size", range(3,10,2))
+def test_local_matching_connected(cluster_size):
+    g = nx.Graph()
+    qid = 0
+    for i in range(cluster_size):
+        g.add_edge(i, i+1, weight=1.0, qubit_id=qid)
+        qid += 1
+    g.add_edge(cluster_size, cluster_size+1, weight=2*cluster_size, qubit_id=qid)
+    qid += 1
+    for i in range(cluster_size+1, 2*cluster_size + 1):
+        g.add_edge(i, i+1, weight=1.0, qubit_id=qid)
+        qid += 1
+    m = Matching(g)
+    m.decode([1]*(cluster_size+1)*2, num_neighbours=cluster_size)
