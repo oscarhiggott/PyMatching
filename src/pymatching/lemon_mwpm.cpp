@@ -135,7 +135,7 @@ py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph&
         is_connected = lemon::connected(defect_graph->g);
     }
 
-    if (!lemon::connected(defect_graph->g)){
+    if (!is_connected){
         throw std::runtime_error("Graph must have only one connected component");
     }
 
