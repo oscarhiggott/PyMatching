@@ -16,7 +16,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
-#include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/connected_components.hpp>
 #include "weighted_stabiliser_graph.h"
 #include <memory>

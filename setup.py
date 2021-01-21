@@ -115,7 +115,7 @@ setup(
     packages=find_packages("src"),
     package_dir={'':'src'},
     cmdclass=dict(build_ext=CMakeBuild),
-    install_requires=['scipy', 'numpy', 'networkx', 'cmake'],
+    install_requires=['scipy', 'numpy', 'networkx'],
     python_requires='>=3.6',
     zip_safe=False,
 )
