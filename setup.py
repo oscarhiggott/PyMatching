@@ -106,16 +106,25 @@ with open(os.path.join(here,"src/pymatching/_version.py")) as fp:
     exec(fp.read(), version)
 
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+
 setup(
     name='PyMatching',
     version=version['__version__'],
     author='Oscar Higgott',
     description='A C++ implementation of the Minimum Weight Perfect Matching decoder, with Python bindings.',
+    url="https://github.com/oscarhiggott/PyMatching",
     ext_modules=[CMakeExtension('pymatching._cpp_mwpm')],
     packages=find_packages("src"),
     package_dir={'':'src'},
     cmdclass=dict(build_ext=CMakeBuild),
     install_requires=['scipy', 'numpy', 'networkx'],
+    classifiers=[
+        "License :: OSI Approved :: Apache Software License"
+    ],
+    long_description=long_description,
     python_requires='>=3.6',
     zip_safe=False,
 )
