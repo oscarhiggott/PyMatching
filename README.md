@@ -7,17 +7,22 @@
 
 PyMatching is a fast Python/C++ library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching (MWPM) decoder. PyMatching can decode codes for which each error generates a pair of syndrome defects (or only a single defect at a boundary). Codes that satisfy these properties include two-dimensional topological codes such as the [toric code](https://en.wikipedia.org/wiki/Toric_code), the [surface code](https://arxiv.org/abs/quant-ph/0110143) and [2D hyperbolic codes](https://arxiv.org/abs/1506.04029). PyMatching can handle boundaries, measurement errors and weighted edges in the matching graph. Since the core algorithms are written in C++, PyMatching is much faster than a pure Python NetworkX implementation.
 
-## Installation
-
 Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/)
 
-Clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule), and then use `pip` to install:
+## Installation
+
+PyMatching can be downloaded and installed from [PyPI](https://pypi.org/project/PyMatching/) with the command:
+```
+pip install pymatching
+```
+This is the recommended way to install PyMatching, since it does not require you to build the C++ extension. Note that PyMatching requires Python 3.6 or later.
+
+If instead you would like to install PyMatching from source, clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule), and then use `pip` to install:
 ```
 git clone --recursive https://github.com/oscarhiggott/PyMatching.git
 pip install -e ./PyMatching
 ```
-
-Note that PyMatching requires Python 3.6 or later. The installation may take a few minutes since the C++ extension has to be compiled. If you'd also like to run the tests, first install [pytest](https://docs.pytest.org/en/stable/), and then run:
+The installation may take a few minutes since the C++ extension has to be compiled. If you'd also like to run the tests, first install [pytest](https://docs.pytest.org/en/stable/), and then run:
 ```
 pytest ./PyMatching/tests
 ```

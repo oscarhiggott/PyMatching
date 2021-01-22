@@ -25,6 +25,12 @@ from setuptools.command.build_ext import build_ext
 from distutils.version import LooseVersion
 
 
+def pip_install(package):
+    return subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
+
+# CMake is needed only if built from source (not for wheels)
+pip_install("cmake")
+
 root_dir = os.path.dirname(os.path.realpath(__file__))
 lib_dir = os.path.join(root_dir, "lib")
 
