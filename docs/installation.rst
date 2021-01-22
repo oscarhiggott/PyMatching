@@ -8,7 +8,7 @@ PyMatching can be downloaded and installed from `PyPI <https://pypi.org/project/
 This is the recommended way to install PyMatching, since it does not require you to build the C++ extension. 
 Note that PyMatching requires Python 3.6 or later.
 
-If instead you would like to install PyMatching from source, clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule), and then use `pip` to install::
+If instead you would like to install PyMatching from source, clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule) and then use `pip` to install::
 
     git clone --recursive https://github.com/oscarhiggott/PyMatching.git
     pip install -e ./PyMatching
