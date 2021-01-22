@@ -3,6 +3,8 @@
 
 ![Continuous Integration](https://github.com/oscarhiggott/PyMatching/workflows/Continuous%20Integration/badge.svg)
 [![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/PyMatching)
+[![docs](https://readthedocs.org/projects/pymatching/badge/?version=latest&style=plastic)](https://readthedocs.org/projects/pymatching/builds/)
+[![PyPI version](https://badge.fury.io/py/PyMatching.svg)](https://badge.fury.io/py/PyMatching)
 [![Unitary Fund](https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge)](http://unitary.fund)
 
 PyMatching is a fast Python/C++ library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching (MWPM) decoder. PyMatching can decode codes for which each error generates a pair of syndrome defects (or only a single defect at a boundary). Codes that satisfy these properties include two-dimensional topological codes such as the [toric code](https://en.wikipedia.org/wiki/Toric_code), the [surface code](https://arxiv.org/abs/quant-ph/0110143) and [2D hyperbolic codes](https://arxiv.org/abs/1506.04029). PyMatching can handle boundaries, measurement errors and weighted edges in the matching graph. Since the core algorithms are written in C++, PyMatching is much faster than a pure Python NetworkX implementation.
@@ -17,7 +19,7 @@ pip install pymatching
 ```
 This is the recommended way to install PyMatching, since it does not require you to build the C++ extension. Note that PyMatching requires Python 3.6 or later.
 
-If instead you would like to install PyMatching from source, clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule), and then use `pip` to install:
+If instead you would like to install PyMatching from source, clone the repository (using the `--recursive` flag to include the lib/pybind11 submodule) and then use `pip` to install:
 ```
 git clone --recursive https://github.com/oscarhiggott/PyMatching.git
 pip install -e ./PyMatching
