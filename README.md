@@ -57,7 +57,7 @@ The Matching object can also be constructed from a NetworkX graph instead of a c
 
 While all the functionality of PyMatching is available via the Python bindings, the core algorithms and data structures are implemented in C++, with the help of the [Lemon](https://lemon.cs.elte.hu/trac/lemon) and [Boost Graph](https://www.boost.org/doc/libs/1_74_0/libs/graph/doc/index.html) libraries. PyMatching also uses a local variant of the MWPM decoder (explained in the Appendix of [this paper](https://arxiv.org/abs/2010.09626)) that has a runtime that is approximately linear, rather than quadratic, in the number of nodes. As a result, PyMatching is orders of magnitude faster than a standard pure Python [NetworkX](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html) implementation, as shown here for decoding the toric code under an independent noise model with p=0.05 and noiseless syndrome measurements:
 
-<img src="docs/_static/pymatching_vs_networkx.png" width="400">
+<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/pymatching_vs_networkx.png" width="400">
 
 ## Attribution
 
