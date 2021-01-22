@@ -3,3 +3,4 @@ include MANIFEST.in
 include README.in
 include CMakeLists.txt
 recursive-include src *.txt *.py *.cpp *.h
+graft lib

@@ -43,9 +43,10 @@ def download_and_extract(pkg_url, pkg_fn, pkg_orig_dir=None, pkg_new_dir=None):
     if os.path.isfile(pkg_fn):
         os.remove(pkg_fn)
 
-lemon_url = "http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
-lemon_fn = os.path.join(root_dir, "lemon-1.3.1.tar.gz")
-lemon_old_dir = os.path.join(lib_dir, "lemon-1.3.1")
+lemon_url = "http://lemon.cs.elte.hu/hg/lemon-1.3/archive/e5af35e6c93f.tar.gz"
+# lemon_url = "http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
+lemon_fn = os.path.join(root_dir, "lemon-1-3-e5af35e6c93f.tar.gz")
+lemon_old_dir = os.path.join(lib_dir, "lemon-1-3-e5af35e6c93f")
 lemon_new_dir = os.path.join(lib_dir, "lemon")
 
 if not os.path.isfile(os.path.join(lemon_new_dir, "CMakeLists.txt")):
@@ -125,6 +126,7 @@ setup(
         "License :: OSI Approved :: Apache Software License"
     ],
     long_description=long_description,
+    long_description_content_type='text/markdown',
     python_requires='>=3.6',
     zip_safe=False,
 )

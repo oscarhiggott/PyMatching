@@ -15,11 +15,14 @@ jobs:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-18.04, windows-2019, macos-10.15]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - uses: actions/setup-python@v2
         name: Install Python
@@ -36,6 +39,9 @@ jobs:
       - name: Build wheels
         run: |
           python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"
+          CIBW_SKIP: "*-win32"
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl

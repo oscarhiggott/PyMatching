@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(mwpm)
 
+if(NOT DEFINED CMAKE_MODULE_LINKER_FLAGS_MAINTAINER)
+    set(
+        CMAKE_MODULE_LINKER_FLAGS_MAINTAINER ""
+        CACHE STRING ""
+    )
+endif()
+
 file(GLOB SOURCES "src/pymatching/*.cpp")
 
 add_subdirectory(lib/pybind11)
