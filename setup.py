@@ -121,7 +121,7 @@ setup(
     name='PyMatching',
     version=version['__version__'],
     author='Oscar Higgott',
-    description='A C++ implementation of the Minimum Weight Perfect Matching decoder, with Python bindings.',
+    description='A package for decoding quantum error correcting codes using minimum-weight perfect matching.',
     url="https://github.com/oscarhiggott/PyMatching",
     ext_modules=[CMakeExtension('pymatching._cpp_mwpm')],
     packages=find_packages("src"),
