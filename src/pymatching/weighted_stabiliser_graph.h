@@ -111,21 +111,122 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          * @return int The number of qubits
          */
         virtual int GetNumQubits() const;
+        /**
+         * @brief Get the number of nodes in the stabiliser graph (this includes both boundaries and stabilisers)
+         * 
+         * @return int Number of nodes in stabiliser_graph
+         */
         virtual int GetNumNodes() const;
+        /**
+         * @brief Get the number of edges in the stabiliser graph
+         * 
+         * @return int Number of edges in stabiliser_graph
+         */
         virtual int GetNumEdges() const;
+        /**
+         * @brief If an error_probability is assigned to every edge, flip each edge 
+         * with its corresponding error_probability. If an edge is flipped, add (mod 2) 
+         * an error to the associated qubits (specified by the qubit_ids edge data).
+         * The qubit errors are returned as a binary numpy array, as well as a syndrome 
+         * vector, also as a binary numpy array. The length of the syndrome vector is 
+         * is the number of nodes in the stabiliser graph (there is an element for each 
+         * stabiliser as well as for each boundary node). The syndromes of the boundary 
+         * nodes are all set to zero unless the parity of the stabiliser syndromes is odd, 
+         * in which case the first boundary node's syndrome is flipped.
+         * 
+         * @return std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> The first item in 
+         * the pair is the noise vector, and the second item is the syndrome vector.
+         */
         std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> AddNoise() const;
+        /**
+         * @brief The distance between every pair of nodes in the stabiliser graph, if 
+         * ComputeAllPairsShortestPaths has been run. all_distances[i][j] is the distance 
+         * between node i and node j in the stabiliser graph. Note that this is only used 
+         * if exact matching is used (the function LemonDecode in lemon_mwpm.cpp), and not if 
+         * (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood 
+         * in lemon_mwpm.cpp).
+         * 
+         */
         std::vector<std::vector<double>> all_distances;
+        /**
+         * @brief all_predecessors[i] is the PredecessorMap found by Boost's dijkstra_shortest_paths 
+         * from node i in stabiliser_graph to all other nodes. In other words, all_predecessors[i][j] 
+         * is the parent of node j in the shortest path from node i to node j in stabiliser_graph.
+         * Note that this is only used if exact matching is used (the function LemonDecode in lemon_mwpm.cpp), 
+         * and not if (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood 
+         * in lemon_mwpm.cpp).
+         * 
+         */
         std::vector<std::vector<vertex_descriptor>> all_predecessors;
-        bool all_edges_have_error_probabilities;
+        bool all_edges_have_error_probabilities; // true if every edge in stabiliser_graph has an error_probability in its edge data
+        /**
+         * @brief Get the indices of the boundary nodes
+         * 
+         * @return std::vector<int> The indices of the boundary nodes
+         */
         virtual std::vector<int> GetBoundary() const;
+        /**
+         * @brief Set the indices of the boundary nodes
+         * 
+         * @param boundary The indices of the boundary nodes
+         */
         virtual void SetBoundary(std::vector<int>& boundary);
+        /**
+         * @brief Flag whether or not the all-pairs shortest paths have been computed. 
+         * The all-pairs shortest paths are only needed for exact matching, which is not 
+         * a default option in the Python bindings.
+         * 
+         * @return true 
+         * @return false 
+         */
         virtual bool HasComputedAllPairsShortestPaths() const;
+        /**
+         * @brief Reset the _predecessors and _distances attributes, which 
+         * are used by WeightedStabiliserGraph::GetPath and WeightedStabiliserGraph::GetNearestNeighbours. 
+         * This just preallocates both of these vectors appropriately for use by the local dijkstra search 
+         * and will only do so if these vectors are not already the correct size. Once these attributes 
+         * are correctly preallocated the first time, the GetPath and GetNearestNeighbours methods always reset 
+         * only the elements in these vectors that have been used for efficiency (since these methods only use 
+         * a local search).
+         * 
+         */
         void ResetDijkstraNeighbours();
+        /**
+         * @brief Get the num_neighbours nearest neighbours i of a source node in the stabiliser_graph for which 
+         * defect_id[i] > -1. This is a local Dijkstra search that halts once num_neighbours nodes i have been found 
+         * that satisfy defect_id[i] > -1. The function returns a vector of pairs, where the first item in each 
+         * pair is the distance from source to one of the nearest nodes i, and the second item in the pair 
+         * is defect_id[i].
+         * This is used by LemonDecodeMatchNeighbourhood to find the num_neigbours nearest defects to be included 
+         * in the matching graph.
+         * 
+         * @param source 
+         * @param num_neighbours 
+         * @param defect_id 
+         * @return std::vector<std::pair<int, double>> 
+         */
         std::vector<std::pair<int, double>> GetNearestNeighbours(
             int source, int num_neighbours, std::vector<int>& defect_id);
+        /**
+         * @brief Get the shortest path from source to target using a version of Dijkstra 
+         * that terminates once target is found.
+         * 
+         * @param source 
+         * @param target 
+         * @return std::vector<int> 
+         */
         std::vector<int> GetPath(
             int source, int target);
+        /**
+         * @brief Get the number of connected components in the stabiliser graph
+         * 
+         * @return int The number of components
+         */
         virtual int GetNumConnectedComponents() const;
+        /**
+         * @brief The indices of the boundary nodes
+         * 
+         */
         std::vector<int> boundary;
         std::vector<double> _distances;
         std::vector<int> _predecessors;

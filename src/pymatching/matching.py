@@ -305,8 +305,8 @@ class Matching:
             Noise vector (binary numpy int array of length self.num_qubits)
         numpy.ndarray of dtype int
             Syndrome vector (binary numpy int array of length 
-            self.num_stabilisers if there is no boundary, or self.num_stabilisers+1
-            if there is a boundary)
+            self.num_stabilisers if there is no boundary, or self.num_stabilisers+len(self.boundary)
+            if there are boundary nodes)
         """
         if not self.stabiliser_graph.all_edges_have_error_probabilities:
             return None
