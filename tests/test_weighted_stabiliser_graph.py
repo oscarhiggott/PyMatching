@@ -35,7 +35,7 @@ def test_weighted_spacetime_shortest_path():
     assert(w.shortest_path(3, 5) == [3, 2, 5])
     assert(w.shortest_path(4, 2) == [4, 5, 2])
     assert(w.get_num_qubits() == 9)
-    assert(w.get_num_stabilisers() == 6)
+    assert(w.get_num_nodes() == 6)
 
 
 def test_weighted_num_qubits_and_stabilisers():
@@ -51,7 +51,7 @@ def test_weighted_num_qubits_and_stabilisers():
     w.add_edge(4, 5, {6}, 9.0)
     w.compute_all_pairs_shortest_paths()
     assert(w.get_num_qubits() == 7)
-    assert(w.get_num_stabilisers() == 6)
+    assert(w.get_num_nodes() == 6)
 
 
 @pytest.mark.parametrize("num_loops", range(1, 10))

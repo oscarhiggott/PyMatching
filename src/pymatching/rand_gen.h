@@ -20,6 +20,18 @@ std::mt19937 & global_urng();
 
 void randomize();
 
+/**
+ * @brief Set the seed for the mt19937 random number generator
+ * 
+ * @param s 
+ */
 void set_seed(unsigned s);
 
+/**
+ * @brief A random double chosen uniformly at random between `from` and `to`
+ * 
+ * @param from
+ * @param to 
+ * @return double 
+ */
 double rand_float(double from, double to);

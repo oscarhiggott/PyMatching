@@ -284,7 +284,7 @@ int WeightedStabiliserGraph::GetNumQubits() const {
     return num_qubits;
 }
 
-int WeightedStabiliserGraph::GetNumStabilisers() const {
+int WeightedStabiliserGraph::GetNumNodes() const {
     return boost::num_vertices(stabiliser_graph);
 };
 
@@ -299,7 +299,7 @@ std::set<int> WeightedStabiliserGraph::QubitIDs(int node1, int node2) const {
 }
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabiliserGraph::AddNoise() const {
-    auto syndrome = new std::vector<int>(GetNumStabilisers(), 0);
+    auto syndrome = new std::vector<int>(GetNumNodes(), 0);
     auto error = new std::vector<int>(GetNumQubits(), 0);
     double p;
     std::set<int> qids;
