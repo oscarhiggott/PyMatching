@@ -111,7 +111,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          * @return int The number of qubits
          */
         virtual int GetNumQubits() const;
-        virtual int GetNumStabilisers() const;
+        virtual int GetNumNodes() const;
         virtual int GetNumEdges() const;
         std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> AddNoise() const;
         std::vector<std::vector<double>> all_distances;

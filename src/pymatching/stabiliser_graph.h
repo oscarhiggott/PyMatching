@@ -26,7 +26,7 @@ class IStabiliserGraph{
         virtual std::set<int> QubitIDs(int node1, int node2) const = 0;
         virtual int GetNumEdges() const = 0;
         virtual int GetNumQubits() const = 0;
-        virtual int GetNumStabilisers() const = 0;
+        virtual int GetNumNodes() const = 0;
         virtual int GetNumConnectedComponents() const = 0;
         virtual std::vector<int> GetBoundary() const = 0;
         virtual void SetBoundary(std::vector<int>& boundary) = 0;

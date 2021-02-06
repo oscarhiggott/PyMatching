@@ -270,7 +270,7 @@ class Matching:
                 <= self.num_stabilisers+len(self.boundary)):
             defects = z.nonzero()[0]
         elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
-            num_stabs = self.stabiliser_graph.get_num_stabilisers()
+            num_stabs = self.stabiliser_graph.get_num_nodes()
             max_num_defects = z.shape[0]*z.shape[1]
             if max_num_defects > num_stabs:
                 raise ValueError(f"Syndrome size {z.shape[0]}x{z.shape[1]} exceeds" \
