@@ -39,31 +39,77 @@ typedef boost::graph_traits < wgraph_t >::vertex_descriptor vertex_descriptor;
 typedef boost::graph_traits < wgraph_t >::edge_descriptor edge_descriptor;
 
 
+/**
+ * @brief 
+ * 
+ */
 class WeightedStabiliserGraph : public IStabiliserGraph{
     public:
         wgraph_t stabiliser_graph;
+        /**
+         * @brief Construct a new Weighted Stabiliser Graph object
+         * 
+         * @param num_stabilisers Number of stabiliser nodes (this excludes boundary nodes)
+         * @param boundary Indices of the boundary nodes
+         */
         WeightedStabiliserGraph(
             int num_stabilisers,
             std::vector<int>& boundary
             );
-        WeightedStabiliserGraph(
-            const py::array_t<int>& indices, 
-            const py::array_t<double>& weights,
-            std::vector<int>& boundary
-        );
-        WeightedStabiliserGraph(
-            const py::array_t<int>& indices, 
-            const py::array_t<double>& weights,
-            const py::array_t<double>& error_probabilies,
-            std::vector<int>& boundary
-        );
+        /**
+         * @brief Add an edge to the Weighted Stabiliser Graph object
+         * 
+         * @param node1 Index of the first node
+         * @param node2 Index of the second node
+         * @param qubit_ids Indices of the qubits associated with this edge
+         * @param weight Weight of the edge
+         * @param error_probability The error probability associated with an edge (optional, set to -1 if not needed)
+         * @param has_error_probability Flag whether a valid error probability has been supplied
+         */
         void AddEdge(int node1, int node2, std::set<int> qubit_ids,
                      double weight, double error_probability,
                      bool has_error_probability);
+        /**
+         * @brief Compute and store the shortest path between every pair of nodes in the matching graph.
+         * This is only used or needed if exact matching is used (rather than the default local matching).
+         * Note that this is only useful for relatively small matching graphs, and is very memory and 
+         * compute intensive matching graphs with many thousands of nodes.
+         * 
+         */
         virtual void ComputeAllPairsShortestPaths();
+        /**
+         * @brief Distance between two nodes in the matching graph. This method is used only for exact matching,
+         * since it uses the pre-computed all-pairs shortest paths data, and computes the all-pairs shortest paths
+         * if this has not yet been done.
+         * 
+         * @param node1 The index of the first node
+         * @param node2 The index of the second node
+         * @return double The distance between the first node and the second node in the matching graph
+         */
         virtual double Distance(int node1, int node2);
+        /**
+         * @brief Shortest path between two nodes in the matching graph. This method is used only for exact matching,
+         * since it uses the pre-computed all-pairs shortest paths data, and computes the all-pairs shortest paths
+         * if this has not yet been done.
+         * 
+         * @param node1 The index of the first node
+         * @param node2 The index of the second node
+         * @return std::vector<int> The vertex indices along the path between the first node and the second node in the matching graph
+         */
         virtual std::vector<int> ShortestPath(int node1, int node2);
+        /**
+         * @brief Get the qubit ids associated with the edge between node1 and node2
+         * 
+         * @param node1 The index of the first node
+         * @param node2 The index of the second node
+         * @return std::set<int> The set of qubit ids associated with the edge between node1 and node2
+         */
         virtual std::set<int> QubitIDs(int node1, int node2) const;
+        /**
+         * @brief Get the number of qubits associated with edges of the matching graph
+         * 
+         * @return int The number of qubits
+         */
         virtual int GetNumQubits() const;
         virtual int GetNumStabilisers() const;
         virtual int GetNumEdges() const;
