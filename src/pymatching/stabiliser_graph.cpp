@@ -17,7 +17,7 @@
 
 
 double IStabiliserGraph::SpaceTimeDistance(int node1, int node2) {
-    int num_stab = GetNumStabilisers();
+    int num_stab = GetNumNodes();
     if ((node1 < num_stab) && (node2 < num_stab)){
         return Distance(node1, node2);
     }
@@ -29,7 +29,7 @@ double IStabiliserGraph::SpaceTimeDistance(int node1, int node2) {
 }
 
 std::vector<int> IStabiliserGraph::SpaceTimeShortestPath(int node1, int node2) {
-    int num_stab = GetNumStabilisers();
+    int num_stab = GetNumNodes();
     int r1 = node1 % num_stab;
     int r2 = node2 % num_stab;
     return ShortestPath(r1, r2);
