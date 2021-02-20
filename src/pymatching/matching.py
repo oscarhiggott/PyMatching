@@ -235,8 +235,9 @@ class Matching:
             A binary syndrome vector to decode. The number of elements in 
             `z` should equal the number of nodes in the matching graph. If 
             `z` is a 1D array, then `z[i]` is the syndrome at node `i` of 
-            the matching graph. If `z` is 2D then `z[i,j]` is the syndrome 
-            of stabiliser `i` in time step `j` (when `repetitions>1`).
+            the matching graph. If `z` is 2D then `z[i,j]` is the difference 
+            (modulo 2) between the (noisy) measurement of stabiliser `i` in time 
+            step `j+1` and time step `j` (for the case where `repetitions>1`).
         num_neighbours : int, optional
             Number of closest neighbours of each matching graph node to consider 
             when decoding. If `num_neighbours` is set (as it is by default), 
