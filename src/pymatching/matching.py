@@ -376,12 +376,21 @@ class Matching:
         G = self.to_networkx()
         pos=nx.spring_layout(G, weight=1)
         c = "#bfbfbf"
-        ncolors = ['w' if G.nodes[i]['is_boundary'] else c for i in range(G.number_of_nodes())]
+        ncolors = ['w' if n[1]['is_boundary'] else c for n in G.nodes(data=True)]
         nx.draw_networkx_nodes(G, pos=pos, node_color=ncolors, edgecolors=c)
         nx.draw_networkx_labels(G, pos=pos)
         weights=np.array([e[2]['weight'] for e in G.edges(data=True)])
         normalised_weights = 0.2+2*weights/np.max(weights)
         nx.draw_networkx_edges(G, pos=pos, width=normalised_weights)
+        def qid_to_str(qid):
+            if len(qid) == 0:
+                return ""
+            elif len(qid) == 1:
+                return str(qid.pop())
+            else:
+                return str(qid)
+        edge_labels = {(s, t): qid_to_str(d['qubit_id']) for (s,t,d) in G.edges(data=True)}
+        nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     def __repr__(self):
         N = self.num_qubits

@@ -9,7 +9,7 @@
 
 PyMatching is a fast Python/C++ library for decoding quantum error correcting codes (QECC) using the Minimum Weight Perfect Matching (MWPM) decoder. PyMatching can decode codes for which each error generates a pair of syndrome defects (or only a single defect at a boundary). Codes that satisfy these properties include two-dimensional topological codes such as the [toric code](https://en.wikipedia.org/wiki/Toric_code), the [surface code](https://arxiv.org/abs/quant-ph/0110143) and [2D hyperbolic codes](https://arxiv.org/abs/1506.04029), amongst others. PyMatching can also be used as a subroutine to decode other codes, such as the 3D toric code and the [color code](https://arxiv.org/abs/1905.07393). PyMatching can handle boundaries, measurement errors and weighted edges in the matching graph. Since the core algorithms are written in C++, PyMatching is much faster than a pure Python NetworkX implementation.
 
-Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/)
+Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/en/stable/)
 
 ## Installation
 
