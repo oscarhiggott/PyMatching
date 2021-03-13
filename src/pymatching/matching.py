@@ -318,6 +318,22 @@ class Matching:
         return self.stabiliser_graph.add_noise()
     
     def edges(self):
+        """Edges of the matching graph
+
+        Returns a generator of edges of the matching graph. Each edge is a 
+        tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the 
+        indices of the source and target nodes, and `attr` is a dictionary containing the 
+        attributes of the edge.
+        The dictionary `attr` has keys `qubit_ids` (a set of ints), `weight` (the weight of the edge, 
+        set to 1.0 if not specified), and `error_probability` 
+        (the error probability of the edge, set to -1 if not specified).
+        Note that the generator is convertible to a list (e.g. using `list(matching.edges())`)
+
+        Returns
+        -------
+        Generator of (int, int, dict) tuples
+            A generator of edges of the matching graph
+        """
         edata = self.stabiliser_graph.get_edges()
         return ((e[0], e[1], {
             'qubit_ids': e[2].qubit_ids,
@@ -326,6 +342,17 @@ class Matching:
             }) for e in edata)
     
     def to_networkx(self):
+        """Convert to NetworkX graph
+
+        Returns a NetworkX graph corresponding to the matching graph. Each edge 
+        has attributes `qubit_ids`, `weight` and `error_probability` and each node has 
+        the attribute `is_boundary`.
+
+        Returns
+        -------
+        NetworkX.Graph
+            NetworkX Graph corresponding to the matching graph
+        """
         G = nx.Graph()
         G.add_edges_from(self.edges())
         boundary = self.boundary
@@ -333,6 +360,26 @@ class Matching:
             is_boundary = i in boundary
             G.nodes[i]['is_boundary'] = is_boundary
         return G
+    
+    def draw(self):
+        """Draw the matching graph using matplotlib
+
+        Draws the matching graph as a matplotlib graph. Stabiliser nodes are 
+        filled grey and boundary nodes are filled white. The thickness of each 
+        edge is a linear function of its weight (with min and max thickness 0.2 
+        and 2 respectively).
+        Note that you may need to call `plt.figure()` before and `plt.show()` after calling 
+        this function.
+        """
+        G = self.to_networkx()
+        pos=nx.spring_layout(G, weight=1)
+        c = "#bfbfbf"
+        ncolors = ['w' if G.nodes[i]['is_boundary'] else c for i in range(G.number_of_nodes())]
+        nx.draw_networkx_nodes(G, pos=pos, node_color=ncolors, edgecolors=c)
+        nx.draw_networkx_labels(G, pos=pos)
+        weights=np.array([e[2]['weight'] for e in G.edges(data=True)])
+        normalised_weights = 0.2+2*weights/np.max(weights)
+        nx.draw_networkx_edges(G, pos=pos, width=normalised_weights)
 
     def __repr__(self):
         N = self.num_qubits
