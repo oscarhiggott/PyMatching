@@ -166,6 +166,12 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          */
         virtual std::vector<int> GetBoundary() const;
         /**
+         * @brief Get the edges of the stabiliser graph and their edge data
+         * 
+         * @return std::vector<std::tuple<int,int,WeightedEdgeData>> 
+         */
+        std::vector<std::tuple<int,int,WeightedEdgeData>> GetEdges() const;
+        /**
          * @brief Set the indices of the boundary nodes
          * 
          * @param boundary The indices of the boundary nodes

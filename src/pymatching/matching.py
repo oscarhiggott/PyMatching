@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
 import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix, spmatrix, vstack
@@ -19,6 +20,9 @@ from scipy.sparse import csc_matrix, spmatrix, vstack
 from pymatching._cpp_mwpm import (decode, 
                             decode_match_neighbourhood,
                             WeightedStabiliserGraph)
+
+# Ignore matplotlib deprecation warning from networkx.draw_networkx
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def _find_boundary_nodes(G):
@@ -313,6 +317,23 @@ class Matching:
             return None
         return self.stabiliser_graph.add_noise()
     
+    def edges(self):
+        edata = self.stabiliser_graph.get_edges()
+        return ((e[0], e[1], {
+            'qubit_ids': e[2].qubit_ids,
+            'weight': e[2].weight,
+            'error_probability': e[2].error_probability
+            }) for e in edata)
+    
+    def to_networkx(self):
+        G = nx.Graph()
+        G.add_edges_from(self.edges())
+        boundary = self.boundary
+        for i in range(G.number_of_nodes()):
+            is_boundary = i in boundary
+            G.nodes[i]['is_boundary'] = is_boundary
+        return G
+
     def __repr__(self):
         N = self.num_qubits
         M = self.num_stabilisers

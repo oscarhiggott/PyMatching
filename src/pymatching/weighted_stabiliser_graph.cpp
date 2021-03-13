@@ -347,6 +347,19 @@ void WeightedStabiliserGraph::SetBoundary(std::vector<int>& boundary) {
     return;
 }
 
+std::vector<std::tuple<int,int,WeightedEdgeData>> WeightedStabiliserGraph::GetEdges() const {
+    std::vector<std::tuple<int,int,WeightedEdgeData>> edges;
+    auto es = boost::edges(stabiliser_graph);
+    for (auto eit = es.first; eit != es.second; ++eit) {
+        WeightedEdgeData edata = stabiliser_graph[*eit];
+        int s = boost::source(*eit, stabiliser_graph);
+        int t = boost::target(*eit, stabiliser_graph);
+        std::tuple<int,int,WeightedEdgeData> edge = std::make_tuple(s, t, edata);
+        edges.push_back(edge);
+    }
+    return edges;
+}
+
 bool WeightedStabiliserGraph::HasComputedAllPairsShortestPaths() const {
     int n = boost::num_vertices(stabiliser_graph);
     bool has_distances = all_distances.size() == n;

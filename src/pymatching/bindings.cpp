@@ -36,6 +36,12 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def("has_computed_all_pairs_shortest_paths", &IStabiliserGraph::HasComputedAllPairsShortestPaths)
      .def("get_num_connected_components", &IStabiliserGraph::GetNumConnectedComponents);
 
+     py::class_<WeightedEdgeData>(m, "WeightedEdgeData")
+     .def_readwrite("qubit_ids", &WeightedEdgeData::qubit_ids)
+     .def_readwrite("weight", &WeightedEdgeData::weight)
+     .def_readwrite("error_probability", &WeightedEdgeData::error_probability)
+     .def_readwrite("has_error_probability", &WeightedEdgeData::has_error_probability);
+
      py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
      .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
      .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
@@ -47,6 +53,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def("add_noise", &WeightedStabiliserGraph::AddNoise)
      .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)
      .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a)
+     .def("get_edges", &WeightedStabiliserGraph::GetEdges)
      .def("get_nearest_neighbours", &WeightedStabiliserGraph::GetNearestNeighbours,
           "source"_a, "num_neighbours"_a, "defect_id"_a)
      .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
