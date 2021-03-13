@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import warnings
+
+import matplotlib.cbook
 import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix, spmatrix, vstack
@@ -21,8 +23,6 @@ from pymatching._cpp_mwpm import (decode,
                             decode_match_neighbourhood,
                             WeightedStabiliserGraph)
 
-# Ignore matplotlib deprecation warning from networkx.draw_networkx
-warnings.filterwarnings("ignore", category=UserWarning)
 
 
 def _find_boundary_nodes(G):
@@ -320,26 +320,25 @@ class Matching:
     def edges(self):
         """Edges of the matching graph
 
-        Returns a generator of edges of the matching graph. Each edge is a 
+        Returns a list of edges of the matching graph. Each edge is a 
         tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the 
         indices of the source and target nodes, and `attr` is a dictionary containing the 
         attributes of the edge.
-        The dictionary `attr` has keys `qubit_ids` (a set of ints), `weight` (the weight of the edge, 
+        The dictionary `attr` has keys `qubit_id` (a set of ints), `weight` (the weight of the edge, 
         set to 1.0 if not specified), and `error_probability` 
         (the error probability of the edge, set to -1 if not specified).
-        Note that the generator is convertible to a list (e.g. using `list(matching.edges())`)
 
         Returns
         -------
-        Generator of (int, int, dict) tuples
-            A generator of edges of the matching graph
+        List of (int, int, dict) tuples
+            A list of edges of the matching graph
         """
         edata = self.stabiliser_graph.get_edges()
-        return ((e[0], e[1], {
-            'qubit_ids': e[2].qubit_ids,
+        return [(e[0], e[1], {
+            'qubit_id': e[2].qubit_ids,
             'weight': e[2].weight,
             'error_probability': e[2].error_probability
-            }) for e in edata)
+            }) for e in edata]
     
     def to_networkx(self):
         """Convert to NetworkX graph
@@ -371,6 +370,9 @@ class Matching:
         Note that you may need to call `plt.figure()` before and `plt.show()` after calling 
         this function.
         """
+        # Ignore matplotlib deprecation warnings from networkx.draw_networkx
+        warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
         G = self.to_networkx()
         pos=nx.spring_layout(G, weight=1)
         c = "#bfbfbf"

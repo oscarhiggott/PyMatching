@@ -19,6 +19,7 @@ import numpy as np
 from scipy.sparse import csc_matrix, load_npz, csr_matrix
 import pytest
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from pymatching._cpp_mwpm import WeightedStabiliserGraph
 from pymatching import Matching
@@ -441,3 +442,59 @@ def test_local_matching_connected(cluster_size):
         qid += 1
     m = Matching(g)
     m.decode([1]*(cluster_size+1)*2, num_neighbours=cluster_size)
+
+
+def test_matching_edges():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, qubit_id=1, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, qubit_id={2,3}, weight=0.9, error_probability=0.3)
+    g.nodes[0]['is_boundary'] = True
+    g.nodes[3]['is_boundary'] = True
+    g.add_edge(0, 3, weight=0.0)
+    m = Matching(g)
+    es = list(m.edges())
+    expected_edges = [
+        (0,1,{'qubit_id': {0}, 'weight': 1.1, 'error_probability': 0.1}),
+        (0,3,{'qubit_id': set(), 'weight': 0.0, 'error_probability': -1.0}),
+        (1,2,{'qubit_id': {1}, 'weight': 2.1, 'error_probability': 0.2}),
+        (2,3,{'qubit_id': {2,3}, 'weight': 0.9, 'error_probability': 0.3})
+        
+    ]
+    assert es == expected_edges
+
+
+def test_matching_to_networkx():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id={0}, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, qubit_id={1}, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, qubit_id={2,3}, weight=0.9, error_probability=0.3)
+    g.nodes[0]['is_boundary'] = True
+    g.nodes[3]['is_boundary'] = True
+    g.add_edge(0, 3, weight=0.0)
+    m = Matching(g)
+
+    g.edges[(0,3)]['qubit_id'] = set()
+    g.edges[(0,3)]['error_probability'] = -1.0
+    g.nodes[1]['is_boundary'] = False
+    g.nodes[2]['is_boundary'] = False
+    
+    g2 = m.to_networkx()
+
+    assert g.nodes(data=True) == g2.nodes(data=True)
+    gedges = [({s,t},d) for (s, t, d) in g.edges(data=True)]
+    g2edges = [({s,t},d) for (s, t, d) in g2.edges(data=True)]
+    assert sorted(gedges) == sorted(g2edges)
+
+
+def test_draw_matching():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id={0}, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, qubit_id={1}, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, qubit_id={2,3}, weight=0.9, error_probability=0.3)
+    g.nodes[0]['is_boundary'] = True
+    g.nodes[3]['is_boundary'] = True
+    g.add_edge(0, 3, weight=0.0)
+    m = Matching(g)
+    plt.figure()
+    m.draw()
