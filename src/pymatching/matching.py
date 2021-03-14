@@ -364,9 +364,9 @@ class Matching:
         """Draw the matching graph using matplotlib
 
         Draws the matching graph as a matplotlib graph. Stabiliser nodes are 
-        filled grey and boundary nodes are filled white. The thickness of each 
-        edge is a linear function of its weight (with min and max thickness 0.2 
-        and 2 respectively).
+        filled grey and boundary nodes are filled white. The line thickness of each 
+        edge is determined from its weight (with min and max thicknesses of 0.2 pts
+        and 2 pts respectively).
         Note that you may need to call `plt.figure()` before and `plt.show()` after calling 
         this function.
         """
