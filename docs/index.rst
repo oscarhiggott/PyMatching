@@ -54,7 +54,7 @@ toric code under an independent noise model at :math:`p=0.05`:
 
    installation
    usage.ipynb
-   example.ipynb
+   toric-code-example.ipynb
    api
    
 
