@@ -127,7 +127,7 @@ setup(
     packages=find_packages("src"),
     package_dir={'':'src'},
     cmdclass=dict(build_ext=CMakeBuild),
-    install_requires=['scipy', 'numpy', 'networkx<=2.4','matplotlib'],
+    install_requires=['scipy', 'numpy', 'networkx','matplotlib'],
     classifiers=[
         "License :: OSI Approved :: Apache Software License"
     ],

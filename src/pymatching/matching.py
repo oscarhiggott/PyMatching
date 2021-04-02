@@ -374,7 +374,7 @@ class Matching:
         warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         G = self.to_networkx()
-        pos=nx.spring_layout(G, weight=None)
+        pos=nx.spectral_layout(G, weight=None)
         c = "#bfbfbf"
         ncolors = ['w' if n[1]['is_boundary'] else c for n in G.nodes(data=True)]
         nx.draw_networkx_nodes(G, pos=pos, node_color=ncolors, edgecolors=c)
