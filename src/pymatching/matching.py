@@ -226,7 +226,7 @@ class Matching:
         """
         return self.stabiliser_graph.get_boundary()
     
-    def decode(self, z, num_neighbours=20):
+    def decode(self, z, num_neighbours=20, return_weight=False):
         """Decode the syndrome `z` using minimum-weight perfect matching
 
         If the parity of `z` is odd, then the first boundary node in 
@@ -256,14 +256,31 @@ class Matching:
             with more than around 10,000 nodes, and is only faster than 
             local matching for matching graphs with less than around 1,000 
             nodes. By default 20
+        return_weight : bool, optional
+            If return_weight=True, the sum of the weights of the edges in the 
+            minimum weight perfect matching is also returned. By default False
 
         Returns
         -------
+        **(If return_weight == False)**
+
         numpy.ndarray
             A 1D numpy array of ints giving the minimum-weight correction 
             operator. The number of elements equals the number of qubits, 
             and an element is 1 if the corresponding qubit should be flipped, 
             and otherwise 0.
+
+        **(If return_weight == True)**
+
+        numpy.ndarray
+            A 1D numpy array of ints giving the minimum-weight correction 
+            operator. The number of elements equals the number of qubits, 
+            and an element is 1 if the corresponding qubit should be flipped, 
+            and otherwise 0.
+
+        float
+            The sum of the weights of the edges in the minimum-weight perfect 
+            matching.
 
         """
         try:
@@ -290,9 +307,13 @@ class Matching:
                                     "if no boundary vertex is given.")
             defects = np.setxor1d(defects, np.array(self.boundary[0:1]))
         if num_neighbours is None:
-            return decode(self.stabiliser_graph, defects)
+            res = decode(self.stabiliser_graph, defects, return_weight)
         else:
-            return decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours)
+            res = decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours, return_weight)
+        if return_weight:
+            return res.correction, res.weight
+        else:
+            return res.correction
     
     def add_noise(self):
         """Add noise by flipping edges in the stabiliser graph with 

@@ -48,5 +48,5 @@ neighbour_match_fixtures = [
 @pytest.mark.parametrize("defects,num_neighbours,correction", neighbour_match_fixtures)
 def test_neighbourhood_matching(defects,num_neighbours,correction):
     assert (np.array_equal(decode_match_neighbourhood(m.stabiliser_graph, 
-            np.array(defects), num_neighbours), np.array(correction)))
+            np.array(defects), num_neighbours, False).correction, np.array(correction)))
 

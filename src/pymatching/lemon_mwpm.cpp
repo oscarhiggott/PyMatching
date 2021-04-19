@@ -59,7 +59,8 @@ void DefectGraph::AddEdge(int i, int j, double weight){
 }
 
 
-py::array_t<std::uint8_t> LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects){
+MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects, bool return_weight){
+    MatchingResult matching_result;
     if (!sg.HasComputedAllPairsShortestPaths()){
         sg.ComputeAllPairsShortestPaths();
     }
@@ -76,6 +77,13 @@ py::array_t<std::uint8_t> LemonDecode(IStabiliserGraph& sg, const py::array_t<in
     typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
     MWPM pm(defect_graph.g, defect_graph.length);
     pm.run();
+
+    if (return_weight) {
+        matching_result.weight = -1*pm.matchingWeight();
+    } else {
+        matching_result.weight = -1.0;
+    }
+
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
@@ -95,11 +103,15 @@ py::array_t<std::uint8_t> LemonDecode(IStabiliserGraph& sg, const py::array_t<in
     }
 
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
-    return py::array_t<int>(correction->size(), correction->data(), capsule);
+    auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
+    matching_result.correction = corr;
+    return matching_result;
 }
 
 
-py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, int num_neighbours){
+MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, 
+                                             int num_neighbours, bool return_weight){
+    MatchingResult matching_result;
     auto d = defects.unchecked<1>();
     int num_defects = d.shape(0);
 
@@ -143,6 +155,12 @@ py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph&
     MWPM pm(defect_graph->g, defect_graph->length);
     pm.run();
 
+    if (return_weight) {
+        matching_result.weight = -1*pm.matchingWeight();
+    } else {
+        matching_result.weight = -1.0;
+    }
+
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
 
@@ -171,5 +189,8 @@ py::array_t<std::uint8_t> LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph&
         }
     }
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
-    return py::array_t<int>(correction->size(), correction->data(), capsule);
+    auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
+    
+    matching_result.correction = corr;
+    return matching_result;
 }

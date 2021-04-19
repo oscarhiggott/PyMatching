@@ -62,6 +62,13 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      m.def("set_seed", &set_seed, "s"_a);
      m.def("rand_float", &rand_float, "from"_a, "to"_a);
 
-     m.def("decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood);
-     m.def("decode", &LemonDecode);
+     py::class_<MatchingResult>(m, "MatchingResult")
+     .def_readwrite("correction", &MatchingResult::correction)
+     .def_readwrite("weight", &MatchingResult::weight);
+
+     m.def("decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood,
+           "sg"_a, "defects"_a, "num_neighbours"_a=20,
+           "return_weight"_a=false);
+     m.def("decode", &LemonDecode, "sg"_a, "defects"_a,
+           "return_weight"_a=false);
 }
