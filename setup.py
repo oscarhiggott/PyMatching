@@ -41,7 +41,7 @@ def download_and_extract(pkg_url, pkg_fn, pkg_orig_dir=None, pkg_new_dir=None):
             with urllib.request.urlopen(pkg_url) as r, open(pkg_fn, 'wb') as f:
                 shutil.copyfileobj(r, f)
         except:
-            print(f"Failed to download {pkg_url} dependency, aborting installation.")
+            print("Failed to download {} dependency, aborting installation.".format(pkg_url))
             raise
     shutil.unpack_archive(pkg_fn, lib_dir)
     if pkg_orig_dir is not None and pkg_new_dir is not None:
