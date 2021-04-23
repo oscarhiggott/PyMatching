@@ -249,7 +249,7 @@ class Matching:
             https://arxiv.org/abs/2010.09626 is used, and `num_neighbours` 
             corresponds to the parameter `m` in the paper. It is recommended 
             to leave `num_neighbours` set to at least 20.
-            If `num_neighbours=None`, then instead full matching is 
+            If `num_neighbours is None`, then instead full matching is 
             performed, with the all-pairs shortest paths precomputed and 
             cached the first time it is used. Since full matching is more 
             memory intensive, it is not recommended to be used for matching graphs 
@@ -257,21 +257,11 @@ class Matching:
             local matching for matching graphs with less than around 1,000 
             nodes. By default 20
         return_weight : bool, optional
-            If return_weight=True, the sum of the weights of the edges in the 
+            If `return_weight==True`, the sum of the weights of the edges in the 
             minimum weight perfect matching is also returned. By default False
 
         Returns
         -------
-        **(If return_weight == False)**
-
-        numpy.ndarray
-            A 1D numpy array of ints giving the minimum-weight correction 
-            operator. The number of elements equals the number of qubits, 
-            and an element is 1 if the corresponding qubit should be flipped, 
-            and otherwise 0.
-
-        **(If return_weight == True)**
-
         numpy.ndarray
             A 1D numpy array of ints giving the minimum-weight correction 
             operator. The number of elements equals the number of qubits, 
@@ -279,6 +269,7 @@ class Matching:
             and otherwise 0.
 
         float
+            Only returned if `return_weight==True`.
             The sum of the weights of the edges in the minimum-weight perfect 
             matching.
 
