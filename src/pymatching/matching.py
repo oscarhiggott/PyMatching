@@ -278,7 +278,7 @@ class Matching:
             z = np.array(z, dtype=np.uint8)
         except:
             raise ValueError("Syndrome must be of type numpy.ndarray or "\
-                             f"convertible to numpy.ndarray, not {z}")
+                             "convertible to numpy.ndarray, not {}".format(z))
         if len(z.shape) == 1 and (self.num_stabilisers <= z.shape[0]
                 <= self.num_stabilisers+len(self.boundary)):
             defects = z.nonzero()[0]
@@ -286,12 +286,12 @@ class Matching:
             num_stabs = self.stabiliser_graph.get_num_nodes()
             max_num_defects = z.shape[0]*z.shape[1]
             if max_num_defects > num_stabs:
-                raise ValueError(f"Syndrome size {z.shape[0]}x{z.shape[1]} exceeds" \
-                        f" the number of stabilisers ({num_stabs})")
+                raise ValueError("Syndrome size {}x{} exceeds" \
+                        " the number of stabilisers ({})".format(z.shape[0],z.shape[1],num_stabs))
             times, checks = z.T.nonzero()
             defects = times*self.num_stabilisers + checks
         else:
-            raise ValueError(f"The shape ({z.shape}) of the syndrome vector z is not valid.")
+            raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
         if len(defects) % 2 != 0:
             if len(self.boundary) == 0:
                 raise ValueError("Syndrome must contain an even number of defects "
@@ -409,8 +409,9 @@ class Matching:
         M = self.num_stabilisers
         B = len(self.boundary)
         E = self.stabiliser_graph.get_num_edges()
-        return (f"<pymatching.Matching object with "
-                f"{N} qubit{'s' if N != 1 else ''},"
-                f" {M} stabiliser{'s' if M != 1 else ''}, "
-                f"{B} boundary node{'s' if B != 1 else ''}, and "
-                f"{E} edge{'s' if E != 1 else ''}>")
+        return "<pymatching.Matching object with "\
+                "{} qubit{}, {} stabiliser{}, "\
+                "{} boundary node{}, "\
+                "and {} edge{}>".format(N, 's' if N != 1 else '',
+                    M, 's' if M != 1 else '', B, 's' if B != 1 else '',
+                    E, 's' if E != 1 else '')
