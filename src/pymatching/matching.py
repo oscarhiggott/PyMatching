@@ -269,7 +269,7 @@ class Matching:
             and otherwise 0.
 
         float
-            Only returned if `return_weight==True`.
+            Present only if `return_weight==True`.
             The sum of the weights of the edges in the minimum-weight perfect 
             matching.
 
