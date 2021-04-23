@@ -36,7 +36,7 @@ jobs:
         run: |
           python -m cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: "cp*-*"
+          CIBW_BUILD: "cp3*-*"
           CIBW_SKIP: "*-win32"
       - uses: actions/upload-artifact@v2
         with:
