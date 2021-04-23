@@ -118,8 +118,8 @@ class Matching:
                 H = csc_matrix(H)
                 unique_elements = np.unique(H.data)
                 if len(unique_elements)>1 or unique_elements[0] != 1:
-                    raise ValueError("Nonzero elements in the parity check matrix"
-                                    f" must be 1, not {unique_elements}.")
+                    raise ValueError("Nonzero elements in the parity check matrix"\
+                                    " must be 1, not {}.".format(unique_elements))
                 H = H.astype(np.uint8)
             except:
                 raise ValueError("H must be a NetworkX graph or convertible "
@@ -143,8 +143,8 @@ class Matching:
             column_weights = np.asarray(H.sum(axis=0))[0]
             unique_column_weights = np.unique(column_weights)
             if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
-                raise ValueError("Each qubit must be contained in either "
-                                 f"1 or 2 check operators, not {unique_column_weights}")
+                raise ValueError("Each qubit must be contained in either "\
+                                 "1 or 2 check operators, not {}".format(unique_column_weights))
             H.eliminate_zeros()
             H.sort_indices()
             self.num_stabilisers = H.shape[0]
@@ -180,9 +180,9 @@ class Matching:
             for (u, v, attr) in H.edges(data=True):
                 u, v = int(u), int(v)
                 if u >= num_nodes or v>= num_nodes:
-                    raise ValueError("Every node id must be less "
-                        "than the number of nodes, but edge "
-                        f"({u},{v}) was present.")
+                    raise ValueError("Every node id must be less "\
+                        "than the number of nodes, but edge "\
+                        "({},{}) was present.".format(u,v))
                 qubit_id = attr.get("qubit_id", set())
                 if isinstance(qubit_id, (int, np.integer)):
                     qubit_id = {int(qubit_id)} if qubit_id != -1 else set()
@@ -190,10 +190,10 @@ class Matching:
                     try:
                         qubit_id = set(qubit_id)
                         if not all(isinstance(q, (int, np.integer)) for q in qubit_id):
-                            raise ValueError(f"qubit_id must be a set of ints, not {qubit_id}")
+                            raise ValueError("qubit_id must be a set of ints, not {}".format(qubit_id))
                     except:
-                        raise ValueError("qubit_id property must be an int or a set of int"
-                                f" (or convertible to a set), not {qubit_id}")
+                        raise ValueError("qubit_id property must be an int or a set of int"\
+                                " (or convertible to a set), not {}".format(qubit_id))
                 all_qubits = all_qubits | qubit_id
                 weight = attr.get("weight", 1) # Default weight is 1 if not provided
                 if weight < 0:
@@ -202,12 +202,12 @@ class Matching:
                 g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
             self.stabiliser_graph = g
             if max(all_qubits, default=-1) != len(all_qubits) - 1:
-                raise ValueError(f"The maximum qubit id ({max(all_qubits, default=0)}) should "
-                        f"equal the number of qubits ({len(all_qubits)}) minus one.")
+                raise ValueError("The maximum qubit id ({}) should "\
+                        "equal the number of qubits ({}) minus one.".format(max(all_qubits, default=0),len(all_qubits)))
         num_components = self.stabiliser_graph.get_num_connected_components()
         if num_components != 1:
-            raise ValueError("Matching graph must have 1 connected component, "
-                             f"but instead has {num_components}")
+            raise ValueError("Matching graph must have 1 connected component, "\
+                             "but instead has {}".format(num_components))
         if precompute_shortest_paths:
             self.stabiliser_graph.compute_all_pairs_shortest_paths()
     
