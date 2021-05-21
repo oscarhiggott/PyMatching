@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
 import networkx as nx
 import numpy as np
 import pytest
@@ -50,3 +52,13 @@ def test_neighbourhood_matching(defects,num_neighbours,correction):
     assert (np.array_equal(decode_match_neighbourhood(m.stabiliser_graph, 
             np.array(defects), num_neighbours, False).correction, np.array(correction)))
 
+
+def test_distances_and_predecessors_reset():
+    M = Matching([[1,1,0,0],[0,1,1,0],[0,0,1,1],[1,0,0,1]])
+    assert M.stabiliser_graph._distances == []
+    assert M.stabiliser_graph._predecessors == []
+    for z in ([1,0,0,1],[0,1,1,0],[0,0,1,1]):
+        M.decode(z)
+        infty = sys.float_info.max
+        assert [infty]*4 == M.stabiliser_graph._distances
+        assert list(range(4)) == M.stabiliser_graph._predecessors
