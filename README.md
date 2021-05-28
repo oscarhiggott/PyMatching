@@ -64,12 +64,10 @@ While all the functionality of PyMatching is available via the Python bindings, 
 
 When using PyMatching for research, please cite:
 ```
-@misc{higgott2020pymatching,
-  author = {Higgott, Oscar},
-  title = {{PyMatching}: A Python package for decoding quantum error correcting codes using minimum-weight perfect matching},
-  year = {2020},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/oscarhiggott/PyMatching}}
+@article{higgott2021pymatching,
+  title={PyMatching: A fast implementation of the minimum-weight perfect matching decoder},
+  author={Higgott, Oscar},
+  journal={arXiv preprint arXiv:2105.13082},
+  year={2021}
 }
 ```
