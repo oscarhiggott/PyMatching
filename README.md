@@ -65,7 +65,7 @@ While all the functionality of PyMatching is available via the Python bindings, 
 When using PyMatching for research, please cite:
 ```
 @article{higgott2021pymatching,
-  title={PyMatching: A fast implementation of the minimum-weight perfect matching decoder},
+  title={{PyMatching}: A fast implementation of the minimum-weight perfect matching decoder},
   author={Higgott, Oscar},
   journal={arXiv preprint arXiv:2105.13082},
   year={2021}
