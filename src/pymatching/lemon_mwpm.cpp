@@ -37,24 +37,20 @@ class DefectGraph {
         void AddEdge(int i, int j, double weight);
         UGraph g;
         LengthMap length;
-        UGraph::NodeMap<int> node_map;
-        std::vector<UGraph::Node> node_list;
         int num_nodes;
 };
 
 DefectGraph::DefectGraph(int num_nodes) : num_nodes(num_nodes),
-         length(g), node_map(g)
+         length(g)
 {
     for (int i=0; i<num_nodes; i++){
         UGraph::Node x;
         x = g.addNode();
-        node_map[x] = i;
-        node_list.push_back(x);
     }
 }
 
 void DefectGraph::AddEdge(int i, int j, double weight){
-    UGraph::Edge e = g.addEdge(node_list[i], node_list[j]);
+    UGraph::Edge e = g.addEdge(g.nodeFromId(i), g.nodeFromId(j));
     length[e] = weight;
 }
 
@@ -87,7 +83,7 @@ MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects
             throw std::runtime_error(
                 "The blossom algorithm was unable to find a solution "
                 "to the MWPM problem. This is due to an issue in the LEMON "
-                "graph library, which occurs for some specific matching problems. "
+                "graph library, which occurs for some specific matching graphs. "
                 "See issue #11 for more "
                 "information (https://github.com/oscarhiggott/PyMatching/issues/11)."
                 );
@@ -139,18 +135,19 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
         ++num_neighbours;
         defect_graph = std::make_unique<DefectGraph>(num_defects);
         std::vector<std::pair<int, double>> neighbours;
-        std::vector<std::set<int>> adj_list(num_defects);
         int j;
         bool is_in;
         for (int i=0; i<num_defects; i++){
             neighbours = sg.GetNearestNeighbours(d(i), num_neighbours, defect_id);
             for (const auto &neighbour : neighbours){
                 j = defect_id[neighbour.first];
-                is_in = adj_list[i].find(j) != adj_list[i].end();
+                UGraph::Edge FoundEdge = lemon::findEdge(
+                    defect_graph->g, 
+                    defect_graph->g.nodeFromId(i), 
+                    defect_graph->g.nodeFromId(j));
+                is_in = FoundEdge != lemon::INVALID;
                 if (!is_in && i!=j){
                     defect_graph->AddEdge(i, j, -1.0*neighbour.second);
-                    adj_list[i].insert(j);
-                    adj_list[j].insert(i);
                 }
             }
         }
@@ -186,7 +183,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
             throw std::runtime_error(
                 "The blossom algorithm was unable to find a solution "
                 "to the MWPM problem. This is due to an issue in the LEMON "
-                "graph library, which occurs for some specific matching problems, "
+                "graph library, which occurs for some specific matching graphs, "
                 "typically when num_neighbours<30. While this issue is being resolved, "
                 "a workaround is to set num_neighbours>30 when calling Matching.decode, "
                 "which may prevent this exception being raised. See issue #11 for more "
