@@ -78,17 +78,20 @@ MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects
     MWPM pm(defect_graph.g, defect_graph.length);
     pm.run();
 
-    if (return_weight) {
-        matching_result.weight = -1*pm.matchingWeight();
-    } else {
-        matching_result.weight = -1.0;
-    }
-
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
     for (py::size_t i = 0; i<num_nodes; i++){
-        int j = defect_graph.node_map[pm.mate(defect_graph.node_list[i])];
+        int j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
+        if (i == j){
+            throw std::runtime_error(
+                "The blossom algorithm was unable to find a solution "
+                "to the MWPM problem. This is due to an issue in the LEMON "
+                "graph library, which occurs for some specific matching problems. "
+                "See issue #11 for more "
+                "information (https://github.com/oscarhiggott/PyMatching/issues/11)."
+                );
+        }
         if (i<j){
             std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
@@ -104,6 +107,13 @@ MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects
 
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
+
+    if (return_weight) {
+        matching_result.weight = -1*pm.matchingWeight();
+    } else {
+        matching_result.weight = -1.0;
+    }
+
     matching_result.correction = corr;
     return matching_result;
 }
@@ -155,12 +165,6 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     MWPM pm(defect_graph->g, defect_graph->length);
     pm.run();
 
-    if (return_weight) {
-        matching_result.weight = -1*pm.matchingWeight();
-    } else {
-        matching_result.weight = -1.0;
-    }
-
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
 
@@ -176,8 +180,19 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     while (remaining_defects.size() > 0){
         i = *remaining_defects.begin();
         remaining_defects.erase(remaining_defects.begin());
-        j = defect_graph->node_map[pm.mate(defect_graph->node_list[i])];
+        j = defect_graph->g.id(pm.mate(defect_graph->g.nodeFromId(i)));
         remaining_defects.erase(j);
+        if (i == j){
+            throw std::runtime_error(
+                "The blossom algorithm was unable to find a solution "
+                "to the MWPM problem. This is due to an issue in the LEMON "
+                "graph library, which occurs for some specific matching problems, "
+                "typically when num_neighbours<30. While this issue is being resolved, "
+                "a workaround is to set num_neighbours>30 when calling Matching.decode, "
+                "which may prevent this exception being raised. See issue #11 for more "
+                "information (https://github.com/oscarhiggott/PyMatching/issues/11)."
+                );
+        }
         path = sg.GetPath(d(i), d(j));
         for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
             qids = sg.QubitIDs(path[k], path[k+1]);
@@ -190,6 +205,12 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     }
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
+
+    if (return_weight) {
+        matching_result.weight = -1*pm.matchingWeight();
+    } else {
+        matching_result.weight = -1.0;
+    }
     
     matching_result.correction = corr;
     return matching_result;
