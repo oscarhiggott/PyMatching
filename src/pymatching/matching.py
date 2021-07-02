@@ -23,7 +23,8 @@ from pymatching._cpp_mwpm import (decode,
                             decode_match_neighbourhood,
                             WeightedStabiliserGraph,
                             BlossomFailureException)
-
+# alias to let unittest mock decode_match_neighbourhood
+_py_decode_match_neighbourhood = decode_match_neighbourhood
 
 
 def _find_boundary_nodes(G):
@@ -55,7 +56,7 @@ def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=Fal
     at nodes in `defects`. Each defect node can be matched to one of the `num_neighbours` 
     nearest defects. This function uses the Lemon library's MaxWeightedPerfectMatching 
     implementation of the blossom algorithm. If Lemon fails to find a solution, this function
-    retries at most `num_attempts` times, increasing `num_neighbours` by 10 between each attempt.
+    retries at most `num_attempts` times, increasing `num_neighbours` by 5 between each attempt.
 
     Parameters
     ----------
@@ -90,12 +91,12 @@ def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=Fal
     attempts_remaining = num_attempts
     while True:
         try:
-            return decode_match_neighbourhood(stabiliser_graph, defects, num_neighbours, return_weight)
+            return _py_decode_match_neighbourhood(stabiliser_graph, defects, num_neighbours, return_weight)
         except BlossomFailureException:
             if attempts_remaining <= 1 or num_neighbours >= len(defects):
                 raise
             else:
-                num_neighbours += 10
+                num_neighbours += 5
                 attempts_remaining -= 1
 
 
