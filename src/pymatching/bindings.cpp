@@ -68,6 +68,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def_readwrite("correction", &MatchingResult::correction)
      .def_readwrite("weight", &MatchingResult::weight);
 
+     py::register_exception<BlossomFailureException>(m, "BlossomFailureException", PyExc_RuntimeError);
+
      m.def("decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood,
            "sg"_a, "defects"_a, "num_neighbours"_a=20,
            "return_weight"_a=false);

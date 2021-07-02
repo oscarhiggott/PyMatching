@@ -16,6 +16,13 @@
 #include "stabiliser_graph.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <exception>
+
+
+struct BlossomFailureException : public std::exception {
+    const char * what() const throw();
+};
+
 
 /**
  * @brief A struct containing the output of the minimum weight perfect matching decoder.
