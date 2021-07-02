@@ -17,11 +17,12 @@ import warnings
 import matplotlib.cbook
 import numpy as np
 import networkx as nx
-from scipy.sparse import csc_matrix, spmatrix, vstack
+from scipy.sparse import csc_matrix
 
 from pymatching._cpp_mwpm import (decode, 
                             decode_match_neighbourhood,
-                            WeightedStabiliserGraph)
+                            WeightedStabiliserGraph,
+                            BlossomFailureException)
 
 
 
@@ -44,7 +45,59 @@ def _find_boundary_nodes(G):
     """
     return [i for i, attr in G.nodes(data=True) 
             if attr.get("is_boundary", False)]
-    
+
+
+def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=False, 
+                    num_attempts=10):
+    """Local matching decoder
+
+    Find the local matching in `stabiliser_graph` with a syndrome defined by -1 measurements 
+    at nodes in `defects`. Each defect node can be matched to one of the `num_neighbours` 
+    nearest defects. This function uses the Lemon library's MaxWeightedPerfectMatching 
+    implementation of the blossom algorithm. If Lemon fails to find a solution, this function
+    retries at most `num_attempts` times, increasing `num_neighbours` by 10 between each attempt.
+
+    Parameters
+    ----------
+    stabiliser_graph : pymatching._cpp_mwpm.WeightedStabiliserGraph
+        The stabliser graph defining the matching problem
+    defects : numpy.ndarray of dtype int
+        The indices of the nodes corresponding to defects (-1 measurements in the syndrome)
+    num_neighbours : int
+        The number of neighbours to use in local matching
+    return_weight : bool, optional
+        If `return_weight==True`, the sum of the weights of the edges in the 
+        minimum weight perfect matching is also returned. By default False
+    num_attempts : int, optional
+        Number of attempts to solve the matching problem if the blossom algorithm 
+        fails to converge, by default 5
+
+    Returns
+    -------
+    numpy.ndarray
+        A 1D numpy array of ints giving the minimum-weight correction 
+        operator. The number of elements equals the number of qubits, 
+        and an element is 1 if the corresponding qubit should be flipped, 
+        and otherwise 0.
+
+    float
+        Present only if `return_weight==True`.
+        The sum of the weights of the edges in the minimum-weight perfect 
+        matching.
+    """
+    if num_attempts < 1:
+        raise ValueError("`num_attempts` must be an integer >= 1")
+    attempts_remaining = num_attempts
+    while True:
+        try:
+            return decode_match_neighbourhood(stabiliser_graph, defects, num_neighbours, return_weight)
+        except BlossomFailureException:
+            if attempts_remaining <= 1 or num_neighbours >= len(defects):
+                raise
+            else:
+                num_neighbours += 10
+                attempts_remaining -= 1
+
 
 class Matching:
     """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder
@@ -300,7 +353,7 @@ class Matching:
         if num_neighbours is None:
             res = decode(self.stabiliser_graph, defects, return_weight)
         else:
-            res = decode_match_neighbourhood(self.stabiliser_graph, defects, num_neighbours, return_weight)
+            res = _local_matching(self.stabiliser_graph, defects, num_neighbours, return_weight)
         if return_weight:
             return res.correction, res.weight
         else:
