@@ -48,15 +48,13 @@ def _find_boundary_nodes(G):
             if attr.get("is_boundary", False)]
 
 
-def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=False, 
-                    num_attempts=10):
+def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=False):
     """Local matching decoder
 
     Find the local matching in `stabiliser_graph` with a syndrome defined by -1 measurements 
     at nodes in `defects`. Each defect node can be matched to one of the `num_neighbours` 
-    nearest defects. This function uses the Lemon library's MaxWeightedPerfectMatching 
-    implementation of the blossom algorithm. If Lemon fails to find a solution, this function
-    retries at most `num_attempts` times, increasing `num_neighbours` by 5 between each attempt.
+    nearest defects. If the graph does not have a perfect matching, this function
+    doubles `num_neighbours` and retries until `num_neighbours==len(defects)`.
 
     Parameters
     ----------
@@ -69,9 +67,6 @@ def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=Fal
     return_weight : bool, optional
         If `return_weight==True`, the sum of the weights of the edges in the 
         minimum weight perfect matching is also returned. By default False
-    num_attempts : int, optional
-        Number of attempts to solve the matching problem if the blossom algorithm 
-        fails to converge, by default 5
 
     Returns
     -------
@@ -86,18 +81,16 @@ def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=Fal
         The sum of the weights of the edges in the minimum-weight perfect 
         matching.
     """
-    if num_attempts < 1:
-        raise ValueError("`num_attempts` must be an integer >= 1")
-    attempts_remaining = num_attempts
+    if num_neighbours < 0:
+        raise ValueError("num_neighbours must be a positive integer")
     while True:
         try:
             return _py_decode_match_neighbourhood(stabiliser_graph, defects, num_neighbours, return_weight)
         except BlossomFailureException:
-            if attempts_remaining <= 1 or num_neighbours >= len(defects):
+            if num_neighbours >= len(defects):
                 raise
             else:
-                num_neighbours += 5
-                attempts_remaining -= 1
+                num_neighbours *= 2
 
 
 class Matching:

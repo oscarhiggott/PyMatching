@@ -35,7 +35,8 @@ typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
 const char * BlossomFailureException::what() const throw() {
     return "The Lemon implementation of the blossom algorithm "
             "(lemon::MaxWeightedPerfectMatching) "
-            "was unable to find a solution due to an error.";
+            "was unable to find a solution to the minimum-weight "
+            "perfect matching problem.";
 }
 
 
