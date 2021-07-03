@@ -15,14 +15,16 @@
 import os
 
 import pytest
+from unittest.mock import patch
 import numpy as np
 from scipy.sparse import csc_matrix, load_npz, csr_matrix
 import pytest
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from pymatching._cpp_mwpm import WeightedStabiliserGraph
+from pymatching._cpp_mwpm import WeightedStabiliserGraph, BlossomFailureException
 from pymatching import Matching
+from pymatching.matching import _local_matching
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -498,3 +500,33 @@ def test_draw_matching():
     m = Matching(g)
     plt.figure()
     m.draw()
+
+
+G = nx.Graph()
+n = 100
+for i in range(n):
+    G.add_edge(i, (i+1) % n, qubit_id=i)
+M = Matching(G)
+defects = np.array(list(range(n)))
+
+
+def test_local_matching_raises_value_error():
+    with pytest.raises(ValueError):
+        for x in (-10, -5, 0):
+            _local_matching(M.stabiliser_graph, defects, 20, False, x)
+
+
+@pytest.mark.parametrize("num_attempts", [1,3,5])
+def test_local_matching_raises_blossom_error(num_attempts):
+    with patch('pymatching.matching._py_decode_match_neighbourhood') as mock_decode:
+        mock_decode.side_effect = BlossomFailureException
+        with pytest.raises(BlossomFailureException):
+            _local_matching(M.stabiliser_graph, defects, 20, False, num_attempts)
+        assert mock_decode.call_count == num_attempts
+
+
+def test_local_matching_catches_blossom_errors():
+    with patch('pymatching.matching._py_decode_match_neighbourhood') as mock_decode:
+        mock_decode.side_effect = [BlossomFailureException]*3 + [0]
+        _local_matching(M.stabiliser_graph, defects, 20, False, 5)
+        assert mock_decode.call_count == 4

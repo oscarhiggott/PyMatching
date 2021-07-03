@@ -29,6 +29,14 @@
 
 typedef lemon::ListGraph UGraph;
 typedef UGraph::EdgeMap<double> LengthMap;
+typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
+
+
+const char * BlossomFailureException::what() const throw() {
+    return "The Lemon implementation of the blossom algorithm "
+            "(lemon::MaxWeightedPerfectMatching) "
+            "was unable to find a solution due to an error.";
+}
 
 
 class DefectGraph {
@@ -37,24 +45,20 @@ class DefectGraph {
         void AddEdge(int i, int j, double weight);
         UGraph g;
         LengthMap length;
-        UGraph::NodeMap<int> node_map;
-        std::vector<UGraph::Node> node_list;
         int num_nodes;
 };
 
 DefectGraph::DefectGraph(int num_nodes) : num_nodes(num_nodes),
-         length(g), node_map(g)
+         length(g)
 {
     for (int i=0; i<num_nodes; i++){
         UGraph::Node x;
         x = g.addNode();
-        node_map[x] = i;
-        node_list.push_back(x);
     }
 }
 
 void DefectGraph::AddEdge(int i, int j, double weight){
-    UGraph::Edge e = g.addEdge(node_list[i], node_list[j]);
+    UGraph::Edge e = g.addEdge(g.nodeFromId(i), g.nodeFromId(j));
     length[e] = weight;
 }
 
@@ -74,21 +78,17 @@ MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects
             defect_graph.AddEdge(i, j, -1.0*sg.SpaceTimeDistance(d(i), d(j)));
         }
     };
-    typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
     MWPM pm(defect_graph.g, defect_graph.length);
-    pm.run();
-
-    if (return_weight) {
-        matching_result.weight = -1*pm.matchingWeight();
-    } else {
-        matching_result.weight = -1.0;
+    bool success = pm.run();
+    if (!success){
+        throw BlossomFailureException();
     }
 
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
     for (py::size_t i = 0; i<num_nodes; i++){
-        int j = defect_graph.node_map[pm.mate(defect_graph.node_list[i])];
+        int j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         if (i<j){
             std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
@@ -104,6 +104,13 @@ MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects
 
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
+
+    if (return_weight) {
+        matching_result.weight = -1*pm.matchingWeight();
+    } else {
+        matching_result.weight = -1.0;
+    }
+
     matching_result.correction = corr;
     return matching_result;
 }
@@ -129,18 +136,19 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
         ++num_neighbours;
         defect_graph = std::make_unique<DefectGraph>(num_defects);
         std::vector<std::pair<int, double>> neighbours;
-        std::vector<std::set<int>> adj_list(num_defects);
         int j;
         bool is_in;
         for (int i=0; i<num_defects; i++){
             neighbours = sg.GetNearestNeighbours(d(i), num_neighbours, defect_id);
             for (const auto &neighbour : neighbours){
                 j = defect_id[neighbour.first];
-                is_in = adj_list[i].find(j) != adj_list[i].end();
+                UGraph::Edge FoundEdge = lemon::findEdge(
+                    defect_graph->g, 
+                    defect_graph->g.nodeFromId(i), 
+                    defect_graph->g.nodeFromId(j));
+                is_in = FoundEdge != lemon::INVALID;
                 if (!is_in && i!=j){
                     defect_graph->AddEdge(i, j, -1.0*neighbour.second);
-                    adj_list[i].insert(j);
-                    adj_list[j].insert(i);
                 }
             }
         }
@@ -151,14 +159,10 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
         throw std::runtime_error("Graph must have only one connected component");
     }
 
-    typedef lemon::MaxWeightedPerfectMatching<UGraph,LengthMap> MWPM;
     MWPM pm(defect_graph->g, defect_graph->length);
-    pm.run();
-
-    if (return_weight) {
-        matching_result.weight = -1*pm.matchingWeight();
-    } else {
-        matching_result.weight = -1.0;
+    bool success = pm.run();
+    if (!success){
+        throw BlossomFailureException();
     }
 
     int N = sg.GetNumQubits();
@@ -176,7 +180,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     while (remaining_defects.size() > 0){
         i = *remaining_defects.begin();
         remaining_defects.erase(remaining_defects.begin());
-        j = defect_graph->node_map[pm.mate(defect_graph->node_list[i])];
+        j = defect_graph->g.id(pm.mate(defect_graph->g.nodeFromId(i)));
         remaining_defects.erase(j);
         path = sg.GetPath(d(i), d(j));
         for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
@@ -190,6 +194,12 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     }
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
+
+    if (return_weight) {
+        matching_result.weight = -1*pm.matchingWeight();
+    } else {
+        matching_result.weight = -1.0;
+    }
     
     matching_result.correction = corr;
     return matching_result;
