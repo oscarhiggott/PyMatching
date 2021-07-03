@@ -26,7 +26,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <boost/graph/adjacency_list.hpp>
-#include <lemon/lgf_writer.h>
 
 typedef lemon::ListGraph UGraph;
 typedef UGraph::EdgeMap<double> LengthMap;
@@ -164,7 +163,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     bool success = pm.run();
     if (!success){
         throw BlossomFailureException();
-        }
+    }
 
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
