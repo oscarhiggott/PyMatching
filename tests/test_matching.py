@@ -14,6 +14,7 @@
 
 import os
 
+import numpy as np
 import pytest
 from unittest.mock import patch
 import numpy as np
@@ -513,20 +514,20 @@ defects = np.array(list(range(n)))
 def test_local_matching_raises_value_error():
     with pytest.raises(ValueError):
         for x in (-10, -5, 0):
-            _local_matching(M.stabiliser_graph, defects, 20, False, x)
+            _local_matching(M.stabiliser_graph, defects, x, False)
 
 
-@pytest.mark.parametrize("num_attempts", [1,3,5])
-def test_local_matching_raises_blossom_error(num_attempts):
+@pytest.mark.parametrize("num_neighbours", [2, 5, 20, 50])
+def test_local_matching_raises_blossom_error(num_neighbours):
     with patch('pymatching.matching._py_decode_match_neighbourhood') as mock_decode:
         mock_decode.side_effect = BlossomFailureException
         with pytest.raises(BlossomFailureException):
-            _local_matching(M.stabiliser_graph, defects, 20, False, num_attempts)
-        assert mock_decode.call_count == num_attempts
+            _local_matching(M.stabiliser_graph, defects, num_neighbours, False)
+        assert mock_decode.call_count == 1+int(np.ceil(np.log2(n)-np.log2(num_neighbours)))
 
 
 def test_local_matching_catches_blossom_errors():
     with patch('pymatching.matching._py_decode_match_neighbourhood') as mock_decode:
-        mock_decode.side_effect = [BlossomFailureException]*3 + [0]
-        _local_matching(M.stabiliser_graph, defects, 20, False, 5)
+        mock_decode.side_effect = [BlossomFailureException]*3 + [None]
+        _local_matching(M.stabiliser_graph, defects, 2, False)
         assert mock_decode.call_count == 4
