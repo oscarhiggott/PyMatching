@@ -74,11 +74,11 @@ As a result, setting `num_neighbours=None` is more memory intensive than local m
 
 For typical decoding problems, local matching is an extremely close approximation of exact matching even for small `num_neighbours`. The following graph shows the threshold of local matching for the toric code with noisy syndrome measurements (a 3D matching graph), as a function of `num_neighbours`. For `num_neighbours>=16`, the local matching threshold is consistent with the 2.92\% threshold found with exact matching:
 
-<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/toric_noisy_syndromes_threshold_vs_num_neighbours.png" width=400>
+<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/toric_noisy_syndromes_threshold_vs_num_neighbours.png" width=300>
 
 The runtime of local matching scales linearly with `num_neighbours`, as shown by the following graph, generated using an L=20 toric code:
 
-<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/toric_timing_analysis_num_neighbours_vs_t.png" width=400>
+<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/toric_timing_analysis_num_neighbours_vs_t.png" width=300>
 
 A more detailed description and analysis of local matching can be found in the PyMatching [paper](https://arxiv.org/abs/2105.13082).
 
