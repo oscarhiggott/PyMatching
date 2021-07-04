@@ -273,7 +273,7 @@ class Matching:
         """
         return self.stabiliser_graph.get_boundary()
     
-    def decode(self, z, num_neighbours=20, return_weight=False):
+    def decode(self, z, num_neighbours=30, return_weight=False):
         """Decode the syndrome `z` using minimum-weight perfect matching
 
         If the parity of `z` is odd, then the first boundary node in 
@@ -302,7 +302,7 @@ class Matching:
             memory intensive, it is not recommended to be used for matching graphs 
             with more than around 10,000 nodes, and is only faster than 
             local matching for matching graphs with less than around 1,000 
-            nodes. By default 20
+            nodes. By default 30
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the 
             minimum weight perfect matching is also returned. By default False

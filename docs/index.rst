@@ -27,12 +27,12 @@ PyMatching is typically faster than a BlossomV/C++ implementation
 of the full matching problem, while being easy to use in conjunction 
 with numpy, scipy and NetworkX using the Python bindings. 
 The core algorithms and data structures are implemented in C++ 
-for good performance (with the help of the open-source Lemon 
+for good performance (with the help of the open-source LEMON 
 and Boost Graph libraries), using a local variant of the matching 
 decoder given in the Appendix of https://arxiv.org/abs/2010.09626, 
 which empirically has an average runtime roughly linear in the number of nodes 
 and gives the same output as full matching in practice. Since 
-PyMatching uses the open-source Lemon C++ library for the Blossom algorithm,
+PyMatching uses the open-source LEMON C++ library for the Blossom algorithm,
 which has similar performance to Kolmogorov's BlossomV library, both PyMatching and 
 its dependencies have permissive licenses. PyMatching can be 
 applied to any quantum code for which 
@@ -47,6 +47,11 @@ toric code under an independent noise model at :math:`p=0.05`:
 .. figure::  _static/pymatching_vs_networkx.png
    :width: 300
    :align:   center
+
+For more information, please also see the PyMatching `paper
+<https://arxiv.org/abs/2105.13082>`_. To make a feature request or 
+report a bug, please visit the PyMatching 
+`GitHub repository <https://github.com/oscarhiggott/PyMatching>`_.
 
 .. toctree::
    :maxdepth: 2

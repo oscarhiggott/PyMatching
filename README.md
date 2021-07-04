@@ -51,13 +51,38 @@ and then decoded from an `m` by `L` numpy array syndrome `z` using:
 c = m.decode(z)
 ```
 
-The Matching object can also be constructed from a NetworkX graph instead of a check matrix, and can handle weighted edges. For full details see [the documentation](https://pymatching.readthedocs.io/).
+The Matching object can also be constructed from a NetworkX graph instead of a check matrix, and can handle weighted edges. For full details see [the documentation](https://pymatching.readthedocs.io/en/stable/usage.html).
 
 ## Performance
 
-While all the functionality of PyMatching is available via the Python bindings, the core algorithms and data structures are implemented in C++, with the help of the [Lemon](https://lemon.cs.elte.hu/trac/lemon) and [Boost Graph](https://www.boost.org/doc/libs/1_74_0/libs/graph/doc/index.html) libraries. PyMatching also uses a local variant of the MWPM decoder (explained in the Appendix of [this paper](https://arxiv.org/abs/2010.09626)) that has a runtime that is approximately linear, rather than quadratic, in the number of nodes. As a result, PyMatching is orders of magnitude faster than a standard pure Python [NetworkX](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html) implementation, as shown here for decoding the toric code under an independent noise model with p=0.05 and noiseless syndrome measurements:
+While all the functionality of PyMatching is available via the Python bindings, the core algorithms and data structures are implemented in C++, with the help of the [LEMON](https://lemon.cs.elte.hu/trac/lemon) and [Boost Graph](https://www.boost.org/doc/libs/1_74_0/libs/graph/doc/index.html) libraries. PyMatching also uses a local variant of the MWPM decoder (explained in the Appendix of [this paper](https://arxiv.org/abs/2010.09626)) that has a runtime that is approximately linear, rather than quadratic, in the number of nodes. As a result, PyMatching is orders of magnitude faster than a standard pure Python [NetworkX](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.matching.max_weight_matching.html) implementation, as shown here for decoding the toric code under an independent noise model with p=0.05 and noiseless syndrome measurements:
 
 <img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/pymatching_vs_networkx.png" width="400">
+
+## Exact vs. local matching
+
+PyMatching includes both the standard "exact" minimum-weight perfect matching decoder, as well as a close approximation of it, called _local matching_, which is much faster.
+Local matching allows each node corresponding to a syndrome defect (-1 measurement) to be matched to one of the `num_neighbours` defects that are closest to it in the matching graph.
+By default, PyMatching uses local matching with `num_neighbours=30`, but a different choice of `num_neighbours` can be set when decoding, e.g.:
+```
+c = m.decode(z, num_neighbours=40)
+```
+Note that by setting `num_neighbours=sum(z)`, local matching corresponds to exact matching.
+
+Rather than setting `num_neighbours=sum(z)`, an alternative option for using exact matching is provided by setting `num_neighbours=None`. If this option is chosen, the shortest paths between all pairs of nodes in the matching graph are pre-computed and cached the first time `m.decode` is called, and then reused for later uses of `m.decode`. This differs from local matching, where shortest paths are computed on the fly.
+As a result, setting `num_neighbours=None` is more memory intensive than local matching, with the required memory scaling quadratically with the number of nodes in the matching graph, however for exact matching it is faster than setting `num_neighbours=sum(z)`.
+
+For typical decoding problems, local matching is an extremely close approximation of exact matching even for small `num_neighbours`. The following graph shows the threshold of local matching for the toric code with noisy syndrome measurements (a 3D matching graph), as a function of `num_neighbours`. For `num_neighbours>=16`, the local matching threshold is consistent with the 2.92\% threshold found with exact matching:
+
+<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/toric_noisy_syndromes_threshold_vs_num_neighbours.png" width=400>
+
+The runtime of local matching scales linearly with `num_neighbours`, as shown by the following graph, generated using an L=20 toric code:
+
+<img src="https://raw.githubusercontent.com/oscarhiggott/PyMatching/master/docs/_static/toric_timing_analysis_num_neighbours_vs_t.png" width=400>
+
+A more detailed description and analysis of local matching can be found in the PyMatching [paper](https://arxiv.org/abs/2105.13082).
+
+Note that PyMatching used `num_neighbours=20` as a default for v0.3.1 and earlier.
 
 ## Attribution
 
@@ -70,3 +95,5 @@ When using PyMatching for research, please cite:
   year={2021}
 }
 ```
+
+Please also consider citing the [LEMON](https://dl.acm.org/doi/10.1016/j.entcs.2011.06.003) and Boost Graph libraries.
