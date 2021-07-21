@@ -28,6 +28,13 @@
 #include "rand_gen.h"
 
 
+WeightedStabiliserGraph::WeightedStabiliserGraph()
+    : all_edges_have_error_probabilities(true) {
+    wgraph_t sgraph = wgraph_t();
+    this->stabiliser_graph = sgraph;
+}
+
+
 WeightedStabiliserGraph::WeightedStabiliserGraph(
     int num_stabilisers,
     std::vector<int>& boundary)

@@ -43,6 +43,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def_readwrite("has_error_probability", &WeightedEdgeData::has_error_probability);
 
      py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
+     .def(py::init<>())
      .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
      .def_readwrite("all_predecessors", &WeightedStabiliserGraph::all_predecessors)
      .def_readwrite("all_distances", &WeightedStabiliserGraph::all_distances)

@@ -49,6 +49,11 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         /**
          * @brief Construct a new Weighted Stabiliser Graph object
          * 
+         */
+        WeightedStabiliserGraph();
+        /**
+         * @brief Construct a new Weighted Stabiliser Graph object
+         * 
          * @param num_stabilisers Number of stabiliser nodes (this excludes boundary nodes)
          * @param boundary Indices of the boundary nodes
          */
