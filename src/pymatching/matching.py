@@ -105,7 +105,7 @@ class Matching:
     graph, with node and edge attributes used to specify edge weights,
     qubit ids, boundaries and error probabilities.
     """
-    def __init__(self, H, spacelike_weights=None, 
+    def __init__(self, H=None, spacelike_weights=None,
                  error_probabilities=None, 
                  repetitions=None,
                  timelike_weights=None,
@@ -115,7 +115,7 @@ class Matching:
 
         Parameters
         ----------
-        H : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` object
+        H : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` object, optional
             The quantum code to be decoded with minimum-weight perfect
             matching, given either as a binary check matrix (scipy sparse 
             matrix or numpy.ndarray), or as a matching graph (NetworkX graph).
@@ -129,7 +129,7 @@ class Matching:
             Each ``weight`` attribute should be a non-negative float. If 
             every edge is assigned an error_probability between zero and one, 
             then the ``add_noise`` method can be used to simulate noise and 
-            flip edges independently in the graph.
+            flip edges independently in the graph. By default, None
         spacelike_weights : float or numpy.ndarray, optional
             If `H` is given as a scipy or numpy array, `spacelike_weights` gives the weights
             of edges in the matching graph. By default None, in which case 
@@ -160,104 +160,164 @@ class Matching:
             to True will precompute the all-pairs shortest paths.
             By default False
             """
+        self.stabiliser_graph = WeightedStabiliserGraph()
+        if H is None:
+            return
         if not isinstance(H, nx.Graph):
             try:
                 H = csc_matrix(H)
-                unique_elements = np.unique(H.data)
-                if len(unique_elements)>1 or unique_elements[0] != 1:
-                    raise ValueError("Nonzero elements in the parity check matrix"\
-                                    " must be 1, not {}.".format(unique_elements))
-                H = H.astype(np.uint8)
-            except:
-                raise ValueError("H must be a NetworkX graph or convertible "
-                                 "to a scipy.csc_matrix")
-
-        if isinstance(H, csc_matrix):
-            num_edges = H.shape[1]
+                self.load_from_check_matrix(H, spacelike_weights, error_probabilities,
+                                            repetitions, timelike_weights, measurement_error_probability)
+            except TypeError:
+                raise TypeError("H must be a NetworkX graph or convertible "
+                                "to a scipy.csc_matrix")
         else:
-            num_edges = nx.number_of_edges(H)
-        
-        weights = 1.0 if spacelike_weights is None else spacelike_weights
-        if isinstance(weights, (int, float)):
-            weights = np.array([weights]*num_edges).astype(float)
-        weights = np.asarray(weights)
-
-        if isinstance(H, csc_matrix):
-            if error_probabilities is None:
-                error_probabilities = np.array([-1]*num_edges)
-            elif isinstance(error_probabilities, (int, float)):
-                error_probabilities = np.array([error_probabilities]*num_edges)
-            column_weights = np.asarray(H.sum(axis=0))[0]
-            unique_column_weights = np.unique(column_weights)
-            if np.setdiff1d(unique_column_weights, np.array([1,2])).size > 0:
-                raise ValueError("Each qubit must be contained in either "\
-                                 "1 or 2 check operators, not {}".format(unique_column_weights))
-            H.eliminate_zeros()
-            H.sort_indices()
-            self.num_stabilisers = H.shape[0]
-            num_qubits = H.shape[1]
-
-            if weights.shape[0] != num_qubits:
-                raise ValueError("Weights array must have num_qubits elements")
-            if np.any(weights < 0.):
-                raise ValueError("All weights must be non-negative.")
-            
-            timelike_weights = 1.0 if timelike_weights is None else timelike_weights
-            repetitions = 1 if repetitions is None else repetitions
-            p_meas = measurement_error_probability if measurement_error_probability is not None else -1
-            boundary = [H.shape[0]*repetitions] if 1 in unique_column_weights else []
-            self.stabiliser_graph = WeightedStabiliserGraph(H.shape[0]*repetitions, boundary=boundary)
-            for t in range(repetitions):
-                for i in range(len(H.indptr)-1):
-                    s, e = H.indptr[i:i+2]
-                    v1 = H.indices[s] + H.shape[0]*t
-                    v2 = H.indices[e-1] + H.shape[0]*t if e-s == 2 else boundary[0]
-                    self.stabiliser_graph.add_edge(v1, v2, {i}, weights[i], 
-                            error_probabilities[i], error_probabilities[i] >= 0)
-            for t in range(repetitions-1):
-                for i in range(H.shape[0]):
-                    self.stabiliser_graph.add_edge(i+t*H.shape[0], i+(t+1)*H.shape[0], 
-                            set(), timelike_weights, p_meas, p_meas >= 0)
-        else:
-            boundary = _find_boundary_nodes(H)
-            num_nodes = H.number_of_nodes()
-            self.num_stabilisers = num_nodes - len(boundary)
-            all_qubits = set()
-            g = WeightedStabiliserGraph(self.num_stabilisers, boundary)
-            for (u, v, attr) in H.edges(data=True):
-                u, v = int(u), int(v)
-                if u >= num_nodes or v>= num_nodes:
-                    raise ValueError("Every node id must be less "\
-                        "than the number of nodes, but edge "\
-                        "({},{}) was present.".format(u,v))
-                qubit_id = attr.get("qubit_id", set())
-                if isinstance(qubit_id, (int, np.integer)):
-                    qubit_id = {int(qubit_id)} if qubit_id != -1 else set()
-                else:
-                    try:
-                        qubit_id = set(qubit_id)
-                        if not all(isinstance(q, (int, np.integer)) for q in qubit_id):
-                            raise ValueError("qubit_id must be a set of ints, not {}".format(qubit_id))
-                    except:
-                        raise ValueError("qubit_id property must be an int or a set of int"\
-                                " (or convertible to a set), not {}".format(qubit_id))
-                all_qubits = all_qubits | qubit_id
-                weight = attr.get("weight", 1) # Default weight is 1 if not provided
-                if weight < 0:
-                    raise ValueError("Weights cannot be negative.")
-                e_prob = attr.get("error_probability", -1)
-                g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
-            self.stabiliser_graph = g
-            if max(all_qubits, default=-1) != len(all_qubits) - 1:
-                raise ValueError("The maximum qubit id ({}) should "\
-                        "equal the number of qubits ({}) minus one.".format(max(all_qubits, default=0),len(all_qubits)))
+            self.load_from_networkx(H)
         num_components = self.stabiliser_graph.get_num_connected_components()
         if num_components != 1:
             raise ValueError("Matching graph must have 1 connected component, "\
                              "but instead has {}".format(num_components))
         if precompute_shortest_paths:
             self.stabiliser_graph.compute_all_pairs_shortest_paths()
-    
+
+    def load_from_networkx(self, G):
+        """
+        Load a matching graph from a NetworkX graph
+
+        Parameters
+        ----------
+        G : networkx.Graph
+            If `G` has `M` nodes, each node
+            `m` in `G` should be an integer :math:`0<m<M-1`, and each node should
+            be unique. Each edge in the NetworkX graph can have optional
+            attributes ``qubit_id``, ``weight`` and ``error_probability``.
+            ``qubit_id`` should be an int or a set of ints. If there
+            are :math:`N` qubits then the union of all ints in the ``qubit_id``
+            attributes in the graph should be the integers :math:`0\ldots N-1`.
+            Each ``weight`` attribute should be a non-negative float. If
+            every edge is assigned an error_probability between zero and one,
+            then the ``add_noise`` method can be used to simulate noise and
+            flip edges independently in the graph.
+        """
+        boundary = _find_boundary_nodes(G)
+        num_nodes = G.number_of_nodes()
+        all_qubits = set()
+        g = WeightedStabiliserGraph(self.num_detectors, boundary)
+        for (u, v, attr) in G.edges(data=True):
+            u, v = int(u), int(v)
+            if u >= num_nodes or v>= num_nodes:
+                raise ValueError("Every node id must be less "\
+                                 "than the number of nodes, but edge "\
+                                 "({},{}) was present.".format(u,v))
+            qubit_id = attr.get("qubit_id", set())
+            if isinstance(qubit_id, (int, np.integer)):
+                qubit_id = {int(qubit_id)} if qubit_id != -1 else set()
+            else:
+                try:
+                    qubit_id = set(qubit_id)
+                    if not all(isinstance(q, (int, np.integer)) for q in qubit_id):
+                        raise ValueError("qubit_id must be a set of ints, not {}".format(qubit_id))
+                except:
+                    raise ValueError(
+                        "qubit_id property must be an int or a set of int"\
+                        " (or convertible to a set), not {}".format(qubit_id))
+            all_qubits = all_qubits | qubit_id
+            weight = attr.get("weight", 1) # Default weight is 1 if not provided
+            if weight < 0:
+                raise ValueError("Weights cannot be negative.")
+            e_prob = attr.get("error_probability", -1)
+            g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
+        self.stabiliser_graph = g
+        if max(all_qubits, default=-1) != len(all_qubits) - 1:
+            raise ValueError(
+                "The maximum qubit id ({}) should equal the number of qubits ({}) "\
+                "minus one.".format(max(all_qubits, default=0), len(all_qubits))
+            )
+
+    def load_from_check_matrix(self, H, spacelike_weights=None,
+                               error_probabilities=None,
+                               repetitions=None,
+                               timelike_weights=None,
+                               measurement_error_probability=None):
+        """
+        Load a matching graph from a check matrix
+
+        Parameters
+        ----------
+        H : `scipy.spmatrix` or `numpy.ndarray`
+            The quantum code to be decoded with minimum-weight perfect
+            matching, given as a binary check matrix (scipy sparse
+            matrix or numpy.ndarray)
+        spacelike_weights : float or numpy.ndarray, optional
+            The weights of edges in the matching graph.
+            By default None, in which case all weights are set to 1.0
+        error_probabilities : float or numpy.ndarray, optional
+            The probabilities with which an error occurs on each qubit. If a
+            single float is given, the same error probability is used for each
+            qubit. If a numpy.ndarray of floats is given, it must have a
+            length equal to the number of qubits. This parameter is only
+            needed for the Matching.add_noise method, and not for decoding.
+            By default None
+        repetitions : int, optional
+            The number of times the stabiliser measurements are repeated, if
+            the measurements are noisy. By default None
+        timelike_weights : float, optional
+            If `repetitions>1`, `timelike_weights` gives the weight of
+            timelike edges. By default None, in which case all
+            weights are set to 1.0
+        measurement_error_probability : float, optional
+            If `repetitions>1`, gives the probability of a measurement
+            error to be used for the add_noise method. By default None
+        """
+        try:
+            H = csc_matrix(H)
+        except TypeError:
+            raise TypeError("H must be convertible to a scipy.csc_matrix")
+        unique_elements = np.unique(H.data)
+        if len(unique_elements) > 1 or unique_elements[0] != 1:
+            raise ValueError("Nonzero elements in the parity check matrix" \
+                             " must be 1, not {}.".format(unique_elements))
+        H = H.astype(np.uint8)
+        num_edges = H.shape[1]
+        weights = 1.0 if spacelike_weights is None else spacelike_weights
+        if isinstance(weights, (int, float)):
+            weights = np.array([weights]*num_edges).astype(float)
+        weights = np.asarray(weights)
+        if error_probabilities is None:
+            error_probabilities = np.array([-1] * num_edges)
+        elif isinstance(error_probabilities, (int, float)):
+            error_probabilities = np.array([error_probabilities] * num_edges)
+        column_weights = np.asarray(H.sum(axis=0))[0]
+        unique_column_weights = np.unique(column_weights)
+        if np.setdiff1d(unique_column_weights, np.array([1, 2])).size > 0:
+            raise ValueError("Each qubit must be contained in either " \
+                             "1 or 2 check operators, not {}".format(unique_column_weights))
+        H.eliminate_zeros()
+        H.sort_indices()
+        num_qubits = H.shape[1]
+
+        if weights.shape[0] != num_qubits:
+            raise ValueError("Weights array must have num_qubits elements")
+        if np.any(weights < 0.):
+            raise ValueError("All weights must be non-negative.")
+
+        timelike_weights = 1.0 if timelike_weights is None else timelike_weights
+        repetitions = 1 if repetitions is None else repetitions
+        p_meas = measurement_error_probability if measurement_error_probability is not None else -1
+        boundary = [H.shape[0] * repetitions] if 1 in unique_column_weights else []
+        self.stabiliser_graph = WeightedStabiliserGraph(H.shape[0] * repetitions, boundary=boundary)
+        for t in range(repetitions):
+            for i in range(len(H.indptr) - 1):
+                s, e = H.indptr[i:i + 2]
+                v1 = H.indices[s] + H.shape[0] * t
+                v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else boundary[0]
+                self.stabiliser_graph.add_edge(v1, v2, {i}, weights[i],
+                                               error_probabilities[i], error_probabilities[i] >= 0)
+        for t in range(repetitions - 1):
+            for i in range(H.shape[0]):
+                self.stabiliser_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
+                                               set(), timelike_weights, p_meas, p_meas >= 0)
+
     @property
     def num_qubits(self):
         return self.stabiliser_graph.get_num_qubits()
@@ -272,6 +332,14 @@ class Matching:
             The indices of the boundary nodes
         """
         return self.stabiliser_graph.get_boundary()
+
+    @property
+    def num_nodes(self):
+        return self.stabiliser_graph.get_num_nodes()
+
+    @property
+    def num_detectors(self):
+        return self.num_nodes - len(self.boundary)
     
     def decode(self, z, num_neighbours=30, return_weight=False):
         """Decode the syndrome `z` using minimum-weight perfect matching
@@ -324,25 +392,25 @@ class Matching:
         try:
             z = np.array(z, dtype=np.uint8)
         except:
-            raise ValueError("Syndrome must be of type numpy.ndarray or "\
+            raise TypeError("Syndrome must be of type numpy.ndarray or "\
                              "convertible to numpy.ndarray, not {}".format(z))
-        if len(z.shape) == 1 and (self.num_stabilisers <= z.shape[0]
-                <= self.num_stabilisers+len(self.boundary)):
+        if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
+                                  <= self.num_detectors + len(self.boundary)):
             defects = z.nonzero()[0]
-        elif len(z.shape) == 2 and z.shape[0] == self.num_stabilisers:
+        elif len(z.shape) == 2 and z.shape[0]*z.shape[1] == self.num_detectors:
             num_stabs = self.stabiliser_graph.get_num_nodes()
             max_num_defects = z.shape[0]*z.shape[1]
             if max_num_defects > num_stabs:
                 raise ValueError("Syndrome size {}x{} exceeds" \
                         " the number of stabilisers ({})".format(z.shape[0],z.shape[1],num_stabs))
             times, checks = z.T.nonzero()
-            defects = times*self.num_stabilisers + checks
+            defects = times*z.shape[0] + checks
         else:
             raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
         if len(defects) % 2 != 0:
             if len(self.boundary) == 0:
                 raise ValueError("Syndrome must contain an even number of defects "
-                                    "if no boundary vertex is given.")
+                                 "if no boundary vertex is given.")
             defects = np.setxor1d(defects, np.array(self.boundary[0:1]))
         if num_neighbours is None:
             res = decode(self.stabiliser_graph, defects, return_weight)
@@ -369,7 +437,7 @@ class Matching:
             Noise vector (binary numpy int array of length self.num_qubits)
         numpy.ndarray of dtype int
             Syndrome vector (binary numpy int array of length 
-            self.num_stabilisers if there is no boundary, or self.num_stabilisers+len(self.boundary)
+            self.num_detectors if there is no boundary, or self.num_detectors+len(self.boundary)
             if there are boundary nodes)
         """
         if not self.stabiliser_graph.all_edges_have_error_probabilities:
@@ -453,7 +521,7 @@ class Matching:
 
     def __repr__(self):
         N = self.num_qubits
-        M = self.num_stabilisers
+        M = self.num_detectors
         B = len(self.boundary)
         E = self.stabiliser_graph.get_num_edges()
         return "<pymatching.Matching object with "\

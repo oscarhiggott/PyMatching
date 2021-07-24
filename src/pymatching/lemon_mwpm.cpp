@@ -64,18 +64,28 @@ void DefectGraph::AddEdge(int i, int j, double weight){
 }
 
 
-MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects, bool return_weight){
+MatchingResult LemonDecode(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, bool return_weight){
     MatchingResult matching_result;
     if (!sg.HasComputedAllPairsShortestPaths()){
         sg.ComputeAllPairsShortestPaths();
     }
     auto d = defects.unchecked<1>();
-    int num_nodes = d.shape(0);
+    int num_defects = d.shape(0);
 
-    DefectGraph defect_graph(num_nodes);
+    int num_nodes = boost::num_vertices(sg.stabiliser_graph);
 
-    for (py::size_t i = 0; i<num_nodes; i++){
-        for (py::size_t j=i+1; j<num_nodes; j++){
+    for (int i=0; i<num_defects; i++){
+        if (d(i) >= num_nodes){
+            throw std::invalid_argument(
+            "Defect id must be less than the number of nodes in the matching graph"
+            );
+        }
+    }
+
+    DefectGraph defect_graph(num_defects);
+
+    for (py::size_t i = 0; i<num_defects; i++){
+        for (py::size_t j=i+1; j<num_defects; j++){
             defect_graph.AddEdge(i, j, -1.0*sg.SpaceTimeDistance(d(i), d(j)));
         }
     };
@@ -88,7 +98,7 @@ MatchingResult LemonDecode(IStabiliserGraph& sg, const py::array_t<int>& defects
     int N = sg.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
-    for (py::size_t i = 0; i<num_nodes; i++){
+    for (py::size_t i = 0; i<num_defects; i++){
         int j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         if (i<j){
             std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
@@ -127,6 +137,11 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
 
     std::vector<int> defect_id(num_nodes, -1);
     for (int i=0; i<num_defects; i++){
+        if (d(i) >= num_nodes){
+            throw std::invalid_argument(
+            "Defect id must be less than the number of nodes in the matching graph"
+            );
+        }
         defect_id[d(i)] = i;
     }
     num_neighbours = std::min(num_neighbours, num_defects-1) + 1;

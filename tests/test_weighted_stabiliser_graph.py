@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pytest
-from pymatching._cpp_mwpm import decode, WeightedStabiliserGraph
+from pymatching._cpp_mwpm import WeightedStabiliserGraph
 
 
 def test_weighted_spacetime_shortest_path():

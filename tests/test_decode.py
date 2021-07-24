@@ -21,7 +21,8 @@ from scipy.sparse import load_npz, csr_matrix
 import pytest
 import networkx as nx
 
-from pymatching._cpp_mwpm import BlossomFailureException
+from pymatching._cpp_mwpm import (BlossomFailureException, decode_match_neighbourhood,
+                                  decode)
 from pymatching import Matching
 from pymatching.matching import _local_matching
 
@@ -78,7 +79,7 @@ def test_mwpm_noisy_decode(n, z_err, c_expected):
     n_all = np.cumsum(n, 0) % 2
     z_noiseless = H.dot(n_all.T) % 2
     z_noisy = (z_noiseless + z_err) % 2
-    z_noisy[:,1:] = (z_noisy[:,1:] - z_noisy[:,:-1]) % 2
+    z_noisy[:, 1:] = (z_noisy[:, 1:] - z_noisy[:, :-1]) % 2
     c = m.decode(z_noisy)
     assert(np.array_equal(c, c_expected))
 
@@ -107,8 +108,8 @@ def test_bad_syndrome_raises_value_error():
     g.add_edge(0, 1, qubit_id=0)
     g.add_edge(1, 2, qubit_id=1)
     m = Matching(g)
-    with pytest.raises(ValueError):
-        noise = m.decode('test')
+    with pytest.raises(TypeError):
+        m.decode('test')
 
 
 distance_fixtures = [
@@ -247,3 +248,13 @@ def test_local_matching_catches_blossom_errors():
         mock_decode.side_effect = [BlossomFailureException]*3 + [None]
         _local_matching(M.stabiliser_graph, defects, 2, False)
         assert mock_decode.call_count == 4
+
+
+def test_decoding_large_defect_id_raises_value_error():
+    g = nx.Graph()
+    g.add_edge(0, 1)
+    g.add_edge(1, 2)
+    m = Matching(g)
+    with pytest.raises(ValueError):
+        decode_match_neighbourhood(m.stabiliser_graph, np.array([1, 4]))
+        decode(m.stabiliser_graph, np.array([1, 4]))

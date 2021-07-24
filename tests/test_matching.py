@@ -141,7 +141,7 @@ def test_unweighted_stabiliser_graph_from_networkx():
     w.add_edge(4, 5, qubit_id=6, weight=9.0)
     m = Matching(w)
     assert(m.num_qubits == 7)
-    assert(m.num_stabilisers == 6)
+    assert(m.num_detectors == 6)
     assert(m.stabiliser_graph.shortest_path(3, 5) == [3, 2, 5])
     assert(m.stabiliser_graph.distance(5, 0) == pytest.approx(11.0))
     assert(np.array_equal(
@@ -169,7 +169,7 @@ def test_mwpm_from_networkx():
     g.add_edge(1, 2, qubit_id=2)
     m = Matching(g)
     assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
-    assert(m.num_stabilisers == 3)
+    assert(m.num_detectors == 3)
     assert(m.num_qubits == 3)
     assert(m.stabiliser_graph.distance(0,2) == 1)
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
@@ -180,7 +180,7 @@ def test_mwpm_from_networkx():
     g.add_edge(1, 2)
     m = Matching(g)
     assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
-    assert(m.num_stabilisers == 3)
+    assert(m.num_detectors == 3)
     assert(m.num_qubits == 0)
     assert(m.stabiliser_graph.distance(0,2) == 1)
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
@@ -191,7 +191,7 @@ def test_mwpm_from_networkx():
     g.add_edge(1, 2, weight=1.2)
     m = Matching(g)
     assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
-    assert(m.num_stabilisers == 3)
+    assert(m.num_detectors == 3)
     assert(m.num_qubits == 0)
     assert(m.stabiliser_graph.distance(0,2) == pytest.approx(1.7))
     assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
@@ -296,3 +296,9 @@ def test_draw_matching():
     m = Matching(g)
     plt.figure()
     m.draw()
+
+
+def test_load_matching_from_dense_array():
+    H = np.array([[1, 1, 0], [0, 1, 1]])
+    m = Matching()
+    m.load_from_check_matrix(H)
