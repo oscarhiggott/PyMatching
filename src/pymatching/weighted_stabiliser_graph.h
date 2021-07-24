@@ -45,7 +45,6 @@ typedef boost::graph_traits < wgraph_t >::edge_descriptor edge_descriptor;
  */
 class WeightedStabiliserGraph : public IStabiliserGraph{
     public:
-        wgraph_t stabiliser_graph;
         /**
          * @brief Construct a new Weighted Stabiliser Graph object
          * 
@@ -144,27 +143,6 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          */
         std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> AddNoise() const;
         /**
-         * @brief The distance between every pair of nodes in the stabiliser graph, if 
-         * ComputeAllPairsShortestPaths has been run. all_distances[i][j] is the distance 
-         * between node i and node j in the stabiliser graph. Note that this is only used 
-         * if exact matching is used (the function LemonDecode in lemon_mwpm.cpp), and not if 
-         * (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood 
-         * in lemon_mwpm.cpp).
-         * 
-         */
-        std::vector<std::vector<double>> all_distances;
-        /**
-         * @brief all_predecessors[i] is the PredecessorMap found by Boost's dijkstra_shortest_paths 
-         * from node i in stabiliser_graph to all other nodes. In other words, all_predecessors[i][j] 
-         * is the parent of node j in the shortest path from node i to node j in stabiliser_graph.
-         * Note that this is only used if exact matching is used (the function LemonDecode in lemon_mwpm.cpp), 
-         * and not if (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood 
-         * in lemon_mwpm.cpp).
-         * 
-         */
-        std::vector<std::vector<vertex_descriptor>> all_predecessors;
-        bool all_edges_have_error_probabilities; // true if every edge in stabiliser_graph has an error_probability in its edge data
-        /**
          * @brief Get the indices of the boundary nodes
          * 
          * @return std::vector<int> The indices of the boundary nodes
@@ -235,10 +213,40 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          */
         virtual int GetNumConnectedComponents() const;
         /**
+        * @brief Whether or not all edges in the graph are assigned error probabilities
+        *
+        * @ return bool True if all edges have error probabilities, else False
+        */
+        bool AllEdgesHaveErrorProbabilities() const;
+    private:
+        /**
          * @brief The indices of the boundary nodes
-         * 
+         *
          */
         std::vector<int> boundary;
         std::vector<double> _distances;
         std::vector<int> _predecessors;
+        // true if every edge in stabiliser_graph has an error_probability in its edge data
+        bool all_edges_have_error_probabilities;
+        wgraph_t stabiliser_graph;
+        /**
+         * @brief The distance between every pair of nodes in the stabiliser graph, if
+         * ComputeAllPairsShortestPaths has been run. all_distances[i][j] is the distance
+         * between node i and node j in the stabiliser graph. Note that this is only used
+         * if exact matching is used (the function LemonDecode in lemon_mwpm.cpp), and not if
+         * (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood
+         * in lemon_mwpm.cpp).
+         *
+         */
+        std::vector<std::vector<double>> all_distances;
+        /**
+         * @brief all_predecessors[i] is the PredecessorMap found by Boost's dijkstra_shortest_paths
+         * from node i in stabiliser_graph to all other nodes. In other words, all_predecessors[i][j]
+         * is the parent of node j in the shortest path from node i to node j in stabiliser_graph.
+         * Note that this is only used if exact matching is used (the function LemonDecode in lemon_mwpm.cpp),
+         * and not if (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood
+         * in lemon_mwpm.cpp).
+         *
+         */
+        std::vector<std::vector<vertex_descriptor>> all_predecessors;
 };

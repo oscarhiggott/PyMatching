@@ -442,7 +442,7 @@ class Matching:
             self.num_detectors if there is no boundary, or self.num_detectors+len(self.boundary)
             if there are boundary nodes)
         """
-        if not self.stabiliser_graph.all_edges_have_error_probabilities:
+        if not self.stabiliser_graph.all_edges_have_error_probabilities():
             return None
         return self.stabiliser_graph.add_noise()
     

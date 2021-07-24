@@ -258,3 +258,12 @@ def test_decoding_large_defect_id_raises_value_error():
     with pytest.raises(ValueError):
         decode_match_neighbourhood(m.stabiliser_graph, np.array([1, 4]))
         decode(m.stabiliser_graph, np.array([1, 4]))
+
+
+def test_decode_with_odd_number_of_defects():
+    g = nx.Graph()
+    g.add_edge(0, 1)
+    g.add_edge(1, 2)
+    g.add_edge(2, 0)
+    m = Matching(g)
+    decode_match_neighbourhood(m.stabiliser_graph, np.array([1]))

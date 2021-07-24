@@ -378,3 +378,7 @@ int WeightedStabiliserGraph::GetNumConnectedComponents() const {
     std::vector<int> component(boost::num_vertices(stabiliser_graph));
     return boost::connected_components(stabiliser_graph, &component[0]);
 }
+
+bool WeightedStabiliserGraph::AllEdgesHaveErrorProbabilities() const {
+    return all_edges_have_error_probabilities;
+}

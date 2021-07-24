@@ -40,6 +40,7 @@ def test_dijkstra_path():
     assert m.stabiliser_graph.get_path(4, 1) == [4,3,2,1]
     assert m.stabiliser_graph.get_path(5, 3) == [5,4,3]
 
+
 neighbour_match_fixtures = [
     ([1,3], 3, [0,1,1,0,0]),
     ([0,1,2,3,4,5], 2, [1,0,1,0,1]),
@@ -51,14 +52,3 @@ neighbour_match_fixtures = [
 def test_neighbourhood_matching(defects,num_neighbours,correction):
     assert (np.array_equal(decode_match_neighbourhood(m.stabiliser_graph, 
             np.array(defects), num_neighbours, False).correction, np.array(correction)))
-
-
-def test_distances_and_predecessors_reset():
-    M = Matching([[1,1,0,0],[0,1,1,0],[0,0,1,1],[1,0,0,1]])
-    assert M.stabiliser_graph._distances == []
-    assert M.stabiliser_graph._predecessors == []
-    for z in ([1,0,0,1],[0,1,1,0],[0,0,1,1]):
-        M.decode(z)
-        infty = sys.float_info.max
-        assert [infty]*4 == M.stabiliser_graph._distances
-        assert list(range(4)) == M.stabiliser_graph._predecessors

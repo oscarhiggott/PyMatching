@@ -64,7 +64,11 @@ void DefectGraph::AddEdge(int i, int j, double weight){
 }
 
 
-MatchingResult LemonDecode(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, bool return_weight){
+MatchingResult LemonDecode(
+    WeightedStabiliserGraph& sg,
+    const py::array_t<int>& defects,
+    bool return_weight
+    ){
     MatchingResult matching_result;
     if (!sg.HasComputedAllPairsShortestPaths()){
         sg.ComputeAllPairsShortestPaths();
@@ -72,7 +76,7 @@ MatchingResult LemonDecode(WeightedStabiliserGraph& sg, const py::array_t<int>& 
     auto d = defects.unchecked<1>();
     int num_defects = d.shape(0);
 
-    int num_nodes = boost::num_vertices(sg.stabiliser_graph);
+    int num_nodes = sg.GetNumNodes();
 
     for (int i=0; i<num_defects; i++){
         if (d(i) >= num_nodes){
@@ -133,7 +137,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
     auto d = defects.unchecked<1>();
     int num_defects = d.shape(0);
 
-    int num_nodes = boost::num_vertices(sg.stabiliser_graph);
+    int num_nodes = sg.GetNumNodes();
 
     std::vector<int> defect_id(num_nodes, -1);
     for (int i=0; i<num_defects; i++){
