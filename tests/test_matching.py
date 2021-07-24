@@ -38,7 +38,7 @@ def test_boundary_from_check_matrix():
     H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
                              [0,0,1,1,0],[0,0,0,1,1]]))
     m = Matching(H)
-    assert m.boundary == [4]
+    assert m.boundary == {4}
     assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
@@ -54,7 +54,7 @@ def test_boundary_from_networkx():
     g.add_edge(3,4, qubit_id=4)
     g.nodes()[4]['is_boundary'] = True
     m = Matching(g)
-    assert m.boundary == [4]
+    assert m.boundary == {4}
     assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
@@ -72,7 +72,7 @@ def test_boundaries_from_networkx():
     g.nodes()[0]['is_boundary'] = True
     g.nodes()[5]['is_boundary'] = True
     m = Matching(g)
-    assert m.boundary == [0,5]
+    assert m.boundary == {0, 5}
     assert np.array_equal(m.decode(np.array([0,1,0,0,0,0])), np.array([1,0,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,0,1,0,0])), np.array([1,1,0,0,0]))
     assert np.array_equal(m.decode(np.array([0,0,1,1,0])), np.array([0,0,1,0,0]))
@@ -101,20 +101,20 @@ def test_negative_weight_raises_value_error():
 
 
 def test_error_probability_from_array():
-    H = csr_matrix(np.array([[1,1,0,0,0],[0,1,1,0,0],
-                             [0,0,1,1,0],[0,0,0,1,1]]))
-    m = Matching(H, error_probabilities=np.array([0.,0.,0.,0.,1.]))
-    assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,1]))
-    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,1,1]))
-    m = Matching(H, error_probabilities=np.array([0.,0.,0.,0.,0.]))
-    assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,0]))
-    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
+    H = csr_matrix(np.array([[1, 1, 0, 0, 0],[0, 1, 1, 0, 0],
+                             [0, 0, 1, 1, 0],[0, 0, 0, 1, 1]]))
+    m = Matching(H, error_probabilities=np.array([0., 0., 0., 0., 1.]))
+    assert np.array_equal(m.add_noise()[0], np.array([0, 0, 0, 0, 1]))
+    assert np.array_equal(m.add_noise()[1], np.array([0, 0, 0, 1, 0]))
+    m = Matching(H, error_probabilities=np.array([0., 0., 0., 0., 0.]))
+    assert np.array_equal(m.add_noise()[0], np.array([0, 0, 0, 0, 0]))
+    assert np.array_equal(m.add_noise()[1], np.array([0, 0, 0, 0, 0]))
     m = Matching(H, error_probabilities=0.0)
-    assert np.array_equal(m.add_noise()[0], np.array([0,0,0,0,0]))
-    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
+    assert np.array_equal(m.add_noise()[0], np.array([0, 0, 0, 0, 0]))
+    assert np.array_equal(m.add_noise()[1], np.array([0, 0, 0, 0, 0]))
     m = Matching(H, error_probabilities=1.0)
-    assert np.array_equal(m.add_noise()[0], np.array([1,1,1,1,1]))
-    assert np.array_equal(m.add_noise()[1], np.array([0,0,0,0,0]))
+    assert np.array_equal(m.add_noise()[0], np.array([1, 1, 1, 1, 1]))
+    assert np.array_equal(m.add_noise()[1], np.array([0, 0, 0, 0, 0]))
 
 
 def test_weighted_mwpm_from_array():
@@ -207,7 +207,7 @@ def test_repr():
     g.add_edge(0, 3, weight=0.0)
     m = Matching(g)
     assert m.__repr__() == ("<pymatching.Matching object with 3 qubits, "
-                            "2 stabilisers, 2 boundary nodes, and 4 edges>")
+                            "2 detectors, 2 boundary nodes, and 4 edges>")
 
 
 def test_wrong_connected_components_raises_value_error():

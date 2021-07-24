@@ -41,11 +41,11 @@ def _find_boundary_nodes(G):
 
     Returns
     -------
-    list of int
+    set of int
         The indices of the boundary nodes in G.
     """
-    return [i for i, attr in G.nodes(data=True) 
-            if attr.get("is_boundary", False)]
+    return {i for i, attr in G.nodes(data=True)
+            if attr.get("is_boundary", False)}
 
 
 def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=False):
@@ -304,13 +304,13 @@ class Matching:
         timelike_weights = 1.0 if timelike_weights is None else timelike_weights
         repetitions = 1 if repetitions is None else repetitions
         p_meas = measurement_error_probability if measurement_error_probability is not None else -1
-        boundary = [H.shape[0] * repetitions] if 1 in unique_column_weights else []
+        boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
         self.stabiliser_graph = WeightedStabiliserGraph(H.shape[0] * repetitions, boundary=boundary)
         for t in range(repetitions):
             for i in range(len(H.indptr) - 1):
                 s, e = H.indptr[i:i + 2]
                 v1 = H.indices[s] + H.shape[0] * t
-                v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else boundary[0]
+                v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else next(iter(boundary))
                 self.stabiliser_graph.add_edge(v1, v2, {i}, weights[i],
                                                error_probabilities[i], error_probabilities[i] >= 0)
         for t in range(repetitions - 1):
@@ -328,7 +328,7 @@ class Matching:
 
         Returns
         -------
-        list of int
+        set of int
             The indices of the boundary nodes
         """
         return self.stabiliser_graph.get_boundary()
@@ -344,7 +344,7 @@ class Matching:
     def decode(self, z, num_neighbours=30, return_weight=False):
         """Decode the syndrome `z` using minimum-weight perfect matching
 
-        If the parity of `z` is odd, then the first boundary node in 
+        If the parity of `z` is odd, then an arbitrarily chosen boundary node in
         ``self.boundary`` is flipped, and all other stabiliser and 
         boundary nodes are left unchanged.
 
@@ -413,7 +413,7 @@ class Matching:
             if len(self.boundary) == 0:
                 raise ValueError("Syndrome must contain an even number of defects "
                                  "if no boundary vertex is given.")
-            defects = np.setxor1d(defects, np.array(self.boundary[0:1]))
+            defects = np.setxor1d(defects, np.array(next(iter(self.boundary))))
         if num_neighbours is None:
             res = decode(self.stabiliser_graph, defects, return_weight)
         else:
@@ -428,10 +428,7 @@ class Matching:
         a probability given by the error_probility edge attribute.
         The ``error_probability`` must be set for all edges for this 
         method to run, otherwise it returns `None`.
-        If boundary nodes are present, then the first boundary in 
-        ``self.boundary`` is given a 1 syndrome only if the syndrome 
-        of the stabilisers has odd parity, and all other boundary 
-        nodes are always given a 0 syndrome.
+        All boundary nodes are always given a 0 syndrome.
 
         Returns
         -------
@@ -527,8 +524,8 @@ class Matching:
         B = len(self.boundary)
         E = self.stabiliser_graph.get_num_edges()
         return "<pymatching.Matching object with "\
-                "{} qubit{}, {} stabiliser{}, "\
-                "{} boundary node{}, "\
-                "and {} edge{}>".format(N, 's' if N != 1 else '',
-                    M, 's' if M != 1 else '', B, 's' if B != 1 else '',
-                    E, 's' if E != 1 else '')
+               "{} qubit{}, {} detector{}, "\
+               "{} boundary node{}, "\
+               "and {} edge{}>".format(N, 's' if N != 1 else '',
+               M, 's' if M != 1 else '', B, 's' if B != 1 else '',
+               E, 's' if E != 1 else '')

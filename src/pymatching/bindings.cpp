@@ -44,7 +44,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
 
      py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
      .def(py::init<>())
-     .def(py::init<int, std::vector<int>&>(), "num_stabilisers"_a, "boundary"_a)
+     .def(py::init<int, std::set<int>&>(), "num_stabilisers"_a, "boundary"_a)
      .def("all_edges_have_error_probabilities",
           &WeightedStabiliserGraph::AllEdgesHaveErrorProbabilities)
      .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a, 

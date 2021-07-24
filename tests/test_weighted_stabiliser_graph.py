@@ -17,7 +17,7 @@ from pymatching._cpp_mwpm import WeightedStabiliserGraph
 
 
 def test_weighted_spacetime_shortest_path():
-    w = WeightedStabiliserGraph(6, [])
+    w = WeightedStabiliserGraph(6, set())
     w.add_edge(0, 1, {0}, 7.0)
     w.add_edge(0, 5, {1}, 14.0)
     w.add_edge(0, 2, {2}, 9.0)
@@ -39,7 +39,7 @@ def test_weighted_spacetime_shortest_path():
 
 
 def test_weighted_num_qubits_and_stabilisers():
-    w = WeightedStabiliserGraph(6, [])
+    w = WeightedStabiliserGraph(6, set())
     w.add_edge(0, 1, {0}, 7.0)
     w.add_edge(0, 5, {1}, 14.0)
     w.add_edge(0, 2, {2}, 9.0)
@@ -57,7 +57,7 @@ def test_weighted_num_qubits_and_stabilisers():
 @pytest.mark.parametrize("num_loops", range(1, 10))
 def test_num_connected_components(num_loops):
     loop_size = 3
-    w = WeightedStabiliserGraph(num_loops*loop_size, [])
+    w = WeightedStabiliserGraph(num_loops*loop_size, set())
     q = 0
     for i in range(num_loops):
         for j in range(loop_size):

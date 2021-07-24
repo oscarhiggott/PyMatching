@@ -73,18 +73,19 @@ MatchingResult LemonDecode(
     if (!sg.HasComputedAllPairsShortestPaths()){
         sg.ComputeAllPairsShortestPaths();
     }
-    auto d = defects.unchecked<1>();
-    int num_defects = d.shape(0);
-
     int num_nodes = sg.GetNumNodes();
 
-    for (int i=0; i<num_defects; i++){
+    auto d = defects.unchecked<1>();
+    std::vector<int> defects_vec(d.shape(0));
+    for (int i=0; i<d.shape(0); i++){
         if (d(i) >= num_nodes){
             throw std::invalid_argument(
             "Defect id must be less than the number of nodes in the matching graph"
             );
         }
     }
+
+    int num_defects = d.shape(0);
 
     DefectGraph defect_graph(num_defects);
 

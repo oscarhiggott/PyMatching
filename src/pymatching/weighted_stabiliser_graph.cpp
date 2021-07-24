@@ -29,7 +29,8 @@
 
 
 WeightedStabiliserGraph::WeightedStabiliserGraph()
-    : all_edges_have_error_probabilities(true) {
+    : all_edges_have_error_probabilities(true),
+     connected_components_need_updating(true) {
     wgraph_t sgraph = wgraph_t();
     this->stabiliser_graph = sgraph;
 }
@@ -37,9 +38,10 @@ WeightedStabiliserGraph::WeightedStabiliserGraph()
 
 WeightedStabiliserGraph::WeightedStabiliserGraph(
     int num_stabilisers,
-    std::vector<int>& boundary)
+    std::set<int>& boundary)
     : all_edges_have_error_probabilities(true),
-    boundary(boundary) {
+    boundary(boundary),
+    connected_components_need_updating(true) {
     wgraph_t sgraph = wgraph_t(num_stabilisers+boundary.size());
     this->stabiliser_graph = sgraph;
 }
@@ -54,6 +56,7 @@ void WeightedStabiliserGraph::AddEdge(
         if (!has_error_probability){
             all_edges_have_error_probabilities = false;
         }
+        connected_components_need_updating = true;
         WeightedEdgeData data;
         data.qubit_ids = qubit_ids;
         data.weight = weight;
@@ -331,11 +334,7 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabilise
     std::uint8_t parity = 0;
     int i = 0;
     for (auto b : boundary){
-        parity = (parity + (*syndrome)[b]) % 2;
         (*syndrome)[b] = 0;
-    }
-    if (parity == 1){
-        (*syndrome)[boundary[0]] = 1;
     }
 
     auto capsule = py::capsule(syndrome, [](void *syndrome) { delete reinterpret_cast<std::vector<int>*>(syndrome); });
@@ -345,11 +344,11 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabilise
     return {error_arr, syndrome_arr};
 }
 
-std::vector<int> WeightedStabiliserGraph::GetBoundary() const {
+std::set<int> WeightedStabiliserGraph::GetBoundary() const {
     return boundary;
 }
 
-void WeightedStabiliserGraph::SetBoundary(std::vector<int>& boundary) {
+void WeightedStabiliserGraph::SetBoundary(std::set<int>& boundary) {
     this->boundary = boundary;
     return;
 }
@@ -374,10 +373,16 @@ bool WeightedStabiliserGraph::HasComputedAllPairsShortestPaths() const {
     return has_distances && has_preds;
 }
 
-int WeightedStabiliserGraph::GetNumConnectedComponents() const {
-    std::vector<int> component(boost::num_vertices(stabiliser_graph));
-    return boost::connected_components(stabiliser_graph, &component[0]);
+int WeightedStabiliserGraph::GetNumConnectedComponents() {
+    if (connected_components_need_updating){
+        component.resize(boost::num_vertices(stabiliser_graph));
+        num_components = boost::connected_components(stabiliser_graph, &component[0]);
+    }
+    connected_components_need_updating = false;
+    return num_components;
 }
+
+//void WeightedStabiliserGraph::FlipBoundaryNodesIfNeeded()
 
 bool WeightedStabiliserGraph::AllEdgesHaveErrorProbabilities() const {
     return all_edges_have_error_probabilities;

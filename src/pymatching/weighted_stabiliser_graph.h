@@ -58,7 +58,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          */
         WeightedStabiliserGraph(
             int num_stabilisers,
-            std::vector<int>& boundary
+            std::set<int>& boundary
             );
         /**
          * @brief Add an edge to the Weighted Stabiliser Graph object
@@ -147,7 +147,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          * 
          * @return std::vector<int> The indices of the boundary nodes
          */
-        virtual std::vector<int> GetBoundary() const;
+        virtual std::set<int> GetBoundary() const;
         /**
          * @brief Get the edges of the stabiliser graph and their edge data
          * 
@@ -159,7 +159,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          * 
          * @param boundary The indices of the boundary nodes
          */
-        virtual void SetBoundary(std::vector<int>& boundary);
+        virtual void SetBoundary(std::set<int>& boundary);
         /**
          * @brief Flag whether or not the all-pairs shortest paths have been computed. 
          * The all-pairs shortest paths are only needed for exact matching, which is not 
@@ -211,7 +211,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          * 
          * @return int The number of components
          */
-        virtual int GetNumConnectedComponents() const;
+        virtual int GetNumConnectedComponents();
         /**
         * @brief Whether or not all edges in the graph are assigned error probabilities
         *
@@ -223,9 +223,12 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
          * @brief The indices of the boundary nodes
          *
          */
-        std::vector<int> boundary;
+        std::set<int> boundary;
         std::vector<double> _distances;
         std::vector<int> _predecessors;
+        int num_components;
+        std::vector<int> component;
+        bool connected_components_need_updating;
         // true if every edge in stabiliser_graph has an error_probability in its edge data
         bool all_edges_have_error_probabilities;
         wgraph_t stabiliser_graph;

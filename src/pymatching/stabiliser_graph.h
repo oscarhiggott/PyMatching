@@ -27,9 +27,9 @@ class IStabiliserGraph{
         virtual int GetNumEdges() const = 0;
         virtual int GetNumQubits() const = 0;
         virtual int GetNumNodes() const = 0;
-        virtual int GetNumConnectedComponents() const = 0;
-        virtual std::vector<int> GetBoundary() const = 0;
-        virtual void SetBoundary(std::vector<int>& boundary) = 0;
+        virtual int GetNumConnectedComponents() = 0;
+        virtual std::set<int> GetBoundary() const = 0;
+        virtual void SetBoundary(std::set<int>& boundary) = 0;
         virtual bool HasComputedAllPairsShortestPaths() const = 0;
         virtual void ComputeAllPairsShortestPaths() = 0;
 };
