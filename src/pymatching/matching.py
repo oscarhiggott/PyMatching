@@ -19,12 +19,8 @@ import numpy as np
 import networkx as nx
 from scipy.sparse import csc_matrix
 
-from pymatching._cpp_mwpm import (decode, 
-                            decode_match_neighbourhood,
-                            WeightedStabiliserGraph,
-                            BlossomFailureException)
-# alias to let unittest mock decode_match_neighbourhood
-_py_decode_match_neighbourhood = decode_match_neighbourhood
+from pymatching._cpp_mwpm import (exact_matching, local_matching,
+                                  WeightedStabiliserGraph)
 
 
 def _find_boundary_nodes(G):
@@ -46,51 +42,6 @@ def _find_boundary_nodes(G):
     """
     return {i for i, attr in G.nodes(data=True)
             if attr.get("is_boundary", False)}
-
-
-def _local_matching(stabiliser_graph, defects, num_neighbours, return_weight=False):
-    """Local matching decoder
-
-    Find the local matching in `stabiliser_graph` with a syndrome defined by -1 measurements 
-    at nodes in `defects`. Each defect node can be matched to one of the `num_neighbours` 
-    nearest defects. If the graph does not have a perfect matching, this function
-    doubles `num_neighbours` and retries until `num_neighbours==len(defects)`.
-
-    Parameters
-    ----------
-    stabiliser_graph : pymatching._cpp_mwpm.WeightedStabiliserGraph
-        The stabliser graph defining the matching problem
-    defects : numpy.ndarray of dtype int
-        The indices of the nodes corresponding to defects (-1 measurements in the syndrome)
-    num_neighbours : int
-        The number of neighbours to use in local matching
-    return_weight : bool, optional
-        If `return_weight==True`, the sum of the weights of the edges in the 
-        minimum weight perfect matching is also returned. By default False
-
-    Returns
-    -------
-    numpy.ndarray
-        A 1D numpy array of ints giving the minimum-weight correction 
-        operator. The number of elements equals the number of qubits, 
-        and an element is 1 if the corresponding qubit should be flipped, 
-        and otherwise 0.
-
-    float
-        Present only if `return_weight==True`.
-        The sum of the weights of the edges in the minimum-weight perfect 
-        matching.
-    """
-    if num_neighbours < 0:
-        raise ValueError("num_neighbours must be a positive integer")
-    while True:
-        try:
-            return _py_decode_match_neighbourhood(stabiliser_graph, defects, num_neighbours, return_weight)
-        except BlossomFailureException:
-            if num_neighbours >= len(defects):
-                raise
-            else:
-                num_neighbours *= 2
 
 
 class Matching:
@@ -402,9 +353,9 @@ class Matching:
         else:
             raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
         if num_neighbours is None:
-            res = decode(self.stabiliser_graph, defects, return_weight)
+            res = exact_matching(self.stabiliser_graph, defects, return_weight)
         else:
-            res = _local_matching(self.stabiliser_graph, defects, num_neighbours, return_weight)
+            res = local_matching(self.stabiliser_graph, defects, num_neighbours, return_weight)
         if return_weight:
             return res.correction, res.weight
         else:

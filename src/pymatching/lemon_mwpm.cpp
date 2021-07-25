@@ -141,21 +141,58 @@ MatchingResult LemonDecode(
 }
 
 
-MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, 
-                                             int num_neighbours, bool return_weight){
-    MatchingResult matching_result;
+MatchingResult LocalMatching(
+    WeightedStabiliserGraph& sg,
+    const py::array_t<int>& defects,
+    int num_neighbours,
+    bool return_weight,
+    int max_attempts
+    ){
+    if (num_neighbours <= 0){
+        throw std::invalid_argument("num_neighbours must be greater than zero");
+    }
     auto d = defects.unchecked<1>();
+    std::set<int> defects_set;
+    for (int i=0; i<d.shape(0); i++) {
+        defects_set.insert(d(i));
+    }
+    int num_attempts = 0;
+    while (true) {
+        try{
+            return LemonDecodeMatchNeighbourhood(
+                sg,
+                defects_set,
+                num_neighbours,
+                return_weight
+            );
+        } catch (BlossomFailureException& e) {
+            num_attempts++;
+            if (num_neighbours >= defects_set.size() || num_attempts >= max_attempts){
+                throw;
+            } else {
+                num_neighbours *= 2;
+            }
+        }
+    }
+}
+
+
+MatchingResult LemonDecodeMatchNeighbourhood(
+    WeightedStabiliserGraph& sg,
+    std::set<int>& defects_set,
+    int num_neighbours,
+    bool return_weight
+    ){
+    MatchingResult matching_result;
 
     int num_nodes = sg.GetNumNodes();
 
-    std::set<int> defects_set;
-    for (int i=0; i<d.shape(0); i++) {
-        if (d(i) >= num_nodes){
+    for (auto d : defects_set){
+        if (d >= num_nodes){
             throw std::invalid_argument(
             "Defect id must be less than the number of nodes in the matching graph"
             );
         }
-        defects_set.insert(d(i));
     }
 
     sg.FlipBoundaryNodesIfNeeded(defects_set);

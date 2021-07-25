@@ -67,9 +67,9 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
 
      py::register_exception<BlossomFailureException>(m, "BlossomFailureException", PyExc_RuntimeError);
 
-     m.def("decode_match_neighbourhood", &LemonDecodeMatchNeighbourhood,
-           "sg"_a, "defects"_a, "num_neighbours"_a=20,
-           "return_weight"_a=false);
-     m.def("decode", &LemonDecode, "sg"_a, "defects"_a,
+     m.def("local_matching", &LocalMatching,
+           "sg"_a, "defects"_a, "num_neighbours"_a=30,
+           "return_weight"_a=false, "max_attempts"_a=10);
+     m.def("exact_matching", &LemonDecode, "sg"_a, "defects"_a,
            "return_weight"_a=false);
 }

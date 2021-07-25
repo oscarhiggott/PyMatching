@@ -19,7 +19,8 @@ import numpy as np
 import pytest
 
 from pymatching import Matching
-from pymatching._cpp_mwpm import decode_match_neighbourhood
+from pymatching._cpp_mwpm import local_matching
+
 
 g = nx.Graph()
 g.add_edge(0,1, qubit_id=0, weight=0.3)
@@ -32,7 +33,7 @@ m = Matching(g)
 
 def test_dijkstra_nearest_neighbour_nodes():
     assert (set(m.stabiliser_graph.get_nearest_neighbours(2, 3, [0,0,1,-1,2,-1]))
-             == {(2, 0.0), (1, 0.1), (4, 0.2)})
+            == {(2, 0.0), (1, 0.1), (4, 0.2)})
 
 
 def test_dijkstra_path():
@@ -42,13 +43,13 @@ def test_dijkstra_path():
 
 
 neighbour_match_fixtures = [
-    ([1,3], 3, [0,1,1,0,0]),
-    ([0,1,2,3,4,5], 2, [1,0,1,0,1]),
-    ([0,1,2,3,4,5], 10, [1,0,1,0,1])
+    ([1, 3], 3, [0, 1, 1, 0, 0]),
+    ([0, 1, 2, 3, 4, 5], 3, [1, 0, 1, 0, 1]),
+    ([0, 1, 2, 3, 4, 5], 11, [1, 0, 1, 0, 1])
 ]
 
 
 @pytest.mark.parametrize("defects,num_neighbours,correction", neighbour_match_fixtures)
 def test_neighbourhood_matching(defects,num_neighbours,correction):
-    assert (np.array_equal(decode_match_neighbourhood(m.stabiliser_graph, 
+    assert (np.array_equal(local_matching(m.stabiliser_graph,
             np.array(defects), num_neighbours, False).correction, np.array(correction)))

@@ -76,5 +76,13 @@ MatchingResult LemonDecode(WeightedStabiliserGraph& sg, const py::array_t<int>& 
  * @return MatchingResult A struct containing the correction vector for the minimum-weight perfect matching and the matching weight. 
  * The matching weight is set to -1 if it is not requested.
  */
-MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, 
-                                                        int num_neighbours, bool return_weight=false);
+MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, std::set<int>& defects,
+                                                        int num_neighbours=30, bool return_weight=false);
+
+MatchingResult LocalMatching(
+    WeightedStabiliserGraph& sg,
+    const py::array_t<int>& defects,
+    int num_neighbours=30,
+    bool return_weight=false,
+    int max_attempts=10
+    );

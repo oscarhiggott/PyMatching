@@ -14,17 +14,14 @@
 
 import os
 
-import pytest
-from unittest.mock import patch
 import numpy as np
 from scipy.sparse import load_npz, csr_matrix
 import pytest
 import networkx as nx
 
-from pymatching._cpp_mwpm import (BlossomFailureException, decode_match_neighbourhood,
-                                  decode)
+from pymatching._cpp_mwpm import (BlossomFailureException, local_matching,
+                                  exact_matching)
 from pymatching import Matching
-from pymatching.matching import _local_matching
 
 TEST_DIR = dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -204,20 +201,41 @@ def test_matching_correct():
     assert np.array_equal(m.decode(z, num_neighbours=None).nonzero()[0], np.array([0,4,12,16,23]))
 
 
-@pytest.mark.parametrize("cluster_size", range(3, 10, 2))
+@pytest.mark.parametrize("cluster_size", [2, 6, 10])
 def test_local_matching_clusters(cluster_size):
     g = nx.Graph()
     qid = 0
     for i in range(cluster_size):
         g.add_edge(i, i+1, weight=1.0, qubit_id=qid)
         qid += 1
-    g.add_edge(cluster_size, cluster_size+1, weight=2*cluster_size, qubit_id=qid)
+    g.add_edge(cluster_size, cluster_size+1, weight=3*cluster_size, qubit_id=qid)
     qid += 1
     for i in range(cluster_size+1, 2*cluster_size + 1):
         g.add_edge(i, i+1, weight=1.0, qubit_id=qid)
         qid += 1
     m = Matching(g)
-    m.decode([1]*(cluster_size+1)*2, num_neighbours=cluster_size)
+    m.decode(np.ones((cluster_size+1)*2), num_neighbours=cluster_size)
+    for i in range(1, cluster_size+1):
+        with pytest.raises(BlossomFailureException):
+            local_matching(
+                m.stabiliser_graph,
+                np.arange(m.num_detectors),
+                num_neighbours=i,
+                max_attempts=1
+            )
+    for i in range(cluster_size+1, 2*cluster_size):
+        local_matching(
+            m.stabiliser_graph,
+            np.arange(m.num_detectors),
+            num_neighbours=i,
+            max_attempts=1
+        )
+    local_matching(
+        m.stabiliser_graph,
+        np.arange(m.num_detectors),
+        num_neighbours=1,
+        max_attempts=int(np.log2(cluster_size+1))+2
+    )
 
 
 G = nx.Graph()
@@ -231,23 +249,7 @@ defects = np.array(list(range(n)))
 def test_local_matching_raises_value_error():
     with pytest.raises(ValueError):
         for x in (-10, -5, 0):
-            _local_matching(M.stabiliser_graph, defects, x, False)
-
-
-@pytest.mark.parametrize("num_neighbours", [2, 5, 20, 50])
-def test_local_matching_raises_blossom_error(num_neighbours):
-    with patch('pymatching.matching._py_decode_match_neighbourhood') as mock_decode:
-        mock_decode.side_effect = BlossomFailureException
-        with pytest.raises(BlossomFailureException):
-            _local_matching(M.stabiliser_graph, defects, num_neighbours, False)
-        assert mock_decode.call_count == 1+int(np.ceil(np.log2(n)-np.log2(num_neighbours)))
-
-
-def test_local_matching_catches_blossom_errors():
-    with patch('pymatching.matching._py_decode_match_neighbourhood') as mock_decode:
-        mock_decode.side_effect = [BlossomFailureException]*3 + [None]
-        _local_matching(M.stabiliser_graph, defects, 2, False)
-        assert mock_decode.call_count == 4
+            local_matching(M.stabiliser_graph, defects, x, False)
 
 
 def test_decoding_large_defect_id_raises_value_error():
@@ -256,8 +258,8 @@ def test_decoding_large_defect_id_raises_value_error():
     g.add_edge(1, 2)
     m = Matching(g)
     with pytest.raises(ValueError):
-        decode_match_neighbourhood(m.stabiliser_graph, np.array([1, 4]))
-        decode(m.stabiliser_graph, np.array([1, 4]))
+        local_matching(m.stabiliser_graph, np.array([1, 4]))
+        exact_matching(m.stabiliser_graph, np.array([1, 4]))
 
 
 def test_decode_with_odd_number_of_defects():
@@ -267,18 +269,18 @@ def test_decode_with_odd_number_of_defects():
     g.add_edge(2, 0)
     m = Matching(g)
     with pytest.raises(ValueError):
-        decode_match_neighbourhood(m.stabiliser_graph, np.array([1]))
+        local_matching(m.stabiliser_graph, np.array([1]))
     with pytest.raises(ValueError):
-        decode(m.stabiliser_graph, np.array([1]))
+        exact_matching(m.stabiliser_graph, np.array([1]))
     g.nodes[2]['is_boundary'] = True
     m2 = Matching(g)
-    decode_match_neighbourhood(m2.stabiliser_graph, np.array([1]))
-    decode(m2.stabiliser_graph, np.array([1]))
+    local_matching(m2.stabiliser_graph, np.array([1]))
+    exact_matching(m2.stabiliser_graph, np.array([1]))
     g.nodes[2]['is_boundary'] = False
     g.nodes[1]['is_boundary'] = True
     m3 = Matching(g)
-    decode_match_neighbourhood(m3.stabiliser_graph, np.array([1]))
-    decode(m3.stabiliser_graph, np.array([1]))
+    local_matching(m3.stabiliser_graph, np.array([1]))
+    exact_matching(m3.stabiliser_graph, np.array([1]))
 
 
 def test_decode_with_multiple_components():
@@ -293,22 +295,22 @@ def test_decode_with_multiple_components():
     m = Matching(g)
     for z in (np.array([0]), np.arange(6)):
         with pytest.raises(ValueError):
-            decode_match_neighbourhood(m.stabiliser_graph, z)
+            local_matching(m.stabiliser_graph, z)
         with pytest.raises(ValueError):
-            decode(m.stabiliser_graph, z)
+            exact_matching(m.stabiliser_graph, z)
 
     g.nodes[0]['is_boundary'] = True
     m2 = Matching(g)
-    decode_match_neighbourhood(m2.stabiliser_graph, np.array([1]))
-    decode(m2.stabiliser_graph, np.array([1]))
+    local_matching(m2.stabiliser_graph, np.array([1]))
+    exact_matching(m2.stabiliser_graph, np.array([1]))
     for z in (np.arange(6), np.array([3])):
         with pytest.raises(ValueError):
-            decode_match_neighbourhood(m2.stabiliser_graph, z)
+            local_matching(m2.stabiliser_graph, z)
         with pytest.raises(ValueError):
-            decode(m2.stabiliser_graph, z)
+            exact_matching(m2.stabiliser_graph, z)
 
     g.nodes[4]['is_boundary'] = True
     m3 = Matching(g)
     for z in (np.array([0]), np.arange(6), np.array([3]), np.array([1,3])):
-        decode_match_neighbourhood(m3.stabiliser_graph, z)
-        decode(m3.stabiliser_graph, z)
+        local_matching(m3.stabiliser_graph, z)
+        exact_matching(m3.stabiliser_graph, z)
