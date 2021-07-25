@@ -19,7 +19,7 @@ sys.path.append(os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = 'PyMatching'
-copyright = '2020, Oscar Higgott'
+copyright = '2021, Oscar Higgott'
 author = 'Oscar Higgott'
 
 # The full version, including alpha/beta/rc tags

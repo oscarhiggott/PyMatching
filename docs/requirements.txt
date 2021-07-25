@@ -1,5 +1,6 @@
 ipykernel
-nbsphinx
+sphinx==4.0.2
+nbsphinx>=0.8.6
 numpy
 scipy
 networkx
