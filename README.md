@@ -89,7 +89,7 @@ Note that PyMatching used `num_neighbours=20` as a default for v0.3.1 and earlie
 When using PyMatching for research, please cite:
 ```
 @article{higgott2021pymatching,
-  title={{PyMatching}: A fast implementation of the minimum-weight perfect matching decoder},
+  title={{PyMatching}: A Python package for decoding quantum codes with minimum-weight perfect matching},
   author={Higgott, Oscar},
   journal={arXiv preprint arXiv:2105.13082},
   year={2021}
