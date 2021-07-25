@@ -32,7 +32,7 @@ MatchingGraph::MatchingGraph()
     : all_edges_have_error_probabilities(true),
      connected_components_need_updating(true) {
     wgraph_t sgraph = wgraph_t();
-    this->stabiliser_graph = sgraph;
+    this->matching_graph = sgraph;
 }
 
 
@@ -43,7 +43,7 @@ MatchingGraph::MatchingGraph(
     boundary(boundary),
     connected_components_need_updating(true) {
     wgraph_t sgraph = wgraph_t(num_detectors+boundary.size());
-    this->stabiliser_graph = sgraph;
+    this->matching_graph = sgraph;
 }
 
 void MatchingGraph::AddEdge(
@@ -63,24 +63,24 @@ void MatchingGraph::AddEdge(
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
         boost::add_edge(
-            boost::vertex(node1, stabiliser_graph), 
-            boost::vertex(node2, stabiliser_graph), 
+            boost::vertex(node1, matching_graph),
+            boost::vertex(node2, matching_graph),
             data, 
-            stabiliser_graph);
+            matching_graph);
 }
 
 void MatchingGraph::ComputeAllPairsShortestPaths(){
-    int n = boost::num_vertices(stabiliser_graph);
+    int n = boost::num_vertices(matching_graph);
     all_distances.clear();
     all_predecessors.clear();
     for (int i=0; i<n; i++){
         std::vector<double> distances(n);
         std::vector<vertex_descriptor> p(n);
-        vertex_descriptor from = boost::vertex(i, stabiliser_graph);
-        boost::dijkstra_shortest_paths(stabiliser_graph, from,
-            boost::weight_map(boost::get(&WeightedEdgeData::weight, stabiliser_graph))
+        vertex_descriptor from = boost::vertex(i, matching_graph);
+        boost::dijkstra_shortest_paths(matching_graph, from,
+            boost::weight_map(boost::get(&WeightedEdgeData::weight, matching_graph))
             .distance_map(boost::make_iterator_property_map(distances.begin(),
-                            boost::get(boost::vertex_index, stabiliser_graph)))
+                            boost::get(boost::vertex_index, matching_graph)))
             .predecessor_map(&p[0]));
         all_distances.push_back(distances);
         all_predecessors.push_back(p);
@@ -122,7 +122,7 @@ class DijkstraNeighbourVisitor : public boost::default_dijkstra_visitor
 
 
 void MatchingGraph::ResetDijkstraNeighbours(){
-    int n = boost::num_vertices(stabiliser_graph);
+    int n = boost::num_vertices(matching_graph);
     double inf = std::numeric_limits<double>::max();
     if (_distances.size() < n){
         _distances.resize(n, inf);
@@ -138,7 +138,7 @@ void MatchingGraph::ResetDijkstraNeighbours(){
 
 std::vector<std::pair<int, double>> MatchingGraph::GetNearestNeighbours(
     int source, int num_neighbours, std::vector<int>& defect_id){
-    int n = boost::num_vertices(stabiliser_graph);
+    int n = boost::num_vertices(matching_graph);
     assert(source < n);
     assert(defect_id.size() == n);
     double inf = std::numeric_limits<double>::max();
@@ -148,13 +148,13 @@ std::vector<std::pair<int, double>> MatchingGraph::GetNearestNeighbours(
     std::vector<int> discovered_nodes;
     DijkstraNeighbourVisitor vis = DijkstraNeighbourVisitor(
         defect_id, num_neighbours, examined_defects, discovered_nodes);
-    vertex_descriptor from = boost::vertex(source, stabiliser_graph);
+    vertex_descriptor from = boost::vertex(source, matching_graph);
     try {
-        boost::dijkstra_shortest_paths_no_color_map_no_init(stabiliser_graph, from, 
+        boost::dijkstra_shortest_paths_no_color_map_no_init(matching_graph, from,
                 &_predecessors[0], boost::make_iterator_property_map(_distances.begin(),
-                boost::get(boost::vertex_index, stabiliser_graph)), 
-                boost::get(&WeightedEdgeData::weight, stabiliser_graph),
-                boost::get(boost::vertex_index, stabiliser_graph), 
+                boost::get(boost::vertex_index, matching_graph)),
+                boost::get(&WeightedEdgeData::weight, matching_graph),
+                boost::get(boost::vertex_index, matching_graph),
                 std::less<double>(),
                 boost::closed_plus<double>(),
                 inf,
@@ -198,7 +198,7 @@ class DijkstraPathVisitor : public boost::default_dijkstra_visitor
 
 std::vector<int> MatchingGraph::GetPath(
     int source, int target){
-    int n = boost::num_vertices(stabiliser_graph);
+    int n = boost::num_vertices(matching_graph);
     assert(source < n);
     assert(target < n);
     double inf = std::numeric_limits<double>::max();
@@ -207,13 +207,13 @@ std::vector<int> MatchingGraph::GetPath(
     std::vector<int> discovered_nodes;
     DijkstraPathVisitor vis = DijkstraPathVisitor(
         target, discovered_nodes);
-    vertex_descriptor from = boost::vertex(source, stabiliser_graph);
+    vertex_descriptor from = boost::vertex(source, matching_graph);
     try {
-        boost::dijkstra_shortest_paths_no_color_map_no_init(stabiliser_graph, from, 
+        boost::dijkstra_shortest_paths_no_color_map_no_init(matching_graph, from,
                 &_predecessors[0], boost::make_iterator_property_map(_distances.begin(),
-                boost::get(boost::vertex_index, stabiliser_graph)), 
-                boost::get(&WeightedEdgeData::weight, stabiliser_graph),
-                boost::get(boost::vertex_index, stabiliser_graph), 
+                boost::get(boost::vertex_index, matching_graph)),
+                boost::get(&WeightedEdgeData::weight, matching_graph),
+                boost::get(boost::vertex_index, matching_graph),
                 std::less<double>(),
                 boost::closed_plus<double>(),
                 inf,
@@ -247,7 +247,7 @@ double MatchingGraph::Distance(int node1, int node2) {
     if (!HasComputedAllPairsShortestPaths()){
         ComputeAllPairsShortestPaths();
     }
-    vertex_descriptor n2 = boost::vertex(node2, stabiliser_graph);
+    vertex_descriptor n2 = boost::vertex(node2, matching_graph);
     return all_distances[node1][n2];
 }
 
@@ -262,8 +262,8 @@ std::vector<int> MatchingGraph::ShortestPath(int node1, int node2) {
         ComputeAllPairsShortestPaths();
     }
     std::vector<vertex_descriptor> parent = all_predecessors[node2];
-    auto index = boost::get(boost::vertex_index, stabiliser_graph);
-    int c = boost::vertex(node1, stabiliser_graph);
+    auto index = boost::get(boost::vertex_index, matching_graph);
+    int c = boost::vertex(node1, matching_graph);
     std::vector<int> path;
     path.push_back(index[c]);
     while (parent[c]!=c){
@@ -275,17 +275,17 @@ std::vector<int> MatchingGraph::ShortestPath(int node1, int node2) {
 
 
 int MatchingGraph::GetNumEdges() const {
-    return boost::num_edges(stabiliser_graph);
+    return boost::num_edges(matching_graph);
 }
 
 
 int MatchingGraph::GetNumQubits() const {
-    auto qid = boost::get(&WeightedEdgeData::qubit_ids, stabiliser_graph);
-    int num_edges = boost::num_edges(stabiliser_graph);
+    auto qid = boost::get(&WeightedEdgeData::qubit_ids, matching_graph);
+    int num_edges = boost::num_edges(matching_graph);
     int maxid = -1;
     std::set<int> qubits;
     std::set<int> edge_qubits;
-    auto es = boost::edges(stabiliser_graph);
+    auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
         edge_qubits = qid[*eit];
         for (auto qubit : edge_qubits){
@@ -307,17 +307,17 @@ int MatchingGraph::GetNumQubits() const {
 }
 
 int MatchingGraph::GetNumNodes() const {
-    return boost::num_vertices(stabiliser_graph);
+    return boost::num_vertices(matching_graph);
 };
 
 std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
-    auto e = boost::edge(node1, node2, stabiliser_graph);
+    auto e = boost::edge(node1, node2, matching_graph);
     if (!e.second){
         std::runtime_error("Graph does not contain edge (" 
                         + std::to_string((int)node1)
                         + std::to_string((int)node2) + ").");
     }
-    return stabiliser_graph[e.first].qubit_ids;
+    return matching_graph[e.first].qubit_ids;
 }
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::AddNoise() const {
@@ -327,15 +327,15 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::Ad
     std::set<int> qids;
     vertex_descriptor s, t;
     bool to_flip;
-    auto es = boost::edges(stabiliser_graph);
+    auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
-        p = stabiliser_graph[*eit].error_probability;
+        p = matching_graph[*eit].error_probability;
         if ((p >= 0) && (rand_float(0.0, 1.0) < p)){
-            s = boost::source(*eit, stabiliser_graph);
-            t = boost::target(*eit, stabiliser_graph);
+            s = boost::source(*eit, matching_graph);
+            t = boost::target(*eit, matching_graph);
             (*syndrome)[s] = ((*syndrome)[s] + 1) % 2;
             (*syndrome)[t] = ((*syndrome)[t] + 1) % 2;
-            qids = stabiliser_graph[*eit].qubit_ids;
+            qids = matching_graph[*eit].qubit_ids;
             for (auto qid : qids){
                 if (qid >= 0){
                     (*error)[qid] = ((*error)[qid] + 1) % 2;
@@ -366,11 +366,11 @@ void MatchingGraph::SetBoundary(std::set<int>& boundary) {
 
 std::vector<std::tuple<int,int,WeightedEdgeData>> MatchingGraph::GetEdges() const {
     std::vector<std::tuple<int,int,WeightedEdgeData>> edges;
-    auto es = boost::edges(stabiliser_graph);
+    auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
-        WeightedEdgeData edata = stabiliser_graph[*eit];
-        int s = boost::source(*eit, stabiliser_graph);
-        int t = boost::target(*eit, stabiliser_graph);
+        WeightedEdgeData edata = matching_graph[*eit];
+        int s = boost::source(*eit, matching_graph);
+        int t = boost::target(*eit, matching_graph);
         std::tuple<int,int,WeightedEdgeData> edge = std::make_tuple(s, t, edata);
         edges.push_back(edge);
     }
@@ -378,7 +378,7 @@ std::vector<std::tuple<int,int,WeightedEdgeData>> MatchingGraph::GetEdges() cons
 }
 
 bool MatchingGraph::HasComputedAllPairsShortestPaths() const {
-    int n = boost::num_vertices(stabiliser_graph);
+    int n = boost::num_vertices(matching_graph);
     bool has_distances = all_distances.size() == n;
     bool has_preds = all_predecessors.size() == n;
     return has_distances && has_preds;
@@ -386,8 +386,8 @@ bool MatchingGraph::HasComputedAllPairsShortestPaths() const {
 
 int MatchingGraph::GetNumConnectedComponents() {
     if (connected_components_need_updating){
-        component.resize(boost::num_vertices(stabiliser_graph));
-        num_components = boost::connected_components(stabiliser_graph, &component[0]);
+        component.resize(boost::num_vertices(matching_graph));
+        num_components = boost::connected_components(matching_graph, &component[0]);
         component_boundary.resize(num_components, -1);
         for (auto b : boundary){
             int c = component[b];

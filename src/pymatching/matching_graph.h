@@ -117,13 +117,13 @@ class MatchingGraph{
         /**
          * @brief Get the number of nodes in the matching graph (this includes both boundaries and stabilisers)
          * 
-         * @return int Number of nodes in stabiliser_graph
+         * @return int Number of nodes in matching_graph
          */
         int GetNumNodes() const;
         /**
          * @brief Get the number of edges in the matching graph
          * 
-         * @return int Number of edges in stabiliser_graph
+         * @return int Number of edges in matching_graph
          */
         int GetNumEdges() const;
         /**
@@ -180,7 +180,7 @@ class MatchingGraph{
          */
         void ResetDijkstraNeighbours();
         /**
-         * @brief Get the num_neighbours nearest neighbours i of a source node in the stabiliser_graph for which 
+         * @brief Get the num_neighbours nearest neighbours i of a source node in the matching_graph for which
          * defect_id[i] > -1. This is a local Dijkstra search that halts once num_neighbours nodes i have been found 
          * that satisfy defect_id[i] > -1. The function returns a vector of pairs, where the first item in each 
          * pair is the distance from source to one of the nearest nodes i, and the second item in the pair 
@@ -230,9 +230,9 @@ class MatchingGraph{
         std::vector<int> component;
         std::vector<int> component_boundary;
         bool connected_components_need_updating;
-        // true if every edge in stabiliser_graph has an error_probability in its edge data
+        // true if every edge in matching_graph has an error_probability in its edge data
         bool all_edges_have_error_probabilities;
-        wgraph_t stabiliser_graph;
+        wgraph_t matching_graph;
         /**
          * @brief The distance between every pair of nodes in the matching graph, if
          * ComputeAllPairsShortestPaths has been run. all_distances[i][j] is the distance
@@ -245,8 +245,8 @@ class MatchingGraph{
         std::vector<std::vector<double>> all_distances;
         /**
          * @brief all_predecessors[i] is the PredecessorMap found by Boost's dijkstra_shortest_paths
-         * from node i in stabiliser_graph to all other nodes. In other words, all_predecessors[i][j]
-         * is the parent of node j in the shortest path from node i to node j in stabiliser_graph.
+         * from node i in matching_graph to all other nodes. In other words, all_predecessors[i][j]
+         * is the parent of node j in the shortest path from node i to node j in matching_graph.
          * Note that this is only used if exact matching is used (the function LemonDecode in lemon_mwpm.cpp),
          * and not if (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood
          * in lemon_mwpm.cpp).
