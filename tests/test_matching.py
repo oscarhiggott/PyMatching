@@ -19,7 +19,7 @@ import pytest
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from pymatching._cpp_mwpm import WeightedStabiliserGraph
+from pymatching._cpp_mwpm import WeightedMatchingGraph
 from pymatching import Matching
 
 
@@ -182,7 +182,7 @@ def test_mwpm_from_networkx():
     g.add_edge(0, 2, qubit_id=1)
     g.add_edge(1, 2, qubit_id=2)
     m = Matching(g)
-    assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
+    assert(isinstance(m.stabiliser_graph, WeightedMatchingGraph))
     assert(m.num_detectors == 3)
     assert(m.num_qubits == 3)
     assert(m.stabiliser_graph.distance(0,2) == 1)
@@ -193,7 +193,7 @@ def test_mwpm_from_networkx():
     g.add_edge(0, 2)
     g.add_edge(1, 2)
     m = Matching(g)
-    assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
+    assert(isinstance(m.stabiliser_graph, WeightedMatchingGraph))
     assert(m.num_detectors == 3)
     assert(m.num_qubits == 0)
     assert(m.stabiliser_graph.distance(0,2) == 1)
@@ -204,7 +204,7 @@ def test_mwpm_from_networkx():
     g.add_edge(0, 2, weight=1.7)
     g.add_edge(1, 2, weight=1.2)
     m = Matching(g)
-    assert(isinstance(m.stabiliser_graph, WeightedStabiliserGraph))
+    assert(isinstance(m.stabiliser_graph, WeightedMatchingGraph))
     assert(m.num_detectors == 3)
     assert(m.num_qubits == 0)
     assert(m.stabiliser_graph.distance(0,2) == pytest.approx(1.7))

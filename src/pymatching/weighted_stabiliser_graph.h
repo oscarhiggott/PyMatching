@@ -43,20 +43,20 @@ typedef boost::graph_traits < wgraph_t >::edge_descriptor edge_descriptor;
  * @brief 
  * 
  */
-class WeightedStabiliserGraph : public IStabiliserGraph{
+class WeightedMatchingGraph : public IStabiliserGraph{
     public:
         /**
          * @brief Construct a new Weighted Stabiliser Graph object
          * 
          */
-        WeightedStabiliserGraph();
+        WeightedMatchingGraph();
         /**
          * @brief Construct a new Weighted Stabiliser Graph object
          * 
          * @param num_stabilisers Number of stabiliser nodes (this excludes boundary nodes)
          * @param boundary Indices of the boundary nodes
          */
-        WeightedStabiliserGraph(
+        WeightedMatchingGraph(
             int num_stabilisers,
             std::set<int>& boundary
             );
@@ -171,7 +171,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         virtual bool HasComputedAllPairsShortestPaths() const;
         /**
          * @brief Reset the _predecessors and _distances attributes, which 
-         * are used by WeightedStabiliserGraph::GetPath and WeightedStabiliserGraph::GetNearestNeighbours. 
+         * are used by WeightedMatchingGraph::GetPath and WeightedMatchingGraph::GetNearestNeighbours.
          * This just preallocates both of these vectors appropriately for use by the local dijkstra search 
          * and will only do so if these vectors are not already the correct size. Once these attributes 
          * are correctly preallocated the first time, the GetPath and GetNearestNeighbours methods always reset 

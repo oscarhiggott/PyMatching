@@ -65,7 +65,7 @@ void DefectGraph::AddEdge(int i, int j, double weight){
 
 
 MatchingResult LemonDecode(
-    WeightedStabiliserGraph& sg,
+    WeightedMatchingGraph& sg,
     const py::array_t<int>& defects,
     bool return_weight
     ){
@@ -142,7 +142,7 @@ MatchingResult LemonDecode(
 
 
 MatchingResult LocalMatching(
-    WeightedStabiliserGraph& sg,
+    WeightedMatchingGraph& sg,
     const py::array_t<int>& defects,
     int num_neighbours,
     bool return_weight,
@@ -178,7 +178,7 @@ MatchingResult LocalMatching(
 
 
 MatchingResult LemonDecodeMatchNeighbourhood(
-    WeightedStabiliserGraph& sg,
+    WeightedMatchingGraph& sg,
     std::set<int>& defects_set,
     int num_neighbours,
     bool return_weight

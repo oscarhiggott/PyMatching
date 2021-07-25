@@ -28,7 +28,7 @@
 #include "rand_gen.h"
 
 
-WeightedStabiliserGraph::WeightedStabiliserGraph()
+WeightedMatchingGraph::WeightedMatchingGraph()
     : all_edges_have_error_probabilities(true),
      connected_components_need_updating(true) {
     wgraph_t sgraph = wgraph_t();
@@ -36,7 +36,7 @@ WeightedStabiliserGraph::WeightedStabiliserGraph()
 }
 
 
-WeightedStabiliserGraph::WeightedStabiliserGraph(
+WeightedMatchingGraph::WeightedMatchingGraph(
     int num_stabilisers,
     std::set<int>& boundary)
     : all_edges_have_error_probabilities(true),
@@ -46,7 +46,7 @@ WeightedStabiliserGraph::WeightedStabiliserGraph(
     this->stabiliser_graph = sgraph;
 }
 
-void WeightedStabiliserGraph::AddEdge(
+void WeightedMatchingGraph::AddEdge(
     int node1, 
     int node2, 
     std::set<int> qubit_ids, 
@@ -69,7 +69,7 @@ void WeightedStabiliserGraph::AddEdge(
             stabiliser_graph);
 }
 
-void WeightedStabiliserGraph::ComputeAllPairsShortestPaths(){
+void WeightedMatchingGraph::ComputeAllPairsShortestPaths(){
     int n = boost::num_vertices(stabiliser_graph);
     all_distances.clear();
     all_predecessors.clear();
@@ -121,7 +121,7 @@ class DijkstraNeighbourVisitor : public boost::default_dijkstra_visitor
 };
 
 
-void WeightedStabiliserGraph::ResetDijkstraNeighbours(){
+void WeightedMatchingGraph::ResetDijkstraNeighbours(){
     int n = boost::num_vertices(stabiliser_graph);
     double inf = std::numeric_limits<double>::max();
     if (_distances.size() < n){
@@ -136,7 +136,7 @@ void WeightedStabiliserGraph::ResetDijkstraNeighbours(){
 }
 
 
-std::vector<std::pair<int, double>> WeightedStabiliserGraph::GetNearestNeighbours(
+std::vector<std::pair<int, double>> WeightedMatchingGraph::GetNearestNeighbours(
     int source, int num_neighbours, std::vector<int>& defect_id){
     int n = boost::num_vertices(stabiliser_graph);
     assert(source < n);
@@ -196,7 +196,7 @@ class DijkstraPathVisitor : public boost::default_dijkstra_visitor
 };
 
 
-std::vector<int> WeightedStabiliserGraph::GetPath(
+std::vector<int> WeightedMatchingGraph::GetPath(
     int source, int target){
     int n = boost::num_vertices(stabiliser_graph);
     assert(source < n);
@@ -237,7 +237,7 @@ std::vector<int> WeightedStabiliserGraph::GetPath(
 }
 
 
-double WeightedStabiliserGraph::Distance(int node1, int node2) {
+double WeightedMatchingGraph::Distance(int node1, int node2) {
     if (!HasComputedAllPairsShortestPaths()){
         ComputeAllPairsShortestPaths();
     }
@@ -245,7 +245,7 @@ double WeightedStabiliserGraph::Distance(int node1, int node2) {
     return all_distances[node1][n2];
 }
 
-std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) {
+std::vector<int> WeightedMatchingGraph::ShortestPath(int node1, int node2) {
     if (!HasComputedAllPairsShortestPaths()){
         ComputeAllPairsShortestPaths();
     }
@@ -262,12 +262,12 @@ std::vector<int> WeightedStabiliserGraph::ShortestPath(int node1, int node2) {
 }
 
 
-int WeightedStabiliserGraph::GetNumEdges() const {
+int WeightedMatchingGraph::GetNumEdges() const {
     return boost::num_edges(stabiliser_graph);
 }
 
 
-int WeightedStabiliserGraph::GetNumQubits() const {
+int WeightedMatchingGraph::GetNumQubits() const {
     auto qid = boost::get(&WeightedEdgeData::qubit_ids, stabiliser_graph);
     int num_edges = boost::num_edges(stabiliser_graph);
     int maxid = -1;
@@ -294,11 +294,11 @@ int WeightedStabiliserGraph::GetNumQubits() const {
     return num_qubits;
 }
 
-int WeightedStabiliserGraph::GetNumNodes() const {
+int WeightedMatchingGraph::GetNumNodes() const {
     return boost::num_vertices(stabiliser_graph);
 };
 
-std::set<int> WeightedStabiliserGraph::QubitIDs(int node1, int node2) const {
+std::set<int> WeightedMatchingGraph::QubitIDs(int node1, int node2) const {
     auto e = boost::edge(node1, node2, stabiliser_graph);
     if (!e.second){
         std::runtime_error("Graph does not contain edge (" 
@@ -308,7 +308,7 @@ std::set<int> WeightedStabiliserGraph::QubitIDs(int node1, int node2) const {
     return stabiliser_graph[e.first].qubit_ids;
 }
 
-std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabiliserGraph::AddNoise() const {
+std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedMatchingGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumNodes(), 0);
     auto error = new std::vector<int>(GetNumQubits(), 0);
     double p;
@@ -342,17 +342,17 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabilise
     return {error_arr, syndrome_arr};
 }
 
-std::set<int> WeightedStabiliserGraph::GetBoundary() const {
+std::set<int> WeightedMatchingGraph::GetBoundary() const {
     return boundary;
 }
 
-void WeightedStabiliserGraph::SetBoundary(std::set<int>& boundary) {
+void WeightedMatchingGraph::SetBoundary(std::set<int>& boundary) {
     this->boundary = boundary;
     connected_components_need_updating = true;
     return;
 }
 
-std::vector<std::tuple<int,int,WeightedEdgeData>> WeightedStabiliserGraph::GetEdges() const {
+std::vector<std::tuple<int,int,WeightedEdgeData>> WeightedMatchingGraph::GetEdges() const {
     std::vector<std::tuple<int,int,WeightedEdgeData>> edges;
     auto es = boost::edges(stabiliser_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
@@ -365,14 +365,14 @@ std::vector<std::tuple<int,int,WeightedEdgeData>> WeightedStabiliserGraph::GetEd
     return edges;
 }
 
-bool WeightedStabiliserGraph::HasComputedAllPairsShortestPaths() const {
+bool WeightedMatchingGraph::HasComputedAllPairsShortestPaths() const {
     int n = boost::num_vertices(stabiliser_graph);
     bool has_distances = all_distances.size() == n;
     bool has_preds = all_predecessors.size() == n;
     return has_distances && has_preds;
 }
 
-int WeightedStabiliserGraph::GetNumConnectedComponents() {
+int WeightedMatchingGraph::GetNumConnectedComponents() {
     if (connected_components_need_updating){
         component.resize(boost::num_vertices(stabiliser_graph));
         num_components = boost::connected_components(stabiliser_graph, &component[0]);
@@ -388,7 +388,7 @@ int WeightedStabiliserGraph::GetNumConnectedComponents() {
     return num_components;
 }
 
-void WeightedStabiliserGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
+void WeightedMatchingGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
     int num_comps = GetNumConnectedComponents();
     if (num_comps == 1){
         if ((defects.size() % 2) == 0){
@@ -428,6 +428,6 @@ void WeightedStabiliserGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
     }
 }
 
-bool WeightedStabiliserGraph::AllEdgesHaveErrorProbabilities() const {
+bool WeightedMatchingGraph::AllEdgesHaveErrorProbabilities() const {
     return all_edges_have_error_probabilities;
 }

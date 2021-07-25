@@ -61,7 +61,7 @@ struct MatchingResult {
  * @return MatchingResult A struct containing the correction vector for the minimum-weight perfect matching and the matching weight. 
  * The matching weight is set to -1 if it is not requested.
  */
-MatchingResult LemonDecode(WeightedStabiliserGraph& sg, const py::array_t<int>& defects, bool return_weight=false);
+MatchingResult LemonDecode(WeightedMatchingGraph& sg, const py::array_t<int>& defects, bool return_weight=false);
 /**
  * @brief Given a stabiliser graph `sg`, a vector `defects` of indices of nodes that have a -1 syndrome and 
  * a chosen `num_neighbours`, find the minimum weight perfect matching in the graph V where each defect node 
@@ -76,11 +76,11 @@ MatchingResult LemonDecode(WeightedStabiliserGraph& sg, const py::array_t<int>& 
  * @return MatchingResult A struct containing the correction vector for the minimum-weight perfect matching and the matching weight. 
  * The matching weight is set to -1 if it is not requested.
  */
-MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, std::set<int>& defects,
+MatchingResult LemonDecodeMatchNeighbourhood(WeightedMatchingGraph& sg, std::set<int>& defects,
                                                         int num_neighbours=30, bool return_weight=false);
 
 MatchingResult LocalMatching(
-    WeightedStabiliserGraph& sg,
+    WeightedMatchingGraph& sg,
     const py::array_t<int>& defects,
     int num_neighbours=30,
     bool return_weight=false,

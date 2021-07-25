@@ -42,20 +42,20 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def_readwrite("error_probability", &WeightedEdgeData::error_probability)
      .def_readwrite("has_error_probability", &WeightedEdgeData::has_error_probability);
 
-     py::class_<WeightedStabiliserGraph, IStabiliserGraph>(m, "WeightedStabiliserGraph")
+     py::class_<WeightedMatchingGraph, IStabiliserGraph>(m, "WeightedMatchingGraph")
      .def(py::init<>())
      .def(py::init<int, std::set<int>&>(), "num_stabilisers"_a, "boundary"_a)
      .def("all_edges_have_error_probabilities",
-          &WeightedStabiliserGraph::AllEdgesHaveErrorProbabilities)
-     .def("add_edge", &WeightedStabiliserGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a, 
+          &WeightedMatchingGraph::AllEdgesHaveErrorProbabilities)
+     .def("add_edge", &WeightedMatchingGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a,
           "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false)
-     .def("add_noise", &WeightedStabiliserGraph::AddNoise)
-     .def("get_boundary", &WeightedStabiliserGraph::GetBoundary)
-     .def("set_boundary", &WeightedStabiliserGraph::SetBoundary, "boundary"_a)
-     .def("get_edges", &WeightedStabiliserGraph::GetEdges)
-     .def("get_nearest_neighbours", &WeightedStabiliserGraph::GetNearestNeighbours,
+     .def("add_noise", &WeightedMatchingGraph::AddNoise)
+     .def("get_boundary", &WeightedMatchingGraph::GetBoundary)
+     .def("set_boundary", &WeightedMatchingGraph::SetBoundary, "boundary"_a)
+     .def("get_edges", &WeightedMatchingGraph::GetEdges)
+     .def("get_nearest_neighbours", &WeightedMatchingGraph::GetNearestNeighbours,
           "source"_a, "num_neighbours"_a, "defect_id"_a)
-     .def("get_path", &WeightedStabiliserGraph::GetPath, "source"_a, "target"_a);
+     .def("get_path", &WeightedMatchingGraph::GetPath, "source"_a, "target"_a);
 
      m.def("randomize", &randomize);
      m.def("set_seed", &set_seed, "s"_a);

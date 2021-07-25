@@ -20,7 +20,7 @@ import networkx as nx
 from scipy.sparse import csc_matrix
 
 from pymatching._cpp_mwpm import (exact_matching, local_matching,
-                                  WeightedStabiliserGraph)
+                                  WeightedMatchingGraph)
 
 
 def _find_boundary_nodes(G):
@@ -111,7 +111,7 @@ class Matching:
             to True will precompute the all-pairs shortest paths.
             By default False
             """
-        self.stabiliser_graph = WeightedStabiliserGraph()
+        self.stabiliser_graph = WeightedMatchingGraph()
         if H is None:
             return
         if not isinstance(H, nx.Graph):
@@ -152,7 +152,7 @@ class Matching:
         boundary = _find_boundary_nodes(G)
         num_nodes = G.number_of_nodes()
         all_qubits = set()
-        g = WeightedStabiliserGraph(self.num_detectors, boundary)
+        g = WeightedMatchingGraph(self.num_detectors, boundary)
         for (u, v, attr) in G.edges(data=True):
             u, v = int(u), int(v)
             if u >= num_nodes or v>= num_nodes:
@@ -255,7 +255,7 @@ class Matching:
         repetitions = 1 if repetitions is None else repetitions
         p_meas = measurement_error_probability if measurement_error_probability is not None else -1
         boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
-        self.stabiliser_graph = WeightedStabiliserGraph(H.shape[0] * repetitions, boundary=boundary)
+        self.stabiliser_graph = WeightedMatchingGraph(H.shape[0] * repetitions, boundary=boundary)
         for t in range(repetitions):
             for i in range(len(H.indptr) - 1):
                 s, e = H.indptr[i:i + 2]
