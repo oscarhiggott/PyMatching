@@ -14,8 +14,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "stabiliser_graph.h"
-#include "weighted_stabiliser_graph.h"
+#include "matching_graph.h"
 #include "rand_gen.h"
 #include "lemon_mwpm.h"
 
@@ -23,39 +22,35 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 PYBIND11_MODULE(_cpp_mwpm, m) {
-     py::class_<IStabiliserGraph>(m, "IStabiliserGraph")
-     .def("distance", &IStabiliserGraph::Distance, "node1"_a, "node2"_a)
-     .def("space_time_distance", &IStabiliserGraph::SpaceTimeDistance, "node1"_a, "node2"_a)
-     .def("shortest_path", &IStabiliserGraph::ShortestPath, "node1"_a, "node2"_a)
-     .def("space_time_shortest_path", &IStabiliserGraph::SpaceTimeShortestPath, "node1"_a, "node2"_a)
-     .def("qubit_ids", &IStabiliserGraph::QubitIDs, "node1"_a, "node2"_a)
-     .def("get_num_qubits", &IStabiliserGraph::GetNumQubits)
-     .def("get_num_nodes", &IStabiliserGraph::GetNumNodes)
-     .def("get_num_edges", &IStabiliserGraph::GetNumEdges)
-     .def("compute_all_pairs_shortest_paths", &IStabiliserGraph::ComputeAllPairsShortestPaths)
-     .def("has_computed_all_pairs_shortest_paths", &IStabiliserGraph::HasComputedAllPairsShortestPaths)
-     .def("get_num_connected_components", &IStabiliserGraph::GetNumConnectedComponents);
-
      py::class_<WeightedEdgeData>(m, "WeightedEdgeData")
      .def_readwrite("qubit_ids", &WeightedEdgeData::qubit_ids)
      .def_readwrite("weight", &WeightedEdgeData::weight)
      .def_readwrite("error_probability", &WeightedEdgeData::error_probability)
      .def_readwrite("has_error_probability", &WeightedEdgeData::has_error_probability);
 
-     py::class_<WeightedMatchingGraph, IStabiliserGraph>(m, "WeightedMatchingGraph")
+     py::class_<MatchingGraph>(m, "MatchingGraph")
      .def(py::init<>())
-     .def(py::init<int, std::set<int>&>(), "num_stabilisers"_a, "boundary"_a)
+     .def(py::init<int, std::set<int>&>(), "num_detectors"_a, "boundary"_a)
      .def("all_edges_have_error_probabilities",
-          &WeightedMatchingGraph::AllEdgesHaveErrorProbabilities)
-     .def("add_edge", &WeightedMatchingGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a,
+          &MatchingGraph::AllEdgesHaveErrorProbabilities)
+     .def("add_edge", &MatchingGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a,
           "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false)
-     .def("add_noise", &WeightedMatchingGraph::AddNoise)
-     .def("get_boundary", &WeightedMatchingGraph::GetBoundary)
-     .def("set_boundary", &WeightedMatchingGraph::SetBoundary, "boundary"_a)
-     .def("get_edges", &WeightedMatchingGraph::GetEdges)
-     .def("get_nearest_neighbours", &WeightedMatchingGraph::GetNearestNeighbours,
+     .def("add_noise", &MatchingGraph::AddNoise)
+     .def("get_boundary", &MatchingGraph::GetBoundary)
+     .def("set_boundary", &MatchingGraph::SetBoundary, "boundary"_a)
+     .def("get_edges", &MatchingGraph::GetEdges)
+     .def("get_nearest_neighbours", &MatchingGraph::GetNearestNeighbours,
           "source"_a, "num_neighbours"_a, "defect_id"_a)
-     .def("get_path", &WeightedMatchingGraph::GetPath, "source"_a, "target"_a);
+     .def("get_path", &MatchingGraph::GetPath, "source"_a, "target"_a)
+     .def("distance", &MatchingGraph::Distance, "node1"_a, "node2"_a)
+     .def("shortest_path", &MatchingGraph::ShortestPath, "node1"_a, "node2"_a)
+     .def("qubit_ids", &MatchingGraph::QubitIDs, "node1"_a, "node2"_a)
+     .def("get_num_qubits", &MatchingGraph::GetNumQubits)
+     .def("get_num_nodes", &MatchingGraph::GetNumNodes)
+     .def("get_num_edges", &MatchingGraph::GetNumEdges)
+     .def("compute_all_pairs_shortest_paths", &MatchingGraph::ComputeAllPairsShortestPaths)
+     .def("has_computed_all_pairs_shortest_paths", &MatchingGraph::HasComputedAllPairsShortestPaths)
+     .def("get_num_connected_components", &MatchingGraph::GetNumConnectedComponents);
 
      m.def("randomize", &randomize);
      m.def("set_seed", &set_seed, "s"_a);

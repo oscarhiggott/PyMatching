@@ -22,7 +22,6 @@
 #include <memory>
 #include <set>
 #include <cstdint>
-#include "stabiliser_graph.h"
 
 namespace py = pybind11;
 
@@ -43,25 +42,25 @@ typedef boost::graph_traits < wgraph_t >::edge_descriptor edge_descriptor;
  * @brief 
  * 
  */
-class WeightedMatchingGraph : public IStabiliserGraph{
+class MatchingGraph{
     public:
         /**
-         * @brief Construct a new Weighted Stabiliser Graph object
+         * @brief Construct a new Matching Graph object
          * 
          */
-        WeightedMatchingGraph();
+        MatchingGraph();
         /**
-         * @brief Construct a new Weighted Stabiliser Graph object
+         * @brief Construct a new Matching Graph object
          * 
-         * @param num_stabilisers Number of stabiliser nodes (this excludes boundary nodes)
+         * @param num_detectors Number of detector nodes (this excludes boundary nodes)
          * @param boundary Indices of the boundary nodes
          */
-        WeightedMatchingGraph(
-            int num_stabilisers,
+        MatchingGraph(
+            int num_detectors,
             std::set<int>& boundary
             );
         /**
-         * @brief Add an edge to the Weighted Stabiliser Graph object
+         * @brief Add an edge to the Matching Graph object
          * 
          * @param node1 Index of the first node
          * @param node2 Index of the second node
@@ -80,7 +79,7 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * compute intensive matching graphs with many thousands of nodes.
          * 
          */
-        virtual void ComputeAllPairsShortestPaths();
+        void ComputeAllPairsShortestPaths();
         /**
          * @brief Distance between two nodes in the matching graph. This method is used only for exact matching,
          * since it uses the pre-computed all-pairs shortest paths data, and computes the all-pairs shortest paths
@@ -90,7 +89,7 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * @param node2 The index of the second node
          * @return double The distance between the first node and the second node in the matching graph
          */
-        virtual double Distance(int node1, int node2);
+        double Distance(int node1, int node2);
         /**
          * @brief Shortest path between two nodes in the matching graph. This method is used only for exact matching,
          * since it uses the pre-computed all-pairs shortest paths data, and computes the all-pairs shortest paths
@@ -100,7 +99,7 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * @param node2 The index of the second node
          * @return std::vector<int> The vertex indices along the path between the first node and the second node in the matching graph
          */
-        virtual std::vector<int> ShortestPath(int node1, int node2);
+        std::vector<int> ShortestPath(int node1, int node2);
         /**
          * @brief Get the qubit ids associated with the edge between node1 and node2
          * 
@@ -108,32 +107,32 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * @param node2 The index of the second node
          * @return std::set<int> The set of qubit ids associated with the edge between node1 and node2
          */
-        virtual std::set<int> QubitIDs(int node1, int node2) const;
+        std::set<int> QubitIDs(int node1, int node2) const;
         /**
          * @brief Get the number of qubits associated with edges of the matching graph
          * 
          * @return int The number of qubits
          */
-        virtual int GetNumQubits() const;
+        int GetNumQubits() const;
         /**
-         * @brief Get the number of nodes in the stabiliser graph (this includes both boundaries and stabilisers)
+         * @brief Get the number of nodes in the matching graph (this includes both boundaries and stabilisers)
          * 
          * @return int Number of nodes in stabiliser_graph
          */
-        virtual int GetNumNodes() const;
+        int GetNumNodes() const;
         /**
-         * @brief Get the number of edges in the stabiliser graph
+         * @brief Get the number of edges in the matching graph
          * 
          * @return int Number of edges in stabiliser_graph
          */
-        virtual int GetNumEdges() const;
+        int GetNumEdges() const;
         /**
          * @brief If an error_probability is assigned to every edge, flip each edge 
          * with its corresponding error_probability. If an edge is flipped, add (mod 2) 
          * an error to the associated qubits (specified by the qubit_ids edge data).
          * The qubit errors are returned as a binary numpy array, as well as a syndrome 
          * vector, also as a binary numpy array. The length of the syndrome vector is 
-         * is the number of nodes in the stabiliser graph (there is an element for each 
+         * is the number of nodes in the matching graph (there is an element for each
          * stabiliser as well as for each boundary node). The syndromes of the boundary 
          * nodes are all set to zero unless the parity of the stabiliser syndromes is odd, 
          * in which case the first boundary node's syndrome is flipped.
@@ -147,9 +146,9 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * 
          * @return std::vector<int> The indices of the boundary nodes
          */
-        virtual std::set<int> GetBoundary() const;
+        std::set<int> GetBoundary() const;
         /**
-         * @brief Get the edges of the stabiliser graph and their edge data
+         * @brief Get the edges of the matching graph and their edge data
          * 
          * @return std::vector<std::tuple<int,int,WeightedEdgeData>> 
          */
@@ -159,7 +158,7 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * 
          * @param boundary The indices of the boundary nodes
          */
-        virtual void SetBoundary(std::set<int>& boundary);
+        void SetBoundary(std::set<int>& boundary);
         /**
          * @brief Flag whether or not the all-pairs shortest paths have been computed. 
          * The all-pairs shortest paths are only needed for exact matching, which is not 
@@ -168,10 +167,10 @@ class WeightedMatchingGraph : public IStabiliserGraph{
          * @return true 
          * @return false 
          */
-        virtual bool HasComputedAllPairsShortestPaths() const;
+        bool HasComputedAllPairsShortestPaths() const;
         /**
          * @brief Reset the _predecessors and _distances attributes, which 
-         * are used by WeightedMatchingGraph::GetPath and WeightedMatchingGraph::GetNearestNeighbours.
+         * are used by MatchingGraph::GetPath and MatchingGraph::GetNearestNeighbours.
          * This just preallocates both of these vectors appropriately for use by the local dijkstra search 
          * and will only do so if these vectors are not already the correct size. Once these attributes 
          * are correctly preallocated the first time, the GetPath and GetNearestNeighbours methods always reset 
@@ -207,11 +206,11 @@ class WeightedMatchingGraph : public IStabiliserGraph{
         std::vector<int> GetPath(
             int source, int target);
         /**
-         * @brief Get the number of connected components in the stabiliser graph
+         * @brief Get the number of connected components in the matching graph
          * 
          * @return int The number of components
          */
-        virtual int GetNumConnectedComponents();
+        int GetNumConnectedComponents();
         /**
         * @brief Whether or not all edges in the graph are assigned error probabilities
         *
@@ -235,9 +234,9 @@ class WeightedMatchingGraph : public IStabiliserGraph{
         bool all_edges_have_error_probabilities;
         wgraph_t stabiliser_graph;
         /**
-         * @brief The distance between every pair of nodes in the stabiliser graph, if
+         * @brief The distance between every pair of nodes in the matching graph, if
          * ComputeAllPairsShortestPaths has been run. all_distances[i][j] is the distance
-         * between node i and node j in the stabiliser graph. Note that this is only used
+         * between node i and node j in the matching graph. Note that this is only used
          * if exact matching is used (the function LemonDecode in lemon_mwpm.cpp), and not if
          * (the Python default) local matching is used (the function LemonDecodeMatchNeighbourhood
          * in lemon_mwpm.cpp).

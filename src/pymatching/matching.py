@@ -20,7 +20,7 @@ import networkx as nx
 from scipy.sparse import csc_matrix
 
 from pymatching._cpp_mwpm import (exact_matching, local_matching,
-                                  WeightedMatchingGraph)
+                                  MatchingGraph)
 
 
 def _find_boundary_nodes(G):
@@ -33,7 +33,7 @@ def _find_boundary_nodes(G):
     Parameters
     ----------
     G : NetworkX graph
-        The stabiliser graph.
+        The matching graph.
 
     Returns
     -------
@@ -111,7 +111,7 @@ class Matching:
             to True will precompute the all-pairs shortest paths.
             By default False
             """
-        self.stabiliser_graph = WeightedMatchingGraph()
+        self.matching_graph = MatchingGraph()
         if H is None:
             return
         if not isinstance(H, nx.Graph):
@@ -125,7 +125,7 @@ class Matching:
         else:
             self.load_from_networkx(H)
         if precompute_shortest_paths:
-            self.stabiliser_graph.compute_all_pairs_shortest_paths()
+            self.matching_graph.compute_all_pairs_shortest_paths()
 
     def load_from_networkx(self, G):
         r"""
@@ -152,7 +152,7 @@ class Matching:
         boundary = _find_boundary_nodes(G)
         num_nodes = G.number_of_nodes()
         all_qubits = set()
-        g = WeightedMatchingGraph(self.num_detectors, boundary)
+        g = MatchingGraph(self.num_detectors, boundary)
         for (u, v, attr) in G.edges(data=True):
             u, v = int(u), int(v)
             if u >= num_nodes or v>= num_nodes:
@@ -177,7 +177,7 @@ class Matching:
                 raise ValueError("Weights cannot be negative.")
             e_prob = attr.get("error_probability", -1)
             g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
-        self.stabiliser_graph = g
+        self.matching_graph = g
         if max(all_qubits, default=-1) != len(all_qubits) - 1:
             raise ValueError(
                 "The maximum qubit id ({}) should equal the number of qubits ({}) "\
@@ -255,22 +255,22 @@ class Matching:
         repetitions = 1 if repetitions is None else repetitions
         p_meas = measurement_error_probability if measurement_error_probability is not None else -1
         boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
-        self.stabiliser_graph = WeightedMatchingGraph(H.shape[0] * repetitions, boundary=boundary)
+        self.matching_graph = MatchingGraph(H.shape[0] * repetitions, boundary=boundary)
         for t in range(repetitions):
             for i in range(len(H.indptr) - 1):
                 s, e = H.indptr[i:i + 2]
                 v1 = H.indices[s] + H.shape[0] * t
                 v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else next(iter(boundary))
-                self.stabiliser_graph.add_edge(v1, v2, {i}, weights[i],
+                self.matching_graph.add_edge(v1, v2, {i}, weights[i],
                                                error_probabilities[i], error_probabilities[i] >= 0)
         for t in range(repetitions - 1):
             for i in range(H.shape[0]):
-                self.stabiliser_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
+                self.matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
                                                set(), timelike_weights, p_meas, p_meas >= 0)
 
     @property
     def num_qubits(self):
-        return self.stabiliser_graph.get_num_qubits()
+        return self.matching_graph.get_num_qubits()
     
     @property
     def boundary(self):
@@ -281,11 +281,11 @@ class Matching:
         set of int
             The indices of the boundary nodes
         """
-        return self.stabiliser_graph.get_boundary()
+        return self.matching_graph.get_boundary()
 
     @property
     def num_nodes(self):
-        return self.stabiliser_graph.get_num_nodes()
+        return self.matching_graph.get_num_nodes()
 
     @property
     def num_detectors(self):
@@ -353,16 +353,16 @@ class Matching:
         else:
             raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
         if num_neighbours is None:
-            res = exact_matching(self.stabiliser_graph, defects, return_weight)
+            res = exact_matching(self.matching_graph, defects, return_weight)
         else:
-            res = local_matching(self.stabiliser_graph, defects, num_neighbours, return_weight)
+            res = local_matching(self.matching_graph, defects, num_neighbours, return_weight)
         if return_weight:
             return res.correction, res.weight
         else:
             return res.correction
     
     def add_noise(self):
-        """Add noise by flipping edges in the stabiliser graph with 
+        """Add noise by flipping edges in the matching graph with
         a probability given by the error_probility edge attribute.
         The ``error_probability`` must be set for all edges for this 
         method to run, otherwise it returns `None`.
@@ -377,9 +377,9 @@ class Matching:
             self.num_detectors if there is no boundary, or self.num_detectors+len(self.boundary)
             if there are boundary nodes)
         """
-        if not self.stabiliser_graph.all_edges_have_error_probabilities():
+        if not self.matching_graph.all_edges_have_error_probabilities():
             return None
-        return self.stabiliser_graph.add_noise()
+        return self.matching_graph.add_noise()
     
     def edges(self):
         """Edges of the matching graph
@@ -397,7 +397,7 @@ class Matching:
         List of (int, int, dict) tuples
             A list of edges of the matching graph
         """
-        edata = self.stabiliser_graph.get_edges()
+        edata = self.matching_graph.get_edges()
         return [(e[0], e[1], {
             'qubit_id': e[2].qubit_ids,
             'weight': e[2].weight,
@@ -461,7 +461,7 @@ class Matching:
         N = self.num_qubits
         M = self.num_detectors
         B = len(self.boundary)
-        E = self.stabiliser_graph.get_num_edges()
+        E = self.matching_graph.get_num_edges()
         return "<pymatching.Matching object with "\
                "{} qubit{}, {} detector{}, "\
                "{} boundary node{}, "\

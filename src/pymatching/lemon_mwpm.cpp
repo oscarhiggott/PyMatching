@@ -19,8 +19,7 @@
 #include <lemon/connectivity.h>
 #include <vector>
 #include <string>
-#include "weighted_stabiliser_graph.h"
-#include "stabiliser_graph.h"
+#include "matching_graph.h"
 #include <stdexcept>
 #include <set>
 #include <pybind11/pybind11.h>
@@ -65,7 +64,7 @@ void DefectGraph::AddEdge(int i, int j, double weight){
 
 
 MatchingResult LemonDecode(
-    WeightedMatchingGraph& sg,
+    MatchingGraph& sg,
     const py::array_t<int>& defects,
     bool return_weight
     ){
@@ -95,7 +94,7 @@ MatchingResult LemonDecode(
 
     for (py::size_t i = 0; i<num_defects; i++){
         for (py::size_t j=i+1; j<num_defects; j++){
-            defect_graph.AddEdge(i, j, -1.0*sg.SpaceTimeDistance(
+            defect_graph.AddEdge(i, j, -1.0*sg.Distance(
                 defects_vec[i], defects_vec[j]
                 ));
         }
@@ -113,7 +112,7 @@ MatchingResult LemonDecode(
     for (py::size_t i = 0; i<num_defects; i++){
         int j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         if (i<j){
-            std::vector<int> path = sg.SpaceTimeShortestPath(
+            std::vector<int> path = sg.ShortestPath(
                 defects_vec[i], defects_vec[j]
                 );
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
@@ -142,7 +141,7 @@ MatchingResult LemonDecode(
 
 
 MatchingResult LocalMatching(
-    WeightedMatchingGraph& sg,
+    MatchingGraph& sg,
     const py::array_t<int>& defects,
     int num_neighbours,
     bool return_weight,
@@ -178,7 +177,7 @@ MatchingResult LocalMatching(
 
 
 MatchingResult LemonDecodeMatchNeighbourhood(
-    WeightedMatchingGraph& sg,
+    MatchingGraph& sg,
     std::set<int>& defects_set,
     int num_neighbours,
     bool return_weight

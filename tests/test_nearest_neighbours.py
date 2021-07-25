@@ -32,14 +32,14 @@ m = Matching(g)
 
 
 def test_dijkstra_nearest_neighbour_nodes():
-    assert (set(m.stabiliser_graph.get_nearest_neighbours(2, 3, [0,0,1,-1,2,-1]))
+    assert (set(m.matching_graph.get_nearest_neighbours(2, 3, [0,0,1,-1,2,-1]))
             == {(2, 0.0), (1, 0.1), (4, 0.2)})
 
 
 def test_dijkstra_path():
-    assert m.stabiliser_graph.get_path(1, 4) == [1,2,3,4]
-    assert m.stabiliser_graph.get_path(4, 1) == [4,3,2,1]
-    assert m.stabiliser_graph.get_path(5, 3) == [5,4,3]
+    assert m.matching_graph.get_path(1, 4) == [1,2,3,4]
+    assert m.matching_graph.get_path(4, 1) == [4,3,2,1]
+    assert m.matching_graph.get_path(5, 3) == [5,4,3]
 
 
 neighbour_match_fixtures = [
@@ -51,5 +51,5 @@ neighbour_match_fixtures = [
 
 @pytest.mark.parametrize("defects,num_neighbours,correction", neighbour_match_fixtures)
 def test_neighbourhood_matching(defects,num_neighbours,correction):
-    assert (np.array_equal(local_matching(m.stabiliser_graph,
+    assert (np.array_equal(local_matching(m.matching_graph,
             np.array(defects), num_neighbours, False).correction, np.array(correction)))

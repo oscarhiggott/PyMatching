@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "weighted_stabiliser_graph.h"
-#include "stabiliser_graph.h"
+#include "matching_graph.h"
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <exception>
@@ -47,40 +46,40 @@ struct MatchingResult {
 };
 
 /**
- * @brief Given a stabiliser graph sg and a vector `defects` of indices of nodes that have a -1 syndrome, 
+ * @brief Given a matching graph sg and a vector `defects` of indices of nodes that have a -1 syndrome,
  * find the find the minimum weight perfect matching in the complete graph with nodes in the defects 
  * list, and where the edge between node i and j is given by the distance between i and j in sg. The 
- * distances and shortest paths between nodes in the stabiliser graph sg are all precomputed and this 
+ * distances and shortest paths between nodes in the matching graph sg are all precomputed and this
  * method returns the exact minimum-weight perfect matching. As a result it is suitable for matching graphs 
  * with a few thousand nodes or less, but will be very memory and compute intensive for larger matching graphs.
  * Returns a noise vector N for which N[i]=1 if qubit_id appeared an odd number of times in the minimum weight 
  * perfect matching and N[i]=0 otherwise.
  * 
- * @param sg A stabiliser graph
+ * @param sg A matching graph
  * @param defects The indices of nodes that are associated with a -1 syndrome
  * @return MatchingResult A struct containing the correction vector for the minimum-weight perfect matching and the matching weight. 
  * The matching weight is set to -1 if it is not requested.
  */
-MatchingResult LemonDecode(WeightedMatchingGraph& sg, const py::array_t<int>& defects, bool return_weight=false);
+MatchingResult LemonDecode(MatchingGraph& sg, const py::array_t<int>& defects, bool return_weight=false);
 /**
- * @brief Given a stabiliser graph `sg`, a vector `defects` of indices of nodes that have a -1 syndrome and 
+ * @brief Given a matching graph `sg`, a vector `defects` of indices of nodes that have a -1 syndrome and
  * a chosen `num_neighbours`, find the minimum weight perfect matching in the graph V where each defect node 
  * is connected by an edge to each of the `num_neighbours` nearest other defect nodes in sg, and where the 
  * weight of each edge is the distance between the two defect nodes in `sg`.
  * Returns a noise vector N for which N[i]=1 if qubit_id appeared an odd number of times in the minimum weight 
  * perfect matching and N[i]=0 otherwise.
  * 
- * @param sg A stabiliser graph
+ * @param sg A matching graph
  * @param defects The indices of nodes that are associated with a -1 syndrome
  * @param num_neighbours The number of closest defects to connect each defect to in the matching graph
  * @return MatchingResult A struct containing the correction vector for the minimum-weight perfect matching and the matching weight. 
  * The matching weight is set to -1 if it is not requested.
  */
-MatchingResult LemonDecodeMatchNeighbourhood(WeightedMatchingGraph& sg, std::set<int>& defects,
+MatchingResult LemonDecodeMatchNeighbourhood(MatchingGraph& sg, std::set<int>& defects,
                                                         int num_neighbours=30, bool return_weight=false);
 
 MatchingResult LocalMatching(
-    WeightedMatchingGraph& sg,
+    MatchingGraph& sg,
     const py::array_t<int>& defects,
     int num_neighbours=30,
     bool return_weight=false,

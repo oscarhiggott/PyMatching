@@ -17,7 +17,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
 #include <boost/graph/connected_components.hpp>
-#include "weighted_stabiliser_graph.h"
+#include "matching_graph.h"
 #include <memory>
 #include <set>
 #include <utility>
@@ -28,7 +28,7 @@
 #include "rand_gen.h"
 
 
-WeightedMatchingGraph::WeightedMatchingGraph()
+MatchingGraph::MatchingGraph()
     : all_edges_have_error_probabilities(true),
      connected_components_need_updating(true) {
     wgraph_t sgraph = wgraph_t();
@@ -36,17 +36,17 @@ WeightedMatchingGraph::WeightedMatchingGraph()
 }
 
 
-WeightedMatchingGraph::WeightedMatchingGraph(
-    int num_stabilisers,
+MatchingGraph::MatchingGraph(
+    int num_detectors,
     std::set<int>& boundary)
     : all_edges_have_error_probabilities(true),
     boundary(boundary),
     connected_components_need_updating(true) {
-    wgraph_t sgraph = wgraph_t(num_stabilisers+boundary.size());
+    wgraph_t sgraph = wgraph_t(num_detectors+boundary.size());
     this->stabiliser_graph = sgraph;
 }
 
-void WeightedMatchingGraph::AddEdge(
+void MatchingGraph::AddEdge(
     int node1, 
     int node2, 
     std::set<int> qubit_ids, 
@@ -69,7 +69,7 @@ void WeightedMatchingGraph::AddEdge(
             stabiliser_graph);
 }
 
-void WeightedMatchingGraph::ComputeAllPairsShortestPaths(){
+void MatchingGraph::ComputeAllPairsShortestPaths(){
     int n = boost::num_vertices(stabiliser_graph);
     all_distances.clear();
     all_predecessors.clear();
@@ -121,7 +121,7 @@ class DijkstraNeighbourVisitor : public boost::default_dijkstra_visitor
 };
 
 
-void WeightedMatchingGraph::ResetDijkstraNeighbours(){
+void MatchingGraph::ResetDijkstraNeighbours(){
     int n = boost::num_vertices(stabiliser_graph);
     double inf = std::numeric_limits<double>::max();
     if (_distances.size() < n){
@@ -136,7 +136,7 @@ void WeightedMatchingGraph::ResetDijkstraNeighbours(){
 }
 
 
-std::vector<std::pair<int, double>> WeightedMatchingGraph::GetNearestNeighbours(
+std::vector<std::pair<int, double>> MatchingGraph::GetNearestNeighbours(
     int source, int num_neighbours, std::vector<int>& defect_id){
     int n = boost::num_vertices(stabiliser_graph);
     assert(source < n);
@@ -196,7 +196,7 @@ class DijkstraPathVisitor : public boost::default_dijkstra_visitor
 };
 
 
-std::vector<int> WeightedMatchingGraph::GetPath(
+std::vector<int> MatchingGraph::GetPath(
     int source, int target){
     int n = boost::num_vertices(stabiliser_graph);
     assert(source < n);
@@ -237,7 +237,13 @@ std::vector<int> WeightedMatchingGraph::GetPath(
 }
 
 
-double WeightedMatchingGraph::Distance(int node1, int node2) {
+double MatchingGraph::Distance(int node1, int node2) {
+    int num_nodes = GetNumNodes();
+    if (node1 >= num_nodes || node2 >= num_nodes
+        || node1 < 0 || node2 < 0){
+        throw std::invalid_argument("node1 and node2 must non-negative and less "
+                                    "than the number of nodes");
+    }
     if (!HasComputedAllPairsShortestPaths()){
         ComputeAllPairsShortestPaths();
     }
@@ -245,7 +251,13 @@ double WeightedMatchingGraph::Distance(int node1, int node2) {
     return all_distances[node1][n2];
 }
 
-std::vector<int> WeightedMatchingGraph::ShortestPath(int node1, int node2) {
+std::vector<int> MatchingGraph::ShortestPath(int node1, int node2) {
+    int num_nodes = GetNumNodes();
+    if (node1 >= num_nodes || node2 >= num_nodes
+        || node1 < 0 || node2 < 0){
+        throw std::invalid_argument("node1 and node2 must non-negative and less "
+                                    "than the number of nodes");
+    }
     if (!HasComputedAllPairsShortestPaths()){
         ComputeAllPairsShortestPaths();
     }
@@ -262,12 +274,12 @@ std::vector<int> WeightedMatchingGraph::ShortestPath(int node1, int node2) {
 }
 
 
-int WeightedMatchingGraph::GetNumEdges() const {
+int MatchingGraph::GetNumEdges() const {
     return boost::num_edges(stabiliser_graph);
 }
 
 
-int WeightedMatchingGraph::GetNumQubits() const {
+int MatchingGraph::GetNumQubits() const {
     auto qid = boost::get(&WeightedEdgeData::qubit_ids, stabiliser_graph);
     int num_edges = boost::num_edges(stabiliser_graph);
     int maxid = -1;
@@ -294,11 +306,11 @@ int WeightedMatchingGraph::GetNumQubits() const {
     return num_qubits;
 }
 
-int WeightedMatchingGraph::GetNumNodes() const {
+int MatchingGraph::GetNumNodes() const {
     return boost::num_vertices(stabiliser_graph);
 };
 
-std::set<int> WeightedMatchingGraph::QubitIDs(int node1, int node2) const {
+std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
     auto e = boost::edge(node1, node2, stabiliser_graph);
     if (!e.second){
         std::runtime_error("Graph does not contain edge (" 
@@ -308,7 +320,7 @@ std::set<int> WeightedMatchingGraph::QubitIDs(int node1, int node2) const {
     return stabiliser_graph[e.first].qubit_ids;
 }
 
-std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedMatchingGraph::AddNoise() const {
+std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumNodes(), 0);
     auto error = new std::vector<int>(GetNumQubits(), 0);
     double p;
@@ -342,17 +354,17 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedMatchingG
     return {error_arr, syndrome_arr};
 }
 
-std::set<int> WeightedMatchingGraph::GetBoundary() const {
+std::set<int> MatchingGraph::GetBoundary() const {
     return boundary;
 }
 
-void WeightedMatchingGraph::SetBoundary(std::set<int>& boundary) {
+void MatchingGraph::SetBoundary(std::set<int>& boundary) {
     this->boundary = boundary;
     connected_components_need_updating = true;
     return;
 }
 
-std::vector<std::tuple<int,int,WeightedEdgeData>> WeightedMatchingGraph::GetEdges() const {
+std::vector<std::tuple<int,int,WeightedEdgeData>> MatchingGraph::GetEdges() const {
     std::vector<std::tuple<int,int,WeightedEdgeData>> edges;
     auto es = boost::edges(stabiliser_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
@@ -365,14 +377,14 @@ std::vector<std::tuple<int,int,WeightedEdgeData>> WeightedMatchingGraph::GetEdge
     return edges;
 }
 
-bool WeightedMatchingGraph::HasComputedAllPairsShortestPaths() const {
+bool MatchingGraph::HasComputedAllPairsShortestPaths() const {
     int n = boost::num_vertices(stabiliser_graph);
     bool has_distances = all_distances.size() == n;
     bool has_preds = all_predecessors.size() == n;
     return has_distances && has_preds;
 }
 
-int WeightedMatchingGraph::GetNumConnectedComponents() {
+int MatchingGraph::GetNumConnectedComponents() {
     if (connected_components_need_updating){
         component.resize(boost::num_vertices(stabiliser_graph));
         num_components = boost::connected_components(stabiliser_graph, &component[0]);
@@ -388,7 +400,7 @@ int WeightedMatchingGraph::GetNumConnectedComponents() {
     return num_components;
 }
 
-void WeightedMatchingGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
+void MatchingGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
     int num_comps = GetNumConnectedComponents();
     if (num_comps == 1){
         if ((defects.size() % 2) == 0){
@@ -428,6 +440,6 @@ void WeightedMatchingGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
     }
 }
 
-bool WeightedMatchingGraph::AllEdgesHaveErrorProbabilities() const {
+bool MatchingGraph::AllEdgesHaveErrorProbabilities() const {
     return all_edges_have_error_probabilities;
 }

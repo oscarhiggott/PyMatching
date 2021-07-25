@@ -19,7 +19,7 @@ import pytest
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from pymatching._cpp_mwpm import WeightedMatchingGraph
+from pymatching._cpp_mwpm import MatchingGraph
 from pymatching import Matching
 
 
@@ -134,8 +134,8 @@ def test_error_probability_from_array():
 def test_weighted_mwpm_from_array():
     H = csc_matrix([[1,0],[1,1],[0,1]])
     m = Matching(H, spacelike_weights=np.array([1., 2.]))
-    assert m.stabiliser_graph.distance(0, 1) == 1.
-    assert m.stabiliser_graph.distance(1, 2) == 2.
+    assert m.matching_graph.distance(0, 1) == 1.
+    assert m.matching_graph.distance(1, 2) == 2.
     with pytest.raises(ValueError):
         m = Matching(H, spacelike_weights=np.array([1.]))
     with pytest.raises(ValueError):
@@ -156,8 +156,8 @@ def test_unweighted_stabiliser_graph_from_networkx():
     m = Matching(w)
     assert(m.num_qubits == 7)
     assert(m.num_detectors == 6)
-    assert(m.stabiliser_graph.shortest_path(3, 5) == [3, 2, 5])
-    assert(m.stabiliser_graph.distance(5, 0) == pytest.approx(11.0))
+    assert(m.matching_graph.shortest_path(3, 5) == [3, 2, 5])
+    assert(m.matching_graph.distance(5, 0) == pytest.approx(11.0))
     assert(np.array_equal(
         m.decode(np.array([1,0,1,0,0,0])),
         np.array([0,0,1,0,0,0,0]))
@@ -182,33 +182,33 @@ def test_mwpm_from_networkx():
     g.add_edge(0, 2, qubit_id=1)
     g.add_edge(1, 2, qubit_id=2)
     m = Matching(g)
-    assert(isinstance(m.stabiliser_graph, WeightedMatchingGraph))
+    assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
     assert(m.num_qubits == 3)
-    assert(m.stabiliser_graph.distance(0,2) == 1)
-    assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+    assert(m.matching_graph.distance(0,2) == 1)
+    assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
     g = nx.Graph()
     g.add_edge(0, 1)
     g.add_edge(0, 2)
     g.add_edge(1, 2)
     m = Matching(g)
-    assert(isinstance(m.stabiliser_graph, WeightedMatchingGraph))
+    assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
     assert(m.num_qubits == 0)
-    assert(m.stabiliser_graph.distance(0,2) == 1)
-    assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+    assert(m.matching_graph.distance(0,2) == 1)
+    assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
     g = nx.Graph()
     g.add_edge(0, 1, weight=1.5)
     g.add_edge(0, 2, weight=1.7)
     g.add_edge(1, 2, weight=1.2)
     m = Matching(g)
-    assert(isinstance(m.stabiliser_graph, WeightedMatchingGraph))
+    assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
     assert(m.num_qubits == 0)
-    assert(m.stabiliser_graph.distance(0,2) == pytest.approx(1.7))
-    assert(m.stabiliser_graph.shortest_path(0,2) == [0,2])
+    assert(m.matching_graph.distance(0,2) == pytest.approx(1.7))
+    assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
 
 def test_repr():
