@@ -100,6 +100,20 @@ def test_negative_weight_raises_value_error():
         Matching(csr_matrix([[1,1,0],[0,1,1]]), spacelike_weights=np.array([1,1,-1]))
 
 
+def test_wrong_check_matrix_type_raises_type_error():
+    with pytest.raises(TypeError):
+        Matching("test")
+    m = Matching()
+    with pytest.raises(TypeError):
+        m.load_from_check_matrix("test")
+
+
+def test_wrong_networkx_graph_type_raises_type_error():
+    m = Matching()
+    with pytest.raises(TypeError):
+        m.load_from_networkx("test")
+
+
 def test_error_probability_from_array():
     H = csr_matrix(np.array([[1, 1, 0, 0, 0],[0, 1, 1, 0, 0],
                              [0, 0, 1, 1, 0],[0, 0, 0, 1, 1]]))
@@ -208,24 +222,6 @@ def test_repr():
     m = Matching(g)
     assert m.__repr__() == ("<pymatching.Matching object with 3 qubits, "
                             "2 detectors, 2 boundary nodes, and 4 edges>")
-
-
-def test_wrong_connected_components_raises_value_error():
-    g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(1, 2, qubit_id=1)
-    g.add_edge(2, 0, qubit_id=2)
-    g.add_edge(3, 4, qubit_id=3)
-    g.add_edge(4, 5, qubit_id=4)
-    g.add_edge(5, 3, qubit_id=5)
-    with pytest.raises(ValueError):
-        Matching(g)
-    g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(1, 2, qubit_id=1)
-    g.add_edge(2, 0, qubit_id=2)
-    m = Matching(g)
-    assert m.stabiliser_graph.get_num_connected_components() == 1
 
 
 def test_high_qubit_id_raises_value_error():

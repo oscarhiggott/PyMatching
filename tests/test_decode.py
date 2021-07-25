@@ -144,11 +144,11 @@ def test_spacetime_shortest_path(node1, node2, expected):
     assert(path == expected)
 
 
-def test_odd_3d_syndrome_raises_value_error():
-    H = csr_matrix(np.array([[1,1,0],[0,1,1]]))
+def test_3d_syndrome_raises_value_error_when_repetitions_not_set():
+    H = csr_matrix(np.array([[1, 1, 0], [0, 1, 1]]))
     m = Matching(H)
     with pytest.raises(ValueError):
-        m.decode(np.array([[1,0],[0,0]]))
+        m.decode(np.array([[1, 0], [0, 0]]))
 
 
 def test_double_weight_matching():
@@ -204,8 +204,8 @@ def test_matching_correct():
     assert np.array_equal(m.decode(z, num_neighbours=None).nonzero()[0], np.array([0,4,12,16,23]))
 
 
-@pytest.mark.parametrize("cluster_size", range(3,10,2))
-def test_local_matching_connected(cluster_size):
+@pytest.mark.parametrize("cluster_size", range(3, 10, 2))
+def test_local_matching_clusters(cluster_size):
     g = nx.Graph()
     qid = 0
     for i in range(cluster_size):
@@ -260,10 +260,55 @@ def test_decoding_large_defect_id_raises_value_error():
         decode(m.stabiliser_graph, np.array([1, 4]))
 
 
-# def test_decode_with_odd_number_of_defects():
-#     g = nx.Graph()
-#     g.add_edge(0, 1)
-#     g.add_edge(1, 2)
-#     g.add_edge(2, 0)
-#     m = Matching(g)
-#     decode_match_neighbourhood(m.stabiliser_graph, np.array([1]))
+def test_decode_with_odd_number_of_defects():
+    g = nx.Graph()
+    g.add_edge(0, 1)
+    g.add_edge(1, 2)
+    g.add_edge(2, 0)
+    m = Matching(g)
+    with pytest.raises(ValueError):
+        decode_match_neighbourhood(m.stabiliser_graph, np.array([1]))
+    with pytest.raises(ValueError):
+        decode(m.stabiliser_graph, np.array([1]))
+    g.nodes[2]['is_boundary'] = True
+    m2 = Matching(g)
+    decode_match_neighbourhood(m2.stabiliser_graph, np.array([1]))
+    decode(m2.stabiliser_graph, np.array([1]))
+    g.nodes[2]['is_boundary'] = False
+    g.nodes[1]['is_boundary'] = True
+    m3 = Matching(g)
+    decode_match_neighbourhood(m3.stabiliser_graph, np.array([1]))
+    decode(m3.stabiliser_graph, np.array([1]))
+
+
+def test_decode_with_multiple_components():
+    g = nx.Graph()
+    g.add_edge(0, 1)
+    g.add_edge(1, 2)
+    g.add_edge(2, 0)
+    g.add_edge(3, 4)
+    g.add_edge(4, 5)
+    g.add_edge(3, 5)
+
+    m = Matching(g)
+    for z in (np.array([0]), np.arange(6)):
+        with pytest.raises(ValueError):
+            decode_match_neighbourhood(m.stabiliser_graph, z)
+        with pytest.raises(ValueError):
+            decode(m.stabiliser_graph, z)
+
+    g.nodes[0]['is_boundary'] = True
+    m2 = Matching(g)
+    decode_match_neighbourhood(m2.stabiliser_graph, np.array([1]))
+    decode(m2.stabiliser_graph, np.array([1]))
+    for z in (np.arange(6), np.array([3])):
+        with pytest.raises(ValueError):
+            decode_match_neighbourhood(m2.stabiliser_graph, z)
+        with pytest.raises(ValueError):
+            decode(m2.stabiliser_graph, z)
+
+    g.nodes[4]['is_boundary'] = True
+    m3 = Matching(g)
+    for z in (np.array([0]), np.arange(6), np.array([3]), np.array([1,3])):
+        decode_match_neighbourhood(m3.stabiliser_graph, z)
+        decode(m3.stabiliser_graph, z)

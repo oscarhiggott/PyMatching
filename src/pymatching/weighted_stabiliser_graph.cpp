@@ -331,8 +331,6 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> WeightedStabilise
             }
         }
     }
-    std::uint8_t parity = 0;
-    int i = 0;
     for (auto b : boundary){
         (*syndrome)[b] = 0;
     }
@@ -350,6 +348,7 @@ std::set<int> WeightedStabiliserGraph::GetBoundary() const {
 
 void WeightedStabiliserGraph::SetBoundary(std::set<int>& boundary) {
     this->boundary = boundary;
+    connected_components_need_updating = true;
     return;
 }
 
@@ -377,12 +376,57 @@ int WeightedStabiliserGraph::GetNumConnectedComponents() {
     if (connected_components_need_updating){
         component.resize(boost::num_vertices(stabiliser_graph));
         num_components = boost::connected_components(stabiliser_graph, &component[0]);
+        component_boundary.resize(num_components, -1);
+        for (auto b : boundary){
+            int c = component[b];
+            if (component_boundary[c] == -1){
+                component_boundary[c] = b;
+            }
+        }
     }
     connected_components_need_updating = false;
     return num_components;
 }
 
-//void WeightedStabiliserGraph::FlipBoundaryNodesIfNeeded()
+void WeightedStabiliserGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
+    int num_comps = GetNumConnectedComponents();
+    if (num_comps == 1){
+        if ((defects.size() % 2) == 0){
+            return;
+        } else if ((defects.size() % 2) == 1 && boundary.size() == 0){
+            throw std::invalid_argument(
+            "The syndrome has an odd number of defects, but no boundary nodes were provided"
+            );
+        }
+    }
+    std::vector<std::uint8_t> component_parities(num_comps, 0);
+    for (auto df : defects){
+        if (df >= component.size()){
+            throw std::invalid_argument(
+            "Defect id should not exceed the number of vertices in the graph"
+            );
+        }
+        component_parities[component[df]] ^= 1;
+    }
+
+    for (int i=0; i<component_parities.size(); i++){
+        if (component_parities[i] == 1){
+            int b = component_boundary[i];
+            if (b == -1){
+                throw std::invalid_argument(
+                    "The syndrome has an odd number of defects in a component of the matching graph "
+                    "that does not have a boundary node"
+                    );
+            }
+            bool is_in_defects = defects.find(b) != defects.end();
+            if (is_in_defects){
+                defects.erase(b);
+            } else {
+                defects.insert(b);
+            }
+        }
+    }
+}
 
 bool WeightedStabiliserGraph::AllEdgesHaveErrorProbabilities() const {
     return all_edges_have_error_probabilities;

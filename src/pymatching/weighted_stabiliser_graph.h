@@ -218,6 +218,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         * @ return bool True if all edges have error probabilities, else False
         */
         bool AllEdgesHaveErrorProbabilities() const;
+        void FlipBoundaryNodesIfNeeded(std::set<int> &defects);
     private:
         /**
          * @brief The indices of the boundary nodes
@@ -228,6 +229,7 @@ class WeightedStabiliserGraph : public IStabiliserGraph{
         std::vector<int> _predecessors;
         int num_components;
         std::vector<int> component;
+        std::vector<int> component_boundary;
         bool connected_components_need_updating;
         // true if every edge in stabiliser_graph has an error_probability in its edge data
         bool all_edges_have_error_probabilities;

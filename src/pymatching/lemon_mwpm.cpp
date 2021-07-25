@@ -76,24 +76,31 @@ MatchingResult LemonDecode(
     int num_nodes = sg.GetNumNodes();
 
     auto d = defects.unchecked<1>();
-    std::vector<int> defects_vec(d.shape(0));
+    std::set<int> defects_set;
     for (int i=0; i<d.shape(0); i++){
         if (d(i) >= num_nodes){
             throw std::invalid_argument(
             "Defect id must be less than the number of nodes in the matching graph"
             );
         }
+        defects_set.insert(d(i));
     }
+    sg.FlipBoundaryNodesIfNeeded(defects_set);
 
-    int num_defects = d.shape(0);
+    std::vector<int> defects_vec(defects_set.begin(), defects_set.end());
+
+    int num_defects = defects_vec.size();
 
     DefectGraph defect_graph(num_defects);
 
     for (py::size_t i = 0; i<num_defects; i++){
         for (py::size_t j=i+1; j<num_defects; j++){
-            defect_graph.AddEdge(i, j, -1.0*sg.SpaceTimeDistance(d(i), d(j)));
+            defect_graph.AddEdge(i, j, -1.0*sg.SpaceTimeDistance(
+                defects_vec[i], defects_vec[j]
+                ));
         }
     };
+
     MWPM pm(defect_graph.g, defect_graph.length);
     bool success = pm.run();
     if (!success){
@@ -106,7 +113,9 @@ MatchingResult LemonDecode(
     for (py::size_t i = 0; i<num_defects; i++){
         int j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         if (i<j){
-            std::vector<int> path = sg.SpaceTimeShortestPath(d(i), d(j));
+            std::vector<int> path = sg.SpaceTimeShortestPath(
+                defects_vec[i], defects_vec[j]
+                );
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
                 qids = sg.QubitIDs(path[k], path[k+1]);
                 for (auto qid : qids){
@@ -136,51 +145,50 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
                                              int num_neighbours, bool return_weight){
     MatchingResult matching_result;
     auto d = defects.unchecked<1>();
-    int num_defects = d.shape(0);
 
     int num_nodes = sg.GetNumNodes();
 
-    std::vector<int> defect_id(num_nodes, -1);
-    for (int i=0; i<num_defects; i++){
+    std::set<int> defects_set;
+    for (int i=0; i<d.shape(0); i++) {
         if (d(i) >= num_nodes){
             throw std::invalid_argument(
             "Defect id must be less than the number of nodes in the matching graph"
             );
         }
-        defect_id[d(i)] = i;
+        defects_set.insert(d(i));
+    }
+
+    sg.FlipBoundaryNodesIfNeeded(defects_set);
+
+    std::vector<int> defects_vec(defects_set.begin(), defects_set.end());
+    int num_defects = defects_vec.size();
+    std::vector<int> defect_id(num_nodes, -1);
+    for (int i=0; i<num_defects; i++){
+        defect_id[defects_vec[i]] = i;
     }
     num_neighbours = std::min(num_neighbours, num_defects-1) + 1;
-    --num_neighbours;
-    bool is_connected = false;
-    std::unique_ptr<DefectGraph> defect_graph;
-    while (!is_connected && num_neighbours < num_defects){
-        ++num_neighbours;
-        defect_graph = std::make_unique<DefectGraph>(num_defects);
-        std::vector<std::pair<int, double>> neighbours;
-        int j;
-        bool is_in;
-        for (int i=0; i<num_defects; i++){
-            neighbours = sg.GetNearestNeighbours(d(i), num_neighbours, defect_id);
-            for (const auto &neighbour : neighbours){
-                j = defect_id[neighbour.first];
-                UGraph::Edge FoundEdge = lemon::findEdge(
-                    defect_graph->g, 
-                    defect_graph->g.nodeFromId(i), 
-                    defect_graph->g.nodeFromId(j));
-                is_in = FoundEdge != lemon::INVALID;
-                if (!is_in && i!=j){
-                    defect_graph->AddEdge(i, j, -1.0*neighbour.second);
-                }
+
+    DefectGraph defect_graph(num_defects);
+
+    std::vector<std::pair<int, double>> neighbours;
+    int j;
+    bool is_in;
+    for (int i=0; i<num_defects; i++){
+        neighbours = sg.GetNearestNeighbours(defects_vec[i], num_neighbours, defect_id);
+        for (const auto &neighbour : neighbours){
+            j = defect_id[neighbour.first];
+            UGraph::Edge FoundEdge = lemon::findEdge(
+                defect_graph.g,
+                defect_graph.g.nodeFromId(i),
+                defect_graph.g.nodeFromId(j));
+            is_in = FoundEdge != lemon::INVALID;
+            if (!is_in && i!=j){
+                defect_graph.AddEdge(i, j, -1.0*neighbour.second);
             }
         }
-        is_connected = lemon::connected(defect_graph->g);
     }
 
-    if (!is_connected){
-        throw std::runtime_error("Graph must have only one connected component");
-    }
-
-    MWPM pm(defect_graph->g, defect_graph->length);
+    MWPM pm(defect_graph.g, defect_graph.length);
     bool success = pm.run();
     if (!success){
         throw BlossomFailureException();
@@ -196,14 +204,13 @@ MatchingResult LemonDecodeMatchNeighbourhood(WeightedStabiliserGraph& sg, const 
 
     std::vector<int> path;
     int i;
-    int j;
     std::set<int> qids;
     while (remaining_defects.size() > 0){
         i = *remaining_defects.begin();
         remaining_defects.erase(remaining_defects.begin());
-        j = defect_graph->g.id(pm.mate(defect_graph->g.nodeFromId(i)));
+        j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         remaining_defects.erase(j);
-        path = sg.GetPath(d(i), d(j));
+        path = sg.GetPath(defects_vec[i], defects_vec[j]);
         for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
             qids = sg.QubitIDs(path[k], path[k+1]);
             for (auto qid : qids){

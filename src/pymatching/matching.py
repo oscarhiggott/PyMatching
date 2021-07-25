@@ -173,15 +173,11 @@ class Matching:
                                 "to a scipy.csc_matrix")
         else:
             self.load_from_networkx(H)
-        num_components = self.stabiliser_graph.get_num_connected_components()
-        if num_components != 1:
-            raise ValueError("Matching graph must have 1 connected component, "\
-                             "but instead has {}".format(num_components))
         if precompute_shortest_paths:
             self.stabiliser_graph.compute_all_pairs_shortest_paths()
 
     def load_from_networkx(self, G):
-        """
+        r"""
         Load a matching graph from a NetworkX graph
 
         Parameters
@@ -199,6 +195,9 @@ class Matching:
             then the ``add_noise`` method can be used to simulate noise and
             flip edges independently in the graph.
         """
+
+        if not isinstance(G, nx.Graph):
+            raise TypeError("G must be a NetworkX graph")
         boundary = _find_boundary_nodes(G)
         num_nodes = G.number_of_nodes()
         all_qubits = set()
@@ -393,27 +392,15 @@ class Matching:
             z = np.array(z, dtype=np.uint8)
         except:
             raise TypeError("Syndrome must be of type numpy.ndarray or "\
-                             "convertible to numpy.ndarray, not {}".format(z))
+                            "convertible to numpy.ndarray, not {}".format(z))
         if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
                                   <= self.num_detectors + len(self.boundary)):
             defects = z.nonzero()[0]
         elif len(z.shape) == 2 and z.shape[0]*z.shape[1] == self.num_detectors:
-            num_nodes = self.stabiliser_graph.get_num_nodes()
-            max_num_defects = z.shape[0]*z.shape[1]
-            if max_num_defects > num_nodes:
-                raise ValueError(
-                    "Syndrome size {}x{} exceeds the number of nodes in the "\
-                    "matching graph ({})".format(z.shape[0], z.shape[1], num_nodes)
-                )
             times, checks = z.T.nonzero()
             defects = times*z.shape[0] + checks
         else:
             raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
-        if len(defects) % 2 != 0:
-            if len(self.boundary) == 0:
-                raise ValueError("Syndrome must contain an even number of defects "
-                                 "if no boundary vertex is given.")
-            defects = np.setxor1d(defects, np.array(next(iter(self.boundary))))
         if num_neighbours is None:
             res = decode(self.stabiliser_graph, defects, return_weight)
         else:
@@ -508,6 +495,7 @@ class Matching:
         weights=np.array([e[2]['weight'] for e in G.edges(data=True)])
         normalised_weights = 0.2+2*weights/np.max(weights)
         nx.draw_networkx_edges(G, pos=pos, width=normalised_weights)
+
         def qid_to_str(qid):
             if len(qid) == 0:
                 return ""
