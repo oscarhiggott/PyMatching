@@ -119,6 +119,25 @@ class Matching:
             `num_neighbours=None` in `decode`), then setting this option
             to True will precompute the all-pairs shortest paths.
             By default False
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> import math
+        >>> m = pymatching.Matching()
+        >>> m.add_edge(0, 1, qubit_id=0, weight=0.1)
+        >>> m.add_edge(1, 2, qubit_id=1, weight=0.15)
+        >>> m.add_edge(2, 3, qubit_id={2, 0}, weight=0.2)
+        >>> m.set_boundary_nodes({0, 3})
+        >>> m
+        <pymatching.Matching object with 3 qubits, 2 detectors, 2 boundary nodes, and 3 edges>
+
+        Matching objects can also be created from a check matrix (provided as a scipy.sparse matrix,
+        dense numpy array, or list of lists):
+        >>> import pymatching
+        >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
+        >>> m
+        <pymatching.Matching object with 4 qubits, 3 detectors, 1 boundary node, and 4 edges>
             """
         self.matching_graph = MatchingGraph()
         if H is None:
