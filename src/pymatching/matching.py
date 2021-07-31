@@ -76,7 +76,11 @@ class Matching:
             attributes ``qubit_id``, ``weight`` and ``error_probability``. 
             ``qubit_id`` should be an int or a set of ints. If there 
             are :math:`N` qubits then the union of all ints in the ``qubit_id`` 
-            attributes in the graph should be the integers :math:`0\ldots N-1`.  
+            attributes in the graph should be the integers :math:`0\ldots N-1`.
+            Note that the ``qubit_id`` attribute can instead be used to store the indices
+            of logical observables flipped by an error on the corresponding edge
+            (e.g. a frame change in an error instruction in a stim detector error model).
+            If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
             Each ``weight`` attribute should be a non-negative float. If 
             every edge is assigned an error_probability between zero and one, 
             then the ``add_noise`` method can be used to simulate noise and 
@@ -141,6 +145,10 @@ class Matching:
             ``qubit_id`` should be an int or a set of ints. If there
             are :math:`N` qubits then the union of all ints in the ``qubit_id``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
+            Note that the ``qubit_id`` attribute can instead be used to store the indices
+            of logical observables flipped by an error on the corresponding edge
+            (e.g. a frame change in an error instruction in a stim detector error model).
+            If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
             Each ``weight`` attribute should be a non-negative float. If
             every edge is assigned an error_probability between zero and one,
             then the ``add_noise`` method can be used to simulate noise and
