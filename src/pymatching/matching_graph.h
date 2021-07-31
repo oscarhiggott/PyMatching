@@ -21,6 +21,7 @@
 #include <pybind11/numpy.h>
 #include <memory>
 #include <set>
+#include <string>
 #include <cstdint>
 
 namespace py = pybind11;

@@ -294,6 +294,23 @@ def test_draw_matching():
     m.draw()
 
 
+def test_add_edge():
+    m = Matching()
+    m.add_edge(0, 1)
+    m.add_edge(1, 2)
+    assert m.num_nodes == 3
+    assert m.num_edges == 2
+
+    m = Matching()
+    m.add_edge(0, 1, weight=0.123, error_probability=0.6)
+    m.add_edge(1, 2, weight=0.6, error_probability=0.3, qubit_id=0)
+    m.add_edge(2, 3, weight=0.01, error_probability=0.5, qubit_id={1, 2})
+    expected = [(0, 1, {'qubit_id': set(), 'weight': 0.123, 'error_probability': 0.6}),
+                (1, 2, {'qubit_id': {0}, 'weight': 0.6, 'error_probability': 0.3}),
+                (2, 3, {'qubit_id': {1, 2}, 'weight': 0.01, 'error_probability': 0.5})]
+    assert m.edges() == expected
+
+
 def test_load_matching_from_dense_array():
     H = np.array([[1, 1, 0], [0, 1, 1]])
     m = Matching()

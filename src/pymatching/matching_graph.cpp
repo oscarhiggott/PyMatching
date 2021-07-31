@@ -53,8 +53,26 @@ void MatchingGraph::AddEdge(
     double weight, 
     double error_probability, 
     bool has_error_probability){
+        if (has_error_probability && (error_probability > 1 || error_probability < 0)){
+            throw std::invalid_argument("error_probability must be between 0 and 1");
+        }
+        if (node1 < 0 || node2 < 0){
+            throw std::invalid_argument("Node IDs must be non-negative");
+        }
+        auto n1 = boost::vertex(node1, matching_graph);
+        auto n2 = boost::vertex(node2, matching_graph);
+        int num_nodes = GetNumNodes();
+        bool nodes_in_graph = (n1 < num_nodes) && (n2 < num_nodes);
+        if (nodes_in_graph && boost::edge(n1, n2, matching_graph).second){
+            throw std::invalid_argument("This edge already exists in the graph. "
+                                        "Parallel edges are not supported.");
+        }
+        if (weight < 0){
+            throw std::invalid_argument("Edge weights must be non-negative");
+        }
         if (!has_error_probability){
             all_edges_have_error_probabilities = false;
+            error_probability = -1;
         }
         connected_components_need_updating = true;
         WeightedEdgeData data;
@@ -63,8 +81,8 @@ void MatchingGraph::AddEdge(
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
         boost::add_edge(
-            boost::vertex(node1, matching_graph),
-            boost::vertex(node2, matching_graph),
+            n1,
+            n2,
             data, 
             matching_graph);
 }
@@ -199,8 +217,11 @@ class DijkstraPathVisitor : public boost::default_dijkstra_visitor
 std::vector<int> MatchingGraph::GetPath(
     int source, int target){
     int n = boost::num_vertices(matching_graph);
-    assert(source < n);
-    assert(target < n);
+    if (source >= n || target >= n
+        || source < 0 || target < 0){
+        throw std::invalid_argument("source and target must non-negative and less "
+                                    "than the number of nodes");
+    }
     double inf = std::numeric_limits<double>::max();
     ResetDijkstraNeighbours();
     _distances[source] = 0;
@@ -359,6 +380,11 @@ std::set<int> MatchingGraph::GetBoundary() const {
 }
 
 void MatchingGraph::SetBoundary(std::set<int>& boundary) {
+    for (auto b: boundary){
+        if (b < 0){
+            throw std::invalid_argument("Boundary nodes must be non-negative.");
+        }
+    }
     this->boundary = boundary;
     connected_components_need_updating = true;
     return;
@@ -386,10 +412,17 @@ bool MatchingGraph::HasComputedAllPairsShortestPaths() const {
 
 int MatchingGraph::GetNumConnectedComponents() {
     if (connected_components_need_updating){
-        component.resize(boost::num_vertices(matching_graph));
+        component.resize(GetNumNodes());
         num_components = boost::connected_components(matching_graph, &component[0]);
         component_boundary.resize(num_components, -1);
         for (auto b : boundary){
+            if (b >= GetNumNodes() || b < 0){
+                throw std::invalid_argument(
+                    "Boundary node ID " + std::to_string(b)
+                    + " does not correspond to a node in the graph, which "
+                    "has " + std::to_string(GetNumNodes()) + " nodes."
+                );
+            }
             int c = component[b];
             if (component_boundary[c] == -1){
                 component_boundary[c] = b;
