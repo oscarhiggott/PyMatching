@@ -13,17 +13,19 @@
 # limitations under the License.
 
 import warnings
+from typing import Union, List, Set, Tuple, Dict
 
 import matplotlib.cbook
 import numpy as np
 import networkx as nx
+import scipy
 from scipy.sparse import csc_matrix
 
 from pymatching._cpp_mwpm import (exact_matching, local_matching,
                                   MatchingGraph)
 
 
-def _find_boundary_nodes(G):
+def _find_boundary_nodes(graph: nx.Graph):
     """Find all boundary nodes in G
 
     Find the boundary nodes in G, each of which have the attribute
@@ -32,7 +34,7 @@ def _find_boundary_nodes(G):
 
     Parameters
     ----------
-    G : NetworkX graph
+    graph : NetworkX graph
         The matching graph.
 
     Returns
@@ -40,7 +42,7 @@ def _find_boundary_nodes(G):
     set of int
         The indices of the boundary nodes in G.
     """
-    return {i for i, attr in G.nodes(data=True)
+    return {i for i, attr in graph.nodes(data=True)
             if attr.get("is_boundary", False)}
 
 
@@ -56,12 +58,15 @@ class Matching:
     graph, with node and edge attributes used to specify edge weights,
     qubit ids, boundaries and error probabilities.
     """
-    def __init__(self, H=None, spacelike_weights=None,
-                 error_probabilities=None, 
-                 repetitions=None,
-                 timelike_weights=None,
-                 measurement_error_probability=None,
-                 precompute_shortest_paths=False):
+    def __init__(self,
+                 H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]]=None,
+                 spacelike_weights: Union[float, np.ndarray]=None,
+                 error_probabilities: Union[float, np.ndarray]=None,
+                 repetitions: int=None,
+                 timelike_weights: float=None,
+                 measurement_error_probability: float=None,
+                 precompute_shortest_paths: bool=False
+                 ):
         r"""Constructor for the Matching class
 
         Parameters
@@ -131,7 +136,7 @@ class Matching:
         if precompute_shortest_paths:
             self.matching_graph.compute_all_pairs_shortest_paths()
 
-    def load_from_networkx(self, G):
+    def load_from_networkx(self, G: nx.Graph) -> None:
         r"""
         Load a matching graph from a NetworkX graph
 
@@ -192,11 +197,14 @@ class Matching:
                 "minus one.".format(max(all_qubits, default=0), len(all_qubits))
             )
 
-    def load_from_check_matrix(self, H, spacelike_weights=None,
-                               error_probabilities=None,
-                               repetitions=None,
-                               timelike_weights=None,
-                               measurement_error_probability=None):
+    def load_from_check_matrix(self,
+                               H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
+                               spacelike_weights: Union[float, np.ndarray]=None,
+                               error_probabilities: Union[float, np.ndarray]=None,
+                               repetitions: int=None,
+                               timelike_weights: float=None,
+                               measurement_error_probability: float=None
+                               ) -> None:
         """
         Load a matching graph from a check matrix
 
@@ -277,11 +285,11 @@ class Matching:
                                                set(), timelike_weights, p_meas, p_meas >= 0)
 
     @property
-    def num_qubits(self):
+    def num_qubits(self) -> int:
         return self.matching_graph.get_num_qubits()
     
     @property
-    def boundary(self):
+    def boundary(self) -> Set[int]:
         """Return the indices of the boundary nodes
 
         Returns
@@ -292,14 +300,18 @@ class Matching:
         return self.matching_graph.get_boundary()
 
     @property
-    def num_nodes(self):
+    def num_nodes(self) -> int:
         return self.matching_graph.get_num_nodes()
 
     @property
-    def num_detectors(self):
+    def num_detectors(self) -> int:
         return self.num_nodes - len(self.boundary)
     
-    def decode(self, z, num_neighbours=30, return_weight=False):
+    def decode(self,
+               z: np.ndarray,
+               num_neighbours: int=30,
+               return_weight: bool=False
+               ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """Decode the syndrome `z` using minimum-weight perfect matching
 
         If the parity of `z` is odd, then an arbitrarily chosen boundary node in
@@ -369,7 +381,7 @@ class Matching:
         else:
             return res.correction
     
-    def add_noise(self):
+    def add_noise(self) -> Union[Tuple[np.ndarray, np.ndarray], None]:
         """Add noise by flipping edges in the matching graph with
         a probability given by the error_probility edge attribute.
         The ``error_probability`` must be set for all edges for this 
@@ -389,7 +401,7 @@ class Matching:
             return None
         return self.matching_graph.add_noise()
     
-    def edges(self):
+    def edges(self) -> List[Tuple[int, int, Dict]]:
         """Edges of the matching graph
 
         Returns a list of edges of the matching graph. Each edge is a 
@@ -412,7 +424,7 @@ class Matching:
             'error_probability': e[2].error_probability
             }) for e in edata]
     
-    def to_networkx(self):
+    def to_networkx(self) -> nx.Graph:
         """Convert to NetworkX graph
 
         Returns a NetworkX graph corresponding to the matching graph. Each edge 
@@ -432,7 +444,7 @@ class Matching:
             G.nodes[i]['is_boundary'] = is_boundary
         return G
     
-    def draw(self):
+    def draw(self) -> None:
         """Draw the matching graph using matplotlib
 
         Draws the matching graph as a matplotlib graph. Stabiliser nodes are 
@@ -465,7 +477,7 @@ class Matching:
         edge_labels = {(s, t): qid_to_str(d['qubit_id']) for (s,t,d) in G.edges(data=True)}
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         N = self.num_qubits
         M = self.num_detectors
         B = len(self.boundary)
