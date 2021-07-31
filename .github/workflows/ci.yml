@@ -35,5 +35,5 @@ jobs:
         pip install -e .
     - name: Test with pytest
       run: |
-        pytest tests --cov=src --cov-report term
+        pytest tests src --cov=src --cov-report term
     - uses: codecov/codecov-action@v1

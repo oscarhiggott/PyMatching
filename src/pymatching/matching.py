@@ -136,13 +136,69 @@ class Matching:
         if precompute_shortest_paths:
             self.matching_graph.compute_all_pairs_shortest_paths()
 
-    def load_from_networkx(self, G: nx.Graph) -> None:
+    def add_edge(
+            self,
+            node1: int,
+            node2: int,
+            qubit_id: Union[int, Set[int]] = None,
+            weight: float = 1.0,
+            error_probability: float = None
+            ) -> None:
+        """
+        Add an edge to the matching graph
+
+        Parameters
+        ----------
+        node1: int
+            The ID of node1 in the new edge (node1, node2)
+        node2: int
+            The ID of node2 in the new edge (node1, node2)
+        qubit_id: set[int] or int, optional
+            The IDs of any qubits that suffer an error when this edge flips. Alternatively,
+            this attribute can be used to store the IDs of any logical observables that are
+            flipped when an error occurs on an edge. By default None
+        weight: float, optional
+            The weight of the edge, which must be non-negative, by default 1.0
+        error_probability: float, optional
+            The probability that the edge is flipped. This is used by the `add_noise()` method
+            to sample from the distribution defined by the matching graph (in which each edge
+            is flipped independently with the corresponding `error_probability`). By default None
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> m = pymatching.Matching()
+        >>> m.add_edge(0, 1)
+        >>> m.add_edge(1, 2)
+        >>> print(m.num_edges)
+        2
+        >>> print(m.num_nodes)
+        3
+
+        >>> import pymatching
+        >>> import math
+        >>> m = pymatching.Matching()
+        >>> m.add_edge(0, 1, qubit_id=2, weight=math.log((1-0.05)/0.05), error_probability=0.05)
+        >>> m.add_edge(1, 2, qubit_id=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> m.add_edge(2, 0, qubit_id={1, 2}, weight=math.log((1-0.2)/0.2), error_probability=0.2)
+        >>> m
+        <pymatching.Matching object with 3 qubits, 3 detectors, 0 boundary nodes, and 3 edges>
+        """
+        if isinstance(qubit_id, (int, np.integer)):
+            qubit_id = {int(qubit_id)}
+        qubit_id = set() if qubit_id is None else qubit_id
+        has_error_probability = error_probability is not None
+        error_probability = error_probability if has_error_probability else -1
+        self.matching_graph.add_edge(node1, node2, qubit_id, weight,
+                                     error_probability, has_error_probability)
+
+    def load_from_networkx(self, graph: nx.Graph) -> None:
         r"""
         Load a matching graph from a NetworkX graph
 
         Parameters
         ----------
-        G : networkx.Graph
+        graph : networkx.Graph
             If `G` has `M` nodes, each node
             `m` in `G` should be an integer :math:`0<m<M-1`, and each node should
             be unique. Each edge in the NetworkX graph can have optional
@@ -158,15 +214,32 @@ class Matching:
             every edge is assigned an error_probability between zero and one,
             then the ``add_noise`` method can be used to simulate noise and
             flip edges independently in the graph.
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> import networkx as nx
+        >>> import math
+        >>> g = nx.Graph()
+        >>> g.add_edge(0, 1, qubit_id=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> g.add_edge(1, 2, qubit_id=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
+        >>> g.node[0]['is_boundary'] = True
+        >>> g.node[2]['is_boundary'] = True
+        >>> m = pymatching.Matching(g)
+        >>> m
+        <pymatching.Matching object with 2 qubits, 1 detector, 2 boundary nodes, and 2 edges>
+        >>> m.edges()
+        [(0, 1, {'qubit_id': {0}, 'weight': 2.1972245773362196, 'error_probability': 0.1}),
+         (1, 2, {'qubit_id': {1}, 'weight': 1.7346010553881064, 'error_probability': 0.15})]
         """
 
-        if not isinstance(G, nx.Graph):
+        if not isinstance(graph, nx.Graph):
             raise TypeError("G must be a NetworkX graph")
-        boundary = _find_boundary_nodes(G)
-        num_nodes = G.number_of_nodes()
+        boundary = _find_boundary_nodes(graph)
+        num_nodes = graph.number_of_nodes()
         all_qubits = set()
         g = MatchingGraph(self.num_detectors, boundary)
-        for (u, v, attr) in G.edges(data=True):
+        for (u, v, attr) in graph.edges(data=True):
             u, v = int(u), int(v)
             if u >= num_nodes or v>= num_nodes:
                 raise ValueError("Every node id must be less "\
@@ -189,7 +262,7 @@ class Matching:
             if weight < 0:
                 raise ValueError("Weights cannot be negative.")
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, qubit_id, weight, e_prob, 0<=e_prob<=1)
+            g.add_edge(u, v, qubit_id, weight, e_prob, 0 <= e_prob <= 1)
         self.matching_graph = g
         if max(all_qubits, default=-1) != len(all_qubits) - 1:
             raise ValueError(
@@ -210,7 +283,7 @@ class Matching:
 
         Parameters
         ----------
-        H : `scipy.spmatrix` or `numpy.ndarray`
+        H : `scipy.spmatrix` or `numpy.ndarray` or List[List[int]]
             The quantum code to be decoded with minimum-weight perfect
             matching, given as a binary check matrix (scipy sparse
             matrix or numpy.ndarray)
@@ -234,6 +307,21 @@ class Matching:
         measurement_error_probability : float, optional
             If `repetitions>1`, gives the probability of a measurement
             error to be used for the add_noise method. By default None
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
+        >>> m
+        <pymatching.Matching object with 4 qubits, 3 detectors, 1 boundary node, and 4 edges>
+
+        Matching objects can also be initialised from a sparse scipy matrix:
+        >>> import pymatching
+        >>> from scipy.sparse import csr_matrix
+        >>> H = csr_matrix([[1, 1, 0], [0, 1, 1]])
+        >>> m = pymatching.Matching(H)
+        >>> m
+        <pymatching.Matching object with 3 qubits, 2 detectors, 1 boundary node, and 3 edges>
         """
         try:
             H = csc_matrix(H)
@@ -282,10 +370,43 @@ class Matching:
         for t in range(repetitions - 1):
             for i in range(H.shape[0]):
                 self.matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
-                                               set(), timelike_weights, p_meas, p_meas >= 0)
+                                             set(), timelike_weights, p_meas, p_meas >= 0)
+
+    def set_boundary_nodes(self, nodes: Set[int]) -> None:
+        """
+        Set boundary nodes in the matching graph. This defines the
+        nodes in `nodes` to be boundary nodes.
+
+        Parameters
+        ----------
+        nodes: set[int]
+            The IDs of the nodes to be set as boundary nodes
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> m = pymatching.Matching()
+        >>> m.add_edge(0, 1)
+        >>> m.add_edge(1, 2)
+        >>> m.set_boundary_nodes({0, 2})
+        >>> m.boundary
+        {0, 2}
+        >>> m
+        <pymatching.Matching object with 0 qubits, 1 detector, 2 boundary nodes, and 2 edges>
+
+        """
+        self.matching_graph.set_boundary(nodes)
 
     @property
     def num_qubits(self) -> int:
+        """
+        The number of qubit IDs defined in the matching graph
+
+        Returns
+        -------
+        int
+            Number of qubits
+        """
         return self.matching_graph.get_num_qubits()
     
     @property
@@ -301,10 +422,41 @@ class Matching:
 
     @property
     def num_nodes(self) -> int:
+        """
+        The number of nodes in the matching graph
+
+        Returns
+        -------
+        int
+            The number of nodes
+
+        """
         return self.matching_graph.get_num_nodes()
 
     @property
+    def num_edges(self) -> int:
+        """
+        The number of edges in the matching graph
+
+        Returns
+        -------
+        int
+            The number of edges
+        """
+        return self.matching_graph.get_num_edges()
+
+    @property
     def num_detectors(self) -> int:
+        """
+        The number of detectors in the matching graph. A
+        detector is a node that can have a non-trivial syndrome
+        (i.e. it is a node that is not a boundary node).
+
+        Returns
+        -------
+        int
+            The number of detectors
+        """
         return self.num_nodes - len(self.boundary)
     
     def decode(self,
