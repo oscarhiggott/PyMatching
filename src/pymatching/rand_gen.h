@@ -25,7 +25,7 @@ void randomize();
  * 
  * @param s 
  */
-void set_seed(unsigned s);
+void set_seed(unsigned seed);
 
 /**
  * @brief A random double chosen uniformly at random between `from` and `to`

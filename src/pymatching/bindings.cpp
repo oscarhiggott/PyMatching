@@ -52,9 +52,40 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def("has_computed_all_pairs_shortest_paths", &MatchingGraph::HasComputedAllPairsShortestPaths)
      .def("get_num_connected_components", &MatchingGraph::GetNumConnectedComponents);
 
-     m.def("randomize", &randomize);
-     m.def("set_seed", &set_seed, "s"_a);
-     m.def("rand_float", &rand_float, "from"_a, "to"_a);
+     m.def("randomize", &randomize, u8R"(
+        Choose a random seed using std::random_device
+
+        Examples
+        --------
+            >>> import pymatching
+            >>> pymatching.randomize()
+     )");
+     m.def("set_seed", &set_seed, "seed"_a, u8R"(
+        Sets the seed of the random number generator
+
+        Parameters
+        ----------
+        seed: int
+            The seed for the random number generator (must be non-negative)
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> pymatching.set_seed(10)
+
+     )");
+     m.def("rand_float", &rand_float, "from"_a, "to"_a, u8R"(
+        Generate a floating point number chosen uniformly at random
+        over the interval between `from` and `to`
+
+        Parameters
+        ----------
+        from: float
+            Smallest float that can be drawn from the distribution
+
+        to: float
+            Largest float that can be drawn from the distribution
+     )");
 
      py::class_<MatchingResult>(m, "MatchingResult")
      .def_readwrite("correction", &MatchingResult::correction)

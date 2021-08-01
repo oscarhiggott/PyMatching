@@ -24,8 +24,8 @@ static std::random_device rd{};
 global_urng().seed( rd() );
 }
 
-void set_seed( unsigned s) { 
-    global_urng().seed(s); 
+void set_seed( unsigned seed) {
+    global_urng().seed(seed);
 }
 
 double rand_float(double from, double to) {
