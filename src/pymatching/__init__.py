@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pymatching._cpp_mwpm import (randomize, set_seed, rand_float)
+from pymatching._cpp_mwpm import (randomize, set_seed, rand_float, BlossomFailureException)
 from pymatching.matching import *
 
 randomize() # Set random seed using std::random_device

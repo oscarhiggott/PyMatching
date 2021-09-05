@@ -26,7 +26,7 @@ pip install -e ./PyMatching
 ```
 The installation may take a few minutes since the C++ extension has to be compiled. If you'd also like to run the tests, first install [pytest](https://docs.pytest.org/en/stable/), and then run:
 ```
-pytest ./PyMatching/tests
+pytest ./PyMatching/tests ./PyMatching/src
 ```
 
 ## Usage

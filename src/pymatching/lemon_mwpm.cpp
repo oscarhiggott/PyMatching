@@ -38,6 +38,36 @@ const char * BlossomFailureException::what() const throw() {
             "perfect matching problem.";
 }
 
+MatchingResult::MatchingResult() {}
+
+MatchingResult::MatchingResult(py::array_t<std::uint8_t> correction, double weight)
+    : correction(correction), weight(weight) {}
+
+
+std::string arr_repr(py::array_t<std::uint8_t> arr) {
+    std::stringstream ss;
+    ss << "array([";
+    bool first = true;
+    for (auto i : arr) {
+        if (first){
+            first = false;
+        } else {
+            ss << ", ";
+        }
+        ss << i;
+    }
+    ss << "], dtype=uint8)";
+    return ss.str();
+}
+
+std::string MatchingResult::repr() const {
+    std::stringstream ss;
+    ss << "pymatching._cpp_mwpm.MatchingResult(correction=";
+    ss << arr_repr(correction);
+    ss << ", weight=" << weight << ")";
+    return ss.str();
+}
+
 
 class DefectGraph {
     public:
@@ -63,16 +93,16 @@ void DefectGraph::AddEdge(int i, int j, double weight){
 }
 
 
-MatchingResult LemonDecode(
-    MatchingGraph& sg,
+MatchingResult ExactMatching(
+    MatchingGraph& graph,
     const py::array_t<int>& defects,
     bool return_weight
     ){
     MatchingResult matching_result;
-    if (!sg.HasComputedAllPairsShortestPaths()){
-        sg.ComputeAllPairsShortestPaths();
+    if (!graph.HasComputedAllPairsShortestPaths()){
+        graph.ComputeAllPairsShortestPaths();
     }
-    int num_nodes = sg.GetNumNodes();
+    int num_nodes = graph.GetNumNodes();
 
     auto d = defects.unchecked<1>();
     std::set<int> defects_set;
@@ -84,7 +114,7 @@ MatchingResult LemonDecode(
         }
         defects_set.insert(d(i));
     }
-    sg.FlipBoundaryNodesIfNeeded(defects_set);
+    graph.FlipBoundaryNodesIfNeeded(defects_set);
 
     std::vector<int> defects_vec(defects_set.begin(), defects_set.end());
 
@@ -94,7 +124,7 @@ MatchingResult LemonDecode(
 
     for (py::size_t i = 0; i<num_defects; i++){
         for (py::size_t j=i+1; j<num_defects; j++){
-            defect_graph.AddEdge(i, j, -1.0*sg.Distance(
+            defect_graph.AddEdge(i, j, -1.0*graph.Distance(
                 defects_vec[i], defects_vec[j]
                 ));
         }
@@ -106,17 +136,17 @@ MatchingResult LemonDecode(
         throw BlossomFailureException();
     }
 
-    int N = sg.GetNumQubits();
+    int N = graph.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
     for (py::size_t i = 0; i<num_defects; i++){
         int j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         if (i<j){
-            std::vector<int> path = sg.ShortestPath(
+            std::vector<int> path = graph.ShortestPath(
                 defects_vec[i], defects_vec[j]
                 );
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
-                qids = sg.QubitIDs(path[k], path[k+1]);
+                qids = graph.QubitIDs(path[k], path[k+1]);
                 for (auto qid : qids){
                     if ((qid != -1) && (qid >= 0) && (qid < N)){
                         (*correction)[qid] = ((*correction)[qid] + 1) % 2;
@@ -141,7 +171,7 @@ MatchingResult LemonDecode(
 
 
 MatchingResult LocalMatching(
-    MatchingGraph& sg,
+    MatchingGraph& graph,
     const py::array_t<int>& defects,
     int num_neighbours,
     bool return_weight,
@@ -159,7 +189,7 @@ MatchingResult LocalMatching(
     while (true) {
         try{
             return LemonDecodeMatchNeighbourhood(
-                sg,
+                graph,
                 defects_set,
                 num_neighbours,
                 return_weight
@@ -177,14 +207,14 @@ MatchingResult LocalMatching(
 
 
 MatchingResult LemonDecodeMatchNeighbourhood(
-    MatchingGraph& sg,
+    MatchingGraph& graph,
     std::set<int>& defects_set,
     int num_neighbours,
     bool return_weight
     ){
     MatchingResult matching_result;
 
-    int num_nodes = sg.GetNumNodes();
+    int num_nodes = graph.GetNumNodes();
 
     for (auto d : defects_set){
         if (d >= num_nodes){
@@ -194,7 +224,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
         }
     }
 
-    sg.FlipBoundaryNodesIfNeeded(defects_set);
+    graph.FlipBoundaryNodesIfNeeded(defects_set);
 
     std::vector<int> defects_vec(defects_set.begin(), defects_set.end());
     int num_defects = defects_vec.size();
@@ -202,7 +232,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
     for (int i=0; i<num_defects; i++){
         defect_id[defects_vec[i]] = i;
     }
-    num_neighbours = std::min(num_neighbours, num_defects-1) + 1;
+    num_neighbours = std::min(num_neighbours, num_defects-1);
 
     DefectGraph defect_graph(num_defects);
 
@@ -210,7 +240,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
     int j;
     bool is_in;
     for (int i=0; i<num_defects; i++){
-        neighbours = sg.GetNearestNeighbours(defects_vec[i], num_neighbours, defect_id);
+        neighbours = graph.GetNearestNeighbours(defects_vec[i], num_neighbours, defect_id);
         for (const auto &neighbour : neighbours){
             j = defect_id[neighbour.first];
             UGraph::Edge FoundEdge = lemon::findEdge(
@@ -230,7 +260,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
         throw BlossomFailureException();
     }
 
-    int N = sg.GetNumQubits();
+    int N = graph.GetNumQubits();
     auto correction = new std::vector<int>(N, 0);
 
     std::set<int> remaining_defects;
@@ -246,9 +276,9 @@ MatchingResult LemonDecodeMatchNeighbourhood(
         remaining_defects.erase(remaining_defects.begin());
         j = defect_graph.g.id(pm.mate(defect_graph.g.nodeFromId(i)));
         remaining_defects.erase(j);
-        path = sg.GetPath(defects_vec[i], defects_vec[j]);
+        path = graph.GetPath(defects_vec[i], defects_vec[j]);
         for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
-            qids = sg.QubitIDs(path[k], path[k+1]);
+            qids = graph.QubitIDs(path[k], path[k+1]);
             for (auto qid : qids){
                 if ((qid != -1) && (qid >= 0) && (qid < N)){
                     (*correction)[qid] = ((*correction)[qid] + 1) % 2;

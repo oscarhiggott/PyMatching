@@ -385,7 +385,7 @@ class Matching:
                 v1 = H.indices[s] + H.shape[0] * t
                 v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else next(iter(boundary))
                 self.matching_graph.add_edge(v1, v2, {i}, weights[i],
-                                               error_probabilities[i], error_probabilities[i] >= 0)
+                                             error_probabilities[i], error_probabilities[i] >= 0)
         for t in range(repetitions - 1):
             for i in range(H.shape[0]):
                 self.matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
@@ -479,7 +479,7 @@ class Matching:
         return self.num_nodes - len(self.boundary)
     
     def decode(self,
-               z: np.ndarray,
+               z: Union[np.ndarray, List[int]],
                num_neighbours: int=30,
                return_weight: bool=False
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
@@ -499,10 +499,10 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time 
             step `j+1` and time step `j` (for the case where `repetitions>1`).
         num_neighbours : int, optional
-            Number of closest neighbours of each matching graph node to consider 
-            when decoding. If `num_neighbours` is set (as it is by default), 
-            then the local matching decoder in the Appendix of 
-            https://arxiv.org/abs/2010.09626 is used, and `num_neighbours` 
+            Number of closest neighbours (with non-trivial syndrome) of each matching
+            graph node to consider when decoding. If `num_neighbours` is set
+            (as it is by default), then the local matching decoder in
+            https://arxiv.org/abs/2105.13082 is used, and `num_neighbours`
             corresponds to the parameter `m` in the paper. It is recommended 
             to leave `num_neighbours` set to at least 20.
             If `num_neighbours is None`, then instead full matching is 
@@ -518,7 +518,7 @@ class Matching:
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray or list[int]
             A 1D numpy array of ints giving the minimum-weight correction 
             operator. The number of elements equals the number of qubits, 
             and an element is 1 if the corresponding qubit should be flipped, 
@@ -529,6 +529,59 @@ class Matching:
             The sum of the weights of the edges in the minimum-weight perfect 
             matching.
 
+        Examples
+        --------
+        >>> import pymatching
+        >>> import numpy as np
+        >>> H = np.array([[1, 1, 0, 0],
+        ...               [0, 1, 1, 0],
+        ...               [0, 0, 1, 1]])
+        >>> m = pymatching.Matching(H)
+        >>> z = np.array([0, 1, 0])
+        >>> m.decode(z)
+        array([1, 1, 0, 0], dtype=uint8)
+
+        Each bit in the correction provided by Matching.decode corresponds to a
+        qubit_id. The index of a bit in a correction corresponds to its qubit_id.
+        For example, here an error on edge (0, 1) flips qubit_id 2 and 3, as
+        inferred by the minimum-weight correction:
+        >>> import pymatching
+        >>> m = pymatching.Matching()
+        >>> m.add_edge(0, 1, qubit_id={2, 3})
+        >>> m.add_edge(1, 2, qubit_id=1)
+        >>> m.add_edge(2, 0, qubit_id=0)
+        >>> m.decode([1, 1, 0])
+        array([0, 0, 1, 1], dtype=uint8)
+
+        To decode with a phenomenological noise model (qubits and measurements both suffering
+        bit-flip errors), you can provide a check matrix and number of syndrome repetitions to
+        construct a matching graph with a time dimension (where nodes in consecutive time steps
+        are connected by an edge), and then decode with a 2D syndrome
+        (dimension 0 is space/qubits, dimension 1 is time):
+        >>> import pymatching
+        >>> import numpy as np
+        >>> np.random.seed(0)
+        >>> H = np.array([[1, 1, 0, 0],
+        ...               [0, 1, 1, 0],
+        ...               [0, 0, 1, 1]])
+        >>> m = pymatching.Matching(H, repetitions=5)
+        >>> data_qubit_noise = (np.random.rand(4, 5) < 0.1).astype(np.uint8)
+        >>> print(data_qubit_noise)
+        [[0 0 0 0 0]
+         [0 0 0 0 0]
+         [0 0 0 0 1]
+         [1 1 0 0 0]]
+        >>> cumulative_noise = (np.cumsum(data_qubit_noise, 1) % 2).astype(np.uint8)
+        >>> syndrome = H@cumulative_noise % 2
+        >>> print(syndrome)
+        [[0 0 0 0 0]
+         [0 0 0 0 1]
+         [1 0 0 0 1]]
+        >>> syndrome[:,:-1] ^= (np.random.rand(3, 4) < 0.1).astype(np.uint8)
+        >>> # Take the parity of consecutive timesteps to construct a difference syndrome:
+        >>> syndrome[:,1:] = syndrome[:,:-1] ^ syndrome[:,1:]
+        >>> m.decode(syndrome)
+        array([0, 0, 1, 0], dtype=uint8)
         """
         try:
             z = np.array(z, dtype=np.uint8)
