@@ -28,6 +28,43 @@
 #include "rand_gen.h"
 
 
+WeightedEdgeData::WeightedEdgeData() {}
+
+WeightedEdgeData::WeightedEdgeData(
+    std::set<int> qubit_ids,
+    double weight,
+    double error_probability,
+    bool has_error_probability
+): qubit_ids(qubit_ids), weight(weight),
+error_probability(error_probability), has_error_probability(has_error_probability) {}
+
+
+std::string set_repr(std::set<int> x) {
+    std::stringstream ss;
+    ss << "{";
+    bool first = true;
+    for (auto i : x){
+        if (first){
+            first = false;
+        } else {
+            ss << ", ";
+        }
+        ss << i;
+    }
+    ss << "}";
+    return ss.str();
+}
+
+
+std::string WeightedEdgeData::repr() const {
+    std::stringstream ss;
+    ss << "pymatching._cpp_mwpm.WeightedEdgeData(";
+    ss << set_repr(qubit_ids) << ", " << weight << ", " << error_probability << ", "
+    << has_error_probability << ")";
+    return ss.str();
+}
+
+
 MatchingGraph::MatchingGraph()
     : all_edges_have_error_probabilities(true),
      connected_components_need_updating(true) {
@@ -157,15 +194,25 @@ void MatchingGraph::ResetDijkstraNeighbours(){
 std::vector<std::pair<int, double>> MatchingGraph::GetNearestNeighbours(
     int source, int num_neighbours, std::vector<int>& defect_id){
     int n = boost::num_vertices(matching_graph);
-    assert(source < n);
-    assert(defect_id.size() == n);
+    if (source < 0 || source >= n) {
+        throw std::invalid_argument("source must be non-negative and less than the number of nodes "
+                                    "in the matching graph");
+    }
+    if (defect_id.size() != n) {
+        throw std::invalid_argument("defect_id must have the same number of elements as the number "
+                                    "of nodes in the matching graph");
+    }
+    if (num_neighbours < 0) {
+        throw std::invalid_argument("num_neighbours must be a positive integer");
+    }
     double inf = std::numeric_limits<double>::max();
     ResetDijkstraNeighbours();
     _distances[source] = 0;
     std::vector<int> examined_defects;
     std::vector<int> discovered_nodes;
+    int source_is_defect = defect_id[source] > -1;
     DijkstraNeighbourVisitor vis = DijkstraNeighbourVisitor(
-        defect_id, num_neighbours, examined_defects, discovered_nodes);
+        defect_id, num_neighbours + source_is_defect, examined_defects, discovered_nodes);
     vertex_descriptor from = boost::vertex(source, matching_graph);
     try {
         boost::dijkstra_shortest_paths_no_color_map_no_init(matching_graph, from,
@@ -182,7 +229,9 @@ std::vector<std::pair<int, double>> MatchingGraph::GetNearestNeighbours(
     
     std::vector<std::pair<int, double>> neighbours;
     for (auto d : examined_defects){
-        neighbours.push_back({d, _distances[d]});
+        if (d != source){
+            neighbours.push_back({d, _distances[d]});
+        }
     }
 
     for (auto n : discovered_nodes){
@@ -304,7 +353,6 @@ int MatchingGraph::GetNumQubits() const {
     auto qid = boost::get(&WeightedEdgeData::qubit_ids, matching_graph);
     int num_edges = boost::num_edges(matching_graph);
     int maxid = -1;
-    std::set<int> qubits;
     std::set<int> edge_qubits;
     auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
@@ -313,18 +361,12 @@ int MatchingGraph::GetNumQubits() const {
             if (qubit >= maxid){
                 maxid = qubit;
             }
-            if (qubit >=0){
-                qubits.insert(qubit);
-            } else if (qubit != -1){
+            if (qubit < 0 && qubit != -1){
                 throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
             }
         }
     }
-    int num_qubits = qubits.size();
-    if (maxid + 1 != num_qubits){
-        throw std::runtime_error("Qubit ids must be numbered 0...(N-1).");
-    }
-    return num_qubits;
+    return maxid + 1;
 }
 
 int MatchingGraph::GetNumNodes() const {
@@ -332,10 +374,16 @@ int MatchingGraph::GetNumNodes() const {
 };
 
 std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
+    int num_nodes = GetNumNodes();
+    if (node1 >= num_nodes || node2 >= num_nodes
+        || node1 < 0 || node2 < 0){
+        throw std::invalid_argument("node1 and node2 must non-negative and less "
+                                    "than the number of nodes");
+    }
     auto e = boost::edge(node1, node2, matching_graph);
     if (!e.second){
-        std::runtime_error("Graph does not contain edge (" 
-                        + std::to_string((int)node1)
+        throw std::invalid_argument("Graph does not contain edge ("
+                        + std::to_string((int)node1) + ", "
                         + std::to_string((int)node2) + ").");
     }
     return matching_graph[e.first].qubit_ids;
@@ -475,4 +523,12 @@ void MatchingGraph::FlipBoundaryNodesIfNeeded(std::set<int> &defects){
 
 bool MatchingGraph::AllEdgesHaveErrorProbabilities() const {
     return all_edges_have_error_probabilities;
+}
+
+std::string MatchingGraph::repr() const {
+    std::stringstream ss;
+    ss << "<pymatching._cpp_mwpm.MatchingGraph object with ";
+    ss << GetNumQubits() << " qubits, " << GetNumNodes() << " nodes, ";
+    ss << GetNumEdges() << " edges and " << GetBoundary().size() << " boundary nodes>";
+    return ss.str();
 }
