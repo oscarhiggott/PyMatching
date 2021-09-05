@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 import networkx as nx
 import numpy as np
 import pytest
@@ -23,17 +21,17 @@ from pymatching._cpp_mwpm import local_matching
 
 
 g = nx.Graph()
-g.add_edge(0,1, qubit_id=0, weight=0.3)
-g.add_edge(1,2, qubit_id=1, weight=0.1)
-g.add_edge(2,3, qubit_id=2, weight=0.1)
-g.add_edge(3,4, qubit_id=3, weight=0.1)
-g.add_edge(4,5, qubit_id=4, weight=0.1)
+g.add_edge(0, 1, qubit_id=0, weight=0.3)
+g.add_edge(1, 2, qubit_id=1, weight=0.1)
+g.add_edge(2, 3, qubit_id=2, weight=0.1)
+g.add_edge(3, 4, qubit_id=3, weight=0.1)
+g.add_edge(4, 5, qubit_id=4, weight=0.1)
 m = Matching(g)
 
 
 def test_dijkstra_nearest_neighbour_nodes():
-    assert (set(m.matching_graph.get_nearest_neighbours(2, 3, [0,0,1,-1,2,-1]))
-            == {(2, 0.0), (1, 0.1), (4, 0.2)})
+    assert (set(m.matching_graph.get_nearest_neighbours(2, 3, [0, 1, 2, -1, 3, -1]))
+            == {(0, 0.4), (1, 0.1), (4, 0.2)})
 
 
 def test_dijkstra_path():
