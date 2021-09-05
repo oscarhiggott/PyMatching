@@ -19,9 +19,11 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/stl.h>
 #include <memory>
 #include <set>
 #include <string>
+#include <sstream>
 #include <cstdint>
 
 namespace py = pybind11;
@@ -31,6 +33,14 @@ struct WeightedEdgeData {
     double weight;
     double error_probability;
     bool has_error_probability;
+    WeightedEdgeData();
+    WeightedEdgeData(
+        std::set<int> qubit_ids,
+        double weight,
+        double error_probability,
+        bool has_error_probability
+    );
+    std::string repr() const;
 };
 
 typedef boost::adjacency_list < boost::listS, boost::vecS, boost::undirectedS,
@@ -219,6 +229,7 @@ class MatchingGraph{
         */
         bool AllEdgesHaveErrorProbabilities() const;
         void FlipBoundaryNodesIfNeeded(std::set<int> &defects);
+        std::string repr() const;
     private:
         /**
          * @brief The indices of the boundary nodes
