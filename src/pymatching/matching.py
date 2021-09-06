@@ -242,8 +242,8 @@ class Matching:
         >>> g = nx.Graph()
         >>> g.add_edge(0, 1, qubit_id=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
         >>> g.add_edge(1, 2, qubit_id=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
-        >>> g.node[0]['is_boundary'] = True
-        >>> g.node[2]['is_boundary'] = True
+        >>> g.nodes[0]['is_boundary'] = True
+        >>> g.nodes[2]['is_boundary'] = True
         >>> m = pymatching.Matching(g)
         >>> m
         <pymatching.Matching object with 2 qubits, 1 detector, 2 boundary nodes, and 2 edges>
