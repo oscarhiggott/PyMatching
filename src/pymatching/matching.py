@@ -247,8 +247,6 @@ class Matching:
         >>> m = pymatching.Matching(g)
         >>> m
         <pymatching.Matching object with 2 qubits, 1 detector, 2 boundary nodes, and 2 edges>
-        >>> m.edges()
-        [(0, 1, {'qubit_id': {0}, 'weight': 2.1972245773362196, 'error_probability': 0.1}), (1, 2, {'qubit_id': {1}, 'weight': 1.7346010553881064, 'error_probability': 0.15})]
         """
 
         if not isinstance(graph, nx.Graph):
