@@ -427,7 +427,12 @@ class Matching:
     
     @property
     def boundary(self) -> Set[int]:
-        """Return the indices of the boundary nodes
+        """Return the indices of the boundary nodes.
+
+        Note that this property is a copy of the set of boundary nodes.
+        In-place modification of the set Matching.boundary will not
+        change the boundary nodes of the matching graph - boundary nodes should
+        instead be set or updated using the `Matching.set_boundary_nodes` method.
 
         Returns
         -------
