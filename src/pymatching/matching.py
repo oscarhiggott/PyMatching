@@ -487,9 +487,15 @@ class Matching:
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """Decode the syndrome `z` using minimum-weight perfect matching
 
-        If the parity of `z` is odd, then an arbitrarily chosen boundary node in
+        If the parity of the weight of `z` is odd and the matching graph has one connected component,
+        then an arbitrarily chosen boundary node in
         ``self.boundary`` is flipped, and all other stabiliser and 
-        boundary nodes are left unchanged.
+        boundary nodes are left unchanged. If the matching graph has multiple connected
+        components, then the parity of the syndrome weight within each connected component is
+        checked separately, and if a connected component has odd parity then an arbitrarily
+        chosen boundary node in the same connected component is highlighted. If the parity of the
+        syndrome weight in a connected component is odd, and the same connected component does not
+        have a boundary node, then a `ValuerError` is raised.
 
         Parameters
         ----------
