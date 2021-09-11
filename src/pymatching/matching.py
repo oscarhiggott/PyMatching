@@ -495,7 +495,7 @@ class Matching:
         checked separately, and if a connected component has odd parity then an arbitrarily
         chosen boundary node in the same connected component is highlighted. If the parity of the
         syndrome weight in a connected component is odd, and the same connected component does not
-        have a boundary node, then a `ValuerError` is raised.
+        have a boundary node, then a `ValueError` is raised.
 
         Parameters
         ----------
