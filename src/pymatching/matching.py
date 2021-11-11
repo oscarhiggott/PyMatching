@@ -60,11 +60,11 @@ class Matching:
     """
     def __init__(self,
                  H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]]=None,
-                 spacelike_weights: Union[float, np.ndarray]=None,
-                 error_probabilities: Union[float, np.ndarray]=None,
-                 repetitions: int=None,
-                 timelike_weights: float=None,
-                 measurement_error_probability: float=None,
+                 spacelike_weights: Union[float, np.ndarray, List[float]] = None,
+                 error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                 repetitions: int = None,
+                 timelike_weights: Union[float, np.ndarray, List[float]] = None,
+                 measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
                  precompute_shortest_paths: bool=False
                  ):
         r"""Constructor for the Matching class
@@ -107,12 +107,19 @@ class Matching:
             provided as a check matrix, not a NetworkX graph. By default None
         timelike_weights : float, optional
             If `H` is given as a scipy or numpy array and `repetitions>1`, 
-            `timelike_weights` gives the weight of timelike edges. By default 
-            None, in which case all weights are set to 1.0
-        measurement_error_probability : float, optional
+            `timelike_weights` gives the weight of timelike edges.
+            If a float is given, all timelike edges weights are set to
+            the same value. If a numpy array of size `(H.shape[0],)` is given, the
+            edge weight for each vertical timelike edge associated with the `i`th check (row)
+            of `H` is set to `timelike_weights[i]`. By default None, in which case all
+            timelike weights are set to 1.0
+        measurement_error_probabilities : float, optional
             If `H` is given as a scipy or numpy array and `repetitions>1`, 
             gives the probability of a measurement error to be used for 
-            the add_noise method. By default None
+            the add_noise method. If a float is given, all measurement
+            errors are set to the same value. If a numpy array of size `(H.shape[0],)` is given,
+            the error probability for each vertical timelike edge associated with the `i`th check
+            (row) of `H` is set to `measurement_error_probabilities[i]`. By default None
         precompute_shortest_paths : bool, optional
             It is almost always recommended to leave this as False. If 
             the exact matching is used for decoding (setting 
@@ -145,11 +152,11 @@ class Matching:
         if not isinstance(H, nx.Graph):
             try:
                 H = csc_matrix(H)
-                self.load_from_check_matrix(H, spacelike_weights, error_probabilities,
-                                            repetitions, timelike_weights, measurement_error_probability)
             except TypeError:
                 raise TypeError("H must be a NetworkX graph or convertible "
                                 "to a scipy.csc_matrix")
+            self.load_from_check_matrix(H, spacelike_weights, error_probabilities,
+                                        repetitions, timelike_weights, measurement_error_probabilities)
         else:
             self.load_from_networkx(H)
         if precompute_shortest_paths:
@@ -288,11 +295,11 @@ class Matching:
 
     def load_from_check_matrix(self,
                                H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
-                               spacelike_weights: Union[float, np.ndarray]=None,
-                               error_probabilities: Union[float, np.ndarray]=None,
-                               repetitions: int=None,
-                               timelike_weights: float=None,
-                               measurement_error_probability: float=None
+                               spacelike_weights: Union[float, np.ndarray, List[float]] = None,
+                               error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                               repetitions: int = None,
+                               timelike_weights: Union[float, np.ndarray, List[float]] = None,
+                               measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None
                                ) -> None:
         """
         Load a matching graph from a check matrix
@@ -316,13 +323,19 @@ class Matching:
         repetitions : int, optional
             The number of times the stabiliser measurements are repeated, if
             the measurements are noisy. By default None
-        timelike_weights : float, optional
+        timelike_weights : float or numpy.ndarray, optional
             If `repetitions>1`, `timelike_weights` gives the weight of
-            timelike edges. By default None, in which case all
-            weights are set to 1.0
-        measurement_error_probability : float, optional
+            timelike edges. If a float is given, all timelike edges weights are set to
+            the same value. If a numpy array of size `(H.shape[0],)` is given, the
+            edge weight for each vertical timelike edge associated with the `i`th check (row)
+            of `H` is set to `timelike_weights[i]`. By default None, in which case all
+            timelike weights are set to 1.0
+        measurement_error_probabilities : float or numpy.ndarray, optional
             If `repetitions>1`, gives the probability of a measurement
-            error to be used for the add_noise method. By default None
+            error to be used for the add_noise method. If a float is given, all measurement
+            errors are set to the same value. If a numpy array of size `(H.shape[0],)` is given,
+            the error probability for each vertical timelike edge associated with the `i`th check
+            (row) of `H` is set to `measurement_error_probabilities[i]`. By default None
 
         Examples
         --------
@@ -350,17 +363,19 @@ class Matching:
         H = H.astype(np.uint8)
         num_edges = H.shape[1]
         weights = 1.0 if spacelike_weights is None else spacelike_weights
-        if isinstance(weights, (int, float)):
+        if isinstance(weights, (int, float, np.integer, np.floating)):
             weights = np.array([weights]*num_edges).astype(float)
         weights = np.asarray(weights)
+
         if error_probabilities is None:
             error_probabilities = np.array([-1] * num_edges)
         elif isinstance(error_probabilities, (int, float)):
             error_probabilities = np.array([error_probabilities] * num_edges)
+
         column_weights = np.asarray(H.sum(axis=0))[0]
         unique_column_weights = np.unique(column_weights)
         if np.setdiff1d(unique_column_weights, np.array([1, 2])).size > 0:
-            raise ValueError("Each qubit must be contained in either " \
+            raise ValueError("Each qubit must be contained in either "
                              "1 or 2 check operators, not {}".format(unique_column_weights))
         H.eliminate_zeros()
         H.sort_indices()
@@ -372,8 +387,28 @@ class Matching:
             raise ValueError("All weights must be non-negative.")
 
         timelike_weights = 1.0 if timelike_weights is None else timelike_weights
+        if isinstance(timelike_weights, (int, float, np.integer, np.floating)):
+            timelike_weights = np.ones(H.shape[0], dtype=float) * timelike_weights
+        elif isinstance(timelike_weights, (np.ndarray, list)):
+            timelike_weights = np.array(timelike_weights, dtype=float)
+            if timelike_weights.shape != (H.shape[0],):
+                raise ValueError("timelike_weights should have the same number of elements as there are rows in H")
+        else:
+            raise ValueError("timelike_weights should be a float or a 1d numpy array")
+
         repetitions = 1 if repetitions is None else repetitions
-        p_meas = measurement_error_probability if measurement_error_probability is not None else -1
+
+        p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
+        if isinstance(p_meas, (int, float, np.integer, np.floating)):
+            p_meas = np.ones(H.shape[0], dtype=float)
+        elif isinstance(p_meas, (np.ndarray, list)):
+            p_meas = np.array(p_meas, dtype=float)
+            if p_meas.shape != (H.shape[0],):
+                raise ValueError("measurement_error_probabilities should have dimensions {}"
+                                 " not {}".format((H.shape[0],), p_meas.shape))
+        else:
+            raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
+
         boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
         self.matching_graph = MatchingGraph(H.shape[0] * repetitions, boundary=boundary)
         for t in range(repetitions):
@@ -386,7 +421,7 @@ class Matching:
         for t in range(repetitions - 1):
             for i in range(H.shape[0]):
                 self.matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
-                                             set(), timelike_weights, p_meas, p_meas >= 0)
+                                             set(), timelike_weights[i], p_meas[i], p_meas[i] >= 0)
 
     def set_boundary_nodes(self, nodes: Set[int]) -> None:
         """
@@ -531,7 +566,6 @@ class Matching:
             operator. The number of elements equals the number of qubits, 
             and an element is 1 if the corresponding qubit should be flipped, 
             and otherwise 0.
-
         float
             Present only if `return_weight==True`.
             The sum of the weights of the edges in the minimum-weight perfect 
