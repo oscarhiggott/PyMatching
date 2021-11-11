@@ -404,8 +404,8 @@ class Matching:
         elif isinstance(p_meas, (np.ndarray, list)):
             p_meas = np.array(p_meas, dtype=float)
             if p_meas.shape != (H.shape[0],):
-                raise ValueError(f"measurement_error_probabilities should have dimensions {(H.shape[0],)}"
-                                 f" not {p_meas.shape}")
+                raise ValueError("measurement_error_probabilities should have dimensions {}"
+                                 " not {}".format((H.shape[0],), p_meas.shape))
         else:
             raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
 
