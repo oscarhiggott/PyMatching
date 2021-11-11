@@ -37,7 +37,7 @@ jobs:
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: "cp3*-*"
-          CIBW_SKIP: "*-win32"
+          CIBW_SKIP: "*-win32 cp310-win_amd64"
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
