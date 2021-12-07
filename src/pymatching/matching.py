@@ -56,7 +56,7 @@ class Matching:
     edge weights, error probabilities and number of repetitions.
     Alternatively, a Matching object can be constructed from a NetworkX 
     graph, with node and edge attributes used to specify edge weights,
-    qubit ids, boundaries and error probabilities.
+    frame changes, boundaries and error probabilities.
     """
     def __init__(self,
                  H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]]=None,
@@ -99,10 +99,11 @@ class Matching:
             of edges in the matching graph. By default None, in which case 
             all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
-            The probabilities with which an error occurs on each qubit. If a 
+            The probabilities with which an error occurs on each edge corresponding
+            to a column of the check matrix. If a
             single float is given, the same error probability is used for each 
-            qubit. If a numpy.ndarray of floats is given, it must have a 
-            length equal to the number of qubits. This parameter is only 
+            edge. If a numpy.ndarray of floats is given, it must have a
+            length equal to the number of columns in the check matrix H. This parameter is only
             needed for the Matching.add_noise method, and not for decoding. 
             By default None
         repetitions : int, optional
@@ -141,14 +142,14 @@ class Matching:
         >>> m.add_edge(2, 3, frame_changes={2, 0}, weight=0.2)
         >>> m.set_boundary_nodes({0, 3})
         >>> m
-        <pymatching.Matching object with 3 qubits, 2 detectors, 2 boundary nodes, and 3 edges>
+        <pymatching.Matching object with 2 detectors, 2 boundary nodes, and 3 edges>
 
         Matching objects can also be created from a check matrix (provided as a scipy.sparse matrix,
         dense numpy array, or list of lists):
         >>> import pymatching
         >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
         >>> m
-        <pymatching.Matching object with 4 qubits, 3 detectors, 1 boundary node, and 4 edges>
+        <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
             """
         self.matching_graph = MatchingGraph()
         if H is None:
@@ -218,7 +219,7 @@ class Matching:
         >>> m.add_edge(1, 2, frame_changes=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
         >>> m.add_edge(2, 0, frame_changes={1, 2}, weight=math.log((1-0.2)/0.2), error_probability=0.2)
         >>> m
-        <pymatching.Matching object with 3 qubits, 3 detectors, 0 boundary nodes, and 3 edges>
+        <pymatching.Matching object with 3 detectors, 0 boundary nodes, and 3 edges>
         """
         if frame_changes is not None and "qubit_id" in kwargs:
             raise ValueError("Both `frame_changes` and `qubit_id` were provided as arguments. Please "
@@ -272,21 +273,17 @@ class Matching:
         >>> g.nodes[2]['is_boundary'] = True
         >>> m = pymatching.Matching(g)
         >>> m
-        <pymatching.Matching object with 2 qubits, 1 detector, 2 boundary nodes, and 2 edges>
+        <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
         """
 
         if not isinstance(graph, nx.Graph):
             raise TypeError("G must be a NetworkX graph")
         boundary = _find_boundary_nodes(graph)
         num_nodes = graph.number_of_nodes()
-        all_qubits = set()
+        all_frame_changes = set()
         g = MatchingGraph(self.num_detectors, boundary)
         for (u, v, attr) in graph.edges(data=True):
             u, v = int(u), int(v)
-            if u >= num_nodes or v >= num_nodes:
-                raise ValueError("Every node id must be less "\
-                                 "than the number of nodes, but edge "\
-                                 "({},{}) was present.".format(u,v))
             if "frame_changes" in attr and "qubit_id" in attr:
                 raise ValueError("Both `frame_changes` and `qubit_id` were provided as edge attributes, however use "
                                  "of `qubit_id` has been deprecated in favour of `frame_changes`. Please only supply "
@@ -306,18 +303,13 @@ class Matching:
                     raise ValueError(
                         "frame_changes property must be an int or a set of int"\
                         " (or convertible to a set), not {}".format(frame_changes))
-            all_qubits = all_qubits | frame_changes
+            all_frame_changes = all_frame_changes | frame_changes
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
             if weight < 0:
                 raise ValueError("Weights cannot be negative.")
             e_prob = attr.get("error_probability", -1)
             g.add_edge(u, v, frame_changes, weight, e_prob, 0 <= e_prob <= 1)
         self.matching_graph = g
-        if max(all_qubits, default=-1) != len(all_qubits) - 1:
-            raise ValueError(
-                "The maximum qubit id ({}) should equal the number of qubits ({}) "\
-                "minus one.".format(max(all_qubits, default=0), len(all_qubits))
-            )
 
     def load_from_check_matrix(self,
                                H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
@@ -340,10 +332,11 @@ class Matching:
             The weights of edges in the matching graph.
             By default None, in which case all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
-            The probabilities with which an error occurs on each qubit. If a
+            The probabilities with which an error occurs on each edge associated with a
+            column of H. If a
             single float is given, the same error probability is used for each
-            qubit. If a numpy.ndarray of floats is given, it must have a
-            length equal to the number of qubits. This parameter is only
+            column. If a numpy.ndarray of floats is given, it must have a
+            length equal to the number of columns in H. This parameter is only
             needed for the Matching.add_noise method, and not for decoding.
             By default None
         repetitions : int, optional
@@ -368,7 +361,7 @@ class Matching:
         >>> import pymatching
         >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
         >>> m
-        <pymatching.Matching object with 4 qubits, 3 detectors, 1 boundary node, and 4 edges>
+        <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
 
         Matching objects can also be initialised from a sparse scipy matrix:
         >>> import pymatching
@@ -376,7 +369,7 @@ class Matching:
         >>> H = csr_matrix([[1, 1, 0], [0, 1, 1]])
         >>> m = pymatching.Matching(H)
         >>> m
-        <pymatching.Matching object with 3 qubits, 2 detectors, 1 boundary node, and 3 edges>
+        <pymatching.Matching object with 2 detectors, 1 boundary node, and 3 edges>
         """
         try:
             H = csc_matrix(H)
@@ -401,14 +394,14 @@ class Matching:
         column_weights = np.asarray(H.sum(axis=0))[0]
         unique_column_weights = np.unique(column_weights)
         if np.setdiff1d(unique_column_weights, np.array([1, 2])).size > 0:
-            raise ValueError("Each qubit must be contained in either "
-                             "1 or 2 check operators, not {}".format(unique_column_weights))
+            raise ValueError("Each column of H must have weight "
+                             "1 or 2, not {}".format(unique_column_weights))
         H.eliminate_zeros()
         H.sort_indices()
-        num_qubits = H.shape[1]
+        num_frame_changes = H.shape[1]
 
-        if weights.shape[0] != num_qubits:
-            raise ValueError("Weights array must have num_qubits elements")
+        if weights.shape[0] != num_frame_changes:
+            raise ValueError("Weights array must have num_frame_changes elements")
         if np.any(weights < 0.):
             raise ValueError("All weights must be non-negative.")
 
@@ -469,22 +462,22 @@ class Matching:
         >>> m.boundary
         {0, 2}
         >>> m
-        <pymatching.Matching object with 0 qubits, 1 detector, 2 boundary nodes, and 2 edges>
+        <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
 
         """
         self.matching_graph.set_boundary(nodes)
 
     @property
-    def num_qubits(self) -> int:
+    def num_frame_changes(self) -> int:
         """
-        The number of qubit IDs defined in the matching graph
+        The number of frame change IDs defined in the matching graph
 
         Returns
         -------
         int
-            Number of qubits
+            Number of frame change IDs
         """
-        return self.matching_graph.get_num_qubits()
+        return self.matching_graph.get_num_frame_changes()
     
     @property
     def boundary(self) -> Set[int]:
@@ -589,8 +582,8 @@ class Matching:
         -------
         numpy.ndarray or list[int]
             A 1D numpy array of ints giving the minimum-weight correction 
-            operator. The number of elements equals the number of qubits, 
-            and an element is 1 if the corresponding qubit should be flipped, 
+            operator. The number of elements equals the number of possible frame changes,
+            and an element is 1 if the corresponding frame change should be applied,
             and otherwise 0.
         float
             Present only if `return_weight==True`.
@@ -625,7 +618,7 @@ class Matching:
         bit-flip errors), you can provide a check matrix and number of syndrome repetitions to
         construct a matching graph with a time dimension (where nodes in consecutive time steps
         are connected by an edge), and then decode with a 2D syndrome
-        (dimension 0 is space/qubits, dimension 1 is time):
+        (dimension 0 is space, dimension 1 is time):
         >>> import pymatching
         >>> import numpy as np
         >>> np.random.seed(0)
@@ -683,7 +676,7 @@ class Matching:
         Returns
         -------
         numpy.ndarray of dtype int
-            Noise vector (binary numpy int array of length self.num_qubits)
+            Noise vector (binary numpy int array of length self.num_frame_changes)
         numpy.ndarray of dtype int
             Syndrome vector (binary numpy int array of length 
             self.num_detectors if there is no boundary, or self.num_detectors+len(self.boundary)
@@ -770,13 +763,12 @@ class Matching:
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     def __repr__(self) -> str:
-        N = self.num_qubits
         M = self.num_detectors
         B = len(self.boundary)
         E = self.matching_graph.get_num_edges()
         return "<pymatching.Matching object with "\
-               "{} qubit{}, {} detector{}, "\
+               "{} detector{}, "\
                "{} boundary node{}, "\
-               "and {} edge{}>".format(N, 's' if N != 1 else '',
+               "and {} edge{}>".format(
                M, 's' if M != 1 else '', B, 's' if B != 1 else '',
                E, 's' if E != 1 else '')

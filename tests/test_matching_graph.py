@@ -34,11 +34,11 @@ def test_weighted_spacetime_shortest_path():
     assert(w.distance(5, 0) == pytest.approx(11.0))
     assert(w.shortest_path(3, 5) == [3, 2, 5])
     assert(w.shortest_path(4, 2) == [4, 5, 2])
-    assert(w.get_num_qubits() == 9)
+    assert(w.get_num_frame_changes() == 9)
     assert(w.get_num_nodes() == 6)
 
 
-def test_weighted_num_qubits_and_stabilisers():
+def test_weighted_num_frame_changes_and_stabilisers():
     w = MatchingGraph(6, set())
     w.add_edge(0, 1, {0}, 7.0)
     w.add_edge(0, 5, {1}, 14.0)
@@ -50,7 +50,7 @@ def test_weighted_num_qubits_and_stabilisers():
     w.add_edge(3, 4, {5}, 6.0)
     w.add_edge(4, 5, {6}, 9.0)
     w.compute_all_pairs_shortest_paths()
-    assert(w.get_num_qubits() == 7)
+    assert(w.get_num_frame_changes() == 7)
     assert(w.get_num_nodes() == 6)
 
 

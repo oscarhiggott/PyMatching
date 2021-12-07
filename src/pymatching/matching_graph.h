@@ -75,7 +75,7 @@ class MatchingGraph{
          * 
          * @param node1 Index of the first node
          * @param node2 Index of the second node
-         * @param frame_changes Indices of the qubits associated with this edge
+         * @param frame_changes Indices of the frame changes associated with this edge
          * @param weight Weight of the edge
          * @param error_probability The error probability associated with an edge (optional, set to -1 if not needed)
          * @param has_error_probability Flag whether a valid error probability has been supplied
@@ -112,19 +112,19 @@ class MatchingGraph{
          */
         std::vector<int> ShortestPath(int node1, int node2);
         /**
-         * @brief Get the qubit ids associated with the edge between node1 and node2
+         * @brief Get the frame change ids associated with the edge between node1 and node2
          * 
          * @param node1 The index of the first node
          * @param node2 The index of the second node
-         * @return std::set<int> The set of qubit ids associated with the edge between node1 and node2
+         * @return std::set<int> The set of frame change ids associated with the edge between node1 and node2
          */
-        std::set<int> QubitIDs(int node1, int node2) const;
+        std::set<int> FrameChangeIDs(int node1, int node2) const;
         /**
-         * @brief Get the number of qubits associated with edges of the matching graph
+         * @brief Get the number of frame changes associated with edges of the matching graph
          * 
-         * @return int The number of qubits
+         * @return int The number of frame changes
          */
-        int GetNumQubits() const;
+        int GetNumFrameChanges() const;
         /**
          * @brief Get the number of nodes in the matching graph (this includes both boundaries and stabilisers)
          * 
@@ -140,8 +140,8 @@ class MatchingGraph{
         /**
          * @brief If an error_probability is assigned to every edge, flip each edge 
          * with its corresponding error_probability. If an edge is flipped, add (mod 2) 
-         * an error to the associated qubits (specified by the frame_changes edge data).
-         * The qubit errors are returned as a binary numpy array, as well as a syndrome 
+         * an error to the associated frame changes (specified by the frame_changes edge data).
+         * The frame changes to be applied as a recovery are returned as a binary numpy array, as well as a syndrome
          * vector, also as a binary numpy array. The length of the syndrome vector is 
          * is the number of nodes in the matching graph (there is an element for each
          * stabiliser as well as for each boundary node). The syndromes of the boundary 

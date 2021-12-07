@@ -33,7 +33,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      Parameters
      ----------
      frame_changes: set[int]
-         A set of qubit ids
+         A set of frame change IDs
      weight: float
          The edge weight
      error_probability: float
@@ -63,7 +63,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.add_edge(3, 4, frame_changes={3}, weight=math.log((1-0.05)/0.05), error_probability=0.05, has_error_probability=True)
      >>> graph.set_boundary({0, 4})
      >>> graph
-     <pymatching._cpp_mwpm.MatchingGraph object with 4 qubits, 5 nodes, 4 edges and 2 boundary nodes>
+     <pymatching._cpp_mwpm.MatchingGraph object with 5 nodes, 4 edges and 2 boundary nodes>
      >>> graph.get_path(1, 4)
      [1, 2, 3, 4]
      >>> graph.get_nearest_neighbours(source=2, num_neighbours=2, defect_id=[-1, 0, 1, 2, -1])
@@ -116,7 +116,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           node2: int
               The id of the second node in the edge to be added
           frame_changes: set[int]
-              The ids of the qubits associated with the edge
+              The ids of the frame changes associated with the edge
           weight: float
               The weight of the edge
           error_probability: float
@@ -136,7 +136,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           >>> graph.add_edge(2, 3, {3}, math.log((1-0.2)/0.2), 0.2, True)
           >>> graph.add_edge(3, 0, set(), 0, -1, False)
           >>> graph.set_boundary({0, 3})
-          >>> graph.get_num_qubits()
+          >>> graph.get_num_frame_changes()
           4
           >>> graph.get_num_edges()
           4
@@ -149,8 +149,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           -------
           numpy.ndarray
               A binary array (of dtype numpy.uint8) specifying whether each
-              qubit has been flipped. Element i is one if the qubit with
-              frame_changes==i has been flipped, and is zero otherwise.
+              frame change has occurred. Element i is one if the frame change with
+              ID `i`` has been flipped, and is zero otherwise.
           numpy.ndarray
               A binary array (of dtype numpy.uint8) with length equal to the
               number of nodes in the matching graph, specifying the syndrome.
@@ -372,7 +372,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.shortest_path(1, 2)
      [1, 2]
      )")
-     .def("frame_changes", &MatchingGraph::QubitIDs, "node1"_a, "node2"_a, u8R"(
+     .def("frame_changes", &MatchingGraph::FrameChangeIDs, "node1"_a, "node2"_a, u8R"(
      Returns the frame_changes associated with the edge (node1, node2)
 
      Parameters
@@ -400,13 +400,13 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.frame_changes(1, 0)
      {0}
      )")
-     .def("get_num_qubits", &MatchingGraph::GetNumQubits, u8R"(
-     Returns the number of qubits associated with edges in the matching graph.
+     .def("get_num_frame_changes", &MatchingGraph::GetNumFrameChanges, u8R"(
+     Returns the number of distinct frame changes associated with edges in the matching graph.
 
      Returns
      -------
      int
-         The number of qubits in the matching graph
+         The number of distinct frame changes in the matching graph
 
      Examples
      --------
@@ -415,7 +415,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.add_edge(0, 1, {0}, 1)
      >>> graph.add_edge(1, 2, {1, 2, 3}, 1)
      >>> graph.add_edge(2, 3, {4, 5}, 1)
-     >>> graph.get_num_qubits()
+     >>> graph.get_num_frame_changes()
      6
      )")
      .def("get_num_nodes", &MatchingGraph::GetNumNodes, u8R"(

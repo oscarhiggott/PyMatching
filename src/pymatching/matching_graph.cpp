@@ -349,20 +349,20 @@ int MatchingGraph::GetNumEdges() const {
 }
 
 
-int MatchingGraph::GetNumQubits() const {
+int MatchingGraph::GetNumFrameChanges() const {
     auto qid = boost::get(&WeightedEdgeData::frame_changes, matching_graph);
     int num_edges = boost::num_edges(matching_graph);
     int maxid = -1;
-    std::set<int> edge_qubits;
+    std::set<int> edge_frame_changes;
     auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
-        edge_qubits = qid[*eit];
-        for (auto qubit : edge_qubits){
-            if (qubit >= maxid){
-                maxid = qubit;
+        edge_frame_changes = qid[*eit];
+        for (auto frame_change : edge_frame_changes){
+            if (frame_change >= maxid){
+                maxid = frame_change;
             }
-            if (qubit < 0 && qubit != -1){
-                throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
+            if (frame_change < 0 && frame_change != -1){
+                throw std::runtime_error("Frame change ids must be non-negative, or -1 if no frame changes are associated with the edge.");
             }
         }
     }
@@ -373,7 +373,7 @@ int MatchingGraph::GetNumNodes() const {
     return boost::num_vertices(matching_graph);
 };
 
-std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
+std::set<int> MatchingGraph::FrameChangeIDs(int node1, int node2) const {
     int num_nodes = GetNumNodes();
     if (node1 >= num_nodes || node2 >= num_nodes
         || node1 < 0 || node2 < 0){
@@ -391,7 +391,7 @@ std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumNodes(), 0);
-    auto error = new std::vector<int>(GetNumQubits(), 0);
+    auto error = new std::vector<int>(GetNumFrameChanges(), 0);
     double p;
     std::set<int> qids;
     vertex_descriptor s, t;
@@ -528,7 +528,7 @@ bool MatchingGraph::AllEdgesHaveErrorProbabilities() const {
 std::string MatchingGraph::repr() const {
     std::stringstream ss;
     ss << "<pymatching._cpp_mwpm.MatchingGraph object with ";
-    ss << GetNumQubits() << " qubits, " << GetNumNodes() << " nodes, ";
+    ss << GetNumNodes() << " nodes, ";
     ss << GetNumEdges() << " edges and " << GetBoundary().size() << " boundary nodes>";
     return ss.str();
 }

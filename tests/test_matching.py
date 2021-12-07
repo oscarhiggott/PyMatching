@@ -154,7 +154,7 @@ def test_unweighted_stabiliser_graph_from_networkx():
     w.add_edge(3, 4, frame_changes=5, weight=6.0)
     w.add_edge(4, 5, frame_changes=6, weight=9.0)
     m = Matching(w)
-    assert(m.num_qubits == 7)
+    assert(m.num_frame_changes == 7)
     assert(m.num_detectors == 6)
     assert(m.matching_graph.shortest_path(3, 5) == [3, 2, 5])
     assert(m.matching_graph.distance(5, 0) == pytest.approx(11.0))
@@ -184,7 +184,7 @@ def test_mwpm_from_networkx():
     m = Matching(g)
     assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
-    assert(m.num_qubits == 3)
+    assert(m.num_frame_changes == 3)
     assert(m.matching_graph.distance(0,2) == 1)
     assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
@@ -195,7 +195,7 @@ def test_mwpm_from_networkx():
     m = Matching(g)
     assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
-    assert(m.num_qubits == 0)
+    assert(m.num_frame_changes == 0)
     assert(m.matching_graph.distance(0,2) == 1)
     assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
@@ -206,7 +206,7 @@ def test_mwpm_from_networkx():
     m = Matching(g)
     assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
-    assert(m.num_qubits == 0)
+    assert(m.num_frame_changes == 0)
     assert(m.matching_graph.distance(0,2) == pytest.approx(1.7))
     assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
@@ -220,22 +220,8 @@ def test_repr():
     g.nodes[3]['is_boundary'] = True
     g.add_edge(0, 3, weight=0.0)
     m = Matching(g)
-    assert m.__repr__() == ("<pymatching.Matching object with 3 qubits, "
+    assert m.__repr__() == ("<pymatching.Matching object with "
                             "2 detectors, 2 boundary nodes, and 4 edges>")
-
-
-def test_high_frame_changes_raises_value_error():
-    g = nx.Graph()
-    g.add_edge(0,1,frame_changes=1)
-    with pytest.raises(ValueError):
-        Matching(g)
-
-
-def test_high_node_id_raises_value_error():
-    g = nx.Graph()
-    g.add_edge(1, 2)
-    with pytest.raises(ValueError):
-        Matching(g)
 
 
 def test_matching_edges_from_networkx():
