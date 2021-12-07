@@ -36,7 +36,7 @@ struct MatchingResult {
     MatchingResult(py::array_t<std::uint8_t> correction, double weight);
     /**
      * @brief The correction operator corresponding to the minimum-weight perfect matching.
-     * correction[i] is 1 if the ith frame change is applied and correction[i] is 0 otherwise.
+     * correction[i] is 1 if the fault with fault ID i is flipped and correction[i] is 0 otherwise.
      * 
      */
     py::array_t<std::uint8_t> correction;

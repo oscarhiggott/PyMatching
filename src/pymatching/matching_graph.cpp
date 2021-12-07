@@ -357,11 +357,11 @@ int MatchingGraph::GetNumFaultIDs() const {
     auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
         edge_fault_ids = qid[*eit];
-        for (auto frame_change : edge_fault_ids){
-            if (frame_change >= maxid){
-                maxid = frame_change;
+        for (auto fault_id : edge_fault_ids){
+            if (fault_id >= maxid){
+                maxid = fault_id;
             }
-            if (frame_change < 0 && frame_change != -1){
+            if (fault_id < 0 && fault_id != -1){
                 throw std::runtime_error("Frame change ids must be non-negative, or -1 if no frame changes are associated with the edge.");
             }
         }

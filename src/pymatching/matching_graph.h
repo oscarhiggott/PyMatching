@@ -75,7 +75,7 @@ class MatchingGraph{
          * 
          * @param node1 Index of the first node
          * @param node2 Index of the second node
-         * @param fault_ids Indices of the frame changes associated with this edge
+         * @param fault_ids Indices of the faults associated with this edge
          * @param weight Weight of the edge
          * @param error_probability The error probability associated with an edge (optional, set to -1 if not needed)
          * @param has_error_probability Flag whether a valid error probability has been supplied
@@ -112,17 +112,17 @@ class MatchingGraph{
          */
         std::vector<int> ShortestPath(int node1, int node2);
         /**
-         * @brief Get the frame change ids associated with the edge between node1 and node2
+         * @brief Get the fault ids associated with the edge between node1 and node2
          * 
          * @param node1 The index of the first node
          * @param node2 The index of the second node
-         * @return std::set<int> The set of frame change ids associated with the edge between node1 and node2
+         * @return std::set<int> The set of fault ids associated with the edge between node1 and node2
          */
         std::set<int> FaultIDs(int node1, int node2) const;
         /**
-         * @brief Get the number of frame changes associated with edges of the matching graph
+         * @brief Get the number of fault ids associated with edges of the matching graph
          * 
-         * @return int The number of frame changes
+         * @return int The number of fault IDs
          */
         int GetNumFaultIDs() const;
         /**
@@ -139,9 +139,9 @@ class MatchingGraph{
         int GetNumEdges() const;
         /**
          * @brief If an error_probability is assigned to every edge, flip each edge 
-         * with its corresponding error_probability. If an edge is flipped, add (mod 2) 
-         * an error to the associated frame changes (specified by the fault_ids edge data).
-         * The frame changes to be applied as a recovery are returned as a binary numpy array, as well as a syndrome
+         * with its corresponding error_probability. If an edge is flipped, flip the corresponding
+         * self-inverse faults (specified by the fault_ids edge data).
+         * The fault ids to be flipped for the recovery are returned as a binary numpy array, as well as a syndrome
          * vector, also as a binary numpy array. The length of the syndrome vector is 
          * is the number of nodes in the matching graph (there is an element for each
          * stabiliser as well as for each boundary node). The syndromes of the boundary 

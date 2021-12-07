@@ -33,7 +33,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      Parameters
      ----------
      fault_ids: set[int]
-         A set of frame change IDs
+         A set of fault IDs
      weight: float
          The edge weight
      error_probability: float
@@ -116,7 +116,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           node2: int
               The id of the second node in the edge to be added
           fault_ids: set[int]
-              The ids of the frame changes associated with the edge
+              The ids of the self-inverse faults that flip if the edge is flipped
           weight: float
               The weight of the edge
           error_probability: float
@@ -149,8 +149,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           -------
           numpy.ndarray
               A binary array (of dtype numpy.uint8) specifying whether each
-              frame change has occurred. Element i is one if the frame change with
-              ID `i`` has been flipped, and is zero otherwise.
+              fault has occurred. Element i is one if the fault with
+              fault ID `i`` has been flipped, and is zero otherwise.
           numpy.ndarray
               A binary array (of dtype numpy.uint8) with length equal to the
               number of nodes in the matching graph, specifying the syndrome.

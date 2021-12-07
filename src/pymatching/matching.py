@@ -473,12 +473,12 @@ class Matching:
     @property
     def num_fault_ids(self) -> int:
         """
-        The number of frame change IDs defined in the matching graph
+        The number of fault IDs defined in the matching graph
 
         Returns
         -------
         int
-            Number of frame change IDs
+            Number of fault IDs
         """
         return self.matching_graph.get_num_fault_ids()
     
@@ -585,8 +585,8 @@ class Matching:
         -------
         numpy.ndarray or list[int]
             A 1D numpy array of ints giving the minimum-weight correction 
-            operator. The number of elements equals the number of possible frame changes,
-            and an element is 1 if the corresponding frame change should be applied,
+            operator. The number of elements is one greater than the largest fault ID,
+            and the ith element is 1 if the fault with fault ID equal to i is flipped,
             and otherwise 0.
         float
             Present only if `return_weight==True`.
