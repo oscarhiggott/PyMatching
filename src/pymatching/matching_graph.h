@@ -124,7 +124,7 @@ class MatchingGraph{
          * 
          * @return int The number of frame changes
          */
-        int GetNumFrameChanges() const;
+        int GetNumFaultIDs() const;
         /**
          * @brief Get the number of nodes in the matching graph (this includes both boundaries and stabilisers)
          * 

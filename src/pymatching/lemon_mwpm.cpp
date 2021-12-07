@@ -136,7 +136,7 @@ MatchingResult ExactMatching(
         throw BlossomFailureException();
     }
 
-    int N = graph.GetNumFrameChanges();
+    int N = graph.GetNumFaultIDs();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
     for (py::size_t i = 0; i<num_defects; i++){
@@ -260,7 +260,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
         throw BlossomFailureException();
     }
 
-    int N = graph.GetNumFrameChanges();
+    int N = graph.GetNumFaultIDs();
     auto correction = new std::vector<int>(N, 0);
 
     std::set<int> remaining_defects;

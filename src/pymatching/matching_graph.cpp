@@ -349,7 +349,7 @@ int MatchingGraph::GetNumEdges() const {
 }
 
 
-int MatchingGraph::GetNumFrameChanges() const {
+int MatchingGraph::GetNumFaultIDs() const {
     auto qid = boost::get(&WeightedEdgeData::fault_ids, matching_graph);
     int num_edges = boost::num_edges(matching_graph);
     int maxid = -1;
@@ -391,7 +391,7 @@ std::set<int> MatchingGraph::FrameChangeIDs(int node1, int node2) const {
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumNodes(), 0);
-    auto error = new std::vector<int>(GetNumFrameChanges(), 0);
+    auto error = new std::vector<int>(GetNumFaultIDs(), 0);
     double p;
     std::set<int> qids;
     vertex_descriptor s, t;

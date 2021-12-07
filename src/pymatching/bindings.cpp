@@ -400,7 +400,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.fault_ids(1, 0)
      {0}
      )")
-     .def("get_num_fault_ids", &MatchingGraph::GetNumFrameChanges, u8R"(
+     .def("get_num_fault_ids", &MatchingGraph::GetNumFaultIDs, u8R"(
      Returns the number of distinct frame changes associated with edges in the matching graph.
 
      Returns
