@@ -29,7 +29,7 @@ def test_weighted_spacetime_shortest_path():
     w.add_edge(4, 5, {8}, 9.0)
     w.compute_all_pairs_shortest_paths()
 
-    assert(w.qubit_ids(3, 1) == {4})
+    assert(w.frame_changes(3, 1) == {4})
     assert(w.distance(1, 2) == pytest.approx(10.0))
     assert(w.distance(5, 0) == pytest.approx(11.0))
     assert(w.shortest_path(3, 5) == [3, 2, 5])

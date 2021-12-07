@@ -78,11 +78,11 @@ class Matching:
             If `H` is given as a NetworkX graph with `M` nodes, each node 
             `m` in `H` should be an integer :math:`0<m<M-1`, and each node should 
             be unique. Each edge in the NetworkX graph can have optional 
-            attributes ``qubit_id``, ``weight`` and ``error_probability``. 
-            ``qubit_id`` should be an int or a set of ints. If there 
-            are :math:`N` qubits then the union of all ints in the ``qubit_id`` 
+            attributes ``frame_changes``, ``weight`` and ``error_probability``. 
+            ``frame_changes`` should be an int or a set of ints. If there 
+            are :math:`N` qubits then the union of all ints in the ``frame_changes`` 
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``qubit_id`` attribute can instead be used to store the indices
+            Note that the ``frame_changes`` attribute can instead be used to store the indices
             of logical observables flipped by an error on the corresponding edge
             (e.g. a frame change in an error instruction in a stim detector error model).
             If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
@@ -132,9 +132,9 @@ class Matching:
         >>> import pymatching
         >>> import math
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, qubit_id=0, weight=0.1)
-        >>> m.add_edge(1, 2, qubit_id=1, weight=0.15)
-        >>> m.add_edge(2, 3, qubit_id={2, 0}, weight=0.2)
+        >>> m.add_edge(0, 1, frame_changes=0, weight=0.1)
+        >>> m.add_edge(1, 2, frame_changes=1, weight=0.15)
+        >>> m.add_edge(2, 3, frame_changes={2, 0}, weight=0.2)
         >>> m.set_boundary_nodes({0, 3})
         >>> m
         <pymatching.Matching object with 3 qubits, 2 detectors, 2 boundary nodes, and 3 edges>
@@ -166,7 +166,7 @@ class Matching:
             self,
             node1: int,
             node2: int,
-            qubit_id: Union[int, Set[int]] = None,
+            frame_changes: Union[int, Set[int]] = None,
             weight: float = 1.0,
             error_probability: float = None
             ) -> None:
@@ -179,7 +179,7 @@ class Matching:
             The ID of node1 in the new edge (node1, node2)
         node2: int
             The ID of node2 in the new edge (node1, node2)
-        qubit_id: set[int] or int, optional
+        frame_changes: set[int] or int, optional
             The IDs of any qubits that suffer an error when this edge flips. Alternatively,
             this attribute can be used to store the IDs of any logical observables that are
             flipped when an error occurs on an edge. By default None
@@ -204,18 +204,18 @@ class Matching:
         >>> import pymatching
         >>> import math
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, qubit_id=2, weight=math.log((1-0.05)/0.05), error_probability=0.05)
-        >>> m.add_edge(1, 2, qubit_id=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
-        >>> m.add_edge(2, 0, qubit_id={1, 2}, weight=math.log((1-0.2)/0.2), error_probability=0.2)
+        >>> m.add_edge(0, 1, frame_changes=2, weight=math.log((1-0.05)/0.05), error_probability=0.05)
+        >>> m.add_edge(1, 2, frame_changes=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> m.add_edge(2, 0, frame_changes={1, 2}, weight=math.log((1-0.2)/0.2), error_probability=0.2)
         >>> m
         <pymatching.Matching object with 3 qubits, 3 detectors, 0 boundary nodes, and 3 edges>
         """
-        if isinstance(qubit_id, (int, np.integer)):
-            qubit_id = {int(qubit_id)}
-        qubit_id = set() if qubit_id is None else qubit_id
+        if isinstance(frame_changes, (int, np.integer)):
+            frame_changes = {int(frame_changes)}
+        frame_changes = set() if frame_changes is None else frame_changes
         has_error_probability = error_probability is not None
         error_probability = error_probability if has_error_probability else -1
-        self.matching_graph.add_edge(node1, node2, qubit_id, weight,
+        self.matching_graph.add_edge(node1, node2, frame_changes, weight,
                                      error_probability, has_error_probability)
 
     def load_from_networkx(self, graph: nx.Graph) -> None:
@@ -228,11 +228,11 @@ class Matching:
             If `G` has `M` nodes, each node
             `m` in `G` should be an integer :math:`0<m<M-1`, and each node should
             be unique. Each edge in the NetworkX graph can have optional
-            attributes ``qubit_id``, ``weight`` and ``error_probability``.
-            ``qubit_id`` should be an int or a set of ints. If there
-            are :math:`N` qubits then the union of all ints in the ``qubit_id``
+            attributes ``frame_changes``, ``weight`` and ``error_probability``.
+            ``frame_changes`` should be an int or a set of ints. If there
+            are :math:`N` qubits then the union of all ints in the ``frame_changes``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``qubit_id`` attribute can instead be used to store the indices
+            Note that the ``frame_changes`` attribute can instead be used to store the indices
             of logical observables flipped by an error on the corresponding edge
             (e.g. a frame change in an error instruction in a stim detector error model).
             If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
@@ -247,8 +247,8 @@ class Matching:
         >>> import networkx as nx
         >>> import math
         >>> g = nx.Graph()
-        >>> g.add_edge(0, 1, qubit_id=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
-        >>> g.add_edge(1, 2, qubit_id=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
+        >>> g.add_edge(0, 1, frame_changes=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> g.add_edge(1, 2, frame_changes=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
         >>> g.nodes[0]['is_boundary'] = True
         >>> g.nodes[2]['is_boundary'] = True
         >>> m = pymatching.Matching(g)
@@ -268,24 +268,24 @@ class Matching:
                 raise ValueError("Every node id must be less "\
                                  "than the number of nodes, but edge "\
                                  "({},{}) was present.".format(u,v))
-            qubit_id = attr.get("qubit_id", set())
-            if isinstance(qubit_id, (int, np.integer)):
-                qubit_id = {int(qubit_id)} if qubit_id != -1 else set()
+            frame_changes = attr.get("frame_changes", set())
+            if isinstance(frame_changes, (int, np.integer)):
+                frame_changes = {int(frame_changes)} if frame_changes != -1 else set()
             else:
                 try:
-                    qubit_id = set(qubit_id)
-                    if not all(isinstance(q, (int, np.integer)) for q in qubit_id):
-                        raise ValueError("qubit_id must be a set of ints, not {}".format(qubit_id))
+                    frame_changes = set(frame_changes)
+                    if not all(isinstance(q, (int, np.integer)) for q in frame_changes):
+                        raise ValueError("frame_changes must be a set of ints, not {}".format(frame_changes))
                 except:
                     raise ValueError(
-                        "qubit_id property must be an int or a set of int"\
-                        " (or convertible to a set), not {}".format(qubit_id))
-            all_qubits = all_qubits | qubit_id
+                        "frame_changes property must be an int or a set of int"\
+                        " (or convertible to a set), not {}".format(frame_changes))
+            all_qubits = all_qubits | frame_changes
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
             if weight < 0:
                 raise ValueError("Weights cannot be negative.")
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, qubit_id, weight, e_prob, 0 <= e_prob <= 1)
+            g.add_edge(u, v, frame_changes, weight, e_prob, 0 <= e_prob <= 1)
         self.matching_graph = g
         if max(all_qubits, default=-1) != len(all_qubits) - 1:
             raise ValueError(
@@ -584,14 +584,14 @@ class Matching:
         array([1, 1, 0, 0], dtype=uint8)
 
         Each bit in the correction provided by Matching.decode corresponds to a
-        qubit_id. The index of a bit in a correction corresponds to its qubit_id.
-        For example, here an error on edge (0, 1) flips qubit_id 2 and 3, as
+        frame_changes. The index of a bit in a correction corresponds to its frame_changes.
+        For example, here an error on edge (0, 1) flips frame_changes 2 and 3, as
         inferred by the minimum-weight correction:
         >>> import pymatching
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, qubit_id={2, 3})
-        >>> m.add_edge(1, 2, qubit_id=1)
-        >>> m.add_edge(2, 0, qubit_id=0)
+        >>> m.add_edge(0, 1, frame_changes={2, 3})
+        >>> m.add_edge(1, 2, frame_changes=1)
+        >>> m.add_edge(2, 0, frame_changes=0)
         >>> m.decode([1, 1, 0])
         array([0, 0, 1, 1], dtype=uint8)
 
@@ -674,7 +674,7 @@ class Matching:
         tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the 
         indices of the source and target nodes, and `attr` is a dictionary containing the 
         attributes of the edge.
-        The dictionary `attr` has keys `qubit_id` (a set of ints), `weight` (the weight of the edge, 
+        The dictionary `attr` has keys `frame_changes` (a set of ints), `weight` (the weight of the edge, 
         set to 1.0 if not specified), and `error_probability` 
         (the error probability of the edge, set to -1 if not specified).
 
@@ -685,7 +685,7 @@ class Matching:
         """
         edata = self.matching_graph.get_edges()
         return [(e[0], e[1], {
-            'qubit_id': e[2].qubit_ids,
+            'frame_changes': e[2].frame_changes,
             'weight': e[2].weight,
             'error_probability': e[2].error_probability
             }) for e in edata]
@@ -694,7 +694,7 @@ class Matching:
         """Convert to NetworkX graph
 
         Returns a NetworkX graph corresponding to the matching graph. Each edge 
-        has attributes `qubit_ids`, `weight` and `error_probability` and each node has 
+        has attributes `frame_changes`, `weight` and `error_probability` and each node has 
         the attribute `is_boundary`.
 
         Returns
@@ -740,7 +740,7 @@ class Matching:
                 return str(qid.pop())
             else:
                 return str(qid)
-        edge_labels = {(s, t): qid_to_str(d['qubit_id']) for (s,t,d) in G.edges(data=True)}
+        edge_labels = {(s, t): qid_to_str(d['frame_changes']) for (s,t,d) in G.edges(data=True)}
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     def __repr__(self) -> str:

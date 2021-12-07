@@ -23,13 +23,13 @@ from pymatching._cpp_mwpm import MatchingGraph
 from pymatching import Matching
 
 
-def test_bad_qubit_id_raises_value_error():
+def test_bad_frame_changes_raises_value_error():
     g = nx.Graph()
-    g.add_edge(0,1, qubit_id='test')
+    g.add_edge(0,1, frame_changes='test')
     with pytest.raises(ValueError):
         m = Matching(g)
     g = nx.Graph()
-    g.add_edge(0,1, qubit_id=[[1],[2]])
+    g.add_edge(0,1, frame_changes=[[1],[2]])
     with pytest.raises(ValueError):
         m = Matching(g)
 
@@ -47,11 +47,11 @@ def test_boundary_from_check_matrix():
 
 def test_boundary_from_networkx():
     g = nx.Graph()
-    g.add_edge(4,0, qubit_id=0)
-    g.add_edge(0,1, qubit_id=1)
-    g.add_edge(1,2, qubit_id=2)
-    g.add_edge(2,3, qubit_id=3)
-    g.add_edge(3,4, qubit_id=4)
+    g.add_edge(4,0, frame_changes=0)
+    g.add_edge(0,1, frame_changes=1)
+    g.add_edge(1,2, frame_changes=2)
+    g.add_edge(2,3, frame_changes=3)
+    g.add_edge(3,4, frame_changes=4)
     g.nodes()[4]['is_boundary'] = True
     m = Matching(g)
     assert m.boundary == {4}
@@ -63,12 +63,12 @@ def test_boundary_from_networkx():
 
 def test_boundaries_from_networkx():
     g = nx.Graph()
-    g.add_edge(0,1, qubit_id=0)
-    g.add_edge(1,2, qubit_id=1)
-    g.add_edge(2,3, qubit_id=2)
-    g.add_edge(3,4, qubit_id=3)
-    g.add_edge(4,5, qubit_id=4)
-    g.add_edge(0,5, qubit_id=-1, weight=0.0)
+    g.add_edge(0,1, frame_changes=0)
+    g.add_edge(1,2, frame_changes=1)
+    g.add_edge(2,3, frame_changes=2)
+    g.add_edge(3,4, frame_changes=3)
+    g.add_edge(4,5, frame_changes=4)
+    g.add_edge(0,5, frame_changes=-1, weight=0.0)
     g.nodes()[0]['is_boundary'] = True
     g.nodes()[5]['is_boundary'] = True
     m = Matching(g)
@@ -144,15 +144,15 @@ def test_weighted_mwpm_from_array():
 
 def test_unweighted_stabiliser_graph_from_networkx():
     w = nx.Graph()
-    w.add_edge(0, 1, qubit_id=0, weight=7.0)
-    w.add_edge(0, 5, qubit_id=1, weight=14.0)
-    w.add_edge(0, 2, qubit_id=2, weight=9.0)
-    w.add_edge(1, 2, qubit_id=-1, weight=10.0)
-    w.add_edge(1, 3, qubit_id=3, weight=15.0)
-    w.add_edge(2, 5, qubit_id=4, weight=2.0)
-    w.add_edge(2, 3, qubit_id=-1, weight=11.0)
-    w.add_edge(3, 4, qubit_id=5, weight=6.0)
-    w.add_edge(4, 5, qubit_id=6, weight=9.0)
+    w.add_edge(0, 1, frame_changes=0, weight=7.0)
+    w.add_edge(0, 5, frame_changes=1, weight=14.0)
+    w.add_edge(0, 2, frame_changes=2, weight=9.0)
+    w.add_edge(1, 2, frame_changes=-1, weight=10.0)
+    w.add_edge(1, 3, frame_changes=3, weight=15.0)
+    w.add_edge(2, 5, frame_changes=4, weight=2.0)
+    w.add_edge(2, 3, frame_changes=-1, weight=11.0)
+    w.add_edge(3, 4, frame_changes=5, weight=6.0)
+    w.add_edge(4, 5, frame_changes=6, weight=9.0)
     m = Matching(w)
     assert(m.num_qubits == 7)
     assert(m.num_detectors == 6)
@@ -178,9 +178,9 @@ def test_unweighted_stabiliser_graph_from_networkx():
 
 def test_mwpm_from_networkx():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(0, 2, qubit_id=1)
-    g.add_edge(1, 2, qubit_id=2)
+    g.add_edge(0, 1, frame_changes=0)
+    g.add_edge(0, 2, frame_changes=1)
+    g.add_edge(1, 2, frame_changes=2)
     m = Matching(g)
     assert(isinstance(m.matching_graph, MatchingGraph))
     assert(m.num_detectors == 3)
@@ -213,9 +213,9 @@ def test_mwpm_from_networkx():
 
 def test_repr():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(1, 2, qubit_id=1)
-    g.add_edge(2, 3, qubit_id=2)
+    g.add_edge(0, 1, frame_changes=0)
+    g.add_edge(1, 2, frame_changes=1)
+    g.add_edge(2, 3, frame_changes=2)
     g.nodes[0]['is_boundary'] = True
     g.nodes[3]['is_boundary'] = True
     g.add_edge(0, 3, weight=0.0)
@@ -224,9 +224,9 @@ def test_repr():
                             "2 detectors, 2 boundary nodes, and 4 edges>")
 
 
-def test_high_qubit_id_raises_value_error():
+def test_high_frame_changes_raises_value_error():
     g = nx.Graph()
-    g.add_edge(0,1,qubit_id=1)
+    g.add_edge(0,1,frame_changes=1)
     with pytest.raises(ValueError):
         Matching(g)
 
@@ -240,19 +240,19 @@ def test_high_node_id_raises_value_error():
 
 def test_matching_edges():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0, weight=1.1, error_probability=0.1)
-    g.add_edge(1, 2, qubit_id=1, weight=2.1, error_probability=0.2)
-    g.add_edge(2, 3, qubit_id={2,3}, weight=0.9, error_probability=0.3)
+    g.add_edge(0, 1, frame_changes=0, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, frame_changes=1, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, frame_changes={2,3}, weight=0.9, error_probability=0.3)
     g.nodes[0]['is_boundary'] = True
     g.nodes[3]['is_boundary'] = True
     g.add_edge(0, 3, weight=0.0)
     m = Matching(g)
     es = list(m.edges())
     expected_edges = [
-        (0,1,{'qubit_id': {0}, 'weight': 1.1, 'error_probability': 0.1}),
-        (0,3,{'qubit_id': set(), 'weight': 0.0, 'error_probability': -1.0}),
-        (1,2,{'qubit_id': {1}, 'weight': 2.1, 'error_probability': 0.2}),
-        (2,3,{'qubit_id': {2,3}, 'weight': 0.9, 'error_probability': 0.3})
+        (0,1,{'frame_changes': {0}, 'weight': 1.1, 'error_probability': 0.1}),
+        (0,3,{'frame_changes': set(), 'weight': 0.0, 'error_probability': -1.0}),
+        (1,2,{'frame_changes': {1}, 'weight': 2.1, 'error_probability': 0.2}),
+        (2,3,{'frame_changes': {2,3}, 'weight': 0.9, 'error_probability': 0.3})
         
     ]
     assert es == expected_edges
@@ -260,15 +260,15 @@ def test_matching_edges():
 
 def test_matching_to_networkx():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id={0}, weight=1.1, error_probability=0.1)
-    g.add_edge(1, 2, qubit_id={1}, weight=2.1, error_probability=0.2)
-    g.add_edge(2, 3, qubit_id={2,3}, weight=0.9, error_probability=0.3)
+    g.add_edge(0, 1, frame_changes={0}, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, frame_changes={1}, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, frame_changes={2,3}, weight=0.9, error_probability=0.3)
     g.nodes[0]['is_boundary'] = True
     g.nodes[3]['is_boundary'] = True
     g.add_edge(0, 3, weight=0.0)
     m = Matching(g)
 
-    g.edges[(0,3)]['qubit_id'] = set()
+    g.edges[(0,3)]['frame_changes'] = set()
     g.edges[(0,3)]['error_probability'] = -1.0
     g.nodes[1]['is_boundary'] = False
     g.nodes[2]['is_boundary'] = False
@@ -283,9 +283,9 @@ def test_matching_to_networkx():
 
 def test_draw_matching():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id={0}, weight=1.1, error_probability=0.1)
-    g.add_edge(1, 2, qubit_id={1}, weight=2.1, error_probability=0.2)
-    g.add_edge(2, 3, qubit_id={2,3}, weight=0.9, error_probability=0.3)
+    g.add_edge(0, 1, frame_changes={0}, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, frame_changes={1}, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, frame_changes={2,3}, weight=0.9, error_probability=0.3)
     g.nodes[0]['is_boundary'] = True
     g.nodes[3]['is_boundary'] = True
     g.add_edge(0, 3, weight=0.0)
@@ -303,11 +303,11 @@ def test_add_edge():
 
     m = Matching()
     m.add_edge(0, 1, weight=0.123, error_probability=0.6)
-    m.add_edge(1, 2, weight=0.6, error_probability=0.3, qubit_id=0)
-    m.add_edge(2, 3, weight=0.01, error_probability=0.5, qubit_id={1, 2})
-    expected = [(0, 1, {'qubit_id': set(), 'weight': 0.123, 'error_probability': 0.6}),
-                (1, 2, {'qubit_id': {0}, 'weight': 0.6, 'error_probability': 0.3}),
-                (2, 3, {'qubit_id': {1, 2}, 'weight': 0.01, 'error_probability': 0.5})]
+    m.add_edge(1, 2, weight=0.6, error_probability=0.3, frame_changes=0)
+    m.add_edge(2, 3, weight=0.01, error_probability=0.5, frame_changes={1, 2})
+    expected = [(0, 1, {'frame_changes': set(), 'weight': 0.123, 'error_probability': 0.6}),
+                (1, 2, {'frame_changes': {0}, 'weight': 0.6, 'error_probability': 0.3}),
+                (2, 3, {'frame_changes': {1, 2}, 'weight': 0.01, 'error_probability': 0.5})]
     assert m.edges() == expected
 
 

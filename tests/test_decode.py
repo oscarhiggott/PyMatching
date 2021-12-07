@@ -83,8 +83,8 @@ def test_mwpm_noisy_decode(n, z_err, c_expected):
 
 def test_precompute_shortest_paths():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(1, 2, qubit_id=1)
+    g.add_edge(0, 1, frame_changes=0)
+    g.add_edge(1, 2, frame_changes=1)
     m = Matching(g)
     assert not m.matching_graph.has_computed_all_pairs_shortest_paths()
     m2 = Matching(g, precompute_shortest_paths=True)
@@ -93,8 +93,8 @@ def test_precompute_shortest_paths():
 
 def test_decode_all_neighbours():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(1, 2, qubit_id=1)
+    g.add_edge(0, 1, frame_changes=0)
+    g.add_edge(1, 2, frame_changes=1)
     m = Matching(g)
     noise = m.decode([1,0,1], num_neighbours=None)
     assert np.array_equal(noise, np.array([1,1]))
@@ -102,8 +102,8 @@ def test_decode_all_neighbours():
 
 def test_bad_syndrome_raises_value_error():
     g = nx.Graph()
-    g.add_edge(0, 1, qubit_id=0)
-    g.add_edge(1, 2, qubit_id=1)
+    g.add_edge(0, 1, frame_changes=0)
+    g.add_edge(1, 2, frame_changes=1)
     m = Matching(g)
     with pytest.raises(TypeError):
         m.decode('test')
@@ -150,10 +150,10 @@ def test_3d_syndrome_raises_value_error_when_repetitions_not_set():
 
 def test_double_weight_matching():
     w = nx.Graph()
-    w.add_edge(0, 1, qubit_id=0, weight=0.97)
-    w.add_edge(2, 3, qubit_id=1, weight=1.98)
-    w.add_edge(0, 2, qubit_id=2, weight=1.1)
-    w.add_edge(1, 3, qubit_id=3, weight=1.2)
+    w.add_edge(0, 1, frame_changes=0, weight=0.97)
+    w.add_edge(2, 3, frame_changes=1, weight=1.98)
+    w.add_edge(0, 2, frame_changes=2, weight=1.1)
+    w.add_edge(1, 3, frame_changes=3, weight=1.2)
     m = Matching(w)
     assert(
         list(m.decode(np.array([1,1,1,1]))) == list(np.array([0,0,1,1]))
@@ -162,30 +162,30 @@ def test_double_weight_matching():
 
 def test_matching_correct():
     g = nx.Graph()
-    g.add_edge(0, 1, weight=1.24, qubit_id=0)
-    g.add_edge(1, 2, weight=1.31, qubit_id=1)
-    g.add_edge(2, 3, weight=1.41, qubit_id=2)
-    g.add_edge(0, 4, weight=1.51, qubit_id=3)
-    g.add_edge(1, 5, weight=1.65, qubit_id=4)
-    g.add_edge(2, 6, weight=1.15, qubit_id=5)
-    g.add_edge(3, 7, weight=1.44, qubit_id=6)
-    g.add_edge(4, 5, weight=1.70, qubit_id=7)
-    g.add_edge(5, 6, weight=1.9, qubit_id=8)
-    g.add_edge(6, 7, weight=1.12, qubit_id=9)
-    g.add_edge(4, 8, weight=1.87, qubit_id=10)
-    g.add_edge(5, 9, weight=1.91, qubit_id=11)
-    g.add_edge(6, 10, weight=1.09, qubit_id=12)
-    g.add_edge(7, 11, weight=1.21, qubit_id=13)
-    g.add_edge(8, 9, weight=1.99, qubit_id=14)
-    g.add_edge(9, 10, weight=1.01, qubit_id=15)
-    g.add_edge(10, 11, weight=1.06, qubit_id=16)
-    g.add_edge(8, 12, weight=1.16, qubit_id=17)
-    g.add_edge(9, 13, weight=1.38, qubit_id=18)
-    g.add_edge(10, 14, weight=1.66, qubit_id=19)
-    g.add_edge(11, 15, weight=1.58, qubit_id=20)
-    g.add_edge(12, 13, weight=1.12, qubit_id=21)
-    g.add_edge(13, 14, weight=1.50, qubit_id=22)
-    g.add_edge(14, 15, weight=1.00, qubit_id=23)
+    g.add_edge(0, 1, weight=1.24, frame_changes=0)
+    g.add_edge(1, 2, weight=1.31, frame_changes=1)
+    g.add_edge(2, 3, weight=1.41, frame_changes=2)
+    g.add_edge(0, 4, weight=1.51, frame_changes=3)
+    g.add_edge(1, 5, weight=1.65, frame_changes=4)
+    g.add_edge(2, 6, weight=1.15, frame_changes=5)
+    g.add_edge(3, 7, weight=1.44, frame_changes=6)
+    g.add_edge(4, 5, weight=1.70, frame_changes=7)
+    g.add_edge(5, 6, weight=1.9, frame_changes=8)
+    g.add_edge(6, 7, weight=1.12, frame_changes=9)
+    g.add_edge(4, 8, weight=1.87, frame_changes=10)
+    g.add_edge(5, 9, weight=1.91, frame_changes=11)
+    g.add_edge(6, 10, weight=1.09, frame_changes=12)
+    g.add_edge(7, 11, weight=1.21, frame_changes=13)
+    g.add_edge(8, 9, weight=1.99, frame_changes=14)
+    g.add_edge(9, 10, weight=1.01, frame_changes=15)
+    g.add_edge(10, 11, weight=1.06, frame_changes=16)
+    g.add_edge(8, 12, weight=1.16, frame_changes=17)
+    g.add_edge(9, 13, weight=1.38, frame_changes=18)
+    g.add_edge(10, 14, weight=1.66, frame_changes=19)
+    g.add_edge(11, 15, weight=1.58, frame_changes=20)
+    g.add_edge(12, 13, weight=1.12, frame_changes=21)
+    g.add_edge(13, 14, weight=1.50, frame_changes=22)
+    g.add_edge(14, 15, weight=1.00, frame_changes=23)
 
     m = Matching(g)
     assert sum(m.decode([0]*16, num_neighbours=20)) == 0
@@ -206,12 +206,12 @@ def test_local_matching_clusters(cluster_size):
     g = nx.Graph()
     qid = 0
     for i in range(cluster_size):
-        g.add_edge(i, i+1, weight=1.0, qubit_id=qid)
+        g.add_edge(i, i+1, weight=1.0, frame_changes=qid)
         qid += 1
-    g.add_edge(cluster_size, cluster_size+1, weight=3*cluster_size, qubit_id=qid)
+    g.add_edge(cluster_size, cluster_size+1, weight=3*cluster_size, frame_changes=qid)
     qid += 1
     for i in range(cluster_size+1, 2*cluster_size + 1):
-        g.add_edge(i, i+1, weight=1.0, qubit_id=qid)
+        g.add_edge(i, i+1, weight=1.0, frame_changes=qid)
         qid += 1
     m = Matching(g)
     m.decode(np.ones((cluster_size+1)*2), num_neighbours=cluster_size)
@@ -241,7 +241,7 @@ def test_local_matching_clusters(cluster_size):
 G = nx.Graph()
 n = 100
 for i in range(n):
-    G.add_edge(i, (i+1) % n, qubit_id=i)
+    G.add_edge(i, (i+1) % n, frame_changes=i)
 M = Matching(G)
 defects = np.array(list(range(n)))
 

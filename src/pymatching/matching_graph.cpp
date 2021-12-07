@@ -31,11 +31,11 @@
 WeightedEdgeData::WeightedEdgeData() {}
 
 WeightedEdgeData::WeightedEdgeData(
-    std::set<int> qubit_ids,
+    std::set<int> frame_changes,
     double weight,
     double error_probability,
     bool has_error_probability
-): qubit_ids(qubit_ids), weight(weight),
+): frame_changes(frame_changes), weight(weight),
 error_probability(error_probability), has_error_probability(has_error_probability) {}
 
 
@@ -59,7 +59,7 @@ std::string set_repr(std::set<int> x) {
 std::string WeightedEdgeData::repr() const {
     std::stringstream ss;
     ss << "pymatching._cpp_mwpm.WeightedEdgeData(";
-    ss << set_repr(qubit_ids) << ", " << weight << ", " << error_probability << ", "
+    ss << set_repr(frame_changes) << ", " << weight << ", " << error_probability << ", "
     << has_error_probability << ")";
     return ss.str();
 }
@@ -86,7 +86,7 @@ MatchingGraph::MatchingGraph(
 void MatchingGraph::AddEdge(
     int node1, 
     int node2, 
-    std::set<int> qubit_ids, 
+    std::set<int> frame_changes,
     double weight, 
     double error_probability, 
     bool has_error_probability){
@@ -113,7 +113,7 @@ void MatchingGraph::AddEdge(
         }
         connected_components_need_updating = true;
         WeightedEdgeData data;
-        data.qubit_ids = qubit_ids;
+        data.frame_changes = frame_changes;
         data.weight = weight;
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
@@ -350,7 +350,7 @@ int MatchingGraph::GetNumEdges() const {
 
 
 int MatchingGraph::GetNumQubits() const {
-    auto qid = boost::get(&WeightedEdgeData::qubit_ids, matching_graph);
+    auto qid = boost::get(&WeightedEdgeData::frame_changes, matching_graph);
     int num_edges = boost::num_edges(matching_graph);
     int maxid = -1;
     std::set<int> edge_qubits;
@@ -386,7 +386,7 @@ std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
                         + std::to_string((int)node1) + ", "
                         + std::to_string((int)node2) + ").");
     }
-    return matching_graph[e.first].qubit_ids;
+    return matching_graph[e.first].frame_changes;
 }
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::AddNoise() const {
@@ -404,7 +404,7 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::Ad
             t = boost::target(*eit, matching_graph);
             (*syndrome)[s] = ((*syndrome)[s] + 1) % 2;
             (*syndrome)[t] = ((*syndrome)[t] + 1) % 2;
-            qids = matching_graph[*eit].qubit_ids;
+            qids = matching_graph[*eit].frame_changes;
             for (auto qid : qids){
                 if (qid >= 0){
                     (*error)[qid] = ((*error)[qid] + 1) % 2;
