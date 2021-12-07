@@ -56,7 +56,7 @@ class Matching:
     edge weights, error probabilities and number of repetitions.
     Alternatively, a Matching object can be constructed from a NetworkX 
     graph, with node and edge attributes used to specify edge weights,
-    frame changes, boundaries and error probabilities.
+    fault ids, boundaries and error probabilities.
     """
     def __init__(self,
                  H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]]=None,
@@ -80,11 +80,12 @@ class Matching:
             be unique. Each edge in the NetworkX graph can have optional 
             attributes ``fault_ids``, ``weight`` and ``error_probability``. 
             ``fault_ids`` should be an int or a set of ints. If there 
-            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``fault_ids``
+            are :math:`N` distinct fault ids being tracked then the union of all ints in the ``fault_ids``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``fault_ids`` attribute could correspond to the IDs of
-            physical Pauli errors that occur when this edge flips (physical frame changes)
-            or the IDs of any logical observables that are flipped when an error occurs associated with the edge
+            Each fault id corresponds to a self-inverse fault that is flipped when the
+            corresponding edge is flipped. These self-inverse faults could correspond to
+            physical Pauli errors (physical frame changes)
+            or to the logical observables that are flipped by the fault
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
             detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
             earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` for backward
@@ -186,12 +187,13 @@ class Matching:
         node2: int
             The ID of node2 in the new edge (node1, node2)
         fault_ids: set[int] or int, optional
-            The IDs of any Pauli frame changes associated with the edge. This could correspond to the IDs of
-            physical Pauli errors that occur when this edge flips (physical frame changes). Alternatively,
+            The IDs of any self-inverse faults which are flipped when the edge is flipped, and which should be tracked.
+            This could correspond to the IDs of physical Pauli errors that occur when this
+            edge flips (physical frame changes). Alternatively,
             this attribute can be used to store the IDs of any logical observables that are
             flipped when an error occurs on an edge (logical frame changes). In earlier versions of PyMatching, this
             attribute was instead named `qubit_id` (since for CSS codes and physical frame changes, there can be
-            a one-to-one correspondence between each frame change ID and physical qubit ID). For backward
+            a one-to-one correspondence between each fault ID and physical qubit ID). For backward
             compatibility, `qubit_id` can still be used instead of `fault_ids` as a keyword argument.
             By default None
         weight: float, optional
@@ -247,13 +249,14 @@ class Matching:
             be unique. Each edge in the NetworkX graph can have optional
             attributes ``fault_ids``, ``weight`` and ``error_probability``.
             ``fault_ids`` should be an int or a set of ints. If there
-            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``fault_ids``
+            are :math:`N` distinct fault_ids being tracked then the union of all ints in the ``fault_ids``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``fault_ids`` attribute could correspond to the IDs of
-            physical Pauli errors that occur when this edge flips (physical frame changes)
-            or the IDs of any logical observables that are flipped when an error occurs associated with the edge
+            Each fault id corresponds to a self-inverse fault that is flipped when the
+            corresponding edge is flipped. These self-inverse faults could correspond to
+            physical Pauli errors (physical frame changes)
+            or to the logical observables that are flipped by the fault
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
-            detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
+            detector error model).  The `fault_ids` attribute was previously named `qubit_id` in an
             earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` for backward
             compatibility.
             Each ``weight`` attribute should be a non-negative float. If

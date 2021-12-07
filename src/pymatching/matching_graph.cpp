@@ -373,7 +373,7 @@ int MatchingGraph::GetNumNodes() const {
     return boost::num_vertices(matching_graph);
 };
 
-std::set<int> MatchingGraph::FrameChangeIDs(int node1, int node2) const {
+std::set<int> MatchingGraph::FaultIDs(int node1, int node2) const {
     int num_nodes = GetNumNodes();
     if (node1 >= num_nodes || node2 >= num_nodes
         || node1 < 0 || node2 < 0){

@@ -372,7 +372,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.shortest_path(1, 2)
      [1, 2]
      )")
-     .def("fault_ids", &MatchingGraph::FrameChangeIDs, "node1"_a, "node2"_a, u8R"(
+     .def("fault_ids", &MatchingGraph::FaultIDs, "node1"_a, "node2"_a, u8R"(
      Returns the fault_ids associated with the edge (node1, node2)
 
      Parameters
@@ -401,12 +401,12 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      {0}
      )")
      .def("get_num_fault_ids", &MatchingGraph::GetNumFaultIDs, u8R"(
-     Returns the number of distinct frame changes associated with edges in the matching graph.
+     Returns the number of distinct fault_ids associated with edges in the matching graph.
 
      Returns
      -------
      int
-         The number of distinct frame changes in the matching graph
+         The number of distinct fault_ids in the matching graph
 
      Examples
      --------

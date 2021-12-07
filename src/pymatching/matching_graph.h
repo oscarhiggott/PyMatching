@@ -118,7 +118,7 @@ class MatchingGraph{
          * @param node2 The index of the second node
          * @return std::set<int> The set of frame change ids associated with the edge between node1 and node2
          */
-        std::set<int> FrameChangeIDs(int node1, int node2) const;
+        std::set<int> FaultIDs(int node1, int node2) const;
         /**
          * @brief Get the number of frame changes associated with edges of the matching graph
          * 
