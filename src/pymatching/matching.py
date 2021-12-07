@@ -80,11 +80,15 @@ class Matching:
             be unique. Each edge in the NetworkX graph can have optional 
             attributes ``frame_changes``, ``weight`` and ``error_probability``. 
             ``frame_changes`` should be an int or a set of ints. If there 
-            are :math:`N` qubits then the union of all ints in the ``frame_changes`` 
+            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``frame_changes``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``frame_changes`` attribute can instead be used to store the indices
-            of logical observables flipped by an error on the corresponding edge
-            (e.g. a frame change in an error instruction in a stim detector error model).
+            Note that the ``frame_changes`` attribute could correspond to the IDs of
+            physical Pauli errors that occur when this edge flips (physical frame changes)
+            or the IDs of any logical observables that are flipped when an error occurs associated with the edge
+            (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
+            detector error model). The `frame_changes` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `frame_changes` for backward
+            compatibility.
             If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
             Each ``weight`` attribute should be a non-negative float. If 
             every edge is assigned an error_probability between zero and one, 
@@ -181,9 +185,14 @@ class Matching:
         node2: int
             The ID of node2 in the new edge (node1, node2)
         frame_changes: set[int] or int, optional
-            The IDs of any qubits that suffer an error when this edge flips. Alternatively,
+            The IDs of any Pauli frame changes associated with the edge. This could correspond to the IDs of
+            physical Pauli errors that occur when this edge flips (physical frame changes). Alternatively,
             this attribute can be used to store the IDs of any logical observables that are
-            flipped when an error occurs on an edge. By default None
+            flipped when an error occurs on an edge (logical frame changes). In earlier versions of PyMatching, this
+            attribute was instead named `qubit_id` (since for CSS codes and physical frame changes, there can be
+            a one-to-one correspondence between each frame change ID and physical qubit ID). For backward
+            compatibility, `qubit_id` can still be used instead of `frame_changes` as a keyword argument.
+            By default None
         weight: float, optional
             The weight of the edge, which must be non-negative, by default 1.0
         error_probability: float, optional
@@ -237,12 +246,15 @@ class Matching:
             be unique. Each edge in the NetworkX graph can have optional
             attributes ``frame_changes``, ``weight`` and ``error_probability``.
             ``frame_changes`` should be an int or a set of ints. If there
-            are :math:`N` qubits then the union of all ints in the ``frame_changes``
+            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``frame_changes``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``frame_changes`` attribute can instead be used to store the indices
-            of logical observables flipped by an error on the corresponding edge
-            (e.g. a frame change in an error instruction in a stim detector error model).
-            If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
+            Note that the ``frame_changes`` attribute could correspond to the IDs of
+            physical Pauli errors that occur when this edge flips (physical frame changes)
+            or the IDs of any logical observables that are flipped when an error occurs associated with the edge
+            (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
+            detector error model). The `frame_changes` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `frame_changes` for backward
+            compatibility.
             Each ``weight`` attribute should be a non-negative float. If
             every edge is assigned an error_probability between zero and one,
             then the ``add_noise`` method can be used to simulate noise and
