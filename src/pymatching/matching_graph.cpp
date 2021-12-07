@@ -362,7 +362,7 @@ int MatchingGraph::GetNumFaultIDs() const {
                 maxid = fault_id;
             }
             if (fault_id < 0 && fault_id != -1){
-                throw std::runtime_error("Frame change ids must be non-negative, or -1 if no frame changes are associated with the edge.");
+                throw std::runtime_error("Fault ids must be non-negative, or -1 if no fault IDs are associated with the edge.");
             }
         }
     }
