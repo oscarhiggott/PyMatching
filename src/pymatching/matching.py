@@ -168,7 +168,8 @@ class Matching:
             node2: int,
             frame_changes: Union[int, Set[int]] = None,
             weight: float = 1.0,
-            error_probability: float = None
+            error_probability: float = None,
+            **kwargs
             ) -> None:
         """
         Add an edge to the matching graph
@@ -210,6 +211,12 @@ class Matching:
         >>> m
         <pymatching.Matching object with 3 qubits, 3 detectors, 0 boundary nodes, and 3 edges>
         """
+        if frame_changes is not None and "qubit_id" in kwargs:
+            raise ValueError("Both `frame_changes` and `qubit_id` were provided as arguments. Please "
+                             "provide `frame_changes` instead of `qubit_id` as an argument, as use of `qubit_id` has "
+                             "been deprecated.")
+        if frame_changes is None and "qubit_id" in kwargs:
+            frame_changes = kwargs["qubit_id"]
         if isinstance(frame_changes, (int, np.integer)):
             frame_changes = {int(frame_changes)}
         frame_changes = set() if frame_changes is None else frame_changes
@@ -264,11 +271,18 @@ class Matching:
         g = MatchingGraph(self.num_detectors, boundary)
         for (u, v, attr) in graph.edges(data=True):
             u, v = int(u), int(v)
-            if u >= num_nodes or v>= num_nodes:
+            if u >= num_nodes or v >= num_nodes:
                 raise ValueError("Every node id must be less "\
                                  "than the number of nodes, but edge "\
                                  "({},{}) was present.".format(u,v))
-            frame_changes = attr.get("frame_changes", set())
+            if "frame_changes" in attr and "qubit_id" in attr:
+                raise ValueError("Both `frame_changes` and `qubit_id` were provided as edge attributes, however use "
+                                 "of `qubit_id` has been deprecated in favour of `frame_changes`. Please only supply "
+                                 "`frame_changes` as an edge attribute.")
+            if "frame_changes" not in attr and "qubit_id" in attr:
+                frame_changes = attr["qubit_id"]  # Still accept qubit_id as well for now
+            else:
+                frame_changes = attr.get("frame_changes", set())
             if isinstance(frame_changes, (int, np.integer)):
                 frame_changes = {int(frame_changes)} if frame_changes != -1 else set()
             else:
@@ -517,8 +531,8 @@ class Matching:
     
     def decode(self,
                z: Union[np.ndarray, List[int]],
-               num_neighbours: int=30,
-               return_weight: bool=False
+               num_neighbours: int = 30,
+               return_weight: bool = False
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """Decode the syndrome `z` using minimum-weight perfect matching
 

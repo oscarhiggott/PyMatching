@@ -238,7 +238,7 @@ def test_high_node_id_raises_value_error():
         Matching(g)
 
 
-def test_matching_edges():
+def test_matching_edges_from_networkx():
     g = nx.Graph()
     g.add_edge(0, 1, frame_changes=0, weight=1.1, error_probability=0.1)
     g.add_edge(1, 2, frame_changes=1, weight=2.1, error_probability=0.2)
@@ -256,6 +256,54 @@ def test_matching_edges():
         
     ]
     assert es == expected_edges
+
+
+def test_qubit_id_accepted_via_networkx():
+    g = nx.Graph()
+    g.add_edge(0, 1, qubit_id=0, weight=1.1, error_probability=0.1)
+    g.add_edge(1, 2, qubit_id=1, weight=2.1, error_probability=0.2)
+    g.add_edge(2, 3, qubit_id={2, 3}, weight=0.9, error_probability=0.3)
+    g.nodes[0]['is_boundary'] = True
+    g.nodes[3]['is_boundary'] = True
+    g.add_edge(0, 3, weight=0.0)
+    m = Matching(g)
+    es = list(m.edges())
+    expected_edges = [
+        (0, 1, {'frame_changes': {0}, 'weight': 1.1, 'error_probability': 0.1}),
+        (0, 3, {'frame_changes': set(), 'weight': 0.0, 'error_probability': -1.0}),
+        (1, 2, {'frame_changes': {1}, 'weight': 2.1, 'error_probability': 0.2}),
+        (2, 3, {'frame_changes': {2, 3}, 'weight': 0.9, 'error_probability': 0.3})
+
+    ]
+    assert es == expected_edges
+
+
+def test_qubit_id_accepted_using_add_edge():
+    m = Matching()
+    m.add_edge(0, 1, qubit_id=0)
+    m.add_edge(1, 2, qubit_id={1, 2})
+    es = list(m.edges())
+    expected_edges = [
+        (0, 1, {'frame_changes': {0}, 'weight': 1.0, 'error_probability': -1.0}),
+        (1, 2, {'frame_changes': {1, 2}, 'weight': 1.0, 'error_probability': -1.0})
+    ]
+    assert es == expected_edges
+
+
+def test_add_edge_raises_value_error_if_qubit_id_and_frame_changes_both_supplied():
+    with pytest.raises(ValueError):
+        m = Matching()
+        m.add_edge(0, 1, qubit_id=0, frame_changes=0)
+        m.add_edge(1, 2, qubit_id=1, frame_changes=1)
+
+
+def test_load_from_networkx_raises_value_error_if_qubit_id_and_frame_changes_both_supplied():
+    with pytest.raises(ValueError):
+        g = nx.Graph()
+        g.add_edge(0, 1, qubit_id=0, frame_changes=0)
+        g.add_edge(1, 2, qubit_id=1, frame_changes=1)
+        m = Matching()
+        m.load_from_networkx(g)
 
 
 def test_matching_to_networkx():
