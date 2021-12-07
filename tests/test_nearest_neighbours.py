@@ -21,11 +21,11 @@ from pymatching._cpp_mwpm import local_matching
 
 
 g = nx.Graph()
-g.add_edge(0, 1, frame_changes=0, weight=0.3)
-g.add_edge(1, 2, frame_changes=1, weight=0.1)
-g.add_edge(2, 3, frame_changes=2, weight=0.1)
-g.add_edge(3, 4, frame_changes=3, weight=0.1)
-g.add_edge(4, 5, frame_changes=4, weight=0.1)
+g.add_edge(0, 1, fault_ids=0, weight=0.3)
+g.add_edge(1, 2, fault_ids=1, weight=0.1)
+g.add_edge(2, 3, fault_ids=2, weight=0.1)
+g.add_edge(3, 4, fault_ids=3, weight=0.1)
+g.add_edge(4, 5, fault_ids=4, weight=0.1)
 m = Matching(g)
 
 

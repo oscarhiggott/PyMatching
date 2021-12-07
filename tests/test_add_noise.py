@@ -25,7 +25,7 @@ def test_add_noise():
     std = (p*(1-p)/N)**0.5
     g = nx.Graph()
     for i in range(N):
-        g.add_edge(i, i+1, frame_changes=i, weight=-np.log(p), error_probability=p)
+        g.add_edge(i, i+1, fault_ids=i, weight=-np.log(p), error_probability=p)
     m = Matching(g)
     for i in range(5):
         noise, syndrome = m.add_noise()
@@ -38,7 +38,7 @@ def test_add_noise():
 def test_add_noise_with_boundary():
     g = nx.Graph()
     for i in range(11):
-        g.add_edge(i, i+1, frame_changes=i, error_probability=(i+1) % 2)
+        g.add_edge(i, i+1, fault_ids=i, error_probability=(i+1) % 2)
     for i in range(5, 12):
         g.nodes()[i]['is_boundary'] = True
     m = Matching(g)

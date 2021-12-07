@@ -78,16 +78,16 @@ class Matching:
             If `H` is given as a NetworkX graph with `M` nodes, each node 
             `m` in `H` should be an integer :math:`0<m<M-1`, and each node should 
             be unique. Each edge in the NetworkX graph can have optional 
-            attributes ``frame_changes``, ``weight`` and ``error_probability``. 
-            ``frame_changes`` should be an int or a set of ints. If there 
-            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``frame_changes``
+            attributes ``fault_ids``, ``weight`` and ``error_probability``. 
+            ``fault_ids`` should be an int or a set of ints. If there 
+            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``fault_ids``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``frame_changes`` attribute could correspond to the IDs of
+            Note that the ``fault_ids`` attribute could correspond to the IDs of
             physical Pauli errors that occur when this edge flips (physical frame changes)
             or the IDs of any logical observables that are flipped when an error occurs associated with the edge
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
-            detector error model). The `frame_changes` attribute was previously named `qubit_id` in an
-            earlier version of PyMatching, and `qubit_id` is still accepted instead of `frame_changes` for backward
+            detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` for backward
             compatibility.
             If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
             Each ``weight`` attribute should be a non-negative float. If 
@@ -137,9 +137,9 @@ class Matching:
         >>> import pymatching
         >>> import math
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, frame_changes=0, weight=0.1)
-        >>> m.add_edge(1, 2, frame_changes=1, weight=0.15)
-        >>> m.add_edge(2, 3, frame_changes={2, 0}, weight=0.2)
+        >>> m.add_edge(0, 1, fault_ids=0, weight=0.1)
+        >>> m.add_edge(1, 2, fault_ids=1, weight=0.15)
+        >>> m.add_edge(2, 3, fault_ids={2, 0}, weight=0.2)
         >>> m.set_boundary_nodes({0, 3})
         >>> m
         <pymatching.Matching object with 2 detectors, 2 boundary nodes, and 3 edges>
@@ -171,7 +171,7 @@ class Matching:
             self,
             node1: int,
             node2: int,
-            frame_changes: Union[int, Set[int]] = None,
+            fault_ids: Union[int, Set[int]] = None,
             weight: float = 1.0,
             error_probability: float = None,
             **kwargs
@@ -185,14 +185,14 @@ class Matching:
             The ID of node1 in the new edge (node1, node2)
         node2: int
             The ID of node2 in the new edge (node1, node2)
-        frame_changes: set[int] or int, optional
+        fault_ids: set[int] or int, optional
             The IDs of any Pauli frame changes associated with the edge. This could correspond to the IDs of
             physical Pauli errors that occur when this edge flips (physical frame changes). Alternatively,
             this attribute can be used to store the IDs of any logical observables that are
             flipped when an error occurs on an edge (logical frame changes). In earlier versions of PyMatching, this
             attribute was instead named `qubit_id` (since for CSS codes and physical frame changes, there can be
             a one-to-one correspondence between each frame change ID and physical qubit ID). For backward
-            compatibility, `qubit_id` can still be used instead of `frame_changes` as a keyword argument.
+            compatibility, `qubit_id` can still be used instead of `fault_ids` as a keyword argument.
             By default None
         weight: float, optional
             The weight of the edge, which must be non-negative, by default 1.0
@@ -215,24 +215,24 @@ class Matching:
         >>> import pymatching
         >>> import math
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, frame_changes=2, weight=math.log((1-0.05)/0.05), error_probability=0.05)
-        >>> m.add_edge(1, 2, frame_changes=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
-        >>> m.add_edge(2, 0, frame_changes={1, 2}, weight=math.log((1-0.2)/0.2), error_probability=0.2)
+        >>> m.add_edge(0, 1, fault_ids=2, weight=math.log((1-0.05)/0.05), error_probability=0.05)
+        >>> m.add_edge(1, 2, fault_ids=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> m.add_edge(2, 0, fault_ids={1, 2}, weight=math.log((1-0.2)/0.2), error_probability=0.2)
         >>> m
         <pymatching.Matching object with 3 detectors, 0 boundary nodes, and 3 edges>
         """
-        if frame_changes is not None and "qubit_id" in kwargs:
-            raise ValueError("Both `frame_changes` and `qubit_id` were provided as arguments. Please "
-                             "provide `frame_changes` instead of `qubit_id` as an argument, as use of `qubit_id` has "
+        if fault_ids is not None and "qubit_id" in kwargs:
+            raise ValueError("Both `fault_ids` and `qubit_id` were provided as arguments. Please "
+                             "provide `fault_ids` instead of `qubit_id` as an argument, as use of `qubit_id` has "
                              "been deprecated.")
-        if frame_changes is None and "qubit_id" in kwargs:
-            frame_changes = kwargs["qubit_id"]
-        if isinstance(frame_changes, (int, np.integer)):
-            frame_changes = {int(frame_changes)}
-        frame_changes = set() if frame_changes is None else frame_changes
+        if fault_ids is None and "qubit_id" in kwargs:
+            fault_ids = kwargs["qubit_id"]
+        if isinstance(fault_ids, (int, np.integer)):
+            fault_ids = {int(fault_ids)}
+        fault_ids = set() if fault_ids is None else fault_ids
         has_error_probability = error_probability is not None
         error_probability = error_probability if has_error_probability else -1
-        self.matching_graph.add_edge(node1, node2, frame_changes, weight,
+        self.matching_graph.add_edge(node1, node2, fault_ids, weight,
                                      error_probability, has_error_probability)
 
     def load_from_networkx(self, graph: nx.Graph) -> None:
@@ -245,16 +245,16 @@ class Matching:
             If `G` has `M` nodes, each node
             `m` in `G` should be an integer :math:`0<m<M-1`, and each node should
             be unique. Each edge in the NetworkX graph can have optional
-            attributes ``frame_changes``, ``weight`` and ``error_probability``.
-            ``frame_changes`` should be an int or a set of ints. If there
-            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``frame_changes``
+            attributes ``fault_ids``, ``weight`` and ``error_probability``.
+            ``fault_ids`` should be an int or a set of ints. If there
+            are :math:`N` distinct frame changes being tracked then the union of all ints in the ``fault_ids``
             attributes in the graph should be the integers :math:`0\ldots N-1`.
-            Note that the ``frame_changes`` attribute could correspond to the IDs of
+            Note that the ``fault_ids`` attribute could correspond to the IDs of
             physical Pauli errors that occur when this edge flips (physical frame changes)
             or the IDs of any logical observables that are flipped when an error occurs associated with the edge
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
-            detector error model). The `frame_changes` attribute was previously named `qubit_id` in an
-            earlier version of PyMatching, and `qubit_id` is still accepted instead of `frame_changes` for backward
+            detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` for backward
             compatibility.
             Each ``weight`` attribute should be a non-negative float. If
             every edge is assigned an error_probability between zero and one,
@@ -267,8 +267,8 @@ class Matching:
         >>> import networkx as nx
         >>> import math
         >>> g = nx.Graph()
-        >>> g.add_edge(0, 1, frame_changes=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
-        >>> g.add_edge(1, 2, frame_changes=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
+        >>> g.add_edge(0, 1, fault_ids=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> g.add_edge(1, 2, fault_ids=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
         >>> g.nodes[0]['is_boundary'] = True
         >>> g.nodes[2]['is_boundary'] = True
         >>> m = pymatching.Matching(g)
@@ -280,35 +280,35 @@ class Matching:
             raise TypeError("G must be a NetworkX graph")
         boundary = _find_boundary_nodes(graph)
         num_nodes = graph.number_of_nodes()
-        all_frame_changes = set()
+        all_fault_ids = set()
         g = MatchingGraph(self.num_detectors, boundary)
         for (u, v, attr) in graph.edges(data=True):
             u, v = int(u), int(v)
-            if "frame_changes" in attr and "qubit_id" in attr:
-                raise ValueError("Both `frame_changes` and `qubit_id` were provided as edge attributes, however use "
-                                 "of `qubit_id` has been deprecated in favour of `frame_changes`. Please only supply "
-                                 "`frame_changes` as an edge attribute.")
-            if "frame_changes" not in attr and "qubit_id" in attr:
-                frame_changes = attr["qubit_id"]  # Still accept qubit_id as well for now
+            if "fault_ids" in attr and "qubit_id" in attr:
+                raise ValueError("Both `fault_ids` and `qubit_id` were provided as edge attributes, however use "
+                                 "of `qubit_id` has been deprecated in favour of `fault_ids`. Please only supply "
+                                 "`fault_ids` as an edge attribute.")
+            if "fault_ids" not in attr and "qubit_id" in attr:
+                fault_ids = attr["qubit_id"]  # Still accept qubit_id as well for now
             else:
-                frame_changes = attr.get("frame_changes", set())
-            if isinstance(frame_changes, (int, np.integer)):
-                frame_changes = {int(frame_changes)} if frame_changes != -1 else set()
+                fault_ids = attr.get("fault_ids", set())
+            if isinstance(fault_ids, (int, np.integer)):
+                fault_ids = {int(fault_ids)} if fault_ids != -1 else set()
             else:
                 try:
-                    frame_changes = set(frame_changes)
-                    if not all(isinstance(q, (int, np.integer)) for q in frame_changes):
-                        raise ValueError("frame_changes must be a set of ints, not {}".format(frame_changes))
+                    fault_ids = set(fault_ids)
+                    if not all(isinstance(q, (int, np.integer)) for q in fault_ids):
+                        raise ValueError("fault_ids must be a set of ints, not {}".format(fault_ids))
                 except:
                     raise ValueError(
-                        "frame_changes property must be an int or a set of int"\
-                        " (or convertible to a set), not {}".format(frame_changes))
-            all_frame_changes = all_frame_changes | frame_changes
+                        "fault_ids property must be an int or a set of int"\
+                        " (or convertible to a set), not {}".format(fault_ids))
+            all_fault_ids = all_fault_ids | fault_ids
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
             if weight < 0:
                 raise ValueError("Weights cannot be negative.")
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, frame_changes, weight, e_prob, 0 <= e_prob <= 1)
+            g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
         self.matching_graph = g
 
     def load_from_check_matrix(self,
@@ -398,10 +398,10 @@ class Matching:
                              "1 or 2, not {}".format(unique_column_weights))
         H.eliminate_zeros()
         H.sort_indices()
-        num_frame_changes = H.shape[1]
+        num_fault_ids = H.shape[1]
 
-        if weights.shape[0] != num_frame_changes:
-            raise ValueError("Weights array must have num_frame_changes elements")
+        if weights.shape[0] != num_fault_ids:
+            raise ValueError("Weights array must have num_fault_ids elements")
         if np.any(weights < 0.):
             raise ValueError("All weights must be non-negative.")
 
@@ -468,7 +468,7 @@ class Matching:
         self.matching_graph.set_boundary(nodes)
 
     @property
-    def num_frame_changes(self) -> int:
+    def num_fault_ids(self) -> int:
         """
         The number of frame change IDs defined in the matching graph
 
@@ -477,7 +477,7 @@ class Matching:
         int
             Number of frame change IDs
         """
-        return self.matching_graph.get_num_frame_changes()
+        return self.matching_graph.get_num_fault_ids()
     
     @property
     def boundary(self) -> Set[int]:
@@ -603,14 +603,14 @@ class Matching:
         array([1, 1, 0, 0], dtype=uint8)
 
         Each bit in the correction provided by Matching.decode corresponds to a
-        frame_changes. The index of a bit in a correction corresponds to its frame_changes.
-        For example, here an error on edge (0, 1) flips frame_changes 2 and 3, as
+        fault_ids. The index of a bit in a correction corresponds to its fault_ids.
+        For example, here an error on edge (0, 1) flips fault_ids 2 and 3, as
         inferred by the minimum-weight correction:
         >>> import pymatching
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, frame_changes={2, 3})
-        >>> m.add_edge(1, 2, frame_changes=1)
-        >>> m.add_edge(2, 0, frame_changes=0)
+        >>> m.add_edge(0, 1, fault_ids={2, 3})
+        >>> m.add_edge(1, 2, fault_ids=1)
+        >>> m.add_edge(2, 0, fault_ids=0)
         >>> m.decode([1, 1, 0])
         array([0, 0, 1, 1], dtype=uint8)
 
@@ -676,7 +676,7 @@ class Matching:
         Returns
         -------
         numpy.ndarray of dtype int
-            Noise vector (binary numpy int array of length self.num_frame_changes)
+            Noise vector (binary numpy int array of length self.num_fault_ids)
         numpy.ndarray of dtype int
             Syndrome vector (binary numpy int array of length 
             self.num_detectors if there is no boundary, or self.num_detectors+len(self.boundary)
@@ -693,7 +693,7 @@ class Matching:
         tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the 
         indices of the source and target nodes, and `attr` is a dictionary containing the 
         attributes of the edge.
-        The dictionary `attr` has keys `frame_changes` (a set of ints), `weight` (the weight of the edge, 
+        The dictionary `attr` has keys `fault_ids` (a set of ints), `weight` (the weight of the edge, 
         set to 1.0 if not specified), and `error_probability` 
         (the error probability of the edge, set to -1 if not specified).
 
@@ -704,7 +704,7 @@ class Matching:
         """
         edata = self.matching_graph.get_edges()
         return [(e[0], e[1], {
-            'frame_changes': e[2].frame_changes,
+            'fault_ids': e[2].fault_ids,
             'weight': e[2].weight,
             'error_probability': e[2].error_probability
             }) for e in edata]
@@ -713,7 +713,7 @@ class Matching:
         """Convert to NetworkX graph
 
         Returns a NetworkX graph corresponding to the matching graph. Each edge 
-        has attributes `frame_changes`, `weight` and `error_probability` and each node has 
+        has attributes `fault_ids`, `weight` and `error_probability` and each node has 
         the attribute `is_boundary`.
 
         Returns
@@ -759,7 +759,7 @@ class Matching:
                 return str(qid.pop())
             else:
                 return str(qid)
-        edge_labels = {(s, t): qid_to_str(d['frame_changes']) for (s,t,d) in G.edges(data=True)}
+        edge_labels = {(s, t): qid_to_str(d['fault_ids']) for (s,t,d) in G.edges(data=True)}
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     def __repr__(self) -> str:

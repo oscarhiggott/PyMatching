@@ -27,12 +27,12 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      Initialises a WeightedEdgeData object
      )")
      .def(py::init<std::set<int>, double, double, bool>(),
-          "frame_changes"_a, "weight"_a, "error_probability"_a, "has_error_probability"_a, u8R"(
+          "fault_ids"_a, "weight"_a, "error_probability"_a, "has_error_probability"_a, u8R"(
      Initialises a WeightedEdgeData object
 
      Parameters
      ----------
-     frame_changes: set[int]
+     fault_ids: set[int]
          A set of frame change IDs
      weight: float
          The edge weight
@@ -43,7 +43,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
          Whether the edge has an error_probability
      )")
      .def("__repr__", &WeightedEdgeData::repr)
-     .def_readwrite("frame_changes", &WeightedEdgeData::frame_changes)
+     .def_readwrite("fault_ids", &WeightedEdgeData::fault_ids)
      .def_readwrite("weight", &WeightedEdgeData::weight)
      .def_readwrite("error_probability", &WeightedEdgeData::error_probability)
      .def_readwrite("has_error_probability", &WeightedEdgeData::has_error_probability);
@@ -57,10 +57,10 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> from pymatching._cpp_mwpm import MatchingGraph, set_seed
      >>> set_seed(0)
      >>> graph = MatchingGraph()
-     >>> graph.add_edge(0, 1, frame_changes={0}, weight=math.log((1-0.1)/0.1), error_probability=0.1, has_error_probability=True)
-     >>> graph.add_edge(1, 2, frame_changes={1}, weight=math.log((1-0.2)/0.2), error_probability=0.2, has_error_probability=True)
-     >>> graph.add_edge(2, 3, frame_changes={2}, weight=math.log((1-0.4)/0.4), error_probability=0.4, has_error_probability=True)
-     >>> graph.add_edge(3, 4, frame_changes={3}, weight=math.log((1-0.05)/0.05), error_probability=0.05, has_error_probability=True)
+     >>> graph.add_edge(0, 1, fault_ids={0}, weight=math.log((1-0.1)/0.1), error_probability=0.1, has_error_probability=True)
+     >>> graph.add_edge(1, 2, fault_ids={1}, weight=math.log((1-0.2)/0.2), error_probability=0.2, has_error_probability=True)
+     >>> graph.add_edge(2, 3, fault_ids={2}, weight=math.log((1-0.4)/0.4), error_probability=0.4, has_error_probability=True)
+     >>> graph.add_edge(3, 4, fault_ids={3}, weight=math.log((1-0.05)/0.05), error_probability=0.05, has_error_probability=True)
      >>> graph.set_boundary({0, 4})
      >>> graph
      <pymatching._cpp_mwpm.MatchingGraph object with 5 nodes, 4 edges and 2 boundary nodes>
@@ -105,7 +105,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           >>> graph.all_edges_have_error_probabilities()
           False
           )")
-     .def("add_edge", &MatchingGraph::AddEdge, "node1"_a, "node2"_a, "frame_changes"_a,
+     .def("add_edge", &MatchingGraph::AddEdge, "node1"_a, "node2"_a, "fault_ids"_a,
           "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false, u8R"(
           Adds an edge to the matching graph
 
@@ -115,7 +115,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
               The id of the first node in the edge to be added
           node2: int
               The id of the second node in the edge to be added
-          frame_changes: set[int]
+          fault_ids: set[int]
               The ids of the frame changes associated with the edge
           weight: float
               The weight of the edge
@@ -136,7 +136,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           >>> graph.add_edge(2, 3, {3}, math.log((1-0.2)/0.2), 0.2, True)
           >>> graph.add_edge(3, 0, set(), 0, -1, False)
           >>> graph.set_boundary({0, 3})
-          >>> graph.get_num_frame_changes()
+          >>> graph.get_num_fault_ids()
           4
           >>> graph.get_num_edges()
           4
@@ -372,8 +372,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.shortest_path(1, 2)
      [1, 2]
      )")
-     .def("frame_changes", &MatchingGraph::FrameChangeIDs, "node1"_a, "node2"_a, u8R"(
-     Returns the frame_changes associated with the edge (node1, node2)
+     .def("fault_ids", &MatchingGraph::FrameChangeIDs, "node1"_a, "node2"_a, u8R"(
+     Returns the fault_ids associated with the edge (node1, node2)
 
      Parameters
      ----------
@@ -385,7 +385,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      Returns
      -------
      set[int]
-         The frame_changes associated with the edge (node1, node2)
+         The fault_ids associated with the edge (node1, node2)
 
      Examples
      --------
@@ -393,14 +393,14 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph = MatchingGraph()
      >>> graph.add_edge(0, 1, {0}, 1)
      >>> graph.add_edge(1, 2, {1, 2, 3}, 1)
-     >>> graph.frame_changes(0, 1)
+     >>> graph.fault_ids(0, 1)
      {0}
-     >>> graph.frame_changes(1, 2)
+     >>> graph.fault_ids(1, 2)
      {1, 2, 3}
-     >>> graph.frame_changes(1, 0)
+     >>> graph.fault_ids(1, 0)
      {0}
      )")
-     .def("get_num_frame_changes", &MatchingGraph::GetNumFrameChanges, u8R"(
+     .def("get_num_fault_ids", &MatchingGraph::GetNumFrameChanges, u8R"(
      Returns the number of distinct frame changes associated with edges in the matching graph.
 
      Returns
@@ -415,7 +415,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.add_edge(0, 1, {0}, 1)
      >>> graph.add_edge(1, 2, {1, 2, 3}, 1)
      >>> graph.add_edge(2, 3, {4, 5}, 1)
-     >>> graph.get_num_frame_changes()
+     >>> graph.get_num_fault_ids()
      6
      )")
      .def("get_num_nodes", &MatchingGraph::GetNumNodes, u8R"(
@@ -592,7 +592,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
             -------
             MatchingResult
                 The recovery operator (and, optionally, weight of the matching).
-                `MatchingResult.correction[i]` is 1 if frame_changes 1
+                `MatchingResult.correction[i]` is 1 if fault_ids 1
                 should be flipped when applying the minimum weight correction, and 0
                 otherwise. `MatchingResult.weight` gives the sum of the weights of the
                 edges included in the minimum-weight perfect matching correction if
@@ -642,7 +642,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
             -------
             MatchingResult
                 The recovery operator (and, optionally, weight of the matching).
-                `MatchingResult.correction[i]` is 1 if frame_changes 1
+                `MatchingResult.correction[i]` is 1 if fault_ids 1
                 should be flipped when applying the minimum weight correction, and 0
                 otherwise. `MatchingResult.weight` gives the sum of the weights of the
                 edges included in the minimum-weight perfect matching correction if

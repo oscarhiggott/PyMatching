@@ -29,13 +29,13 @@
 namespace py = pybind11;
 
 struct WeightedEdgeData {
-    std::set<int> frame_changes;
+    std::set<int> fault_ids;
     double weight;
     double error_probability;
     bool has_error_probability;
     WeightedEdgeData();
     WeightedEdgeData(
-        std::set<int> frame_changes,
+        std::set<int> fault_ids,
         double weight,
         double error_probability,
         bool has_error_probability
@@ -75,12 +75,12 @@ class MatchingGraph{
          * 
          * @param node1 Index of the first node
          * @param node2 Index of the second node
-         * @param frame_changes Indices of the frame changes associated with this edge
+         * @param fault_ids Indices of the frame changes associated with this edge
          * @param weight Weight of the edge
          * @param error_probability The error probability associated with an edge (optional, set to -1 if not needed)
          * @param has_error_probability Flag whether a valid error probability has been supplied
          */
-        void AddEdge(int node1, int node2, std::set<int> frame_changes,
+        void AddEdge(int node1, int node2, std::set<int> fault_ids,
                      double weight, double error_probability,
                      bool has_error_probability);
         /**
@@ -140,7 +140,7 @@ class MatchingGraph{
         /**
          * @brief If an error_probability is assigned to every edge, flip each edge 
          * with its corresponding error_probability. If an edge is flipped, add (mod 2) 
-         * an error to the associated frame changes (specified by the frame_changes edge data).
+         * an error to the associated frame changes (specified by the fault_ids edge data).
          * The frame changes to be applied as a recovery are returned as a binary numpy array, as well as a syndrome
          * vector, also as a binary numpy array. The length of the syndrome vector is 
          * is the number of nodes in the matching graph (there is an element for each
