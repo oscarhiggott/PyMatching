@@ -562,7 +562,8 @@ class Matching:
             `z` is a 1D array, then `z[i]` is the syndrome at node `i` of 
             the matching graph. If `z` is 2D then `z[i,j]` is the difference 
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time 
-            step `j+1` and time step `j` (for the case where `repetitions>1`).
+            step `j+1` and time step `j` (for the case where the matching graph is
+            constructed from a check matrix with `repetitions>1`).
         num_neighbours : int, optional
             Number of closest neighbours (with non-trivial syndrome) of each matching
             graph node to consider when decoding. If `num_neighbours` is set
