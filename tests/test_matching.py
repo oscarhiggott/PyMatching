@@ -424,6 +424,16 @@ def test_measurement_error_probabilities(p_meas, expected_edges, repetitions):
     es = set((tuple(sorted([u, v])), d["error_probability"]) for u, v, d in m.edges())
     assert es == expected_edges
 
+    # Check measurement_error_probability also accepted
+    m = Matching(
+        [[1, 1, 0], [0, 1, 1]],
+        error_probabilities=[0.1, 0.2, 0.3],
+        measurement_error_probability=p_meas,
+        repetitions=repetitions
+    )
+    es = set((tuple(sorted([u, v])), d["error_probability"]) for u, v, d in m.edges())
+    assert es == expected_edges
+
 
 @pytest.mark.parametrize("m_errors", [[0.1, 0.01, 3], "A"])
 def test_wrong_measurement_error_probabilities_raises_valueerror(m_errors):
@@ -432,6 +442,15 @@ def test_wrong_measurement_error_probabilities_raises_valueerror(m_errors):
         m = Matching()
         m.load_from_check_matrix(H, spacelike_weights=np.array([0.3, 0.7, 0.9]),
                                  measurement_error_probabilities=m_errors, repetitions=3)
+
+
+def test_measurement_error_probabilities_and_probability_raises_value_error():
+    H = np.array([[1, 1, 0], [0, 1, 1]])
+    with pytest.raises(ValueError):
+        m = Matching()
+        m.load_from_check_matrix(H, spacelike_weights=np.array([0.3, 0.7, 0.9]),
+                                 measurement_error_probabilities=[0.1, 0.1], repetitions=3,
+                                 measurement_error_probability=[0.1, 0.1])
 
 
 def test_set_boundary_nodes():

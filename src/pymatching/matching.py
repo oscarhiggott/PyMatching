@@ -59,13 +59,14 @@ class Matching:
     fault ids, boundaries and error probabilities.
     """
     def __init__(self,
-                 H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]]=None,
+                 H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]] = None,
                  spacelike_weights: Union[float, np.ndarray, List[float]] = None,
                  error_probabilities: Union[float, np.ndarray, List[float]] = None,
                  repetitions: int = None,
                  timelike_weights: Union[float, np.ndarray, List[float]] = None,
                  measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                 precompute_shortest_paths: bool=False
+                 precompute_shortest_paths: bool = False,
+                 **kwargs
                  ):
         r"""Constructor for the Matching class
 
@@ -162,7 +163,8 @@ class Matching:
                 raise TypeError("H must be a NetworkX graph or convertible "
                                 "to a scipy.csc_matrix")
             self.load_from_check_matrix(H, spacelike_weights, error_probabilities,
-                                        repetitions, timelike_weights, measurement_error_probabilities)
+                                        repetitions, timelike_weights, measurement_error_probabilities,
+                                        **kwargs)
         else:
             self.load_from_networkx(H)
         if precompute_shortest_paths:
@@ -320,7 +322,8 @@ class Matching:
                                error_probabilities: Union[float, np.ndarray, List[float]] = None,
                                repetitions: int = None,
                                timelike_weights: Union[float, np.ndarray, List[float]] = None,
-                               measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None
+                               measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                               **kwargs
                                ) -> None:
         """
         Load a matching graph from a check matrix
@@ -357,7 +360,9 @@ class Matching:
             error to be used for the add_noise method. If a float is given, all measurement
             errors are set to the same value. If a numpy array of size `(H.shape[0],)` is given,
             the error probability for each vertical timelike edge associated with the `i`th check
-            (row) of `H` is set to `measurement_error_probabilities[i]`. By default None
+            (row) of `H` is set to `measurement_error_probabilities[i]`. This argument can also be
+            given using the keyword argument `measurement_error_probability` to maintain backward
+            compatibility with previous versions of Pymatching. By default None
 
         Examples
         --------
@@ -419,6 +424,15 @@ class Matching:
             raise ValueError("timelike_weights should be a float or a 1d numpy array")
 
         repetitions = 1 if repetitions is None else repetitions
+
+        mep = kwargs.get("measurement_error_probability")
+        if measurement_error_probabilities is not None and mep is not None:
+            raise ValueError("Both `measurement_error_probabilities` and `measurement_error_probability` "
+                             "were provided as arguments. Please "
+                             "provide `measurement_error_probabilities` instead of `measurement_error_probability` "
+                             "as an argument, as use of `measurement_error_probability` has been deprecated.")
+        if measurement_error_probabilities is None and mep is not None:
+            measurement_error_probabilities = mep
 
         p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
         if isinstance(p_meas, (int, float, np.integer, np.floating)):
