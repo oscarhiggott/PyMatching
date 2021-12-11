@@ -50,8 +50,9 @@ class Matching:
     """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder
 
     The Matching class provides most of the core functionality of PyMatching. 
-    A PyMatching object can be constructed from the :math:`Z` or 
-    :math:`X` check matrix of the quantum code, given as a `scipy.sparse` 
+    A PyMatching object can be constructed from a check matrix with one or two non-zero
+    elements in each column (e.g. the :math:`Z` or
+    :math:`X` check matrix of some classes of CSS quantum code), given as a `scipy.sparse`
     matrix or `numpy.ndarray`, along with additional argument specifying the 
     edge weights, error probabilities and number of repetitions.
     Alternatively, a Matching object can be constructed from a NetworkX 
@@ -76,29 +77,27 @@ class Matching:
             The quantum code to be decoded with minimum-weight perfect
             matching, given either as a binary check matrix (scipy sparse 
             matrix or numpy.ndarray), or as a matching graph (NetworkX graph).
-            If `H` is given as a NetworkX graph with `M` nodes, each node 
-            `m` in `H` should be an integer :math:`0<m<M-1`, and each node should 
-            be unique. Each edge in the NetworkX graph can have optional 
+            Each edge in the NetworkX graph can have optional
             attributes ``fault_ids``, ``weight`` and ``error_probability``. 
-            ``fault_ids`` should be an int or a set of ints. If there 
-            are :math:`N` distinct fault ids being tracked then the union of all ints in the ``fault_ids``
-            attributes in the graph should be the integers :math:`0\ldots N-1`.
+            ``fault_ids`` should be an int or a set of ints.
             Each fault id corresponds to a self-inverse fault that is flipped when the
             corresponding edge is flipped. These self-inverse faults could correspond to
             physical Pauli errors (physical frame changes)
             or to the logical observables that are flipped by the fault
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
             detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
-            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` for backward
-            compatibility.
-            If there are N logical observables, they should again be numbered :math:`0\ldots N-1`.
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` in order
+            to maintain backward compatibility.
             Each ``weight`` attribute should be a non-negative float. If 
             every edge is assigned an error_probability between zero and one, 
             then the ``add_noise`` method can be used to simulate noise and 
             flip edges independently in the graph. By default, None
         spacelike_weights : float or numpy.ndarray, optional
             If `H` is given as a scipy or numpy array, `spacelike_weights` gives the weights
-            of edges in the matching graph. By default None, in which case 
+            of edges in the matching graph corresponding to columns of `H`.
+            If spacelike_weights is a numpy.ndarray, it should be a 1D array with length
+            equal to `H.shape[1]`. If spacelike_weights is a float, it is used as the weight for all
+            edges corresponding to columns of `H`. By default None, in which case
             all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each edge corresponding
@@ -246,21 +245,17 @@ class Matching:
         Parameters
         ----------
         graph : networkx.Graph
-            If `G` has `M` nodes, each node
-            `m` in `G` should be an integer :math:`0<m<M-1`, and each node should
-            be unique. Each edge in the NetworkX graph can have optional
+            Each edge in the NetworkX graph can have optional
             attributes ``fault_ids``, ``weight`` and ``error_probability``.
-            ``fault_ids`` should be an int or a set of ints. If there
-            are :math:`N` distinct fault_ids being tracked then the union of all ints in the ``fault_ids``
-            attributes in the graph should be the integers :math:`0\ldots N-1`.
+            ``fault_ids`` should be an int or a set of ints.
             Each fault id corresponds to a self-inverse fault that is flipped when the
             corresponding edge is flipped. These self-inverse faults could correspond to
             physical Pauli errors (physical frame changes)
             or to the logical observables that are flipped by the fault
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
-            detector error model).  The `fault_ids` attribute was previously named `qubit_id` in an
-            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` for backward
-            compatibility.
+            detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` in order
+            to maintain backward compatibility.
             Each ``weight`` attribute should be a non-negative float. If
             every edge is assigned an error_probability between zero and one,
             then the ``add_noise`` method can be used to simulate noise and
@@ -335,8 +330,12 @@ class Matching:
             matching, given as a binary check matrix (scipy sparse
             matrix or numpy.ndarray)
         spacelike_weights : float or numpy.ndarray, optional
-            The weights of edges in the matching graph.
-            By default None, in which case all weights are set to 1.0
+            If `H` is given as a scipy or numpy array, `spacelike_weights` gives the weights
+            of edges in the matching graph corresponding to columns of `H`.
+            If spacelike_weights is a numpy.ndarray, it should be a 1D array with length
+            equal to `H.shape[1]`. If spacelike_weights is a float, it is used as the weight for all
+            edges corresponding to columns of `H`. By default None, in which case
+            all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each edge associated with a
             column of H. If a
