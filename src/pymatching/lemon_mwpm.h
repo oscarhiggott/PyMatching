@@ -36,7 +36,7 @@ struct MatchingResult {
     MatchingResult(py::array_t<std::uint8_t> correction, double weight);
     /**
      * @brief The correction operator corresponding to the minimum-weight perfect matching.
-     * correction[i] is 1 if the ith qubit is flipped and correction[i] is 0 otherwise.
+     * correction[i] is 1 if the fault with fault ID i is flipped and correction[i] is 0 otherwise.
      * 
      */
     py::array_t<std::uint8_t> correction;
@@ -57,7 +57,7 @@ struct MatchingResult {
  * distances and shortest paths between nodes in the matching graph `graph` are all precomputed and this
  * method returns the exact minimum-weight perfect matching. As a result it is suitable for matching graphs 
  * with a few thousand nodes or less, but will be very memory and compute intensive for larger matching graphs.
- * Returns a noise vector N for which N[i]=1 if qubit_id appeared an odd number of times in the minimum weight 
+ * Returns a noise vector N for which N[i]=1 if fault_ids appeared an odd number of times in the minimum weight
  * perfect matching and N[i]=0 otherwise.
  * 
  * @param graph A matching graph
@@ -71,7 +71,7 @@ MatchingResult ExactMatching(MatchingGraph& graph, const py::array_t<int>& defec
  * a chosen `num_neighbours`, find the minimum weight perfect matching in the graph V where each defect node 
  * is connected by an edge to each of the `num_neighbours` nearest other defect nodes in graph, and where the
  * weight of each edge is the distance between the two defect nodes in `graph`.
- * Returns a noise vector N for which N[i]=1 if qubit_id appeared an odd number of times in the minimum weight 
+ * Returns a noise vector N for which N[i]=1 if fault_ids appeared an odd number of times in the minimum weight
  * perfect matching and N[i]=0 otherwise.
  * 
  * @param graph A matching graph

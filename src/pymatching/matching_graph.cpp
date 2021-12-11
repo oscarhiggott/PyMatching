@@ -31,11 +31,11 @@
 WeightedEdgeData::WeightedEdgeData() {}
 
 WeightedEdgeData::WeightedEdgeData(
-    std::set<int> qubit_ids,
+    std::set<int> fault_ids,
     double weight,
     double error_probability,
     bool has_error_probability
-): qubit_ids(qubit_ids), weight(weight),
+): fault_ids(fault_ids), weight(weight),
 error_probability(error_probability), has_error_probability(has_error_probability) {}
 
 
@@ -59,7 +59,7 @@ std::string set_repr(std::set<int> x) {
 std::string WeightedEdgeData::repr() const {
     std::stringstream ss;
     ss << "pymatching._cpp_mwpm.WeightedEdgeData(";
-    ss << set_repr(qubit_ids) << ", " << weight << ", " << error_probability << ", "
+    ss << set_repr(fault_ids) << ", " << weight << ", " << error_probability << ", "
     << has_error_probability << ")";
     return ss.str();
 }
@@ -86,7 +86,7 @@ MatchingGraph::MatchingGraph(
 void MatchingGraph::AddEdge(
     int node1, 
     int node2, 
-    std::set<int> qubit_ids, 
+    std::set<int> fault_ids,
     double weight, 
     double error_probability, 
     bool has_error_probability){
@@ -113,7 +113,7 @@ void MatchingGraph::AddEdge(
         }
         connected_components_need_updating = true;
         WeightedEdgeData data;
-        data.qubit_ids = qubit_ids;
+        data.fault_ids = fault_ids;
         data.weight = weight;
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
@@ -349,20 +349,20 @@ int MatchingGraph::GetNumEdges() const {
 }
 
 
-int MatchingGraph::GetNumQubits() const {
-    auto qid = boost::get(&WeightedEdgeData::qubit_ids, matching_graph);
+int MatchingGraph::GetNumFaultIDs() const {
+    auto qid = boost::get(&WeightedEdgeData::fault_ids, matching_graph);
     int num_edges = boost::num_edges(matching_graph);
     int maxid = -1;
-    std::set<int> edge_qubits;
+    std::set<int> edge_fault_ids;
     auto es = boost::edges(matching_graph);
     for (auto eit = es.first; eit != es.second; ++eit) {
-        edge_qubits = qid[*eit];
-        for (auto qubit : edge_qubits){
-            if (qubit >= maxid){
-                maxid = qubit;
+        edge_fault_ids = qid[*eit];
+        for (auto fault_id : edge_fault_ids){
+            if (fault_id >= maxid){
+                maxid = fault_id;
             }
-            if (qubit < 0 && qubit != -1){
-                throw std::runtime_error("Qubit ids must be non-negative, or -1 if the edge is not a qubit.");
+            if (fault_id < 0 && fault_id != -1){
+                throw std::runtime_error("Fault ids must be non-negative, or -1 if no fault IDs are associated with the edge.");
             }
         }
     }
@@ -373,7 +373,7 @@ int MatchingGraph::GetNumNodes() const {
     return boost::num_vertices(matching_graph);
 };
 
-std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
+std::set<int> MatchingGraph::FaultIDs(int node1, int node2) const {
     int num_nodes = GetNumNodes();
     if (node1 >= num_nodes || node2 >= num_nodes
         || node1 < 0 || node2 < 0){
@@ -386,12 +386,12 @@ std::set<int> MatchingGraph::QubitIDs(int node1, int node2) const {
                         + std::to_string((int)node1) + ", "
                         + std::to_string((int)node2) + ").");
     }
-    return matching_graph[e.first].qubit_ids;
+    return matching_graph[e.first].fault_ids;
 }
 
 std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::AddNoise() const {
     auto syndrome = new std::vector<int>(GetNumNodes(), 0);
-    auto error = new std::vector<int>(GetNumQubits(), 0);
+    auto error = new std::vector<int>(GetNumFaultIDs(), 0);
     double p;
     std::set<int> qids;
     vertex_descriptor s, t;
@@ -404,7 +404,7 @@ std::pair<py::array_t<std::uint8_t>,py::array_t<std::uint8_t>> MatchingGraph::Ad
             t = boost::target(*eit, matching_graph);
             (*syndrome)[s] = ((*syndrome)[s] + 1) % 2;
             (*syndrome)[t] = ((*syndrome)[t] + 1) % 2;
-            qids = matching_graph[*eit].qubit_ids;
+            qids = matching_graph[*eit].fault_ids;
             for (auto qid : qids){
                 if (qid >= 0){
                     (*error)[qid] = ((*error)[qid] + 1) % 2;
@@ -528,7 +528,7 @@ bool MatchingGraph::AllEdgesHaveErrorProbabilities() const {
 std::string MatchingGraph::repr() const {
     std::stringstream ss;
     ss << "<pymatching._cpp_mwpm.MatchingGraph object with ";
-    ss << GetNumQubits() << " qubits, " << GetNumNodes() << " nodes, ";
+    ss << GetNumNodes() << " nodes, ";
     ss << GetNumEdges() << " edges and " << GetBoundary().size() << " boundary nodes>";
     return ss.str();
 }

@@ -27,13 +27,13 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      Initialises a WeightedEdgeData object
      )")
      .def(py::init<std::set<int>, double, double, bool>(),
-          "qubit_ids"_a, "weight"_a, "error_probability"_a, "has_error_probability"_a, u8R"(
+          "fault_ids"_a, "weight"_a, "error_probability"_a, "has_error_probability"_a, u8R"(
      Initialises a WeightedEdgeData object
 
      Parameters
      ----------
-     qubit_ids: set[int]
-         A set of qubit ids
+     fault_ids: set[int]
+         A set of fault IDs
      weight: float
          The edge weight
      error_probability: float
@@ -43,7 +43,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
          Whether the edge has an error_probability
      )")
      .def("__repr__", &WeightedEdgeData::repr)
-     .def_readwrite("qubit_ids", &WeightedEdgeData::qubit_ids)
+     .def_readwrite("fault_ids", &WeightedEdgeData::fault_ids)
      .def_readwrite("weight", &WeightedEdgeData::weight)
      .def_readwrite("error_probability", &WeightedEdgeData::error_probability)
      .def_readwrite("has_error_probability", &WeightedEdgeData::has_error_probability);
@@ -57,13 +57,13 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> from pymatching._cpp_mwpm import MatchingGraph, set_seed
      >>> set_seed(0)
      >>> graph = MatchingGraph()
-     >>> graph.add_edge(0, 1, qubit_ids={0}, weight=math.log((1-0.1)/0.1), error_probability=0.1, has_error_probability=True)
-     >>> graph.add_edge(1, 2, qubit_ids={1}, weight=math.log((1-0.2)/0.2), error_probability=0.2, has_error_probability=True)
-     >>> graph.add_edge(2, 3, qubit_ids={2}, weight=math.log((1-0.4)/0.4), error_probability=0.4, has_error_probability=True)
-     >>> graph.add_edge(3, 4, qubit_ids={3}, weight=math.log((1-0.05)/0.05), error_probability=0.05, has_error_probability=True)
+     >>> graph.add_edge(0, 1, fault_ids={0}, weight=math.log((1-0.1)/0.1), error_probability=0.1, has_error_probability=True)
+     >>> graph.add_edge(1, 2, fault_ids={1}, weight=math.log((1-0.2)/0.2), error_probability=0.2, has_error_probability=True)
+     >>> graph.add_edge(2, 3, fault_ids={2}, weight=math.log((1-0.4)/0.4), error_probability=0.4, has_error_probability=True)
+     >>> graph.add_edge(3, 4, fault_ids={3}, weight=math.log((1-0.05)/0.05), error_probability=0.05, has_error_probability=True)
      >>> graph.set_boundary({0, 4})
      >>> graph
-     <pymatching._cpp_mwpm.MatchingGraph object with 4 qubits, 5 nodes, 4 edges and 2 boundary nodes>
+     <pymatching._cpp_mwpm.MatchingGraph object with 5 nodes, 4 edges and 2 boundary nodes>
      >>> graph.get_path(1, 4)
      [1, 2, 3, 4]
      >>> graph.get_nearest_neighbours(source=2, num_neighbours=2, defect_id=[-1, 0, 1, 2, -1])
@@ -105,7 +105,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           >>> graph.all_edges_have_error_probabilities()
           False
           )")
-     .def("add_edge", &MatchingGraph::AddEdge, "node1"_a, "node2"_a, "qubit_ids"_a,
+     .def("add_edge", &MatchingGraph::AddEdge, "node1"_a, "node2"_a, "fault_ids"_a,
           "weight"_a, "error_probability"_a=-1.0, "has_error_probability"_a=false, u8R"(
           Adds an edge to the matching graph
 
@@ -115,8 +115,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
               The id of the first node in the edge to be added
           node2: int
               The id of the second node in the edge to be added
-          qubit_ids: set[int]
-              The ids of the qubits associated with the edge
+          fault_ids: set[int]
+              The ids of the self-inverse faults that flip if the edge is flipped
           weight: float
               The weight of the edge
           error_probability: float
@@ -136,7 +136,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           >>> graph.add_edge(2, 3, {3}, math.log((1-0.2)/0.2), 0.2, True)
           >>> graph.add_edge(3, 0, set(), 0, -1, False)
           >>> graph.set_boundary({0, 3})
-          >>> graph.get_num_qubits()
+          >>> graph.get_num_fault_ids()
           4
           >>> graph.get_num_edges()
           4
@@ -149,8 +149,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
           -------
           numpy.ndarray
               A binary array (of dtype numpy.uint8) specifying whether each
-              qubit has been flipped. Element i is one if the qubit with
-              qubit_id==i has been flipped, and is zero otherwise.
+              fault has occurred. Element i is one if the fault with
+              fault ID `i`` has been flipped, and is zero otherwise.
           numpy.ndarray
               A binary array (of dtype numpy.uint8) with length equal to the
               number of nodes in the matching graph, specifying the syndrome.
@@ -372,8 +372,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.shortest_path(1, 2)
      [1, 2]
      )")
-     .def("qubit_ids", &MatchingGraph::QubitIDs, "node1"_a, "node2"_a, u8R"(
-     Returns the qubit_ids associated with the edge (node1, node2)
+     .def("fault_ids", &MatchingGraph::FaultIDs, "node1"_a, "node2"_a, u8R"(
+     Returns the fault_ids associated with the edge (node1, node2)
 
      Parameters
      ----------
@@ -385,7 +385,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      Returns
      -------
      set[int]
-         The qubit_ids associated with the edge (node1, node2)
+         The fault_ids associated with the edge (node1, node2)
 
      Examples
      --------
@@ -393,20 +393,20 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph = MatchingGraph()
      >>> graph.add_edge(0, 1, {0}, 1)
      >>> graph.add_edge(1, 2, {1, 2, 3}, 1)
-     >>> graph.qubit_ids(0, 1)
+     >>> graph.fault_ids(0, 1)
      {0}
-     >>> graph.qubit_ids(1, 2)
+     >>> graph.fault_ids(1, 2)
      {1, 2, 3}
-     >>> graph.qubit_ids(1, 0)
+     >>> graph.fault_ids(1, 0)
      {0}
      )")
-     .def("get_num_qubits", &MatchingGraph::GetNumQubits, u8R"(
-     Returns the number of qubits associated with edges in the matching graph.
+     .def("get_num_fault_ids", &MatchingGraph::GetNumFaultIDs, u8R"(
+     Returns the number of distinct fault_ids associated with edges in the matching graph.
 
      Returns
      -------
      int
-         The number of qubits in the matching graph
+         The number of distinct fault_ids in the matching graph
 
      Examples
      --------
@@ -415,7 +415,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      >>> graph.add_edge(0, 1, {0}, 1)
      >>> graph.add_edge(1, 2, {1, 2, 3}, 1)
      >>> graph.add_edge(2, 3, {4, 5}, 1)
-     >>> graph.get_num_qubits()
+     >>> graph.get_num_fault_ids()
      6
      )")
      .def("get_num_nodes", &MatchingGraph::GetNumNodes, u8R"(
@@ -592,7 +592,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
             -------
             MatchingResult
                 The recovery operator (and, optionally, weight of the matching).
-                `MatchingResult.correction[i]` is 1 if qubit_id 1
+                `MatchingResult.correction[i]` is 1 if fault_ids 1
                 should be flipped when applying the minimum weight correction, and 0
                 otherwise. `MatchingResult.weight` gives the sum of the weights of the
                 edges included in the minimum-weight perfect matching correction if
@@ -642,7 +642,7 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
             -------
             MatchingResult
                 The recovery operator (and, optionally, weight of the matching).
-                `MatchingResult.correction[i]` is 1 if qubit_id 1
+                `MatchingResult.correction[i]` is 1 if fault_ids 1
                 should be flipped when applying the minimum weight correction, and 0
                 otherwise. `MatchingResult.weight` gives the sum of the weights of the
                 edges included in the minimum-weight perfect matching correction if

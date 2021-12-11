@@ -136,7 +136,7 @@ MatchingResult ExactMatching(
         throw BlossomFailureException();
     }
 
-    int N = graph.GetNumQubits();
+    int N = graph.GetNumFaultIDs();
     auto correction = new std::vector<int>(N, 0);
     std::set<int> qids;
     for (py::size_t i = 0; i<num_defects; i++){
@@ -146,7 +146,7 @@ MatchingResult ExactMatching(
                 defects_vec[i], defects_vec[j]
                 );
             for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
-                qids = graph.QubitIDs(path[k], path[k+1]);
+                qids = graph.FaultIDs(path[k], path[k+1]);
                 for (auto qid : qids){
                     if ((qid != -1) && (qid >= 0) && (qid < N)){
                         (*correction)[qid] = ((*correction)[qid] + 1) % 2;
@@ -260,7 +260,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
         throw BlossomFailureException();
     }
 
-    int N = graph.GetNumQubits();
+    int N = graph.GetNumFaultIDs();
     auto correction = new std::vector<int>(N, 0);
 
     std::set<int> remaining_defects;
@@ -278,7 +278,7 @@ MatchingResult LemonDecodeMatchNeighbourhood(
         remaining_defects.erase(j);
         path = graph.GetPath(defects_vec[i], defects_vec[j]);
         for (std::vector<int>::size_type k=0; k<path.size()-1; k++){
-            qids = graph.QubitIDs(path[k], path[k+1]);
+            qids = graph.FaultIDs(path[k], path[k+1]);
             for (auto qid : qids){
                 if ((qid != -1) && (qid >= 0) && (qid < N)){
                     (*correction)[qid] = ((*correction)[qid] + 1) % 2;
