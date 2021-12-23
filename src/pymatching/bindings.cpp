@@ -26,8 +26,8 @@ PYBIND11_MODULE(_cpp_mwpm, m) {
      .def(py::init<>(), u8R"(
      Initialises a WeightedEdgeData object
      )")
-     .def(py::init<std::set<int>, double, double, bool>(),
-          "fault_ids"_a, "weight"_a, "error_probability"_a, "has_error_probability"_a, u8R"(
+     .def(py::init<std::set<int>, double, double, bool, bool>(),
+          "fault_ids"_a, "weight"_a, "error_probability"_a, "has_error_probability"_a, "weight_is_negative"_a, u8R"(
      Initialises a WeightedEdgeData object
 
      Parameters

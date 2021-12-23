@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <cmath>
 #include "rand_gen.h"
 
 
@@ -34,9 +35,11 @@ WeightedEdgeData::WeightedEdgeData(
     std::set<int> fault_ids,
     double weight,
     double error_probability,
-    bool has_error_probability
+    bool has_error_probability,
+    bool weight_is_negative
 ): fault_ids(fault_ids), weight(weight),
-error_probability(error_probability), has_error_probability(has_error_probability) {}
+error_probability(error_probability), has_error_probability(has_error_probability),
+weight_is_negative(weight_is_negative) {}
 
 
 std::string set_repr(std::set<int> x) {
@@ -67,7 +70,8 @@ std::string WeightedEdgeData::repr() const {
 
 MatchingGraph::MatchingGraph()
     : all_edges_have_error_probabilities(true),
-     connected_components_need_updating(true) {
+     connected_components_need_updating(true),
+     negative_weight_sum(0.0)  {
     wgraph_t sgraph = wgraph_t();
     this->matching_graph = sgraph;
 }
@@ -78,7 +82,8 @@ MatchingGraph::MatchingGraph(
     std::set<int>& boundary)
     : all_edges_have_error_probabilities(true),
     boundary(boundary),
-    connected_components_need_updating(true) {
+    connected_components_need_updating(true),
+     negative_weight_sum(0.0) {
     wgraph_t sgraph = wgraph_t(num_detectors+boundary.size());
     this->matching_graph = sgraph;
 }
@@ -104,8 +109,8 @@ void MatchingGraph::AddEdge(
             throw std::invalid_argument("This edge already exists in the graph. "
                                         "Parallel edges are not supported.");
         }
-        if (weight < 0){
-            throw std::invalid_argument("Edge weights must be non-negative");
+        if (std::signbit(weight)){
+            HandleNewNegativeWeightEdge(node1, node2, weight, fault_ids);
         }
         if (!has_error_probability){
             all_edges_have_error_probabilities = false;
@@ -114,15 +119,40 @@ void MatchingGraph::AddEdge(
         connected_components_need_updating = true;
         WeightedEdgeData data;
         data.fault_ids = fault_ids;
-        data.weight = weight;
+        data.weight = std::abs(weight);
         data.error_probability = error_probability;
         data.has_error_probability = has_error_probability;
+        data.weight_is_negative = std::signbit(weight);
         boost::add_edge(
             n1,
             n2,
             data, 
             matching_graph);
 }
+
+
+void MatchingGraph::HandleNewNegativeWeightEdge(int u, int v, double weight, std::set<int> &fault_ids){
+    assert(std::signbit(weight));
+    negative_weight_sum += weight;
+
+    for (auto fid : fault_ids){
+        if (negative_edge_fault_ids.find(fid) != negative_edge_fault_ids.end()){
+            negative_edge_fault_ids.erase(fid);
+        } else {
+            negative_edge_fault_ids.insert(fid);
+        }
+    }
+
+    for (auto node : {u, v}){
+        if (negative_edge_syndrome.find(node) != negative_edge_syndrome.end()){
+            negative_edge_syndrome.erase(node);
+        } else {
+            negative_edge_syndrome.insert(node);
+        }
+    }
+
+}
+
 
 void MatchingGraph::ComputeAllPairsShortestPaths(){
     int n = boost::num_vertices(matching_graph);
@@ -445,6 +475,9 @@ std::vector<std::tuple<int,int,WeightedEdgeData>> MatchingGraph::GetEdges() cons
         WeightedEdgeData edata = matching_graph[*eit];
         int s = boost::source(*eit, matching_graph);
         int t = boost::target(*eit, matching_graph);
+        if (edata.weight_is_negative) {
+            edata.weight = -1 * edata.weight;
+        }
         std::tuple<int,int,WeightedEdgeData> edge = std::make_tuple(s, t, edata);
         edges.push_back(edge);
     }

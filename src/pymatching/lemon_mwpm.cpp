@@ -114,6 +114,16 @@ MatchingResult ExactMatching(
         }
         defects_set.insert(d(i));
     }
+
+    for (auto s : graph.negative_edge_syndrome){
+        auto s_it = defects_set.find(s);
+        if (s_it != defects_set.end()){
+            defects_set.erase(s_it);
+        } else {
+            defects_set.insert(s);
+        }
+    }
+
     graph.FlipBoundaryNodesIfNeeded(defects_set);
 
     std::vector<int> defects_vec(defects_set.begin(), defects_set.end());
@@ -156,11 +166,17 @@ MatchingResult ExactMatching(
         }
     }
 
+    for (auto fid : graph.negative_edge_fault_ids){
+        if ((fid != -1) && (fid >= 0) && (fid < N)){
+            (*correction)[fid] = ((*correction)[fid] + 1) % 2;
+        }
+    }
+
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
 
     if (return_weight) {
-        matching_result.weight = -1*pm.matchingWeight();
+        matching_result.weight = -1*pm.matchingWeight() + graph.negative_weight_sum;
     } else {
         matching_result.weight = -1.0;
     }
@@ -221,6 +237,15 @@ MatchingResult LemonDecodeMatchNeighbourhood(
             throw std::invalid_argument(
             "Defect id must be less than the number of nodes in the matching graph"
             );
+        }
+    }
+
+    for (auto s : graph.negative_edge_syndrome){
+        auto s_it = defects_set.find(s);
+        if (s_it != defects_set.end()){
+            defects_set.erase(s_it);
+        } else {
+            defects_set.insert(s);
         }
     }
 
@@ -286,11 +311,18 @@ MatchingResult LemonDecodeMatchNeighbourhood(
             }
         }
     }
+
+    for (auto fid : graph.negative_edge_fault_ids){
+        if ((fid != -1) && (fid >= 0) && (fid < N)){
+            (*correction)[fid] = ((*correction)[fid] + 1) % 2;
+        }
+    }
+
     auto capsule = py::capsule(correction, [](void *correction) { delete reinterpret_cast<std::vector<int>*>(correction); });
     auto corr = py::array_t<int>(correction->size(), correction->data(), capsule);
 
     if (return_weight) {
-        matching_result.weight = -1*pm.matchingWeight();
+        matching_result.weight = -1*pm.matchingWeight() + graph.negative_weight_sum;
     } else {
         matching_result.weight = -1.0;
     }
