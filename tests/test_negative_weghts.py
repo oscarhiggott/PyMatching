@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import networkx as nx
 
 from pymatching import Matching
 
@@ -32,11 +33,12 @@ def test_isolated_negative_weight(nn):
 
 @pytest.mark.parametrize("nn", (None, 30))
 def test_negative_and_positive_in_matching(nn):
-    m = Matching()
-    m.add_edge(0, 1, 0, 1)
-    m.add_edge(1, 2, 1, -10)
-    m.add_edge(2, 3, 2, 1)
-    m.add_edge(3, 0, 3, 1)
+    g = nx.Graph()
+    g.add_edge(0, 1, fault_ids=0, weight=1)
+    g.add_edge(1, 2, fault_ids=1, weight=-10)
+    g.add_edge(2, 3, fault_ids=2, weight=1)
+    g.add_edge(3, 0, fault_ids=3, weight=1)
+    m = Matching(g)
     c, w = m.decode([0, 1, 0, 1], return_weight=True, num_neighbours=nn)
     assert np.array_equal(c, np.array([0, 1, 1, 0]))
     assert w == -9
