@@ -129,8 +129,6 @@ def test_weighted_mwpm_from_array():
     assert m.matching_graph.distance(1, 2) == 2.
     with pytest.raises(ValueError):
         m = Matching(H, spacelike_weights=np.array([1.]))
-    with pytest.raises(ValueError):
-        m = Matching(H, spacelike_weights=np.array([1., -2.]))
 
 
 def test_unweighted_stabiliser_graph_from_networkx():

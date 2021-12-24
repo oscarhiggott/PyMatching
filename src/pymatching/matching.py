@@ -407,8 +407,6 @@ class Matching:
 
         if weights.shape[0] != num_fault_ids:
             raise ValueError("Weights array must have num_fault_ids elements")
-        if np.any(weights < 0.):
-            raise ValueError("All weights must be non-negative.")
 
         timelike_weights = 1.0 if timelike_weights is None else timelike_weights
         if isinstance(timelike_weights, (int, float, np.integer, np.floating)):
