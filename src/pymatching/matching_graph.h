@@ -33,12 +33,14 @@ struct WeightedEdgeData {
     double weight;
     double error_probability;
     bool has_error_probability;
+    bool weight_is_negative;
     WeightedEdgeData();
     WeightedEdgeData(
         std::set<int> fault_ids,
         double weight,
         double error_probability,
-        bool has_error_probability
+        bool has_error_probability,
+        bool weight_is_negative
     );
     std::string repr() const;
 };
@@ -230,6 +232,10 @@ class MatchingGraph{
         bool AllEdgesHaveErrorProbabilities() const;
         void FlipBoundaryNodesIfNeeded(std::set<int> &defects);
         std::string repr() const;
+        void HandleNewNegativeWeightEdge(int u, int v, double weight, std::set<int> &fault_ids);
+        std::set<int> negative_edge_syndrome;
+        std::set<int> negative_edge_fault_ids;
+        double negative_weight_sum;
     private:
         /**
          * @brief The indices of the boundary nodes

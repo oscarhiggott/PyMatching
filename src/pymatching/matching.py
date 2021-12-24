@@ -305,8 +305,6 @@ class Matching:
                         " (or convertible to a set), not {}".format(fault_ids))
             all_fault_ids = all_fault_ids | fault_ids
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
-            if weight < 0:
-                raise ValueError("Weights cannot be negative.")
             e_prob = attr.get("error_probability", -1)
             g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
         self.matching_graph = g
@@ -409,8 +407,6 @@ class Matching:
 
         if weights.shape[0] != num_fault_ids:
             raise ValueError("Weights array must have num_fault_ids elements")
-        if np.any(weights < 0.):
-            raise ValueError("All weights must be non-negative.")
 
         timelike_weights = 1.0 if timelike_weights is None else timelike_weights
         if isinstance(timelike_weights, (int, float, np.integer, np.floating)):

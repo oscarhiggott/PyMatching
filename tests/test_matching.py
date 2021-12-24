@@ -91,15 +91,6 @@ def test_too_many_checks_per_qubit_raises_value_error():
         Matching(H)
 
 
-def test_negative_weight_raises_value_error():
-    g = nx.Graph()
-    g.add_edge(0,1,weight=-1)
-    with pytest.raises(ValueError):
-        Matching(g)
-    with pytest.raises(ValueError):
-        Matching(csr_matrix([[1,1,0],[0,1,1]]), spacelike_weights=np.array([1,1,-1]))
-
-
 def test_wrong_check_matrix_type_raises_type_error():
     with pytest.raises(TypeError):
         Matching("test")
@@ -138,8 +129,6 @@ def test_weighted_mwpm_from_array():
     assert m.matching_graph.distance(1, 2) == 2.
     with pytest.raises(ValueError):
         m = Matching(H, spacelike_weights=np.array([1.]))
-    with pytest.raises(ValueError):
-        m = Matching(H, spacelike_weights=np.array([1., -2.]))
 
 
 def test_unweighted_stabiliser_graph_from_networkx():
