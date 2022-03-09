@@ -106,8 +106,10 @@ void MatchingGraph::AddEdge(
         int num_nodes = GetNumNodes();
         bool nodes_in_graph = (n1 < num_nodes) && (n2 < num_nodes);
         if (nodes_in_graph && boost::edge(n1, n2, matching_graph).second){
-            throw std::invalid_argument("This edge already exists in the graph. "
-                                        "Parallel edges are not supported.");
+            throw std::invalid_argument("Edge (" + std::to_string(n1) + "," + std::to_string(n2) + 
+                                        ") already exists in the matching graph, but "
+                                        "parallel edges are not supported. Consider merging "
+                                        "parallel edges into a single edge instead.");
         }
         if (std::signbit(weight)){
             HandleNewNegativeWeightEdge(node1, node2, weight, fault_ids);
