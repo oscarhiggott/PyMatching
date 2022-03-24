@@ -593,12 +593,18 @@ class Matching:
 
         Returns
         -------
-        numpy.ndarray or list[int]
-            A 1D numpy array of ints giving the minimum-weight correction 
-            operator. The number of elements is one greater than the largest fault ID,
-            and the ith element is 1 if the fault with fault ID equal to i is flipped,
-            and otherwise 0.
-        float
+        correction : numpy.ndarray or list[int]
+            A 1D numpy array of ints giving the minimum-weight correction operator as a 
+            binary vector. The number of elements in `correction` is one greater than
+            the largest fault ID. The ith element of `correction` is 1 if the 
+            minimum-weight perfect matching (MWPM) found by PyMatching contains an odd 
+            number of edges that have `i` as one of the `fault_ids`, and is 0 otherwise.
+            If each edge in the matching graph is assigned a unique integer in its 
+            `fault_ids` attribute, then the locations of nonzero entries in `correction` 
+            correspond to the edges in the MWPM. However, `fault_ids` can instead be used, 
+            for example, to store IDs of the physical or logical frame changes that occur 
+            when an edge flips (see the documentation for ``Matching.add_edge`` for more information).
+        weight : float
             Present only if `return_weight==True`.
             The sum of the weights of the edges in the minimum-weight perfect 
             matching.
