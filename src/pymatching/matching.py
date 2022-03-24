@@ -138,12 +138,13 @@ class Matching:
         >>> import pymatching
         >>> import math
         >>> m = pymatching.Matching()
-        >>> m.add_edge(0, 1, fault_ids=0, weight=0.1)
-        >>> m.add_edge(1, 2, fault_ids=1, weight=0.15)
-        >>> m.add_edge(2, 3, fault_ids={2, 0}, weight=0.2)
-        >>> m.set_boundary_nodes({0, 3})
+        >>> m.add_edge(0, 1, fault_ids={0}, weight=0.1)
+        >>> m.add_edge(1, 2, fault_ids={1}, weight=0.15)
+        >>> m.add_edge(2, 3, fault_ids={2, 3}, weight=0.2)
+        >>> m.add_edge(0, 3, fault_ids={4}, weight=0.1)
+        >>> m.set_boundary_nodes({3})
         >>> m
-        <pymatching.Matching object with 2 detectors, 2 boundary nodes, and 3 edges>
+        <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
 
         Matching objects can also be created from a check matrix (provided as a scipy.sparse matrix,
         dense numpy array, or list of lists):
@@ -231,7 +232,7 @@ class Matching:
         if fault_ids is None and "qubit_id" in kwargs:
             fault_ids = kwargs["qubit_id"]
         if isinstance(fault_ids, (int, np.integer)):
-            fault_ids = {int(fault_ids)}
+            fault_ids = set() if fault_ids == -1 else {int(fault_ids)}
         fault_ids = set() if fault_ids is None else fault_ids
         has_error_probability = error_probability is not None
         error_probability = error_probability if has_error_probability else -1
