@@ -51,7 +51,11 @@ and then decoded from an `m` by `L` numpy array syndrome `z` using:
 c = m.decode(z)
 ```
 
-The Matching object can also be constructed from a NetworkX graph instead of a check matrix, and can handle weighted edges. For full details see [the documentation](https://pymatching.readthedocs.io/en/stable/usage.html).
+Instead of using a check matrix, the Matching object can also be constructed using the [`Matching.add_edge`](https://pymatching.readthedocs.io/en/stable/api.html#pymatching.matching.Matching.add_edge) method or by loading from a NetworkX graph. PyMatching supports arbitrary graphs, including weighted edges and boundary nodes.
+
+PyMatching can be used with [Stim](https://github.com/quantumlib/Stim) for circuit-level simulations of quantum error correction protocols. Stim is a powerful tool that can automatically construct matching graphs just from the definition of the annotated stabiliser circuit used for stabiliser measurements. Stim can also be used to sample from the stabiliser measurement circuits. The Stim ["getting started" notebook](https://github.com/quantumlib/Stim/blob/main/doc/getting_started.ipynb) contains an example that uses Stim and PyMatching to estimate the circuit-level threshold of a quantum error correcting code.
+
+For more details on how to use PyMatching, see [the documentation](https://pymatching.readthedocs.io/en/stable/usage.html).
 
 ## Performance
 
