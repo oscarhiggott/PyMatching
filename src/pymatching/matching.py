@@ -744,7 +744,7 @@ class Matching:
         G = nx.Graph()
         G.add_edges_from(self.edges())
         boundary = self.boundary
-        for i in range(G.number_of_nodes()):
+        for i in G.nodes:
             is_boundary = i in boundary
             G.nodes[i]['is_boundary'] = is_boundary
         return G
