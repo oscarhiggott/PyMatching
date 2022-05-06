@@ -17,6 +17,7 @@ import pytest
 from scipy.sparse import csc_matrix, csr_matrix
 import pytest
 import networkx as nx
+import retworkx as rx
 import matplotlib.pyplot as plt
 
 from pymatching._cpp_mwpm import MatchingGraph
@@ -60,6 +61,21 @@ def test_boundary_from_networkx():
     assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
     assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
 
+def test_boundary_from_retworkx():
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(5)])
+    g.add_edge(4,0, dict(fault_ids=0))
+    g.add_edge(0,1, dict(fault_ids=1))
+    g.add_edge(1,2, dict(fault_ids=2))
+    g.add_edge(2,3, dict(fault_ids=3))
+    g.add_edge(3,4, dict(fault_ids=4))
+    g[4]['is_boundary'] = True
+    m = Matching(g)
+    assert m.boundary == {4}
+    assert np.array_equal(m.decode(np.array([1,0,0,0])), np.array([1,0,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,1,0,0])), np.array([1,1,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,1,1,0])), np.array([0,0,1,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,0])), np.array([0,0,0,1,1]))
 
 def test_boundaries_from_networkx():
     g = nx.Graph()
@@ -78,6 +94,23 @@ def test_boundaries_from_networkx():
     assert np.array_equal(m.decode(np.array([0,0,1,1,0])), np.array([0,0,1,0,0]))
     assert np.array_equal(m.decode(np.array([0,0,0,1,0])), np.array([0,0,0,1,1]))
 
+def test_boundaries_from_retworkx():
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(6)])
+    g.add_edge(0,1, dict(fault_ids=0))
+    g.add_edge(1,2, dict(fault_ids=1))
+    g.add_edge(2,3, dict(fault_ids=2))
+    g.add_edge(3,4, dict(fault_ids=3))
+    g.add_edge(4,5, dict(fault_ids=4))
+    g.add_edge(0,5, dict(fault_ids=-1, weight=0.0))
+    g.nodes()[0]['is_boundary'] = True
+    g.nodes()[5]['is_boundary'] = True
+    m = Matching(g)
+    assert m.boundary == {0, 5}
+    assert np.array_equal(m.decode(np.array([0,1,0,0,0,0])), np.array([1,0,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,0,0])), np.array([1,1,0,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,1,1,0])), np.array([0,0,1,0,0]))
+    assert np.array_equal(m.decode(np.array([0,0,0,1,0])), np.array([0,0,0,1,1]))
 
 def test_nonzero_matrix_elements_not_one_raises_value_error():
     H = csr_matrix(np.array([[0,1.01,1.01],[1.01,1.01,0]]))
@@ -200,6 +233,79 @@ def test_mwpm_from_networkx():
     assert(m.matching_graph.shortest_path(0,2) == [0,2])
 
 
+def test_unweighted_stabiliser_graph_from_retworkx():
+    w = rx.PyGraph()
+    w.add_nodes_from([{} for _ in range(6)])
+    w.add_edge(0, 1, dict(fault_ids=0, weight=7.0))
+    w.add_edge(0, 5, dict(fault_ids=1, weight=14.0))
+    w.add_edge(0, 2, dict(fault_ids=2, weight=9.0))
+    w.add_edge(1, 2, dict(fault_ids=-1, weight=10.0))
+    w.add_edge(1, 3, dict(fault_ids=3, weight=15.0))
+    w.add_edge(2, 5, dict(fault_ids=4, weight=2.0))
+    w.add_edge(2, 3, dict(fault_ids=-1, weight=11.0))
+    w.add_edge(3, 4, dict(fault_ids=5, weight=6.0))
+    w.add_edge(4, 5, dict(fault_ids=6, weight=9.0))
+    m = Matching(w)
+    assert(m.num_fault_ids == 7)
+    assert(m.num_detectors == 6)
+    assert(m.matching_graph.shortest_path(3, 5) == [3, 2, 5])
+    assert(m.matching_graph.distance(5, 0) == pytest.approx(11.0))
+    assert(np.array_equal(
+        m.decode(np.array([1,0,1,0,0,0])),
+        np.array([0,0,1,0,0,0,0]))
+    )
+    with pytest.raises(ValueError):
+        m.decode(np.array([1,1,0]))
+    with pytest.raises(ValueError):
+        m.decode(np.array([1,1,1,0,0,0]))
+    assert(np.array_equal(
+        m.decode(np.array([1,0,0,0,0,1])),
+        np.array([0,0,1,0,1,0,0]))
+    )
+    assert(np.array_equal(
+        m.decode(np.array([0,1,0,0,0,1])),
+        np.array([0,0,0,0,1,0,0]))
+    )
+
+
+def test_mwpm_from_retworkx():
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(3)])
+    g.add_edge(0, 1, dict(fault_ids=0))
+    g.add_edge(0, 2, dict(fault_ids=1))
+    g.add_edge(1, 2, dict(fault_ids=2))
+    m = Matching(g)
+    assert(isinstance(m.matching_graph, MatchingGraph))
+    assert(m.num_detectors == 3)
+    assert(m.num_fault_ids == 3)
+    assert(m.matching_graph.distance(0,2) == 1)
+    assert(m.matching_graph.shortest_path(0,2) == [0,2])
+
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(3)])
+    g.add_edge(0, 1, {})
+    g.add_edge(0, 2, {})
+    g.add_edge(1, 2, {})
+    m = Matching(g)
+    assert(isinstance(m.matching_graph, MatchingGraph))
+    assert(m.num_detectors == 3)
+    assert(m.num_fault_ids == 0)
+    assert(m.matching_graph.distance(0,2) == 1)
+    assert(m.matching_graph.shortest_path(0,2) == [0,2])
+
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(3)])
+    g.add_edge(0, 1, dict(weight=1.5))
+    g.add_edge(0, 2, dict(weight=1.7))
+    g.add_edge(1, 2, dict(weight=1.2))
+    m = Matching(g)
+    assert(isinstance(m.matching_graph, MatchingGraph))
+    assert(m.num_detectors == 3)
+    assert(m.num_fault_ids == 0)
+    assert(m.matching_graph.distance(0,2) == pytest.approx(1.7))
+    assert(m.matching_graph.shortest_path(0,2) == [0,2])
+
+
 def test_repr():
     g = nx.Graph()
     g.add_edge(0, 1, fault_ids=0)
@@ -253,6 +359,47 @@ def test_qubit_id_accepted_via_networkx():
     assert es == expected_edges
 
 
+def test_matching_edges_from_retworkx():
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(4)])
+    g.add_edge(0, 1, dict(fault_ids=0, weight=1.1, error_probability=0.1))
+    g.add_edge(1, 2, dict(fault_ids=1, weight=2.1, error_probability=0.2))
+    g.add_edge(2, 3, dict(fault_ids={2,3}, weight=0.9, error_probability=0.3))
+    g[0]['is_boundary'] = True
+    g[3]['is_boundary'] = True
+    g.add_edge(0, 3, dict(weight=0.0))
+    m = Matching(g)
+    es = list(m.edges())
+    expected_edges = [
+        (0,1,{'fault_ids': {0}, 'weight': 1.1, 'error_probability': 0.1}),
+        (1,2,{'fault_ids': {1}, 'weight': 2.1, 'error_probability': 0.2}),
+        (2,3,{'fault_ids': {2,3}, 'weight': 0.9, 'error_probability': 0.3}),
+        (0,3,{'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0}),
+    ]
+    print(es)
+    assert es == expected_edges
+
+
+def test_qubit_id_accepted_via_retworkx():
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(4)])
+    g.add_edge(0, 1, dict(qubit_id=0, weight=1.1, error_probability=0.1))
+    g.add_edge(1, 2, dict(qubit_id=1, weight=2.1, error_probability=0.2))
+    g.add_edge(2, 3, dict(qubit_id={2, 3}, weight=0.9, error_probability=0.3))
+    g[0]['is_boundary'] = True
+    g[3]['is_boundary'] = True
+    g.add_edge(0, 3, dict(weight=0.0))
+    m = Matching(g)
+    es = list(m.edges())
+    expected_edges = [
+        (0, 1, {'fault_ids': {0}, 'weight': 1.1, 'error_probability': 0.1}),
+        (1, 2, {'fault_ids': {1}, 'weight': 2.1, 'error_probability': 0.2}),
+        (2, 3, {'fault_ids': {2, 3}, 'weight': 0.9, 'error_probability': 0.3}),
+        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0}),
+    ]
+    assert es == expected_edges
+
+
 def test_qubit_id_accepted_using_add_edge():
     m = Matching()
     m.add_edge(0, 1, qubit_id=0)
@@ -301,6 +448,31 @@ def test_matching_to_networkx():
     assert g.nodes(data=True) == g2.nodes(data=True)
     gedges = [({s,t},d) for (s, t, d) in g.edges(data=True)]
     g2edges = [({s,t},d) for (s, t, d) in g2.edges(data=True)]
+    assert sorted(gedges) == sorted(g2edges)
+
+
+def test_matching_to_retworkx():
+    g = rx.PyGraph()
+    g.add_nodes_from([{} for _ in range(4)])
+    g.add_edge(0, 1, dict(fault_ids={0}, weight=1.1, error_probability=0.1))
+    g.add_edge(1, 2, dict(fault_ids={1}, weight=2.1, error_probability=0.2))
+    g.add_edge(2, 3, dict(fault_ids={2,3}, weight=0.9, error_probability=0.3))
+    g[0]['is_boundary'] = True
+    g[3]['is_boundary'] = True
+    g.add_edge(0, 3, dict(weight=0.0))
+    m = Matching(g)
+
+    edge_0_3 = g.get_edge_data(0, 3)
+    edge_0_3['fault_ids'] = set()
+    edge_0_3['error_probability'] = -1.0
+    g[1]['is_boundary'] = False
+    g[2]['is_boundary'] = False
+
+    g2 = m.to_retworkx()
+
+    assert g.node_indices() == g2.node_indices()
+    gedges = [({s,t},d) for (s, t, d) in g.weighted_edge_list()]
+    g2edges = [({s,t},d) for (s, t, d) in g.weighted_edge_list()]
     assert sorted(gedges) == sorted(g2edges)
 
 
