@@ -341,9 +341,9 @@ class Matching:
         >>> import retworkx as rx
         >>> import math
         >>> g = rx.PyGraph()
-        >>> g.add_nodes_from([{} for _ in range(3)])
-        >>> g.add_edge(0, 1, dict(fault_ids=0, weight=math.log((1-0.1)/0.1), error_probability=0.1))
-        >>> g.add_edge(1, 2, dict(fault_ids=1, weight=math.log((1-0.15)/0.15), error_probability=0.15))
+        >>> matching = g.add_nodes_from([{} for _ in range(3)])
+        >>> edge_a =g.add_edge(0, 1, dict(fault_ids=0, weight=math.log((1-0.1)/0.1), error_probability=0.1))
+        >>> edge_b = g.add_edge(1, 2, dict(fault_ids=1, weight=math.log((1-0.15)/0.15), error_probability=0.15))
         >>> g[0]['is_boundary'] = True
         >>> g[2]['is_boundary'] = True
         >>> m = pymatching.Matching(g)
