@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, '3.10']
+        python-version: [3.6, 3.7, 3.8, 3.9, '3.10']
 
     steps:
     - uses: actions/checkout@v2
@@ -32,4 +32,4 @@ jobs:
     - name: Test with pytest
       run: |
         pytest tests src --cov=src --cov-report term
-    - uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v2
