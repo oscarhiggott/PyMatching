@@ -354,7 +354,6 @@ class Matching:
             raise TypeError("G must be a retworkx graph")
         boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
         num_nodes = len(graph)
-        all_fault_ids = set()
         g = MatchingGraph(self.num_detectors, boundary)
         for (u, v, attr) in graph.weighted_edge_list():
             u, v = int(u), int(v)
@@ -377,7 +376,6 @@ class Matching:
                     raise ValueError(
                         "fault_ids property must be an int or a set of int"\
                         " (or convertible to a set), not {}".format(fault_ids))
-            all_fault_ids = all_fault_ids | fault_ids
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
             g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
