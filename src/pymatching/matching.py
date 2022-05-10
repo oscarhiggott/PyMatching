@@ -18,6 +18,7 @@ from typing import Union, List, Set, Tuple, Dict
 import matplotlib.cbook
 import numpy as np
 import networkx as nx
+import retworkx as rx
 import scipy
 from scipy.sparse import csc_matrix
 
@@ -60,7 +61,7 @@ class Matching:
     fault ids, boundaries and error probabilities.
     """
     def __init__(self,
-                 H: Union[scipy.sparse.spmatrix, np.ndarray, nx.Graph, List[List[int]]] = None,
+                 H: Union[scipy.sparse.spmatrix, np.ndarray, rx.PyGraph, nx.Graph, List[List[int]]] = None,
                  spacelike_weights: Union[float, np.ndarray, List[float]] = None,
                  error_probabilities: Union[float, np.ndarray, List[float]] = None,
                  repetitions: int = None,
@@ -156,7 +157,7 @@ class Matching:
         self.matching_graph = MatchingGraph()
         if H is None:
             return
-        if not isinstance(H, nx.Graph):
+        if not isinstance(H, (nx.Graph, rx.PyGraph)):
             try:
                 H = csc_matrix(H)
             except TypeError:
@@ -165,8 +166,10 @@ class Matching:
             self.load_from_check_matrix(H, spacelike_weights, error_probabilities,
                                         repetitions, timelike_weights, measurement_error_probabilities,
                                         **kwargs)
-        else:
+        elif isinstance(H, nx.Graph):
             self.load_from_networkx(H)
+        else:
+            self.load_from_retworkx(H)
         if precompute_shortest_paths:
             self.matching_graph.compute_all_pairs_shortest_paths()
 
@@ -305,6 +308,74 @@ class Matching:
                         "fault_ids property must be an int or a set of int"\
                         " (or convertible to a set), not {}".format(fault_ids))
             all_fault_ids = all_fault_ids | fault_ids
+            weight = attr.get("weight", 1) # Default weight is 1 if not provided
+            e_prob = attr.get("error_probability", -1)
+            g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
+        self.matching_graph = g
+
+    def load_from_retworkx(self, graph: rx.PyGraph) -> None:
+        r"""
+        Load a matching graph from a retworkX graph
+
+        Parameters
+        ----------
+        graph : retworkx.PyGraph
+            Each edge in the retworkx graph can have dictionary payload with keys
+            ``fault_ids``, ``weight`` and ``error_probability``. ``fault_ids`` should be
+            an int or a set of ints. Each fault id corresponds to a self-inverse fault
+            that is flipped when the corresponding edge is flipped. These self-inverse
+            faults could correspond to physical Pauli errors (physical frame changes)
+            or to the logical observables that are flipped by the fault
+            (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
+            detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` in order
+            to maintain backward compatibility.
+            Each ``weight`` attribute should be a non-negative float. If
+            every edge is assigned an error_probability between zero and one,
+            then the ``add_noise`` method can be used to simulate noise and
+            flip edges independently in the graph.
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> import retworkx as rx
+        >>> import math
+        >>> g = rx.PyGraph()
+        >>> matching = g.add_nodes_from([{} for _ in range(3)])
+        >>> edge_a =g.add_edge(0, 1, dict(fault_ids=0, weight=math.log((1-0.1)/0.1), error_probability=0.1))
+        >>> edge_b = g.add_edge(1, 2, dict(fault_ids=1, weight=math.log((1-0.15)/0.15), error_probability=0.15))
+        >>> g[0]['is_boundary'] = True
+        >>> g[2]['is_boundary'] = True
+        >>> m = pymatching.Matching(g)
+        >>> m
+        <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
+        """
+        if not isinstance(graph, rx.PyGraph):
+            raise TypeError("G must be a retworkx graph")
+        boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
+        num_nodes = len(graph)
+        g = MatchingGraph(self.num_detectors, boundary)
+        for (u, v, attr) in graph.weighted_edge_list():
+            u, v = int(u), int(v)
+            if "fault_ids" in attr and "qubit_id" in attr:
+                raise ValueError("Both `fault_ids` and `qubit_id` were provided as edge attributes, however use "
+                                 "of `qubit_id` has been deprecated in favour of `fault_ids`. Please only supply "
+                                 "`fault_ids` as an edge attribute.")
+            if "fault_ids" not in attr and "qubit_id" in attr:
+                fault_ids = attr["qubit_id"]  # Still accept qubit_id as well for now
+            else:
+                fault_ids = attr.get("fault_ids", set())
+            if isinstance(fault_ids, (int, np.integer)):
+                fault_ids = {int(fault_ids)} if fault_ids != -1 else set()
+            else:
+                try:
+                    fault_ids = set(fault_ids)
+                    if not all(isinstance(q, (int, np.integer)) for q in fault_ids):
+                        raise ValueError("fault_ids must be a set of ints, not {}".format(fault_ids))
+                except:
+                    raise ValueError(
+                        "fault_ids property must be an int or a set of int"\
+                        " (or convertible to a set), not {}".format(fault_ids))
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
             g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
@@ -747,6 +818,28 @@ class Matching:
         for i in G.nodes:
             is_boundary = i in boundary
             G.nodes[i]['is_boundary'] = is_boundary
+        return G
+
+    def to_retworkx(self) -> rx.PyGraph:
+        """Convert to retworkx graph
+
+        Returns a retworkx graph object corresponding to the matching graph. Each edge
+        payload is a ``dict`` with keys `fault_ids`, `weight` and `error_probability` and
+        each node has a ``dict`` payload with the key ``is_boundary`` and the value is
+        a boolean.
+
+        Returns
+        -------
+        retworkx.PyGraph
+            retworkx graph corresponding to the matching graph
+        """
+        G = rx.PyGraph(multigraph=False)
+        G.add_nodes_from([{} for _ in range(self.num_nodes)])
+        G.extend_from_weighted_edge_list(self.edges())
+        boundary = self.boundary
+        for i in G.node_indices():
+            is_boundary = i in boundary
+            G[i]['is_boundary'] = is_boundary
         return G
     
     def draw(self) -> None:
