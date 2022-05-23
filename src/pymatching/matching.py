@@ -371,8 +371,8 @@ class Matching:
 
         Matching objects can also be initialised from a sparse scipy matrix:
         >>> import pymatching
-        >>> from scipy.sparse import csr_matrix
-        >>> H = csr_matrix([[1, 1, 0], [0, 1, 1]])
+        >>> from scipy.sparse import csc_matrix
+        >>> H = csc_matrix([[1, 1, 0], [0, 1, 1]])
         >>> m = pymatching.Matching(H)
         >>> m
         <pymatching.Matching object with 2 detectors, 1 boundary node, and 3 edges>
@@ -389,13 +389,13 @@ class Matching:
         num_edges = H.shape[1]
         weights = 1.0 if spacelike_weights is None else spacelike_weights
         if isinstance(weights, (int, float, np.integer, np.floating)):
-            weights = np.array([weights]*num_edges).astype(float)
+            weights = np.ones(num_edges, dtype=float)*weights
         weights = np.asarray(weights)
 
         if error_probabilities is None:
-            error_probabilities = np.array([-1] * num_edges)
+            error_probabilities = np.ones(num_edges) * -1
         elif isinstance(error_probabilities, (int, float)):
-            error_probabilities = np.array([error_probabilities] * num_edges)
+            error_probabilities = np.ones(num_edges) * error_probabilities
 
         column_weights = np.asarray(H.sum(axis=0))[0]
         unique_column_weights = np.unique(column_weights)
