@@ -1,3 +1,5 @@
+ENV
+
 ### VSCode ####
 
 .vscode
@@ -85,3 +87,6 @@ timing
 
 ### Jupyter ###
 .ipynb_checkpoints
+
+.clwb
+bazel*
