@@ -620,7 +620,7 @@ class Matching:
     
     def decode(self,
                z: Union[np.ndarray, List[int]],
-               num_neighbours: int = 30,
+               num_neighbours: Union[int, None] = 30,
                return_weight: bool = False
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """Decode the syndrome `z` using minimum-weight perfect matching
