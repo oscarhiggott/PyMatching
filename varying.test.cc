@@ -51,3 +51,9 @@ TEST(Varying, TimeToXIntercept) {
     ASSERT_EQ(pm::Varying64((-90 << 2) + 1).time_of_x_intercept(), 90);
     ASSERT_EQ(pm::Varying64((120 << 2) + 2).time_of_x_intercept(), 120);
 }
+
+TEST(Varying, Equality) {
+    ASSERT_TRUE(pm::Varying32((-12345 << 2) + 1) == pm::Varying32((-12345 << 2) + 1));
+    ASSERT_TRUE(pm::Varying32((-12345 << 2) + 1) != pm::Varying32((-12345 << 2) + 2));
+    ASSERT_TRUE(pm::Varying32((-12345 << 2) + 1) != pm::Varying32((-12346 << 2) + 1));
+}

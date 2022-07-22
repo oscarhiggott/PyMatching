@@ -122,7 +122,7 @@ namespace pm {
 
     template<typename T>
     inline bool Varying<T>::operator!=(Varying<T> rhs) const {
-        return !(rhs == *this);
+        return data != rhs.data;
     }
 
     template<typename T>
