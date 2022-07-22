@@ -24,14 +24,14 @@ TEST(Varying, ThenSlopeAt){
 }
 
 TEST(Varying, AdditionAndSubtraction) {
-    auto x = pm::Varying<pm::time_int>((100 << 2) + 2);
+    auto x = pm::Varying32((100 << 2) + 2);
     ASSERT_EQ(x.str(), "100 - t");
     ASSERT_EQ((x + 9).str(), "109 - t");
     ASSERT_EQ((x - 19).str(), "81 - t");
-    auto x2 = pm::Varying<pm::time_int>((1000 << 2) + 1);
+    auto x2 = pm::Varying32((1000 << 2) + 1);
     ASSERT_EQ((x2 + 100).str(), "1100 + t");
     ASSERT_EQ((x2 - 200).str(), "800 + t");
-    auto x3 = pm::Varying<pm::time_int>((50 << 2));
+    auto x3 = pm::Varying32((50 << 2));
     ASSERT_EQ((x3 + 1000).str(), "1050");
     ASSERT_EQ((x3 + 1000).str(), "1050");
 }

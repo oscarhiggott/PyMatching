@@ -106,6 +106,9 @@ namespace pm {
     inline Varying<T> Varying<T>::operator-(T offset) const {
         return pm::Varying<T>(this->data - (offset << 2));
     }
+
+    using Varying32 = Varying<int32_t>;
+    using Varying64 = Varying<int64_t>;
 }
 
 #endif //PYMATCHING2_VARYING_H
