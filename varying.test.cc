@@ -35,3 +35,19 @@ TEST(Varying, AdditionAndSubtraction) {
     ASSERT_EQ((x3 + 1000).str(), "1050");
     ASSERT_EQ((x3 + 1000).str(), "1050");
 }
+
+TEST(Varying, TimeToXInterceptWhenAddedTo) {
+    auto x1 = pm::Varying32((-10 << 2) + 1);
+    auto x2 = pm::Varying32 ((-20 << 2) + 1);
+    int32_t t = x1.time_of_x_intercept_when_added_to(x2 - 100);
+    ASSERT_EQ(t, 65);
+
+    auto x3 = pm::Varying32 ((10 << 2));
+    int32_t t2 = x1.time_of_x_intercept_when_added_to(x3 - 100);
+    ASSERT_EQ(t2, 100);
+}
+
+TEST(Varying, TimeToXIntercept) {
+    ASSERT_EQ(pm::Varying64((-90 << 2) + 1).time_of_x_intercept(), 90);
+    ASSERT_EQ(pm::Varying64((120 << 2) + 2).time_of_x_intercept(), 120);
+}
