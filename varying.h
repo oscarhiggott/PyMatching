@@ -5,36 +5,38 @@
 #include <string>
 #include <sstream>
 
-// To do: check that you can only divide weights by at most 2
-// Template to take arbitrary unsigned integer type
-
 
 namespace pm {
     typedef int32_t time_int;
 
+    template<typename T>
     class Varying {
     public:
-        int32_t data{};
+        T data{};
         Varying();
-        explicit Varying(const int32_t &data);
-        int32_t get_distance_at_time(int32_t time) const;
-        Varying then_growing_at_time(int32_t time_of_change) const;
-        Varying then_shrinking_at_time(int32_t time_of_change) const;
-        Varying then_frozen_at_time(int32_t time_of_change) const;
+        explicit Varying(T data);
+        T get_distance_at_time(T time) const;
+        Varying<T> then_growing_at_time(T time_of_change) const;
+        Varying<T> then_shrinking_at_time(T time_of_change) const;
+        Varying<T> then_frozen_at_time(T time_of_change) const;
         std::string str() const;
-        static Varying growing_varying_with_zero_distance_at_time(int32_t time);
-        friend std::ostream &operator<<(std::ostream &os, Varying varying);
-        bool operator==(Varying rhs) const;
-        bool operator!=(Varying rhs) const;
-        Varying operator+(int32_t offset) const;
-        Varying operator-(int32_t offset) const;
+        static Varying<T> growing_varying_with_zero_distance_at_time(T time);
+        template<typename U>
+        friend std::ostream &operator<<(std::ostream &os, Varying<U> varying);
+        bool operator==(Varying<T> rhs) const;
+        bool operator!=(Varying<T> rhs) const;
+        Varying<T> operator+(T offset) const;
+        Varying<T> operator-(T offset) const;
     };
 
-    inline Varying::Varying() = default;
+    template<typename T>
+    inline Varying<T>::Varying() = default;
 
-    inline Varying::Varying(const int32_t& data) : data(data) {}
+    template<typename T>
+    inline Varying<T>::Varying(T data) : data(data) {}
 
-    inline int32_t Varying::get_distance_at_time(int32_t time) const {
+    template<typename T>
+    inline T Varying<T>::get_distance_at_time(T time) const {
         if (data & 1) {
             return (data >> 2) + time;
         } else if (data & 2) {
@@ -44,32 +46,38 @@ namespace pm {
         }
     }
 
-    inline Varying Varying::then_growing_at_time(int32_t time_of_change) const {
-        int32_t d = get_distance_at_time(time_of_change);
-        return pm::Varying(((d - time_of_change) << 2) + 1);
+    template<typename T>
+    inline Varying<T> Varying<T>::then_growing_at_time(T time_of_change) const {
+        T d = get_distance_at_time(time_of_change);
+        return pm::Varying<T>(((d - time_of_change) << 2) + 1);
     }
 
-    inline Varying Varying::then_shrinking_at_time(int32_t time_of_change) const {
-        int32_t d = get_distance_at_time(time_of_change);
-        return pm::Varying(((d + time_of_change) << 2) + 2);
+    template<typename T>
+    inline Varying<T> Varying<T>::then_shrinking_at_time(T time_of_change) const {
+        T d = get_distance_at_time(time_of_change);
+        return pm::Varying<T>(((d + time_of_change) << 2) + 2);
     }
 
-    inline Varying Varying::then_frozen_at_time(int32_t time_of_change) const {
-        int32_t d = get_distance_at_time(time_of_change);
-        return pm::Varying(d << 2);
+    template<typename T>
+    inline Varying<T> Varying<T>::then_frozen_at_time(T time_of_change) const {
+        T d = get_distance_at_time(time_of_change);
+        return pm::Varying<T>(d << 2);
     }
 
-    inline std::string Varying::str() const {
+    template<typename T>
+    inline std::string Varying<T>::str() const {
         std::stringstream s;
         s << *this;
         return s.str();
     }
 
-    inline Varying Varying::growing_varying_with_zero_distance_at_time(int32_t time) {
-        return Varying(((-time) << 2) + 1);
+    template<typename T>
+    inline Varying<T> Varying<T>::growing_varying_with_zero_distance_at_time(T time) {
+        return Varying<T>(((-time) << 2) + 1);
     }
 
-    inline std::ostream &operator<<(std::ostream &os, Varying varying) {
+    template<typename T>
+    std::ostream &operator<<(std::ostream &os, Varying<T> varying) {
         os << (varying.data >> 2);
         if (varying.data & 1){
             os << " + t";
@@ -79,20 +87,24 @@ namespace pm {
         return os;
     }
 
-    inline bool Varying::operator==(Varying rhs) const {
+    template<typename T>
+    inline bool Varying<T>::operator==(Varying<T> rhs) const {
         return data == rhs.data;
     }
 
-    inline bool Varying::operator!=(Varying rhs) const {
+    template<typename T>
+    inline bool Varying<T>::operator!=(Varying<T> rhs) const {
         return !(rhs == *this);
     }
 
-    inline Varying Varying::operator+(int32_t offset) const {
-        return Varying(this->data + (offset<<2));
+    template<typename T>
+    inline Varying<T> Varying<T>::operator+(T offset) const {
+        return Varying<T>(this->data + (offset<<2));
     }
 
-    inline Varying Varying::operator-(int32_t offset) const {
-        return pm::Varying(this->data - (offset << 2));
+    template<typename T>
+    inline Varying<T> Varying<T>::operator-(T offset) const {
+        return pm::Varying<T>(this->data - (offset << 2));
     }
 }
 
