@@ -54,6 +54,7 @@ TEST(Varying, TimeToXIntercept) {
 
 TEST(Varying, Equality) {
     ASSERT_TRUE(pm::Varying32((-12345 << 2) + 1) == pm::Varying32((-12345 << 2) + 1));
+    ASSERT_FALSE(pm::Varying32((-12 << 2) + 1) == pm::Varying32((-13 << 2) + 1));
     ASSERT_TRUE(pm::Varying32((-12345 << 2) + 1) != pm::Varying32((-12345 << 2) + 2));
     ASSERT_TRUE(pm::Varying32((-12345 << 2) + 1) != pm::Varying32((-12346 << 2) + 1));
 }

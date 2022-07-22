@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <string>
 #include <sstream>
-#include <assert.h>
 #include <stdexcept>
 
 
