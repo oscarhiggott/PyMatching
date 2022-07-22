@@ -17,13 +17,14 @@ add_executable(PyMatching2 main.cc graph.cc region_path.cc alternating_tree.cc)
 enable_testing()
 
 add_executable(
-        varying_test
+        pymatching_tests
         varying.test.cc
+        events.test.cc
 )
 target_link_libraries(
-        varying_test
+        pymatching_tests
         GTest::gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(varying_test)
+gtest_discover_tests(pymatching_tests)

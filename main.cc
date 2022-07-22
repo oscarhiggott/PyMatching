@@ -10,7 +10,7 @@
 
 
 int main() {
-    pm::Varying v = pm::growing_varying_with_zero_distance_at_time(-10);
+    pm::Varying32 v = pm::Varying32::growing_varying_with_zero_distance_at_time(-10);
     std::cout << v;
     return 0;
 }

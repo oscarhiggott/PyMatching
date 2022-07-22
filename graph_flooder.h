@@ -28,10 +28,10 @@ public:
     void reschedule_events_at_detector_node(DetectorNode& detector_node);
     void do_region_arriving_at_empty_detector_node(const GraphFillRegion& region, DetectorNode& detector_node);
     MwpmEvent do_region_shrinking(const TentativeRegionShrinkEventData& event); // Use std::optional?
-    RegionHitRegionEvent do_neighbor_interaction(const TentativeNeighborInteractionEvent& event); // Use std::optional?
-    RegionHitBoundaryEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEvent& event);
-    RegionHitRegionEvent do_degenerate_implosion(const GraphFillRegion& region);
-    BlossomImplodeEvent do_blossom_implosioin(GraphFillRegion& region);
+    MwpmEvent do_neighbor_interaction(const TentativeNeighborInteractionEvent& event); // Use std::optional?
+    MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEvent& event);
+    MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
+    MwpmEvent do_blossom_implosioin(GraphFillRegion& region);
 
     // Delete these:
     int next_event_id;

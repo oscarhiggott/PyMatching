@@ -5,54 +5,62 @@
 #include "graph.h"
 #include "graph_fill_region.h"
 
-
-
-
-struct TentativeNeighborInteractionEventData {
-    DetectorNode* detector_node_1;
-    int schedule_index_1; // rename to neighbor index or something
-    DetectorNode* detector_node_2;
-    int schedule_index_2;
-};
-
-struct TentativeRegionShrinkEventData {
-    GraphFillRegion* region;
-};
-
-// declare enum for tentative event types (inherit uint8_t)
-
-// For all structs, biggest fields first
-
-struct TentativeEvent{
-    pm::time_int time;
-    bool is_invalidated;
-    //enum here
-    union{
-        TentativeNeighborInteractionEventData neighbor_interaction_event_data;
-        TentativeRegionShrinkEventData tentative_region_shrink_event_data;
+namespace pm{
+    struct TentativeNeighborInteractionEventData {
+        DetectorNode* detector_node_1;
+        int node_1_neighbor_index;
+        DetectorNode* detector_node_2;
+        int node_2_neighbor_index;
     };
-};
 
-// Same for MwpmEvents
+    struct TentativeRegionShrinkEventData {
+        GraphFillRegion* region;
+    };
 
-struct MwpmEvent {};
+    enum TentativeType {INTERACTION, SHRINKING};
 
-struct BlossomImplodeEvent : MwpmEvent {
-    GraphFillRegion* blossom_region;
-    GraphFillRegion* in_parent_region;
-    GraphFillRegion* in_child_region;
-};
+    struct TentativeEvent{
+        union {
+            TentativeNeighborInteractionEventData neighbor_interaction_event_data;
+            TentativeRegionShrinkEventData tentative_region_shrink_event_data;
+        };
+        pm::time_int time;
+        TentativeType tentative_event_type;
+        bool is_invalidated;
+    };
 
-struct RegionHitRegionEvent : MwpmEvent {
-    GraphFillRegion* region1;
-    GraphFillRegion* region2;
-    CompressedEdge edge;
-};
 
-struct RegionHitBoundaryEvent : MwpmEvent {
-    GraphFillRegion* region;
-    CompressedEdge edge;
-};
+    struct RegionHitRegionEventData {
+        GraphFillRegion* region1;
+        GraphFillRegion* region2;
+        CompressedEdge edge;
+    };
 
+    struct RegionHitBoundaryEventData {
+        GraphFillRegion* region;
+        CompressedEdge edge;
+    };
+
+    struct BlossomImplodeEventData {
+        GraphFillRegion* blossom_region;
+        GraphFillRegion* in_parent_region;
+        GraphFillRegion* in_child_region;
+    };
+
+    enum MwpmEventType {
+        REGION_HIT_REGION,
+        REGION_HIT_BOUNDARY,
+        BLOSSOM_IMPLODE
+    };
+
+    struct MwpmEvent {
+        union {
+            RegionHitRegionEventData region_hit_region_event_data;
+            RegionHitBoundaryEventData region_hit_boundary_event_data;
+            BlossomImplodeEventData blossom_implode_event_data;
+        };
+        MwpmEventType event_type;
+    };
+}
 
 #endif //PYMATCHING2_EVENTS_H
