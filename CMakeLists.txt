@@ -12,13 +12,13 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-add_executable(PyMatching2 main.cc graph.cc region_path.cc alternating_tree.cc varying.cc)
+add_executable(PyMatching2 main.cc graph.cc region_path.cc alternating_tree.cc)
 
 enable_testing()
 
 add_executable(
         varying_test
-        varying.test.cc varying.cc
+        varying.test.cc
 )
 target_link_libraries(
         varying_test

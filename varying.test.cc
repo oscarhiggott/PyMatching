@@ -2,7 +2,7 @@
 #include "varying.h"
 
 TEST(Varying, GrowingZeroRadiusAtTime) {
-    pm::Varying x = pm::growing_varying_with_zero_distance_at_time(3);
+    pm::Varying x = pm::Varying::growing_varying_with_zero_distance_at_time(3);
     ASSERT_EQ(x.get_distance_at_time(3), 0);
     ASSERT_EQ(x.get_distance_at_time(10), 7);
     ASSERT_EQ(x.get_distance_at_time(0), -3);
@@ -15,7 +15,7 @@ TEST(Varying, VaryingString) {
 
 
 TEST(Varying, ThenSlopeAt){
-    pm::Varying x = pm::growing_varying_with_zero_distance_at_time(20);
+    pm::Varying x = pm::Varying::growing_varying_with_zero_distance_at_time(20);
     pm::Varying y = x.then_shrinking_at_time(30);
     ASSERT_EQ(y, pm::Varying((40 << 2) + 2));
 }
@@ -31,5 +31,4 @@ TEST(Varying, AdditionAndSubtraction) {
     pm::Varying x3 = pm::Varying((50 << 2));
     ASSERT_EQ((x3 + 1000).str(), "1050");
     ASSERT_EQ((x3 + 1000).str(), "1050");
-
 }
