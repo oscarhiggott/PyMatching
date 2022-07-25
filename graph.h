@@ -37,11 +37,11 @@ namespace pm {
     };
 
 
-    template<template<class> class neighbor_vec>
     class Graph {
     public:
         std::vector<DetectorNode> nodes;
         void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
+        void add_boundary_edge(size_t u, weight_int weight, obs_int observables);
     };
 
 }
