@@ -2,10 +2,25 @@
 #include "varying.h"
 
 TEST(Varying, GrowingZeroRadiusAtTime) {
-    pm::Varying x = pm::Varying<pm::time_int>::growing_varying_with_zero_distance_at_time(3);
+    pm::Varying32 x = pm::Varying32::growing_varying_with_zero_distance_at_time(3);
     ASSERT_EQ(x.get_distance_at_time(3), 0);
     ASSERT_EQ(x.get_distance_at_time(10), 7);
     ASSERT_EQ(x.get_distance_at_time(0), -3);
+}
+
+TEST(Varying, GetDistanceAtTime) {
+    auto x1 = pm::Varying32((-10 << 2) + 1);
+    ASSERT_EQ(x1.get_distance_at_time(15), 5);
+    ASSERT_EQ(x1.get_distance_at_time(5), -5);
+    ASSERT_EQ(x1.get_growing_distance_at_time(5), -5);
+    auto x2 = pm::Varying32((20 << 2) + 2);
+    ASSERT_EQ(x2.get_distance_at_time(30), -10);
+    ASSERT_EQ(x2.get_distance_at_time(10), 10);
+    ASSERT_EQ(x2.get_shrinking_distance_at_time(10), 10);
+    auto x3 = pm::Varying32((120 << 2));
+    ASSERT_EQ(x3.get_distance_at_time(1000), 120);
+    ASSERT_EQ(x3.get_distance_at_time(30), 120);
+    ASSERT_EQ(x3.get_frozen_distance_at_time(30), 120);
 }
 
 TEST(Varying, VaryingString) {

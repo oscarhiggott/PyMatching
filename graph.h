@@ -16,6 +16,7 @@ namespace pm {
 
     struct TentativeEvent;
 
+//    template<template<class> class neighbour_list>
     class DetectorNode{
     public:
         DetectorNode() :

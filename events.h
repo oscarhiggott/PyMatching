@@ -18,7 +18,7 @@ namespace pm{
         GraphFillRegion* region;
     };
 
-    enum TentativeType : unsigned char {INTERACTION, SHRINKING};
+    enum TentativeType : uint8_t {INTERACTION, SHRINKING};
 
     struct TentativeEvent{
         union {
@@ -47,7 +47,7 @@ namespace pm{
         GraphFillRegion* in_child_region;
     };
 
-    enum MwpmEventType : unsigned char {
+    enum MwpmEventType : uint8_t {
         REGION_HIT_REGION,
         REGION_HIT_BOUNDARY,
         BLOSSOM_IMPLODE

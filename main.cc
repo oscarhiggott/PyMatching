@@ -1,18 +1,9 @@
 #include <iostream>
-#include <bitset>
-#include "graph.h"
-#include "events.h"
-#include "region_path.h"
-#include "graph_fill_region.h"
-#include "graph_flooder.h"
-#include "mwpm.h"
-#include "varying.h"
+#include "varying.perf.h"
 
 
 int main() {
-    pm::Varying32 v = pm::Varying32::growing_varying_with_zero_distance_at_time(-10);
-    std::cout << v;
-    std::vector<int> x;
-    std::cout << x[100];
-    return 0;
+    auto out = pm::time_get_distance(pm::DIRECT);
+    std::cout << std::get<1>(out) << std::endl;
+    std::cout << std::get<0>(out) << std::endl;
 }

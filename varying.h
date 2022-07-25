@@ -17,6 +17,9 @@ namespace pm {
         Varying();
         explicit Varying(T data);
         T get_distance_at_time(T time) const;
+        T get_shrinking_distance_at_time(T time) const;
+        T get_growing_distance_at_time(T time) const;
+        T get_frozen_distance_at_time(T time) const;
         T time_of_x_intercept();
         T time_of_x_intercept_when_added_to(Varying<T> other);
         Varying<T> then_growing_at_time(T time_of_change) const;

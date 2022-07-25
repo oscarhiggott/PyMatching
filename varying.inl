@@ -21,6 +21,15 @@ inline T Varying<T>::get_distance_at_time(T time) const {
 }
 
 template<typename T>
+inline T Varying<T>::get_frozen_distance_at_time(T time) const {return data >> 2;}
+
+template<typename T>
+inline T Varying<T>::get_growing_distance_at_time(T time) const {return (data >> 2) + time;}
+
+template<typename T>
+inline T Varying<T>::get_shrinking_distance_at_time(T time) const {return (data >> 2) - time;}
+
+template<typename T>
 inline T Varying<T>::time_of_x_intercept() {
     if (data & 1) {
         return (data >> 2) * -1;
