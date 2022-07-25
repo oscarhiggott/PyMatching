@@ -6,6 +6,7 @@
 #include "graph_fill_region.h"
 
 namespace pm{
+
     struct TentativeNeighborInteractionEventData {
         DetectorNode* detector_node_1;
         int node_1_neighbor_index;
@@ -17,7 +18,7 @@ namespace pm{
         GraphFillRegion* region;
     };
 
-    enum TentativeType {INTERACTION, SHRINKING};
+    enum TentativeType : unsigned char {INTERACTION, SHRINKING};
 
     struct TentativeEvent{
         union {
@@ -28,7 +29,6 @@ namespace pm{
         TentativeType tentative_event_type;
         bool is_invalidated;
     };
-
 
     struct RegionHitRegionEventData {
         GraphFillRegion* region1;
@@ -47,7 +47,7 @@ namespace pm{
         GraphFillRegion* in_child_region;
     };
 
-    enum MwpmEventType {
+    enum MwpmEventType : unsigned char {
         REGION_HIT_REGION,
         REGION_HIT_BOUNDARY,
         BLOSSOM_IMPLODE

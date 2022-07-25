@@ -3,35 +3,48 @@
 
 
 #include <vector>
-
-typedef uint64_t obs_int;
-typedef uint8_t weight_int;
-
-class GraphFillRegion;
-class TentativeNeighborInteractionEvent;
-
-class DetectorNode{
-public:
-    obs_int observables_crossed_from_source;
-    DetectorNode* reached_from_source;
-    int distance_from_source; // DO I NEED THIS???
-    GraphFillRegion* region_that_arrived;
-
-    // Eventually, make optionally fixed size arrays with templates.
-    std::vector<DetectorNode*> neighbors;
-    std::vector<weight_int> neighbor_weights;
-    std::vector<obs_int> neighbor_observables;
-    std::vector<TentativeNeighborInteractionEvent*> neighbor_schedules;
-    // no neighbor back index
-};
+#include "fixed_length_vector.h"
+#include "varying.h"
 
 
-class Graph {
-public:
-    std::vector<DetectorNode> nodes;
+namespace pm {
 
-    void add_edge(int u, int v, weight_int weight, obs_int observables);
-};
+    typedef uint64_t obs_int;
+    typedef uint8_t weight_int;
+
+    class GraphFillRegion;
+
+    struct TentativeEvent;
+
+    class DetectorNode{
+    public:
+        DetectorNode() :
+            observables_crossed_from_source(0),
+            reached_from_source(nullptr),
+            distance_from_source(0),
+            region_that_arrived(nullptr) {}
+
+
+        obs_int observables_crossed_from_source;
+        DetectorNode* reached_from_source;
+        time_int distance_from_source;
+        GraphFillRegion* region_that_arrived;
+
+        std::vector<DetectorNode*> neighbors;
+        std::vector<weight_int> neighbor_weights;
+        std::vector<obs_int> neighbor_observables;
+        std::vector<TentativeEvent*> neighbor_schedules;
+    };
+
+
+    template<template<class> class neighbor_vec>
+    class Graph {
+    public:
+        std::vector<DetectorNode> nodes;
+        void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
+    };
+
+}
 
 
 #endif //PYMATCHING2_GRAPH_H

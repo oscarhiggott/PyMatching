@@ -20,6 +20,7 @@ add_executable(
         pymatching_tests
         varying.test.cc
         events.test.cc
+        fixed_length_vector.test.cc
 )
 target_link_libraries(
         pymatching_tests

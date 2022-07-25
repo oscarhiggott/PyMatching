@@ -12,5 +12,7 @@
 int main() {
     pm::Varying32 v = pm::Varying32::growing_varying_with_zero_distance_at_time(-10);
     std::cout << v;
+    std::vector<int> x;
+    std::cout << x[100];
     return 0;
 }
