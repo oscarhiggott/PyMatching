@@ -5,6 +5,7 @@
 #include "alternating_tree.h"
 
 namespace pm {
+
     class GraphFillRegion {
     public:
         // Maybe one field for blossom_parent or alt_tree_node eventually by using union?
@@ -14,7 +15,10 @@ namespace pm {
 
         std::vector<GraphFillRegion*> blossom_children;
         std::vector<pm::DetectorNode*> shell_area;
+
+        GraphFillRegion();
     };
+
 }
 
 
