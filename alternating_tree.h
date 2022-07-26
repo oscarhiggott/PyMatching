@@ -14,7 +14,7 @@ namespace pm{
 
 
     struct AltTreeEdge{
-        AltTreeNode* node;
+        AltTreeNode* alt_tree_node;
         CompressedEdge edge;
     };
 
