@@ -8,7 +8,6 @@
 
 namespace pm{
 
-
     class AltTreeNode;
     class GraphFillRegion;
 
@@ -28,14 +27,16 @@ namespace pm{
         std::vector<RegionEdge> pruned_path_regions;
     };
 
-    class AltTreeNode{
+    class AltTreeNode {
     public:
         GraphFillRegion* inner_region;
         GraphFillRegion* outer_region;
         AltTreeEdge parent;
         std::vector<AltTreeEdge> children; // Maybe make linked list?
         CompressedEdge inner_to_outer_edge;
-
+        AltTreeNode();
+        AltTreeNode(GraphFillRegion* inner_region, GraphFillRegion* outer_region, const AltTreeEdge& parent,
+                    const std::vector<AltTreeEdge>& children, const CompressedEdge& inner_to_outer_edge);
         std::vector<GraphFillRegion> shatter_into_matches();
         AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);
         bool in_same_tree_as(const AltTreeNode& other);

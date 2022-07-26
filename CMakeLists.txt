@@ -25,6 +25,8 @@ add_executable(
         fixed_length_vector.test.cc
         compressed_edge.test.cc
         compressed_edge.cc
+        alternating_tree.test.cc
+        alternating_tree.cc
 )
 target_link_libraries(
         pymatching_tests

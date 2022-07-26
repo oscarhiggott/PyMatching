@@ -10,3 +10,5 @@ bool pm::CompressedEdge::operator==(const pm::CompressedEdge &rhs) const {
 bool pm::CompressedEdge::operator!=(const pm::CompressedEdge &rhs) const {
     return !(rhs == *this);
 }
+
+pm::CompressedEdge::CompressedEdge() : loc_from(nullptr), loc_to(nullptr), obs_mask(0) {}

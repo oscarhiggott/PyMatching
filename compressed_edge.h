@@ -18,6 +18,7 @@ namespace pm {
         bool operator!=(const CompressedEdge &rhs) const;
 
         CompressedEdge merged_with(const CompressedEdge& other) const;
+        CompressedEdge();
         CompressedEdge(DetectorNode* loc_from, DetectorNode* loc_to, obs_int obs_mask);
     };
 

@@ -1,10 +1,13 @@
 #ifndef PYMATCHING2_GRAPH_FILL_REGION_H
 #define PYMATCHING2_GRAPH_FILL_REGION_H
 
-#include "graph.h"
 #include "alternating_tree.h"
+#include "graph.h"
+
 
 namespace pm {
+
+    class AltTreeNode;
 
     class GraphFillRegion {
     public:
