@@ -16,6 +16,8 @@ namespace pm{
     struct AltTreeEdge{
         AltTreeNode* alt_tree_node;
         CompressedEdge edge;
+        AltTreeEdge();
+        AltTreeEdge(AltTreeNode* alt_tree_node, const CompressedEdge& edge);
     };
 
 // Equality and string
