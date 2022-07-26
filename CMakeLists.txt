@@ -21,6 +21,7 @@ add_executable(
         varying.test.cc
         events.test.cc
         graph.test.cc
+        graph.cc
         fixed_length_vector.test.cc
 )
 target_link_libraries(

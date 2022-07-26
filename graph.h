@@ -40,6 +40,9 @@ namespace pm {
 
     class Graph {
     public:
+        size_t num_nodes;
+        Graph() = delete;
+        explicit Graph(size_t num_nodes);
         std::vector<DetectorNode> nodes;
         void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
         void add_boundary_edge(size_t u, weight_int weight, obs_int observables);

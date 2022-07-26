@@ -13,7 +13,6 @@ namespace pm{
     class GraphFillRegion;
 
 
-
     struct AltTreeEdge{
         AltTreeNode* node;
         CompressedEdge edge;
