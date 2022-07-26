@@ -35,11 +35,11 @@ namespace pm{
         CompressedEdge inner_to_outer_edge;
 
         std::vector<GraphFillRegion> shatter_into_matches();
-        AltTreeNode most_recent_common_ancestor(AltTreeNode other);
-        bool in_same_tree_as(AltTreeNode other);
-        void add_child(AltTreeEdge child);
+        AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);
+        bool in_same_tree_as(const AltTreeNode& other);
+        void add_child(const AltTreeEdge& child);
         AltTreeNode* make_child(GraphFillRegion* inner_region, GraphFillRegion* outer_region,
-                                CompressedEdge inner_outer_edge, CompressedEdge child_edge);
+                                const CompressedEdge& inner_outer_edge, const CompressedEdge& child_edge);
         AltTreePruneResult prune_upward_stopping_before(AltTreeNode* prune_parent);
     };
 

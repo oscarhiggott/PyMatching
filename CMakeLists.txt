@@ -23,6 +23,8 @@ add_executable(
         graph.test.cc
         graph.cc
         fixed_length_vector.test.cc
+        compressed_edge.test.cc
+        compressed_edge.cc
 )
 target_link_libraries(
         pymatching_tests
