@@ -46,8 +46,8 @@ namespace pm{
         AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);
         bool in_same_tree_as(const AltTreeNode& other);
         void add_child(const AltTreeEdge& child);
-        AltTreeNode* make_child(GraphFillRegion* inner_region, GraphFillRegion* outer_region,
-                                const CompressedEdge& inner_to_outer_edge, const CompressedEdge& child_edge);
+        AltTreeNode* make_child(GraphFillRegion* child_inner_region, GraphFillRegion* child_outer_region,
+                                const CompressedEdge& child_inner_to_outer_edge, const CompressedEdge& child_compressed_edge);
         AltTreePruneResult prune_upward_stopping_before(AltTreeNode* prune_parent);
         AltTreeNode* find_root();
     };
