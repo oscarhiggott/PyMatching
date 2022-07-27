@@ -1,6 +1,7 @@
 #include "alternating_tree.h"
 
 #include <utility>
+#include <algorithm>
 
 
 pm::AltTreeEdge::AltTreeEdge() : alt_tree_node(nullptr), edge(nullptr, nullptr, 0) {}
@@ -58,5 +59,16 @@ pm::AltTreeNode *pm::AltTreeNode::find_root() {
 pm::AltTreeNode::~AltTreeNode() {
     outer_region->alt_tree_node = nullptr;
     inner_region->alt_tree_node = nullptr;
+}
+
+
+void pm::AltTreeNode::become_root() {
+    // Performs a tree rotation turning this node into the root of the tree/
+    auto old_parent = parent.alt_tree_node;
+    old_parent->become_root();
+    parent.alt_tree_node->inner_region = inner_region;
+    parent.alt_tree_node->inner_to_outer_edge = parent.edge;
+    inner_region = nullptr;
+//    parent.alt_tree_node->children.
 }
 

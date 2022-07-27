@@ -27,7 +27,6 @@ add_executable(
         compressed_edge.cc
         alternating_tree.test.cc
         alternating_tree.cc
-        graph_fill_region.h
         graph_fill_region.cc
 )
 target_link_libraries(

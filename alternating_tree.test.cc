@@ -106,8 +106,22 @@ namespace att {
     }
 
 
-
-
+    TEST(AlternatingTree, UnstableEraseInt) {
+        std::vector<int> v = {6, 2, 4, 7, 9, 10};
+        bool b1 = pm::unstable_erase(v, [](int x){return x==7;});
+        ASSERT_EQ(v, std::vector<int>({6, 2, 4, 10, 9}));
+        ASSERT_TRUE(b1);
+        bool b2 = pm::unstable_erase(v, [](int x){return x == 6;});
+        ASSERT_EQ(v, std::vector<int>({9, 2, 4, 10}));
+        ASSERT_TRUE(b2);
+        std::vector<int> w = {8};
+        bool b3 = pm::unstable_erase(w, [](int x){return x == 8;});
+        ASSERT_EQ(w, std::vector<int>({}));
+        ASSERT_TRUE(b3);
+        bool b4 = pm::unstable_erase(w, [](int x){return x == 0;});
+        ASSERT_EQ(w, std::vector<int>({}));
+        ASSERT_FALSE(b4);
+    }
 
 }
 

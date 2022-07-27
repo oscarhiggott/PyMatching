@@ -21,6 +21,22 @@ namespace pm{
 
 // Equality and string
 
+    template<class T, class UnaryPredicate>
+    bool unstable_erase(std::vector<T>& vec, UnaryPredicate pred);
+
+    template<class T, class UnaryPredicate>
+    inline bool pm::unstable_erase(std::vector<T>& vec, UnaryPredicate pred) {
+        auto res = std::find_if(vec.begin(), vec.end(), pred);
+        if (res == vec.end())
+            return false;
+        if (vec.size() > 1){
+            *res = std::move(vec.back());
+            vec.pop_back();
+            return true;
+        }
+        vec.clear();
+        return true;
+    }
 
     struct AltTreePruneResult {
         std::vector<AltTreeEdge> orphans;
@@ -42,6 +58,7 @@ namespace pm{
                     const pm::CompressedEdge& inner_to_outer_edge);
         AltTreeNode(pm::GraphFillRegion* outer_region);
         ~AltTreeNode();
+        void become_root();
         std::vector<GraphFillRegion> shatter_into_matches();
         AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);
         bool in_same_tree_as(const AltTreeNode& other);
