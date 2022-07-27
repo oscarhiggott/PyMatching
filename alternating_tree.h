@@ -16,6 +16,11 @@ namespace pm{
         AltTreeNode* alt_tree_node;
         CompressedEdge edge;
         AltTreeEdge();
+
+        bool operator==(const AltTreeEdge &rhs) const;
+
+        bool operator!=(const AltTreeEdge &rhs) const;
+
         AltTreeEdge(AltTreeNode* alt_tree_node, const CompressedEdge& edge);
     };
 
@@ -58,6 +63,11 @@ namespace pm{
                     const pm::CompressedEdge& inner_to_outer_edge);
         AltTreeNode(pm::GraphFillRegion* outer_region);
         ~AltTreeNode();
+
+        bool operator==(const AltTreeNode &rhs) const;
+
+        bool operator!=(const AltTreeNode &rhs) const;
+
         void become_root();
         std::vector<GraphFillRegion> shatter_into_matches();
         AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);

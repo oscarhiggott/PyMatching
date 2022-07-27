@@ -9,6 +9,15 @@ pm::AltTreeEdge::AltTreeEdge() : alt_tree_node(nullptr), edge(nullptr, nullptr, 
 pm::AltTreeEdge::AltTreeEdge(AltTreeNode *alt_tree_node, const CompressedEdge &edge)
     : alt_tree_node(alt_tree_node), edge(edge) {}
 
+bool pm::AltTreeEdge::operator==(const pm::AltTreeEdge &rhs) const {
+    return alt_tree_node == rhs.alt_tree_node &&
+           edge == rhs.edge;
+}
+
+bool pm::AltTreeEdge::operator!=(const pm::AltTreeEdge &rhs) const {
+    return !(rhs == *this);
+}
+
 void pm::AltTreeNode::add_child(const pm::AltTreeEdge& child) {
     children.push_back(child);
     child.alt_tree_node->parent = {this, child.edge.reversed()};
@@ -57,8 +66,10 @@ pm::AltTreeNode *pm::AltTreeNode::find_root() {
 }
 
 pm::AltTreeNode::~AltTreeNode() {
-    outer_region->alt_tree_node = nullptr;
-    inner_region->alt_tree_node = nullptr;
+    if (outer_region)
+        outer_region->alt_tree_node = nullptr;
+    if (inner_region)
+        inner_region->alt_tree_node = nullptr;
 }
 
 
@@ -70,5 +81,17 @@ void pm::AltTreeNode::become_root() {
     parent.alt_tree_node->inner_to_outer_edge = parent.edge;
     inner_region = nullptr;
 //    parent.alt_tree_node->children.
+}
+
+bool pm::AltTreeNode::operator==(const pm::AltTreeNode &rhs) const {
+    return inner_region == rhs.inner_region &&
+           outer_region == rhs.outer_region &&
+           inner_to_outer_edge == rhs.inner_to_outer_edge &&
+           parent == rhs.parent &&
+           children == rhs.children;
+}
+
+bool pm::AltTreeNode::operator!=(const pm::AltTreeNode &rhs) const {
+    return !(rhs == *this);
 }
 
