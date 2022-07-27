@@ -31,12 +31,16 @@ namespace pm{
     public:
         GraphFillRegion* inner_region;
         GraphFillRegion* outer_region;
+        CompressedEdge inner_to_outer_edge;
         AltTreeEdge parent;
         std::vector<AltTreeEdge> children; // Maybe make linked list?
-        CompressedEdge inner_to_outer_edge;
         AltTreeNode();
-        AltTreeNode(GraphFillRegion* inner_region, GraphFillRegion* outer_region, const AltTreeEdge& parent,
-                    const std::vector<AltTreeEdge>& children, const CompressedEdge& inner_to_outer_edge);
+        AltTreeNode(GraphFillRegion* inner_region, GraphFillRegion* outer_region,
+                    const CompressedEdge& inner_to_outer_edge, const AltTreeEdge& parent,
+                    std::vector<AltTreeEdge>  children);
+        AltTreeNode(pm::GraphFillRegion* inner_region, pm::GraphFillRegion* outer_region,
+                    const pm::CompressedEdge& inner_to_outer_edge);
+        AltTreeNode(pm::GraphFillRegion* outer_region);
         std::vector<GraphFillRegion> shatter_into_matches();
         AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);
         bool in_same_tree_as(const AltTreeNode& other);
@@ -44,6 +48,7 @@ namespace pm{
         AltTreeNode* make_child(GraphFillRegion* inner_region, GraphFillRegion* outer_region,
                                 const CompressedEdge& inner_outer_edge, const CompressedEdge& child_edge);
         AltTreePruneResult prune_upward_stopping_before(AltTreeNode* prune_parent);
+        AltTreeNode* find_root();
     };
 
 }
