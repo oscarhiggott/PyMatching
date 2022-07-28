@@ -10,8 +10,7 @@ pm::AltTreeEdge::AltTreeEdge(AltTreeNode *alt_tree_node, const CompressedEdge &e
     : alt_tree_node(alt_tree_node), edge(edge) {}
 
 bool pm::AltTreeEdge::operator==(const pm::AltTreeEdge &rhs) const {
-    return alt_tree_node == rhs.alt_tree_node &&
-           edge == rhs.edge;
+    return edge == rhs.edge;
 }
 
 bool pm::AltTreeEdge::operator!=(const pm::AltTreeEdge &rhs) const {
@@ -23,13 +22,14 @@ void pm::AltTreeNode::add_child(const pm::AltTreeEdge& child) {
     child.alt_tree_node->parent = {this, child.edge.reversed()};
 }
 
-pm::AltTreeNode *pm::AltTreeNode::make_child(pm::GraphFillRegion *child_inner_region, pm::GraphFillRegion *child_outer_region,
+pm::AltTreeNode *pm::AltTreeNode::make_child(pm::GraphFillRegion *child_inner_region,
+                                             pm::GraphFillRegion *child_outer_region,
                                              const pm::CompressedEdge &child_inner_to_outer_edge,
                                              const pm::CompressedEdge &child_compressed_edge) {
     auto child = new AltTreeNode(child_inner_region, child_outer_region,
                                  child_inner_to_outer_edge);
-    auto child_alt_treeedge = AltTreeEdge(child, child_compressed_edge);
-    add_child(child_alt_treeedge);
+    auto child_alt_tree_edge = AltTreeEdge(child, child_compressed_edge);
+    add_child(child_alt_tree_edge);
     return child;
 }
 
@@ -57,8 +57,8 @@ pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *inner_region, pm::GraphFillReg
 pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *outer_region)
         : inner_region(nullptr), outer_region(outer_region) {}
 
-pm::AltTreeNode *pm::AltTreeNode::find_root() {
-    auto current = this;
+const pm::AltTreeNode *pm::AltTreeNode::find_root() const {
+    const pm::AltTreeNode* current = this;
     while (current->parent.alt_tree_node) {
         current = current->parent.alt_tree_node;
     }
@@ -90,19 +90,28 @@ void pm::AltTreeNode::become_root() {
 }
 
 bool pm::AltTreeNode::operator==(const pm::AltTreeNode &rhs) const {
-    return inner_region == rhs.inner_region &&
-           outer_region == rhs.outer_region &&
-           inner_to_outer_edge == rhs.inner_to_outer_edge &&
-           parent == rhs.parent &&
-           children == rhs.children;
+    return find_root()->tree_equal(*rhs.find_root());
 }
 
 bool pm::AltTreeNode::operator!=(const pm::AltTreeNode &rhs) const {
     return !(rhs == *this);
 }
 
-bool pm::AltTreeNode::tree_equal(pm::AltTreeNode* other) {
-    return false;
+bool pm::AltTreeNode::tree_equal(const pm::AltTreeNode& other) const {
+    if (inner_region != other.inner_region || outer_region != other.outer_region ||
+        inner_to_outer_edge != other.inner_to_outer_edge ||
+        children.size() != other.children.size()){
+        return false;
+    }
+    if (children.empty())
+        return true;
+    for (size_t i = 0; i < children.size(); i++) {
+        if (children[i].edge != other.children[i].edge)
+            return false;
+        if (!children[i].alt_tree_node->tree_equal(*other.children[i].alt_tree_node))
+            return false;
+    }
+    return true;
 }
 
 std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {

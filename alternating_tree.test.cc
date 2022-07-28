@@ -221,4 +221,24 @@ TEST(AlternatingTree, AllNodesInTree) {
                   x.alt_tree_node->children[1].alt_tree_node->children[0].alt_tree_node,
                   x.alt_tree_node->children[0].alt_tree_node
               }));
+    delete_alternating_tree(x.alt_tree_node);
+}
+
+TEST(AlternatingTree, TreeEqual) {
+    pm::AltTreeEdge x = example_tree();
+    pm::AltTreeEdge x2 = example_tree();
+    pm::AltTreeEdge y = example_tree_four_children();
+    pm::AltTreeEdge y2 = example_tree_four_children();
+    ASSERT_TRUE(x.alt_tree_node->tree_equal(*x2.alt_tree_node));
+    ASSERT_TRUE(*x.alt_tree_node == *x2.alt_tree_node);
+    ASSERT_TRUE(y.alt_tree_node->tree_equal(*y.alt_tree_node));
+    ASSERT_TRUE(y.alt_tree_node->tree_equal(*y2.alt_tree_node));
+    ASSERT_FALSE(x.alt_tree_node->tree_equal(*y.alt_tree_node));
+    ASSERT_FALSE(*x.alt_tree_node == *y.alt_tree_node);
+    y2.alt_tree_node->children.pop_back();
+    ASSERT_FALSE(y.alt_tree_node->tree_equal(*y2.alt_tree_node));
+    delete_alternating_tree(x.alt_tree_node);
+    delete_alternating_tree(x2.alt_tree_node);
+    delete_alternating_tree(y.alt_tree_node);
+    delete_alternating_tree(y2.alt_tree_node);
 }

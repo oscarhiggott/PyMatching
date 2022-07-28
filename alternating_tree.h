@@ -14,7 +14,7 @@ namespace pm{
 
     struct AltTreeEdge{
         AltTreeNode* alt_tree_node;
-        CompressedEdge edge;
+        pm::CompressedEdge edge;
         AltTreeEdge();
 
         bool operator==(const AltTreeEdge &rhs) const;
@@ -23,8 +23,6 @@ namespace pm{
 
         AltTreeEdge(AltTreeNode* alt_tree_node, const CompressedEdge& edge);
     };
-
-// Equality and string
 
     template<class T, class UnaryPredicate>
     bool unstable_erase(std::vector<T>& vec, UnaryPredicate pred);
@@ -76,8 +74,8 @@ namespace pm{
         AltTreeNode* make_child(GraphFillRegion* child_inner_region, GraphFillRegion* child_outer_region,
                                 const CompressedEdge& child_inner_to_outer_edge, const CompressedEdge& child_compressed_edge);
         AltTreePruneResult prune_upward_stopping_before(AltTreeNode* prune_parent);
-        AltTreeNode* find_root();
-        bool tree_equal(pm::AltTreeNode* other);
+        const AltTreeNode* find_root() const;
+        bool tree_equal(const pm::AltTreeNode& other) const;
         std::vector<pm::AltTreeNode*> all_nodes_in_tree();
     };
 
