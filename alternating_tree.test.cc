@@ -56,6 +56,16 @@ pm::AltTreeEdge example_tree() {
     return t(
             {
                     t(
+                            {},
+                            7,
+                            8,
+                            false,
+                            7,
+                            8,
+                            0,
+                            7
+                    ),
+                    t(
                             {
                                     t(
                                             {},
@@ -66,6 +76,16 @@ pm::AltTreeEdge example_tree() {
                                             4,
                                             2,
                                             3
+                                    ),
+                                    t(
+                                            {},
+                                            5,
+                                            6,
+                                            false,
+                                            5,
+                                            6,
+                                            2,
+                                            5
                                     )
                             },
                             1,
@@ -153,7 +173,7 @@ void delete_alternating_tree(pm::AltTreeNode* root) {
 TEST(AlternatingTree, FindRoot) {
     auto n = example_tree();
     ASSERT_EQ(
-            n.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->find_root(), n.alt_tree_node);
+            n.alt_tree_node->children[1].alt_tree_node->children[0].alt_tree_node->find_root(), n.alt_tree_node);
     ASSERT_EQ(n.alt_tree_node->find_root(), n.alt_tree_node);
     delete_alternating_tree(n.alt_tree_node);
 }
@@ -189,4 +209,16 @@ TEST(AlternatingTree, UnstableEraseAltTreeEdge) {
         return y.alt_tree_node == xc_copy[0].alt_tree_node;});
     ASSERT_EQ(xc, std::vector<pm::AltTreeEdge>({xc_copy[2], xc_copy[3]}));
     delete_alternating_tree(x.alt_tree_node);
+}
+
+TEST(AlternatingTree, AllNodesInTree) {
+    pm::AltTreeEdge x = example_tree();
+    ASSERT_EQ(x.alt_tree_node->all_nodes_in_tree(),
+              std::vector<pm::AltTreeNode*>({
+                  x.alt_tree_node,
+                  x.alt_tree_node->children[1].alt_tree_node,
+                  x.alt_tree_node->children[1].alt_tree_node->children[1].alt_tree_node,
+                  x.alt_tree_node->children[1].alt_tree_node->children[0].alt_tree_node,
+                  x.alt_tree_node->children[0].alt_tree_node
+              }));
 }

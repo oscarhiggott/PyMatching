@@ -75,12 +75,18 @@ pm::AltTreeNode::~AltTreeNode() {
 
 void pm::AltTreeNode::become_root() {
     // Performs a tree rotation turning this node into the root of the tree/
+    if (!parent.alt_tree_node)
+        return;
     auto old_parent = parent.alt_tree_node;
     old_parent->become_root();
     parent.alt_tree_node->inner_region = inner_region;
     parent.alt_tree_node->inner_to_outer_edge = parent.edge;
     inner_region = nullptr;
-//    parent.alt_tree_node->children.
+    pm::unstable_erase(parent.alt_tree_node->children,
+                       [&](pm::AltTreeEdge x){return x.alt_tree_node == this;}
+                       );
+    parent = pm::AltTreeEdge();
+    add_child(pm::AltTreeEdge(old_parent, inner_to_outer_edge));
 }
 
 bool pm::AltTreeNode::operator==(const pm::AltTreeNode &rhs) const {
@@ -95,3 +101,20 @@ bool pm::AltTreeNode::operator!=(const pm::AltTreeNode &rhs) const {
     return !(rhs == *this);
 }
 
+bool pm::AltTreeNode::tree_equal(pm::AltTreeNode* other) {
+    return false;
+}
+
+std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {
+    std::vector<pm::AltTreeNode*> all_nodes;
+    std::vector<pm::AltTreeNode*> to_visit;
+    to_visit.push_back(this);
+    while (!to_visit.empty()) {
+        pm::AltTreeNode* current = to_visit.back();
+        to_visit.pop_back();
+        all_nodes.push_back(current);
+        for (auto c: current->children)
+            to_visit.push_back(c.alt_tree_node);
+    }
+    return all_nodes;
+}

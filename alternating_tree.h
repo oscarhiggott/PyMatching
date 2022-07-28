@@ -77,6 +77,8 @@ namespace pm{
                                 const CompressedEdge& child_inner_to_outer_edge, const CompressedEdge& child_compressed_edge);
         AltTreePruneResult prune_upward_stopping_before(AltTreeNode* prune_parent);
         AltTreeNode* find_root();
+        bool tree_equal(pm::AltTreeNode* other);
+        std::vector<pm::AltTreeNode*> all_nodes_in_tree();
     };
 
 }
