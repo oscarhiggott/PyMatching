@@ -83,10 +83,11 @@ void pm::AltTreeNode::become_root() {
     parent.alt_tree_node->inner_to_outer_edge = parent.edge;
     inner_region = nullptr;
     pm::unstable_erase(parent.alt_tree_node->children,
-                       [&](pm::AltTreeEdge x){return x.alt_tree_node == this;}
+                       [&](const pm::AltTreeEdge& x){return x.alt_tree_node == this;}
                        );
     parent = pm::AltTreeEdge();
-    add_child(pm::AltTreeEdge(old_parent, inner_to_outer_edge));
+    add_child(pm::AltTreeEdge(old_parent, inner_to_outer_edge.reversed()));
+    inner_to_outer_edge = CompressedEdge();
 }
 
 bool pm::AltTreeNode::operator==(const pm::AltTreeNode &rhs) const {
