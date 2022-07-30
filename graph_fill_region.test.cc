@@ -51,4 +51,16 @@ TEST(GraphFillRegion, TopRegion) {
         }, true);
 
     ASSERT_EQ(t.region, t.region->blossom_children[2].region->blossom_children[0].region->top_region());
+    ASSERT_EQ(t.region, t.region->blossom_children[1].region->top_region());
+}
+
+
+TEST(GraphFillRegion, AddMatch) {
+    pm::GraphFillRegion r1;
+    pm::GraphFillRegion r2;
+    std::vector<pm::DetectorNode> ds(2);
+    r1.add_match(&r2, pm::CompressedEdge(&ds[0], &ds[1], 5));
+    ASSERT_EQ(r1.match.region, &r2);
+    ASSERT_EQ(r1.match.edge, r2.match.edge.reversed());
+    ASSERT_EQ(r1.match.edge, pm::CompressedEdge(&ds[0], &ds[1], 5));
 }

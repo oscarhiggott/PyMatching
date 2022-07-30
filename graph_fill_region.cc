@@ -43,3 +43,12 @@ bool pm::GraphFillRegion::operator==(const pm::GraphFillRegion &rhs) const {
 bool pm::GraphFillRegion::operator!=(const pm::GraphFillRegion &rhs) const {
     return !(rhs == *this);
 }
+
+void pm::GraphFillRegion::add_match(pm::GraphFillRegion *region, const pm::CompressedEdge &edge) {
+    match = Match(region, edge);
+    region->match = Match(this,edge.reversed());
+}
+
+pm::Match::Match(pm::GraphFillRegion *region, pm::CompressedEdge edge) : region(region), edge(edge) {}
+
+pm::Match::Match() : region(nullptr), edge(CompressedEdge()) {}
