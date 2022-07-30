@@ -2,7 +2,7 @@
 #define PYMATCHING2_GRAPH_FILL_REGION_H
 
 #include "alternating_tree.h"
-#include "graph.h"
+#include "region_edge.h"
 
 
 namespace pm {
@@ -16,12 +16,20 @@ namespace pm {
         pm::AltTreeNode* alt_tree_node;
         pm::Varying32 radius;
 
-        std::vector<GraphFillRegion*> blossom_children;
+        std::vector<pm::RegionEdge> blossom_children;
         std::vector<pm::DetectorNode*> shell_area;
 
         GraphFillRegion();
+        bool tree_equal(const pm::GraphFillRegion& other) const;
+
+        const pm::GraphFillRegion* top_region() const;
+        void add_match(pm::GraphFillRegion* match, const pm::CompressedEdge& edge) {};
+
+        bool operator==(const GraphFillRegion &rhs) const;
+
+        bool operator!=(const GraphFillRegion &rhs) const;
     };
-    
+
 }
 
 

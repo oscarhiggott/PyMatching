@@ -3,7 +3,7 @@
 
 #include "graph.h"
 #include "events.h"
-#include "region_path.h"
+#include "region_edge.h"
 
 // add namespace
 //

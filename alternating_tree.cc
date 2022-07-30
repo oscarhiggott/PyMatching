@@ -91,7 +91,7 @@ void pm::AltTreeNode::become_root() {
 }
 
 bool pm::AltTreeNode::operator==(const pm::AltTreeNode &rhs) const {
-    return find_root()->tree_equal(*rhs.find_root());
+    return tree_equal(rhs);
 }
 
 bool pm::AltTreeNode::operator!=(const pm::AltTreeNode &rhs) const {

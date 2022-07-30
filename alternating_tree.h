@@ -3,7 +3,7 @@
 
 
 #include "compressed_edge.h"
-#include "region_path.h"
+#include "region_edge.h"
 #include "graph_fill_region.h"
 
 namespace pm{
@@ -28,7 +28,7 @@ namespace pm{
     bool unstable_erase(std::vector<T>& vec, UnaryPredicate pred);
 
     template<class T, class UnaryPredicate>
-    inline bool pm::unstable_erase(std::vector<T>& vec, UnaryPredicate pred) {
+    inline bool unstable_erase(std::vector<T>& vec, UnaryPredicate pred) {
         auto res = std::find_if(vec.begin(), vec.end(), pred);
         if (res == vec.end())
             return false;
