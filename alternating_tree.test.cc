@@ -3,78 +3,42 @@
 #include "graph_fill_region.h"
 
 
-std::vector<pm::GraphFillRegion>& getGfrs(){
-    static std::vector<pm::GraphFillRegion> gfrs(15);
-    return gfrs;
-}
+struct AltTreeTestData {
+    std::vector<pm::GraphFillRegion> gfrs;
+    std::vector<pm::DetectorNode> nodes;
+    AltTreeTestData(size_t num_elements) {
+        gfrs.resize(num_elements);
+        nodes.resize(num_elements);
+    };
+    pm::AltTreeEdge t(
+            std::vector<pm::AltTreeEdge> children,
+            size_t inner_region_id,
+            size_t outer_region_id,
+            bool root = false
+    );
+};
 
-pm::Graph& getGraph() {
-    static pm::Graph g(15);
-    return g;
-}
 
-
-//pm::AltTreeEdge t(
-//        const std::vector<pm::AltTreeEdge>& children,
-//        size_t inner_region_id,
-//        size_t outer_region_id,
-//        bool root,
-//        size_t io_loc_from_id,
-//        size_t io_loc_to_id,
-//        size_t parent_loc_from_id,
-//        size_t parent_loc_to_id
-//        ) {
-//    pm::AltTreeNode* node;
-//    pm::CompressedEdge parent_ce;
-//    if (root) {
-//        node = new pm::AltTreeNode(&getGfrs()[outer_region_id]);
-//    } else {
-//        node = new pm::AltTreeNode(
-//                &getGfrs()[inner_region_id],
-//                &getGfrs()[outer_region_id],
-//                {
-//                    &getGraph().nodes[io_loc_from_id],
-//                    &getGraph().nodes[io_loc_to_id],
-//                    0
-//                }
-//                );
-//        parent_ce = {
-//                &getGraph().nodes[parent_loc_from_id],
-//                &getGraph().nodes[parent_loc_to_id],
-//                0
-//        };
-//    }
-//    auto edge = pm::AltTreeEdge(node, parent_ce);
-//    for (auto& child : children) {
-//        edge.alt_tree_node->add_child(child);
-//    }
-//    return edge;
-//}
-
-pm::AltTreeEdge t(
-        std::vector<pm::AltTreeEdge> children,
-        size_t inner_region_id,
-        size_t outer_region_id,
-        bool root = false
-) {
+pm::AltTreeEdge
+AltTreeTestData::t(std::vector<pm::AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root) {
     pm::AltTreeNode* node;
     pm::CompressedEdge parent_ce;
     if (root) {
-        node = new pm::AltTreeNode(&getGfrs()[outer_region_id]);
+        node = new pm::AltTreeNode(&gfrs[outer_region_id]);
     } else {
         node = new pm::AltTreeNode(
-                &getGfrs()[inner_region_id],
-                &getGfrs()[outer_region_id],
+                &gfrs[inner_region_id],
+                &gfrs[outer_region_id],
                 {
-                        &getGraph().nodes[inner_region_id],
-                        &getGraph().nodes[outer_region_id],
+                        &nodes[inner_region_id],
+                        &nodes[outer_region_id],
                         0
                 }
         );
     }
     auto edge = pm::AltTreeEdge(node, parent_ce);
     for (auto& child : children) {
-        child.edge.loc_from = &getGraph().nodes[outer_region_id];
+        child.edge.loc_from = &nodes[outer_region_id];
         child.edge.loc_to = child.alt_tree_node->inner_to_outer_edge.loc_from;
         edge.alt_tree_node->add_child(child);
     }
@@ -82,15 +46,15 @@ pm::AltTreeEdge t(
 }
 
 
-pm::AltTreeEdge example_tree() {
-    return t(
+pm::AltTreeEdge example_tree(AltTreeTestData& d) {
+    return d.t(
             {
-                    t({}, 7, 8
+                    d.t({}, 7, 8
                     ),
-                    t(
+                    d.t(
                             {
-                                    t({}, 3, 4),
-                                    t({}, 5, 6)
+                                    d.t({}, 3, 4),
+                                    d.t({}, 5, 6)
                             },
                             1, 2
                     )
@@ -99,13 +63,13 @@ pm::AltTreeEdge example_tree() {
     );
 }
 
-pm::AltTreeEdge example_tree_four_children() {
-    return t(
+pm::AltTreeEdge example_tree_four_children(AltTreeTestData& d) {
+    return d.t(
             {
-                    t({}, 1, 2),
-                    t({}, 3, 4),
-                    t({}, 5, 6),
-                    t({}, 7, 8)
+                    d.t({}, 1, 2),
+                    d.t({}, 3, 4),
+                    d.t({}, 5, 6),
+                    d.t({}, 7, 8)
             },
             -1, 0, true);
 }
@@ -120,7 +84,8 @@ void delete_alternating_tree(pm::AltTreeNode* root) {
 
 
 TEST(AlternatingTree, FindRoot) {
-    auto n = example_tree();
+    AltTreeTestData d(10);
+    auto n = example_tree(d);
     ASSERT_EQ(
             n.alt_tree_node->children[1].alt_tree_node->children[0].alt_tree_node->find_root(), n.alt_tree_node);
     ASSERT_EQ(n.alt_tree_node->find_root(), n.alt_tree_node);
@@ -147,7 +112,8 @@ TEST(AlternatingTree, UnstableEraseInt) {
 
 
 TEST(AlternatingTree, UnstableEraseAltTreeEdge) {
-    pm::AltTreeEdge x = example_tree_four_children();
+    AltTreeTestData d(10);
+    pm::AltTreeEdge x = example_tree_four_children(d);
     std::vector<pm::AltTreeEdge> xc = x.alt_tree_node->children;
     auto xc_copy = xc;
     ASSERT_EQ(xc, x.alt_tree_node->children);
@@ -161,7 +127,8 @@ TEST(AlternatingTree, UnstableEraseAltTreeEdge) {
 }
 
 TEST(AlternatingTree, AllNodesInTree) {
-    pm::AltTreeEdge x = example_tree();
+    AltTreeTestData d(10);
+    pm::AltTreeEdge x = example_tree(d);
     ASSERT_EQ(x.alt_tree_node->all_nodes_in_tree(),
               std::vector<pm::AltTreeNode*>({
                   x.alt_tree_node,
@@ -174,10 +141,11 @@ TEST(AlternatingTree, AllNodesInTree) {
 }
 
 TEST(AlternatingTree, TreeEqual) {
-    pm::AltTreeEdge x = example_tree();
-    pm::AltTreeEdge x2 = example_tree();
-    pm::AltTreeEdge y = example_tree_four_children();
-    pm::AltTreeEdge y2 = example_tree_four_children();
+    AltTreeTestData d(10);
+    pm::AltTreeEdge x = example_tree(d);
+    pm::AltTreeEdge x2 = example_tree(d);
+    pm::AltTreeEdge y = example_tree_four_children(d);
+    pm::AltTreeEdge y2 = example_tree_four_children(d);
     ASSERT_TRUE(x.alt_tree_node->tree_equal(*x2.alt_tree_node));
     ASSERT_TRUE(*x.alt_tree_node == *x2.alt_tree_node);
     ASSERT_TRUE(y.alt_tree_node->tree_equal(*y.alt_tree_node));
@@ -196,40 +164,41 @@ TEST(AlternatingTree, TreeEqual) {
 
 
 TEST(AlternatingTree, BecomeRoot) {
-    auto y1 = t(
-            {t({}, 1, 2)},
+    AltTreeTestData d(10);
+    auto y1 = d.t(
+            {d.t({}, 1, 2)},
             -1,
             0,
             true
             );
-    auto y2 = t(
-            {t({}, 1, 0)}, -1, 2, true
+    auto y2 = d.t(
+            {d.t({}, 1, 0)}, -1, 2, true
             );
     auto v = y1.alt_tree_node->children[0].alt_tree_node;
     v->become_root();
     ASSERT_EQ(*v, *y2.alt_tree_node);
 
-    auto x1 = t(
+    auto x1 = d.t(
             {
-                t(
+                d.t(
                         {
-                            t({}, 10, 11),
-                            t({}, 8, 9),
-                            t({ t({}, 6, 7)}, 12, 13)
+                            d.t({}, 10, 11),
+                            d.t({}, 8, 9),
+                            d.t({ d.t({}, 6, 7)}, 12, 13)
                         }, 4, 5),
-                t({}, 2, 3)
+                d.t({}, 2, 3)
             },
             -1,
             1,
             true);
 
-    auto x2 = t(
+    auto x2 = d.t(
             {
-                t({}, 6, 7),
-                t({
-                            t({}, 10, 11),
-                            t({}, 8, 9),
-                            t({t({}, 2, 3)}, 4, 1)},
+                d.t({}, 6, 7),
+                d.t({
+                            d.t({}, 10, 11),
+                            d.t({}, 8, 9),
+                            d.t({d.t({}, 2, 3)}, 4, 1)},
                 12, 5
             )
             },

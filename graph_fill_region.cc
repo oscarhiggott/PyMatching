@@ -18,7 +18,6 @@ const pm::GraphFillRegion* pm::GraphFillRegion::top_region() const {
 bool pm::GraphFillRegion::tree_equal(const pm::GraphFillRegion& other) const {
     if (
             alt_tree_node != other.alt_tree_node || radius != other.radius ||
-            blossom_parent != other.blossom_parent ||
             blossom_children.size() != other.blossom_children.size() ||
             shell_area != other.shell_area
     ) {
