@@ -207,3 +207,53 @@ TEST(AlternatingTree, BecomeRoot) {
     c->become_root();
     ASSERT_EQ(*c, *x2.alt_tree_node);
 }
+
+
+TEST(AlternatingTree, CommonAncestor) {
+    AltTreeTestData d(20);
+    auto t = d.t(
+            {
+                d.t(
+                        {
+                            d.t({
+                                d.t({}, 7, 8, false),
+                                d.t({}, 9, 10, false)
+                                },3,4,false),
+                            d.t({},5,6,false)
+                            },
+                        1, 2,false
+                        )
+                },
+            -1, 0, true
+            );
+    auto anc = t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->most_recent_common_ancestor(
+            *t.alt_tree_node->children[0].alt_tree_node->children[1].alt_tree_node
+            );
+    ASSERT_EQ(anc, t.alt_tree_node->children[0].alt_tree_node);
+    ASSERT_TRUE(t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->visited);
+    ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->children[1].alt_tree_node->visited);
+    ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->visited);
+    ASSERT_FALSE(t.alt_tree_node->visited);
+    ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->visited);
+
+    auto t2 = d.t(
+            {
+                d.t({}, 12, 13, false)
+                },
+            -1, 11, true
+            );
+    auto t3 = d.t(
+            {
+                    d.t({}, 15, 16, false)
+            },
+            -1, 14, true
+            );
+    auto anc2 = t3.alt_tree_node->children[0].alt_tree_node->most_recent_common_ancestor(
+            *t2.alt_tree_node->children[0].alt_tree_node
+            );
+    ASSERT_EQ(anc2, nullptr);
+    ASSERT_TRUE(t2.alt_tree_node->visited);
+    ASSERT_FALSE(t2.alt_tree_node->children[0].alt_tree_node->visited);
+    ASSERT_TRUE(t3.alt_tree_node->visited);
+    ASSERT_FALSE(t3.alt_tree_node->children[0].alt_tree_node->visited);
+}

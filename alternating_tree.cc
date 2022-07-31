@@ -34,14 +34,14 @@ pm::AltTreeNode *pm::AltTreeNode::make_child(pm::GraphFillRegion *child_inner_re
 }
 
 pm::AltTreeNode::AltTreeNode()
-    : inner_region(nullptr), outer_region(nullptr) {}
+    : inner_region(nullptr), outer_region(nullptr), visited(false) {}
 
 pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *inner_region, pm::GraphFillRegion *outer_region,
                              const pm::CompressedEdge &inner_to_outer_edge,
                              const pm::AltTreeEdge &parent, std::vector<AltTreeEdge> children
                              )
       : inner_region(inner_region), outer_region(outer_region), inner_to_outer_edge(inner_to_outer_edge),
-      parent(parent), children(std::move(children)){
+      parent(parent), children(std::move(children)), visited(false){
     inner_region->alt_tree_node = this;
     outer_region->alt_tree_node = this;
 }
@@ -49,13 +49,13 @@ pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *inner_region, pm::GraphFillReg
 pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *inner_region, pm::GraphFillRegion *outer_region,
                              const pm::CompressedEdge &inner_to_outer_edge)
                              : inner_region(inner_region), outer_region(outer_region),
-                             inner_to_outer_edge(inner_to_outer_edge) {
+                             inner_to_outer_edge(inner_to_outer_edge), visited(false) {
     inner_region->alt_tree_node = this;
     outer_region->alt_tree_node = this;
 }
 
 pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *outer_region)
-        : inner_region(nullptr), outer_region(outer_region) {}
+        : inner_region(nullptr), outer_region(outer_region), visited(false) {}
 
 const pm::AltTreeNode *pm::AltTreeNode::find_root() const {
     const pm::AltTreeNode* current = this;
@@ -127,4 +127,44 @@ std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {
             to_visit.push_back(c.alt_tree_node);
     }
     return all_nodes;
+}
+
+pm::AltTreeNode* pm::AltTreeNode::most_recent_common_ancestor(pm::AltTreeNode &other) {
+    pm::AltTreeNode* this_current = this;
+    pm::AltTreeNode* other_current = &other;
+    pm::AltTreeNode* this_parent;
+    pm::AltTreeNode* other_parent;
+    pm::AltTreeNode* common_ancestor;
+    while (true) {
+        this_parent = this_current->parent.alt_tree_node;
+        other_parent = other_current->parent.alt_tree_node;
+        if (this_parent || other_parent) {
+            if (this_parent) {
+                this_current = this_parent;
+                if (this_current->visited){
+                    common_ancestor = this_current;
+                    break;
+                }
+                this_current->visited = true;
+            }
+            if (other_parent) {
+                other_current = other_parent;
+                if (other_current->visited) {
+                    common_ancestor = other_current;
+                    break;
+                }
+                other_current->visited = true;
+            }
+        } else {
+            return nullptr;
+        }
+    }
+    // Clean up 'visited' flags for ancestors of common_ancestor
+    common_ancestor->visited = false;
+    this_parent = common_ancestor->parent.alt_tree_node;
+    while (this_parent) {
+        this_parent->visited = false;
+        this_parent = this_parent->parent.alt_tree_node;
+    }
+    return common_ancestor;
 }

@@ -53,6 +53,7 @@ namespace pm{
         CompressedEdge inner_to_outer_edge;
         AltTreeEdge parent;
         std::vector<AltTreeEdge> children; // Maybe make linked list?
+        bool visited;
         AltTreeNode();
         AltTreeNode(GraphFillRegion* inner_region, GraphFillRegion* outer_region,
                     const CompressedEdge& inner_to_outer_edge, const AltTreeEdge& parent,
@@ -68,7 +69,7 @@ namespace pm{
 
         void become_root();
         std::vector<GraphFillRegion> shatter_into_matches();
-        AltTreeNode most_recent_common_ancestor(const AltTreeNode& other);
+        AltTreeNode* most_recent_common_ancestor(AltTreeNode& other);
         bool in_same_tree_as(const AltTreeNode& other);
         void add_child(const AltTreeEdge& child);
         AltTreeNode* make_child(GraphFillRegion* child_inner_region, GraphFillRegion* child_outer_region,
