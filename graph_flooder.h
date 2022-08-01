@@ -4,6 +4,7 @@
 #include "graph.h"
 #include "events.h"
 #include "region_edge.h"
+#include<queue>
 
 
 namespace pm{
@@ -13,17 +14,19 @@ namespace pm{
     class GraphFlooder {
     public:
         Graph graph;
+        std::priority_queue<TentativeEvent, std::vector<TentativeEvent>, std::greater<>> queue;
         time_int time;
-        GraphFlooder(Graph& graph);
+        explicit GraphFlooder(Graph& graph);
         void create_region(DetectorNode* node);
         MwpmEvent next_event();
         void set_region_growth(pm::GraphFillRegion& region);
         GraphFillRegion* create_blossom(const std::vector<RegionEdge>& contained_regions);
         void schedule_tentative_neighbor_interaction_event(
-                DetectorNode& detector_node_1,
-                int schedule_list_index_1,
-                DetectorNode& detector_node_2,
-                int schedule_list_index_2
+                DetectorNode* detector_node_1,
+                size_t schedule_list_index_1,
+                DetectorNode* detector_node_2,
+                size_t schedule_list_index_2,
+                time_int event_time
         );
         void schedule_tentative_shrink_event(GraphFillRegion& region);
         void reschedule_events_for_region(GraphFillRegion& region);

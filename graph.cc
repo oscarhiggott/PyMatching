@@ -65,4 +65,18 @@ namespace pm {
         return total_radius() - distance_from_source;
     }
 
+    bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
+        if ((!region_that_arrived) != (!other.region_that_arrived))
+            return false;
+        if (region_that_arrived == other.region_that_arrived)
+            return true;
+        return top_region() == other.top_region();
+    }
+
+    const GraphFillRegion* DetectorNode::top_region() const {
+        if (!region_that_arrived)
+            return nullptr;
+        return region_that_arrived->top_region();
+    }
+
 }

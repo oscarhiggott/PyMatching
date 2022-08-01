@@ -31,6 +31,8 @@ add_executable(
         graph_fill_region.cc
         graph_fill_region.test.cc
         region_edge.cc
+        graph_flooder.cc
+        graph_flooder.test.cc
 )
 target_link_libraries(
         pymatching_tests

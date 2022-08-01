@@ -1,3 +1,6 @@
+
+#include "varying.h"
+
 template<typename T>
 inline Varying<T>::Varying() = default;
 
@@ -36,16 +39,26 @@ inline T Varying<T>::time_of_x_intercept() {
 }
 
 template<typename T>
+T Varying<T>::time_of_x_intercept_for_growing() {
+    // Assumes Varying is growing
+    return - (data >> 2);
+}
+
+template<typename T>
 inline T Varying<T>::time_of_x_intercept_when_added_to(Varying<T> other) {
-    // Assumes both this and other are growing or frozen. Cannot have both frozen, or one shrinking.
+    // Assumes both this and other are growing or frozen. Cannot have both frozen, or any shrinking.
     T time_with_unit_slope = - (data >> 2) - (other.data >> 2);
     if ((this->data & 1) && (other.data & 1)) {
         return time_with_unit_slope >> 1;
-    } else if (((this->data | other.data) & 3) == 1){
-        return time_with_unit_slope;
     } else {
-        throw std::invalid_argument("this or other must be growing, and neither can be shrinking");
+        // By assumption on the input, one must be growing, and the other frozen.
+        return time_with_unit_slope;
     }
+}
+
+template<typename T>
+bool Varying<T>::colliding_with(Varying<T> other) const {
+    return ((data | other.data) & 3) == 1;
 }
 
 template<typename T>
@@ -112,4 +125,19 @@ inline Varying<T> Varying<T>::operator-(T offset) const {
 template<typename T>
 T Varying<T>::y_intercept() const {
     return data >> 2;
+}
+
+template<typename T>
+bool Varying<T>::is_shrinking() const {
+    return data & 2;
+}
+
+template<typename T>
+bool Varying<T>::is_frozen() const {
+    return !(data & 3);
+}
+
+template<typename T>
+bool Varying<T>::is_growing() const {
+    return data & 1;
 }

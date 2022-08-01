@@ -9,13 +9,20 @@ namespace pm{
 
     struct TentativeNeighborInteractionEventData {
         DetectorNode* detector_node_1;
-        int node_1_neighbor_index;
+        size_t node_1_neighbor_index;
         DetectorNode* detector_node_2;
-        int node_2_neighbor_index;
+        size_t node_2_neighbor_index;
+        TentativeNeighborInteractionEventData(DetectorNode* detector_node_1,
+                                              size_t node_1_neighbor_index,
+                                              DetectorNode* detector_node_2,
+                                              size_t node_2_neighbor_index);
+        TentativeNeighborInteractionEventData() = default;
     };
 
     struct TentativeRegionShrinkEventData {
         GraphFillRegion* region;
+        TentativeRegionShrinkEventData() = default;
+        explicit TentativeRegionShrinkEventData(GraphFillRegion* region);
     };
 
     enum TentativeType : uint8_t {INTERACTION, SHRINKING};
@@ -23,11 +30,26 @@ namespace pm{
     struct TentativeEvent{
         union {
             TentativeNeighborInteractionEventData neighbor_interaction_event_data;
-            TentativeRegionShrinkEventData tentative_region_shrink_event_data;
+            TentativeRegionShrinkEventData region_shrink_event_data;
         };
         pm::time_int time;
         TentativeType tentative_event_type;
         bool is_invalidated;
+
+        TentativeEvent(DetectorNode* detector_node_1, size_t node_1_neighbor_index,
+                       DetectorNode* detector_node_2, size_t node_2_neighbor_index,
+                       time_int time);
+        TentativeEvent(pm::GraphFillRegion* region, time_int time);
+        TentativeEvent() = default;
+
+        bool operator<(const TentativeEvent &rhs) const;
+
+        bool operator>(const TentativeEvent &rhs) const;
+
+        bool operator<=(const TentativeEvent &rhs) const;
+
+        bool operator>=(const TentativeEvent &rhs) const;
+
         void invalidate();
     };
 
@@ -62,6 +84,23 @@ namespace pm{
         };
         MwpmEventType event_type;
     };
+
+    inline bool pm::TentativeEvent::operator<(const pm::TentativeEvent &rhs) const {
+        return time < rhs.time;
+    }
+
+    inline bool pm::TentativeEvent::operator>(const pm::TentativeEvent &rhs) const {
+        return rhs < *this;
+    }
+
+    inline bool pm::TentativeEvent::operator<=(const pm::TentativeEvent &rhs) const {
+        return !(rhs < *this);
+    }
+
+    inline bool pm::TentativeEvent::operator>=(const pm::TentativeEvent &rhs) const {
+        return !(*this < rhs);
+    }
+
 }
 
 #endif //PYMATCHING2_EVENTS_H

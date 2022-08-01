@@ -22,6 +22,11 @@ namespace pm {
         T get_frozen_distance_at_time(T time) const;
         T time_of_x_intercept();
         T time_of_x_intercept_when_added_to(Varying<T> other);
+        T time_of_x_intercept_for_growing();
+        bool is_growing() const;
+        bool is_shrinking() const;
+        bool is_frozen() const;
+        bool colliding_with(Varying <T> other) const;
         Varying<T> then_growing_at_time(T time_of_change) const;
         Varying<T> then_shrinking_at_time(T time_of_change) const;
         Varying<T> then_frozen_at_time(T time_of_change) const;
