@@ -35,15 +35,19 @@ namespace pm {
         std::vector<weight_int> neighbor_weights;
         std::vector<obs_int> neighbor_observables;
         std::vector<TentativeEvent*> neighbor_schedules;
+        void invalidate_involved_schedule_items();
+        Varying32 total_radius() const;
+        Varying32 local_radius() const;
     };
 
 
     class Graph {
     public:
+        std::vector<DetectorNode> nodes;
         size_t num_nodes;
         Graph() = delete;
         explicit Graph(size_t num_nodes);
-        std::vector<DetectorNode> nodes;
+        Graph(Graph&& graph) noexcept;
         void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
         void add_boundary_edge(size_t u, weight_int weight, obs_int observables);
     };

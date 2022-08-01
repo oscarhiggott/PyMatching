@@ -1,5 +1,6 @@
 #include<algorithm>
 #include "graph.h"
+#include "events.h"
 
 namespace pm {
 
@@ -35,6 +36,33 @@ namespace pm {
 
     Graph::Graph(size_t num_nodes) : num_nodes(num_nodes) {
         nodes.resize(num_nodes);
+    }
+
+    Graph::Graph(Graph &&graph)  noexcept : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {}
+
+    void DetectorNode::invalidate_involved_schedule_items() {
+        for (auto & neighbor_schedule : neighbor_schedules) {
+            if (neighbor_schedule)
+                neighbor_schedule->invalidate();
+        }
+    }
+
+    Varying32 DetectorNode::total_radius() const {
+        if (!reached_from_source)
+            return pm::Varying32(0);
+        auto curr_region = reached_from_source->region_that_arrived;
+        typeof(curr_region->radius.data) tot_rad = 0;
+        while (curr_region->blossom_parent) {
+            tot_rad += curr_region->radius.y_intercept();
+            curr_region = curr_region->blossom_parent;
+        }
+        return curr_region->radius + tot_rad;
+    }
+
+    Varying32 DetectorNode::local_radius() const {
+        if (!reached_from_source)
+            return Varying32(0);
+        return total_radius() - distance_from_source;
     }
 
 }

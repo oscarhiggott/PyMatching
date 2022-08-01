@@ -1,7 +1,3 @@
-#ifndef PYMATCHING2_VARYING_INL
-#define PYMATCHING2_VARYING_INL
-
-
 template<typename T>
 inline Varying<T>::Varying() = default;
 
@@ -10,7 +6,6 @@ inline Varying<T>::Varying(T data) : data(data) {}
 
 template<typename T>
 inline T Varying<T>::get_distance_at_time(T time) const {
-
     if (data & 1) {
         return (data >> 2) + time;
     } else if (data & 2) {
@@ -114,4 +109,7 @@ inline Varying<T> Varying<T>::operator-(T offset) const {
     return pm::Varying<T>(this->data - (offset << 2));
 }
 
-#endif //PYMATCHING2_VARYING_INL
+template<typename T>
+T Varying<T>::y_intercept() const {
+    return data >> 2;
+}

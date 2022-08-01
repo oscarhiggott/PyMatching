@@ -19,6 +19,7 @@ enable_testing()
 add_executable(
         pymatching_tests
         varying.test.cc
+        events.cc
         events.test.cc
         graph.test.cc
         graph.cc

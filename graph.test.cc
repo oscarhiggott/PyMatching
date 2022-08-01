@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include "graph.h"
+#include "graph_fill_region.test.h"
+
 
 TEST(Graph, AddEdge){
     pm::Graph g(4);
@@ -24,4 +26,29 @@ TEST(Graph, AddBoundaryEdge) {
     ASSERT_EQ(g.nodes[0].neighbors[1], nullptr);
     ASSERT_EQ(g.nodes[0].neighbors[0], &g.nodes[1]);
     ASSERT_EQ(g.nodes[5].neighbors[0], nullptr);
+}
+
+
+TEST(Graph, TotalRadius) {
+    GraphFillTestData d(10);
+    auto x = d.b(-1, -1, {
+        d.b(0, 1, {
+            d.b(3, 4, {}, false),
+            d.b(4, 5, {}, false),
+            d.b(5, 3, {}, false)
+            }, false),
+        d.b(1, 2, {}, false),
+        d.b(2, 0, {}, false)
+        }, true).region;
+    d.detectors[3].reached_from_source = &d.detectors[3];
+    d.detectors[6].reached_from_source = &d.detectors[3];
+    d.detectors[3].region_that_arrived = x->blossom_children[0].region->blossom_children[0].region;
+    d.detectors[6].region_that_arrived = x;
+    x->blossom_children[0].region->blossom_children[0].region->radius = pm::Varying32(5 << 2);
+    x->blossom_children[0].region->radius = pm::Varying32(6 << 2);
+    x->radius = pm::Varying32((1 << 2) + 1);
+    d.detectors[6].distance_from_source = 20;
+    ASSERT_EQ(d.detectors[6].total_radius(), pm::Varying32((12 << 2) + 1));
+    ASSERT_EQ(d.detectors[6].local_radius(), pm::Varying32((-8 << 2) + 1));
+    ASSERT_EQ(d.detectors[6].local_radius().get_distance_at_time(1000), 992);
 }

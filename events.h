@@ -28,6 +28,7 @@ namespace pm{
         pm::time_int time;
         TentativeType tentative_event_type;
         bool is_invalidated;
+        void invalidate();
     };
 
     struct RegionHitRegionEventData {

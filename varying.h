@@ -25,6 +25,7 @@ namespace pm {
         Varying<T> then_growing_at_time(T time_of_change) const;
         Varying<T> then_shrinking_at_time(T time_of_change) const;
         Varying<T> then_frozen_at_time(T time_of_change) const;
+        T y_intercept() const;
         std::string str() const;
         static Varying<T> growing_varying_with_zero_distance_at_time(T time);
         template<typename U>

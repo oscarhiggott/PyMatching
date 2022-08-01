@@ -28,6 +28,8 @@ namespace pm {
         std::vector<pm::RegionEdge> blossom_children;
         std::vector<pm::DetectorNode*> shell_area;
 
+        pm::TentativeEvent* shrink_event;
+
         GraphFillRegion();
         bool tree_equal(const pm::GraphFillRegion& other) const;
 
