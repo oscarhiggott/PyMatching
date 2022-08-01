@@ -37,5 +37,40 @@ pm::TentativeNeighborInteractionEventData::TentativeNeighborInteractionEventData
                                            detector_node_2(detector_node_2),
                                            node_2_neighbor_index(node_2_neighbor_index){}
 
+bool pm::TentativeNeighborInteractionEventData::operator==(const pm::TentativeNeighborInteractionEventData &rhs) const {
+    return detector_node_1 == rhs.detector_node_1 &&
+           node_1_neighbor_index == rhs.node_1_neighbor_index &&
+           detector_node_2 == rhs.detector_node_2 &&
+           node_2_neighbor_index == rhs.node_2_neighbor_index;
+}
+
+bool pm::TentativeNeighborInteractionEventData::operator!=(const pm::TentativeNeighborInteractionEventData &rhs) const {
+    return !(rhs == *this);
+}
+
 pm::TentativeRegionShrinkEventData::TentativeRegionShrinkEventData(pm::GraphFillRegion* region)
     : region(region) {}
+
+bool pm::TentativeRegionShrinkEventData::operator==(const pm::TentativeRegionShrinkEventData &rhs) const {
+    return region == rhs.region;
+}
+
+bool pm::TentativeRegionShrinkEventData::operator!=(const pm::TentativeRegionShrinkEventData &rhs) const {
+    return !(rhs == *this);
+}
+
+bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
+    if (time != rhs.time || tentative_event_type != rhs.tentative_event_type ||
+        is_invalidated != rhs.is_invalidated)
+        return false;
+    switch (tentative_event_type) {
+        case SHRINKING:
+            return region_shrink_event_data == rhs.region_shrink_event_data;
+        case INTERACTION:
+            return neighbor_interaction_event_data == rhs.neighbor_interaction_event_data;
+    }
+}
+
+bool pm::TentativeEvent::operator!=(const TentativeEvent &rhs) const {
+    return !(rhs == *this);
+}

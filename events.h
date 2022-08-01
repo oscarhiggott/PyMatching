@@ -9,6 +9,11 @@ namespace pm{
 
     struct TentativeNeighborInteractionEventData {
         DetectorNode* detector_node_1;
+
+        bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
+
+        bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
+
         size_t node_1_neighbor_index;
         DetectorNode* detector_node_2;
         size_t node_2_neighbor_index;
@@ -22,6 +27,11 @@ namespace pm{
     struct TentativeRegionShrinkEventData {
         GraphFillRegion* region;
         TentativeRegionShrinkEventData() = default;
+
+        bool operator==(const TentativeRegionShrinkEventData &rhs) const;
+
+        bool operator!=(const TentativeRegionShrinkEventData &rhs) const;
+
         explicit TentativeRegionShrinkEventData(GraphFillRegion* region);
     };
 
@@ -47,6 +57,10 @@ namespace pm{
         bool operator>(const TentativeEvent &rhs) const;
 
         bool operator<=(const TentativeEvent &rhs) const;
+
+        bool operator==(const TentativeEvent &rhs) const;
+
+        bool operator!=(const TentativeEvent &rhs) const;
 
         bool operator>=(const TentativeEvent &rhs) const;
 
@@ -100,6 +114,7 @@ namespace pm{
     inline bool pm::TentativeEvent::operator>=(const pm::TentativeEvent &rhs) const {
         return !(*this < rhs);
     }
+
 
 }
 

@@ -44,22 +44,59 @@ TEST(GraphFlooder, CreateRegion) {
     g.add_boundary_edge(3, 1000, 0);
     pm::GraphFlooder flooder(g);
     flooder.create_region(&flooder.graph.nodes[0]);
+    flooder.create_region(&flooder.graph.nodes[2]);
+    flooder.create_region(&flooder.graph.nodes[3]);
     auto e1 = flooder.queue.top();
-    ASSERT_TRUE(!e1->is_invalidated);
-    ASSERT_EQ(e1->time, 3);
-    ASSERT_EQ(e1->neighbor_interaction_event_data.detector_node_1, &flooder.graph.nodes[0]);
-    ASSERT_EQ(e1->neighbor_interaction_event_data.node_1_neighbor_index, 0);
-    ASSERT_EQ(e1->neighbor_interaction_event_data.detector_node_2, nullptr);
+    ASSERT_EQ(*e1, pm::TentativeEvent(
+            &flooder.graph.nodes[0], 0,
+            nullptr, -1, 3
+            ));
     flooder.queue.pop();
     auto e2 = flooder.queue.top();
-    ASSERT_TRUE(!e2->is_invalidated);
-    ASSERT_EQ(e2->time, 5);
-    ASSERT_EQ(e2->neighbor_interaction_event_data.detector_node_1, &flooder.graph.nodes[0]);
-    ASSERT_EQ(e2->neighbor_interaction_event_data.node_1_neighbor_index, 1);
-    ASSERT_EQ(e2->neighbor_interaction_event_data.detector_node_2, &flooder.graph.nodes[1]);
-    ASSERT_EQ(e2->neighbor_interaction_event_data.node_2_neighbor_index, 0);
+    ASSERT_EQ(*e2,
+            pm::TentativeEvent(
+                    &flooder.graph.nodes[0], 1,
+                    &flooder.graph.nodes[1], 0, 5
+                    )
+            );
     flooder.queue.pop();
     ASSERT_EQ(flooder.graph.nodes[0].region_that_arrived->shell_area[0], &flooder.graph.nodes[0]);
     ASSERT_EQ(flooder.graph.nodes[0].distance_from_source, 0);
     ASSERT_EQ(flooder.graph.nodes[0].reached_from_source, &flooder.graph.nodes[0]);
+    auto e3 = flooder.queue.top();
+    ASSERT_EQ(*e3,
+              pm::TentativeEvent(
+                      &flooder.graph.nodes[2], 0,
+                      &flooder.graph.nodes[1], 1,
+                      11
+                      )
+              );
+    flooder.queue.pop();
+    auto e4 = flooder.queue.top();
+    ASSERT_EQ(*e4,
+              pm::TentativeEvent(
+                      &flooder.graph.nodes[3], 0,
+                      &flooder.graph.nodes[2], 1, 50
+                      )
+              );
+    flooder.queue.pop();
+    auto e5 = flooder.queue.top();
+    auto e5_exp = pm::TentativeEvent(
+            &flooder.graph.nodes[2], 1,
+            &flooder.graph.nodes[3], 0,
+            100
+    );
+    e5_exp.is_invalidated = true;
+    ASSERT_EQ(*e5, e5_exp);
+    flooder.queue.pop();
+    auto e6 = flooder.queue.top();
+    ASSERT_EQ(*e6,
+              pm::TentativeEvent(
+                      &flooder.graph.nodes[3], 1,
+                      nullptr, -1, 1000
+                      )
+              );
+    ASSERT_FALSE(flooder.queue.empty());
+    flooder.queue.pop();
+    ASSERT_TRUE(flooder.queue.empty());
 }
