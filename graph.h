@@ -10,7 +10,7 @@
 namespace pm {
 
     typedef uint64_t obs_int;
-    typedef uint8_t weight_int;
+    typedef uint16_t weight_int;
 
     class GraphFillRegion;
 

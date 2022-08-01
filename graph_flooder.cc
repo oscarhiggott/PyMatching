@@ -45,7 +45,7 @@ void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector
         auto rad2 = neighbor->local_radius();
         if (!rad1.colliding_with(rad2))
             continue;
-        auto coll_time = rad1.time_of_x_intercept_when_added_to(rad2);
+        auto coll_time = rad1.time_of_x_intercept_when_added_to((rad2 - weight));
 
         // Find index of detector_node from neighbor
         size_t j = 0;
@@ -69,5 +69,10 @@ void pm::GraphFlooder::schedule_tentative_neighbor_interaction_event(pm::Detecto
                                                                      pm::DetectorNode *detector_node_2,
                                                                      size_t schedule_list_index_2,
                                                                      pm::time_int event_time) {
-    
+    auto e = new pm::TentativeEvent(detector_node_1, schedule_list_index_1, detector_node_2,
+                                    schedule_list_index_2, event_time);
+    detector_node_1->neighbor_schedules[schedule_list_index_1] = e;
+    if (detector_node_2)
+        detector_node_2->neighbor_schedules[schedule_list_index_2] = e;
+    queue.push(e);
 }

@@ -11,10 +11,17 @@ namespace pm{
 
 //    constexpr int MAX_TIME = 100000; // twice maximum edge weight
 
+    class Compare{
+    public:
+        bool operator() (TentativeEvent* a, TentativeEvent* b) {
+            return *a > *b;
+        }
+    };
+
     class GraphFlooder {
     public:
         Graph graph;
-        std::priority_queue<TentativeEvent, std::vector<TentativeEvent>, std::greater<>> queue;
+        std::priority_queue<TentativeEvent*, std::vector<TentativeEvent*>, Compare> queue;
         time_int time;
         explicit GraphFlooder(Graph& graph);
         void create_region(DetectorNode* node);
