@@ -72,12 +72,22 @@ namespace pm{
         GraphFillRegion* region2;
         CompressedEdge edge;
         RegionHitRegionEventData() = default;
+
+        bool operator==(const RegionHitRegionEventData &rhs) const;
+
+        bool operator!=(const RegionHitRegionEventData &rhs) const;
+
         RegionHitRegionEventData(GraphFillRegion* region1, GraphFillRegion* region2, CompressedEdge edge);
     };
 
     struct RegionHitBoundaryEventData {
         GraphFillRegion* region;
         CompressedEdge edge;
+
+        bool operator==(const RegionHitBoundaryEventData &rhs) const;
+
+        bool operator!=(const RegionHitBoundaryEventData &rhs) const;
+
         RegionHitBoundaryEventData() = default;
         RegionHitBoundaryEventData(GraphFillRegion* region, CompressedEdge edge);
     };
@@ -86,6 +96,11 @@ namespace pm{
         GraphFillRegion* blossom_region;
         GraphFillRegion* in_parent_region;
         GraphFillRegion* in_child_region;
+
+        bool operator==(const BlossomImplodeEventData &rhs) const;
+
+        bool operator!=(const BlossomImplodeEventData &rhs) const;
+
         BlossomImplodeEventData() = default;
         BlossomImplodeEventData(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
                                 GraphFillRegion* in_child_region);
@@ -107,6 +122,11 @@ namespace pm{
         MwpmEventType event_type;
         MwpmEvent() = default;
         MwpmEvent(GraphFillRegion* region1, GraphFillRegion* region2, CompressedEdge edge);
+
+        bool operator==(const MwpmEvent &rhs) const;
+
+        bool operator!=(const MwpmEvent &rhs) const;
+
         MwpmEvent(GraphFillRegion* region, CompressedEdge edge);
         MwpmEvent(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
                   GraphFillRegion* in_child_region);

@@ -253,8 +253,10 @@ pm::MwpmEvent pm::GraphFlooder::next_event() {
                     current_event = do_region_hit_boundary_interaction(
                             tentative_event->neighbor_interaction_event_data);
                 }
+                break;
             case SHRINKING:
                 current_event = do_region_shrinking(tentative_event->region_shrink_event_data);
+                break;
         }
         if (current_event.event_type != NO_EVENT)
             return current_event;

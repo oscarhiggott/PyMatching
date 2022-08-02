@@ -100,3 +100,40 @@ TEST(GraphFlooder, CreateRegion) {
     flooder.queue.pop();
     ASSERT_TRUE(flooder.queue.empty());
 }
+
+
+TEST(GraphFlooder, RegionGrowingToBoundary){
+    auto g = pm::Graph(10);
+    g.add_boundary_edge(0, 2, 3);
+    g.add_edge(0, 1, 10, 5);
+    g.add_edge(1, 2, 21, 0);
+    g.add_edge(2, 3, 100, 1);
+    g.add_edge(3, 4, 7, 9);
+    g.add_boundary_edge(4, 5, 2);
+    pm::GraphFlooder flooder(g);
+    flooder.create_region(&flooder.graph.nodes[2]);
+    auto e1 = flooder.next_event();
+    auto e1_exp = pm::MwpmEvent(
+            flooder.graph.nodes[2].region_that_arrived,
+            pm::CompressedEdge(&flooder.graph.nodes[2], nullptr, 6)
+    );
+    ASSERT_EQ(e1, e1_exp);
+    ASSERT_EQ(*flooder.queue.top(),
+              pm::TentativeEvent(
+                      &flooder.graph.nodes[2],
+                      1,
+                      &flooder.graph.nodes[3],
+                      0,
+                      100
+                      )
+              );
+    auto e2 = flooder.next_event();
+    auto e2_exp = pm::MwpmEvent(
+            flooder.graph. nodes[2].region_that_arrived,
+            pm::CompressedEdge(&flooder.graph.nodes[2], nullptr, 10)
+    );
+    ASSERT_EQ(
+            e2,
+            e2_exp
+            );
+}
