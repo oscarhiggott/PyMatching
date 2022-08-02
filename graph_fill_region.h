@@ -22,13 +22,13 @@ namespace pm {
         GraphFillRegion* blossom_parent;
         pm::AltTreeNode* alt_tree_node;
         pm::Varying32 radius;
-
+        pm::TentativeEvent* shrink_event;
         pm::Match match;
 
         std::vector<pm::RegionEdge> blossom_children;
         std::vector<pm::DetectorNode*> shell_area;
 
-        pm::TentativeEvent* shrink_event;
+
 
         GraphFillRegion();
         bool tree_equal(const pm::GraphFillRegion& other) const;

@@ -211,7 +211,7 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge>& c
     blossom_region->radius = pm::Varying32::growing_varying_with_zero_distance_at_time(time);
     blossom_region->blossom_children = std::move(contained_regions);
     for (auto& region_edge : blossom_region->blossom_children){
-        region_edge.region->radius.then_frozen_at_time(time);
+        region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(time);
         region_edge.region->blossom_parent = blossom_region;
         if (region_edge.region->shrink_event)
             region_edge.region->shrink_event->invalidate();
@@ -221,17 +221,17 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge>& c
 }
 
 void pm::GraphFlooder::set_region_growing(pm::GraphFillRegion &region) {
-    region.radius.then_growing_at_time(time);
+    region.radius = region.radius.then_growing_at_time(time);
     reschedule_events_for_region(region);
 }
 
 void pm::GraphFlooder::set_region_frozen(pm::GraphFillRegion &region) {
-    region.radius.then_frozen_at_time(time);
+    region.radius = region.radius.then_frozen_at_time(time);
     reschedule_events_for_region(region);
 }
 
 void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
-    region.radius.then_shrinking_at_time(time);
+    region.radius = region.radius.then_shrinking_at_time(time);
     reschedule_events_for_region(region);
 }
 
