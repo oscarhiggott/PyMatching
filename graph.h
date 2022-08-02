@@ -38,7 +38,7 @@ namespace pm {
         void invalidate_involved_schedule_items();
         Varying32 total_radius() const;
         Varying32 local_radius() const;
-        const GraphFillRegion* top_region() const;
+        GraphFillRegion * top_region() const;
         bool has_same_owner_as(const DetectorNode& other) const;
     };
 

@@ -71,23 +71,31 @@ namespace pm{
         GraphFillRegion* region1;
         GraphFillRegion* region2;
         CompressedEdge edge;
+        RegionHitRegionEventData() = default;
+        RegionHitRegionEventData(GraphFillRegion* region1, GraphFillRegion* region2, CompressedEdge edge);
     };
 
     struct RegionHitBoundaryEventData {
         GraphFillRegion* region;
         CompressedEdge edge;
+        RegionHitBoundaryEventData() = default;
+        RegionHitBoundaryEventData(GraphFillRegion* region, CompressedEdge edge);
     };
 
     struct BlossomImplodeEventData {
         GraphFillRegion* blossom_region;
         GraphFillRegion* in_parent_region;
         GraphFillRegion* in_child_region;
+        BlossomImplodeEventData() = default;
+        BlossomImplodeEventData(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
+                                GraphFillRegion* in_child_region);
     };
 
     enum MwpmEventType : uint8_t {
         REGION_HIT_REGION,
         REGION_HIT_BOUNDARY,
-        BLOSSOM_IMPLODE
+        BLOSSOM_IMPLODE,
+        NO_EVENT
     };
 
     struct MwpmEvent {
@@ -97,6 +105,11 @@ namespace pm{
             BlossomImplodeEventData blossom_implode_event_data;
         };
         MwpmEventType event_type;
+        MwpmEvent() = default;
+        MwpmEvent(GraphFillRegion* region1, GraphFillRegion* region2, CompressedEdge edge);
+        MwpmEvent(GraphFillRegion* region, CompressedEdge edge);
+        MwpmEvent(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
+                  GraphFillRegion* in_child_region);
     };
 
     inline bool pm::TentativeEvent::operator<(const pm::TentativeEvent &rhs) const {

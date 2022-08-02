@@ -33,13 +33,26 @@ namespace pm {
         GraphFillRegion();
         bool tree_equal(const pm::GraphFillRegion& other) const;
 
-        const pm::GraphFillRegion* top_region() const;
+        GraphFillRegion * top_region() const;
         void add_match(pm::GraphFillRegion* match, const pm::CompressedEdge& edge);
+
+        template<typename Callable>
+        void do_op_for_each_node_in_total_area(Callable func);
 
         bool operator==(const GraphFillRegion &rhs) const;
 
         bool operator!=(const GraphFillRegion &rhs) const;
     };
+
+    template<typename Callable>
+    inline void pm::GraphFillRegion::do_op_for_each_node_in_total_area(Callable func) {
+        for (size_t i = 0; i < shell_area.size(); i++){
+            func(shell_area[shell_area.size() - i - 1]);
+        }
+        for (auto& child: blossom_children) {
+            child.region->do_op_for_each_node_in_total_area(func);
+        }
+    }
 
 }
 

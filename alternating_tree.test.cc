@@ -22,7 +22,7 @@ struct AltTreeTestData {
 pm::AltTreeEdge
 AltTreeTestData::t(std::vector<pm::AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root) {
     pm::AltTreeNode* node;
-    pm::CompressedEdge parent_ce;
+    pm::CompressedEdge parent_ce(nullptr, nullptr, 0);
     if (root) {
         node = new pm::AltTreeNode(&gfrs[outer_region_id]);
     } else {

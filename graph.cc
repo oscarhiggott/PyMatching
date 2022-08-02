@@ -73,7 +73,7 @@ namespace pm {
         return top_region() == other.top_region();
     }
 
-    const GraphFillRegion* DetectorNode::top_region() const {
+    GraphFillRegion * DetectorNode::top_region() const {
         if (!region_that_arrived)
             return nullptr;
         return region_that_arrived->top_region();

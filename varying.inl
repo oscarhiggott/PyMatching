@@ -45,6 +45,12 @@ T Varying<T>::time_of_x_intercept_for_growing() {
 }
 
 template<typename T>
+T Varying<T>::time_of_x_intercept_for_shrinking() {
+    return data >> 2;
+}
+
+
+template<typename T>
 inline T Varying<T>::time_of_x_intercept_when_added_to(Varying<T> other) {
     // Assumes both this and other are growing or frozen. Cannot have both frozen, or any shrinking.
     T time_with_unit_slope = - (data >> 2) - (other.data >> 2);

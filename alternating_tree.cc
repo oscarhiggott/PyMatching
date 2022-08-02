@@ -55,7 +55,7 @@ pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *inner_region, pm::GraphFillReg
 }
 
 pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *outer_region)
-        : inner_region(nullptr), outer_region(outer_region), visited(false) {}
+        : inner_region(nullptr), outer_region(outer_region), inner_to_outer_edge(nullptr, nullptr, 0), visited(false) {}
 
 const pm::AltTreeNode *pm::AltTreeNode::find_root() const {
     const pm::AltTreeNode* current = this;
@@ -123,7 +123,7 @@ std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {
         pm::AltTreeNode* current = to_visit.back();
         to_visit.pop_back();
         all_nodes.push_back(current);
-        for (auto c: current->children)
+        for (auto& c: current->children)
             to_visit.push_back(c.alt_tree_node);
     }
     return all_nodes;

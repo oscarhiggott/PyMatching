@@ -23,6 +23,7 @@ namespace pm {
         T time_of_x_intercept();
         T time_of_x_intercept_when_added_to(Varying<T> other);
         T time_of_x_intercept_for_growing();
+        T time_of_x_intercept_for_shrinking();
         bool is_growing() const;
         bool is_shrinking() const;
         bool is_frozen() const;

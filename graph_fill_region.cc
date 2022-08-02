@@ -6,8 +6,8 @@ pm::GraphFillRegion::GraphFillRegion()
     : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1) {}
 
 
-const pm::GraphFillRegion* pm::GraphFillRegion::top_region() const {
-    auto current = this;
+pm::GraphFillRegion* pm::GraphFillRegion::top_region() const {
+    auto current = const_cast<GraphFillRegion *>(this);
     while (current->blossom_parent) {
         current = current->blossom_parent;
     }

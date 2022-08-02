@@ -26,8 +26,10 @@ namespace pm{
         explicit GraphFlooder(Graph& graph);
         void create_region(DetectorNode* node);
         MwpmEvent next_event();
-        void set_region_growth(pm::GraphFillRegion& region);
-        GraphFillRegion* create_blossom(const std::vector<RegionEdge>& contained_regions);
+        void set_region_growing(pm::GraphFillRegion& region);
+        void set_region_frozen(pm::GraphFillRegion& region);
+        void set_region_shrinking(pm::GraphFillRegion& region);
+        GraphFillRegion* create_blossom(std::vector<RegionEdge>& contained_regions);
         void schedule_tentative_neighbor_interaction_event(
                 DetectorNode* detector_node_1,
                 size_t schedule_list_index_1,
@@ -39,11 +41,13 @@ namespace pm{
         void reschedule_events_for_region(GraphFillRegion& region);
         void reschedule_events_at_detector_node(DetectorNode& detector_node);
         void do_region_created_at_empty_detector_node(GraphFillRegion& region, DetectorNode& detector_node);
-        MwpmEvent do_region_shrinking(const TentativeRegionShrinkEventData& event); // Use std::optional?
-        MwpmEvent do_neighbor_interaction(const TentativeNeighborInteractionEventData& event); // Use std::optional?
-        MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
-        MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
-        MwpmEvent do_blossom_implosion(GraphFillRegion& region);
+        void do_region_arriving_at_empty_detector_node(GraphFillRegion& region, DetectorNode& empty_node,
+                                                       DetectorNode& from_node, size_t neighbor_index);
+        MwpmEvent do_region_shrinking(const TentativeRegionShrinkEventData& event);
+        MwpmEvent do_neighbor_interaction(const TentativeNeighborInteractionEventData& event);
+        static MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
+        static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
+        static MwpmEvent do_blossom_implosion(GraphFillRegion& region);
 
 //        // Put in class called bucket queue. Template with number of buckets. Switch to heapq if number of buckets is big.
 //        // Use standard library heap

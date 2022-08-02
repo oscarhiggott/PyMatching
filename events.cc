@@ -74,3 +74,29 @@ bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
 bool pm::TentativeEvent::operator!=(const TentativeEvent &rhs) const {
     return !(rhs == *this);
 }
+
+pm::RegionHitRegionEventData::RegionHitRegionEventData(
+        pm::GraphFillRegion *region1, pm::GraphFillRegion *region2, pm::CompressedEdge edge
+        )
+            : region1(region1), region2(region2), edge(edge) {}
+
+pm::RegionHitBoundaryEventData::RegionHitBoundaryEventData(
+        pm::GraphFillRegion *region, CompressedEdge edge
+        )
+        : region(region), edge(edge) {}
+
+
+pm::BlossomImplodeEventData::BlossomImplodeEventData(
+        pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region,
+        pm::GraphFillRegion *in_child_region)
+        : blossom_region(blossom_region), in_parent_region(in_parent_region), in_child_region(in_child_region) {}
+
+pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *region1, pm::GraphFillRegion *region2, pm::CompressedEdge edge)
+    : region_hit_region_event_data(region1, region2, edge), event_type(REGION_HIT_REGION) {}
+
+pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *region, pm::CompressedEdge edge)
+    :  region_hit_boundary_event_data(region, edge), event_type(REGION_HIT_BOUNDARY) {}
+
+pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region,
+                         pm::GraphFillRegion *in_child_region)
+     : blossom_implode_event_data(blossom_region, in_parent_region, in_child_region), event_type(BLOSSOM_IMPLODE){}
