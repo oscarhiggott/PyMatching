@@ -41,9 +41,27 @@ namespace pm{
         return true;
     }
 
+    template <typename T>
+    void move_append(std::vector<T>& src, std::vector<T>& dst)
+    {
+        if (dst.empty()) {
+            dst = std::move(src);
+        } else {
+            dst.reserve(dst.size() + src.size());
+            std::move(std::begin(src), std::end(src), std::back_inserter(dst));
+            src.clear();
+        }
+    }
+
+
     struct AltTreePruneResult {
-        std::vector<AltTreeEdge> orphans;
-        std::vector<RegionEdge> pruned_path_regions;
+        std::vector<AltTreeEdge> orphan_edges;
+        std::vector<RegionEdge> pruned_path_region_edges;
+
+        AltTreePruneResult(
+                std::vector<AltTreeEdge> orphan_edges,
+                std::vector<pm::RegionEdge> pruned_path_region_edges
+                );
     };
 
     class AltTreeNode {
@@ -73,7 +91,8 @@ namespace pm{
         void add_child(const AltTreeEdge& child);
         AltTreeNode* make_child(GraphFillRegion* child_inner_region, GraphFillRegion* child_outer_region,
                                 const CompressedEdge& child_inner_to_outer_edge, const CompressedEdge& child_compressed_edge);
-        AltTreePruneResult prune_upward_stopping_before(AltTreeNode* prune_parent);
+        AltTreePruneResult prune_upward_path_stopping_before(AltTreeNode* prune_parent);
+        AltTreePruneResult prune_upward_back_edge_path_stopping_before(AltTreeNode* prune_parent);
         const AltTreeNode* find_root() const;
         bool tree_equal(const pm::AltTreeNode& other) const;
         std::vector<pm::AltTreeNode*> all_nodes_in_tree();

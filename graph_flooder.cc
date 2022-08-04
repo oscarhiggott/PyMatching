@@ -118,7 +118,7 @@ void pm::GraphFlooder::do_region_arriving_at_empty_detector_node(pm::GraphFillRe
 
 pm::MwpmEvent pm::GraphFlooder::do_region_shrinking(const pm::TentativeRegionShrinkEventData &event) {
     if (event.region->shell_area.empty()) {
-        return do_blossom_implosion(*event.region);
+        return do_blossom_shattering(*event.region);
     } else if (event.region->shell_area.size() == 1 && event.region->blossom_children.empty()) {
         return do_degenerate_implosion(*event.region);
     } else {
@@ -191,11 +191,16 @@ pm::MwpmEvent pm::GraphFlooder::do_degenerate_implosion(const pm::GraphFillRegio
     return {
         region.alt_tree_node->parent.alt_tree_node->outer_region,
         region.alt_tree_node->outer_region,
-        region.alt_tree_node->parent.edge.reversed()
+        pm::CompressedEdge(
+                region.alt_tree_node->parent.edge.loc_to,
+                region.alt_tree_node->inner_to_outer_edge.loc_to,
+                region.alt_tree_node->inner_to_outer_edge.obs_mask
+                    ^ region.alt_tree_node->parent.edge.obs_mask
+                )
     };
 }
 
-pm::MwpmEvent pm::GraphFlooder::do_blossom_implosion(pm::GraphFillRegion &region) {
+pm::MwpmEvent pm::GraphFlooder::do_blossom_shattering(pm::GraphFillRegion &region) {
     for (auto& child : region.blossom_children)
         child.region->blossom_parent = nullptr;
 
@@ -264,4 +269,8 @@ pm::MwpmEvent pm::GraphFlooder::next_event() {
     current_event.event_type = NO_EVENT;
     return current_event;
 }
+
+pm::GraphFlooder::GraphFlooder(pm::GraphFlooder && flooder)  noexcept : graph(std::move(flooder.graph)),
+    queue(std::move(flooder.queue)), time(flooder.time) {}
+
 

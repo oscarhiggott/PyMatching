@@ -12,7 +12,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-add_executable(PyMatching2 main.cc graph.cc region_edge.cc alternating_tree.cc)
+add_executable(PyMatching2 main.cc)
 
 enable_testing()
 
@@ -33,6 +33,8 @@ add_executable(
         region_edge.cc
         graph_flooder.cc
         graph_flooder.test.cc
+        mwpm.cc
+        mwpm.test.cc
 )
 target_link_libraries(
         pymatching_tests

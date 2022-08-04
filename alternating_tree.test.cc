@@ -257,3 +257,84 @@ TEST(AlternatingTree, CommonAncestor) {
     ASSERT_TRUE(t3.alt_tree_node->visited);
     ASSERT_FALSE(t3.alt_tree_node->children[0].alt_tree_node->visited);
 }
+
+
+TEST(AlternatingTree, PrunedUpwardPathStoppingBefore) {
+    AltTreeTestData d(20);
+    auto tree = d.t(
+            {
+                    d.t(
+                            {
+                                d.t({}, 10, 11),
+                                d.t({}, 8, 9),
+                                d.t({
+                                    d.t({}, 6, 7)
+                                    }, 12, 13)
+                                },
+                            4, 5
+                            ),
+                    d.t({}, 2, 3)
+                },
+            -1, 1, true
+            );
+    auto c0 = tree.alt_tree_node->children[0].alt_tree_node;
+    auto c02 = c0->children[2].alt_tree_node;
+    std::vector<pm::AltTreeEdge> orphans_expected = {c02->children[0], c0->children[0], c0->children[1]};
+    std::vector<pm::RegionEdge> pruned_region_edges_expected = {
+                    pm::RegionEdge(
+                            c02->outer_region, c02->inner_to_outer_edge.reversed()
+                            ),
+                    pm::RegionEdge(
+                            c02->inner_region, c02->parent.edge
+                            ),
+                    pm::RegionEdge(
+                            c0->outer_region, c0->inner_to_outer_edge.reversed()
+                            ),
+                    pm::RegionEdge(
+                            c0->inner_region, c0->parent.edge
+                            )
+    };
+    auto res = c02->prune_upward_path_stopping_before(tree.alt_tree_node);
+    ASSERT_EQ(res.orphan_edges, orphans_expected);
+    ASSERT_EQ(res.pruned_path_region_edges, pruned_region_edges_expected);
+}
+
+TEST(AlternatingTree, PrunedUpwardBackEdgePathStoppingBefore) {
+    AltTreeTestData d(20);
+    auto tree = d.t(
+            {
+                    d.t(
+                            {
+                                    d.t({}, 10, 11),
+                                    d.t({}, 8, 9),
+                                    d.t({
+                                                d.t({}, 6, 7)
+                                        }, 12, 13)
+                            },
+                            4, 5
+                    ),
+                    d.t({}, 2, 3)
+            },
+            -1, 1, true
+    );
+    auto c0 = tree.alt_tree_node->children[0].alt_tree_node;
+    auto c02 = c0->children[2].alt_tree_node;
+    std::vector<pm::AltTreeEdge> orphans_expected = {c02->children[0], c0->children[0], c0->children[1]};
+    std::vector<pm::RegionEdge> pruned_region_edges_expected = {
+            pm::RegionEdge(
+                    c02->inner_region, c02->inner_to_outer_edge
+            ),
+            pm::RegionEdge(
+                    c0->outer_region, c02->parent.edge.reversed()
+            ),
+            pm::RegionEdge(
+                    c0->inner_region, c0->inner_to_outer_edge
+            ),
+            pm::RegionEdge(
+                    tree.alt_tree_node->outer_region, c0->parent.edge.reversed()
+            )
+    };
+    auto res = c02->prune_upward_back_edge_path_stopping_before(tree.alt_tree_node);
+    ASSERT_EQ(res.orphan_edges, orphans_expected);
+    ASSERT_EQ(res.pruned_path_region_edges, pruned_region_edges_expected);
+}

@@ -24,6 +24,7 @@ namespace pm{
         std::priority_queue<TentativeEvent*, std::vector<TentativeEvent*>, Compare> queue;
         time_int time;
         explicit GraphFlooder(Graph& graph);
+        GraphFlooder(GraphFlooder&&) noexcept;
         void create_region(DetectorNode* node);
         MwpmEvent next_event();
         void set_region_growing(pm::GraphFillRegion& region);
@@ -47,7 +48,7 @@ namespace pm{
         MwpmEvent do_neighbor_interaction(const TentativeNeighborInteractionEventData& event);
         static MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
         static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
-        static MwpmEvent do_blossom_implosion(GraphFillRegion& region);
+        static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
 
 //        // Put in class called bucket queue. Template with number of buckets. Switch to heapq if number of buckets is big.
 //        // Use standard library heap

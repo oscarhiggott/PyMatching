@@ -105,18 +105,18 @@ bool pm::RegionHitBoundaryEventData::operator!=(const pm::RegionHitBoundaryEvent
 }
 
 
-pm::BlossomImplodeEventData::BlossomImplodeEventData(
+pm::BlossomShatterEventData::BlossomShatterEventData(
         pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region,
         pm::GraphFillRegion *in_child_region)
         : blossom_region(blossom_region), in_parent_region(in_parent_region), in_child_region(in_child_region) {}
 
-bool pm::BlossomImplodeEventData::operator==(const pm::BlossomImplodeEventData &rhs) const {
+bool pm::BlossomShatterEventData::operator==(const pm::BlossomShatterEventData &rhs) const {
     return blossom_region == rhs.blossom_region &&
            in_parent_region == rhs.in_parent_region &&
            in_child_region == rhs.in_child_region;
 }
 
-bool pm::BlossomImplodeEventData::operator!=(const pm::BlossomImplodeEventData &rhs) const {
+bool pm::BlossomShatterEventData::operator!=(const pm::BlossomShatterEventData &rhs) const {
     return !(rhs == *this);
 }
 
@@ -128,7 +128,7 @@ pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *region, pm::CompressedEdge edge)
 
 pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region,
                          pm::GraphFillRegion *in_child_region)
-     : blossom_implode_event_data(blossom_region, in_parent_region, in_child_region), event_type(BLOSSOM_IMPLODE){}
+     : blossom_shatter_event_data(blossom_region, in_parent_region, in_child_region), event_type(BLOSSOM_IMPLODE){}
 
 bool pm::MwpmEvent::operator==(const pm::MwpmEvent &rhs) const {
     if (event_type != rhs.event_type)
@@ -141,12 +141,12 @@ bool pm::MwpmEvent::operator==(const pm::MwpmEvent &rhs) const {
         case REGION_HIT_BOUNDARY:
             return region_hit_boundary_event_data == rhs.region_hit_boundary_event_data;
         case BLOSSOM_IMPLODE:
-            return blossom_implode_event_data == rhs.blossom_implode_event_data;
+            return blossom_shatter_event_data == rhs.blossom_shatter_event_data;
     }
 
     return region_hit_region_event_data == rhs.region_hit_region_event_data &&
            region_hit_boundary_event_data == rhs.region_hit_boundary_event_data &&
-           blossom_implode_event_data == rhs.blossom_implode_event_data &&
+           blossom_shatter_event_data == rhs.blossom_shatter_event_data &&
            event_type == rhs.event_type;
 }
 

@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "graph_flooder.h"
 #include "events.h"
+#include "mwpm.h"
 
 TEST(GraphFlooder, PriorityQueue){
     pm::Graph graph(10);
@@ -207,3 +208,50 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
                     )
               );
 }
+
+
+TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
+    auto g = pm::Graph(10);
+    g.add_boundary_edge(0, 4, 3);
+    g.add_edge(0, 1, 100, 5);
+    g.add_edge(1, 2, 22, 5);
+    g.add_edge(2, 3, 30, 1);
+    g.add_edge(3, 4, 10, 9);
+    g.add_boundary_edge(4, 1000, 2);
+    pm::GraphFlooder flooder(g);
+    pm::Mwpm mwpm(std::move(flooder));
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[3]);
+    auto e1 = mwpm.flooder.next_event();
+    auto e1_expected = pm::MwpmEvent(
+            mwpm.flooder.graph.nodes[1].region_that_arrived,
+            mwpm.flooder.graph.nodes[3].region_that_arrived,
+            pm::CompressedEdge(
+                    &mwpm.flooder.graph.nodes[1],
+                    &mwpm.flooder.graph.nodes[3],
+                    4
+                    )
+            );
+    ASSERT_EQ(e1, e1_expected);
+    mwpm.process_event(e1);
+    auto e2 = mwpm.flooder.next_event();
+    ASSERT_EQ(e2.event_type, pm::NO_EVENT);
+    ASSERT_TRUE(mwpm.flooder.queue.empty());
+    std::vector<pm::DetectorNode*> expected_area_1 = {
+            &mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[2]
+    };
+    ASSERT_EQ(
+            mwpm.flooder.graph.nodes[1].region_that_arrived->shell_area,
+            expected_area_1
+            );
+    std::vector<pm::DetectorNode*> expected_area_3 = {
+            &mwpm.flooder.graph.nodes[3], &mwpm.flooder.graph.nodes[4]
+    };
+    ASSERT_EQ(
+            mwpm.flooder.graph.nodes[3].region_that_arrived->shell_area,
+            expected_area_3
+    );
+    ASSERT_EQ(mwpm.flooder.graph.nodes[1].region_that_arrived->radius, pm::Varying(26 << 2));
+    ASSERT_EQ(mwpm.flooder.graph.nodes[3].region_that_arrived->radius, pm::Varying(26 << 2));
+}
+

@@ -37,7 +37,7 @@ namespace pm {
         void add_match(pm::GraphFillRegion* match, const pm::CompressedEdge& edge);
 
         template<typename Callable>
-        void do_op_for_each_node_in_total_area(Callable func);
+        void do_op_for_each_node_in_total_area(const Callable& func);
 
         bool operator==(const GraphFillRegion &rhs) const;
 
@@ -45,7 +45,7 @@ namespace pm {
     };
 
     template<typename Callable>
-    inline void pm::GraphFillRegion::do_op_for_each_node_in_total_area(Callable func) {
+    inline void pm::GraphFillRegion::do_op_for_each_node_in_total_area(const Callable& func) {
         for (size_t i = 0; i < shell_area.size(); i++){
             func(shell_area[shell_area.size() - i - 1]);
         }

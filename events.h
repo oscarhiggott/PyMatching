@@ -92,17 +92,17 @@ namespace pm{
         RegionHitBoundaryEventData(GraphFillRegion* region, CompressedEdge edge);
     };
 
-    struct BlossomImplodeEventData {
+    struct BlossomShatterEventData {
         GraphFillRegion* blossom_region;
         GraphFillRegion* in_parent_region;
         GraphFillRegion* in_child_region;
 
-        bool operator==(const BlossomImplodeEventData &rhs) const;
+        bool operator==(const BlossomShatterEventData &rhs) const;
 
-        bool operator!=(const BlossomImplodeEventData &rhs) const;
+        bool operator!=(const BlossomShatterEventData &rhs) const;
 
-        BlossomImplodeEventData() = default;
-        BlossomImplodeEventData(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
+        BlossomShatterEventData() = default;
+        BlossomShatterEventData(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
                                 GraphFillRegion* in_child_region);
     };
 
@@ -117,7 +117,7 @@ namespace pm{
         union {
             RegionHitRegionEventData region_hit_region_event_data;
             RegionHitBoundaryEventData region_hit_boundary_event_data;
-            BlossomImplodeEventData blossom_implode_event_data;
+            BlossomShatterEventData blossom_shatter_event_data;
         };
         MwpmEventType event_type;
         MwpmEvent() = default;
