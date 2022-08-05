@@ -85,10 +85,10 @@ void pm::Mwpm::handle_tree_hitting_match(pm::GraphFillRegion *unmatched_region, 
 void pm::Mwpm::handle_tree_hitting_self(const pm::RegionHitRegionEventData &event, pm::AltTreeNode *common_ancestor) {
     auto alt_node_1 = event.region1->alt_tree_node;
     auto alt_node_2 = event.region2->alt_tree_node;
-    auto prune_result_1 = alt_node_1->prune_upward_back_edge_path_stopping_before(
-            common_ancestor
+    auto prune_result_1 = alt_node_1->prune_upward_path_stopping_before(
+            common_ancestor, true
             );
-    auto prune_result_2 = alt_node_2->prune_upward_path_stopping_before(common_ancestor);
+    auto prune_result_2 = alt_node_2->prune_upward_path_stopping_before(common_ancestor, false);
 
     // Construct blossom region cycle
     auto blossom_cycle = std::move(prune_result_2.pruned_path_region_edges);

@@ -298,7 +298,7 @@ TEST(AlternatingTree, PrunedUpwardPathStoppingBefore) {
                             c0->inner_region, c0->parent.edge
                             )
     };
-    auto res = c02->prune_upward_path_stopping_before(tree.alt_tree_node);
+    auto res = c02->prune_upward_path_stopping_before(tree.alt_tree_node, false);
     ASSERT_EQ(res.orphan_edges, orphans_expected);
     ASSERT_EQ(res.pruned_path_region_edges, pruned_region_edges_expected);
 }
@@ -338,7 +338,7 @@ TEST(AlternatingTree, PrunedUpwardBackEdgePathStoppingBefore) {
                     tree.alt_tree_node->outer_region, c0->parent.edge.reversed()
             )
     };
-    auto res = c02->prune_upward_back_edge_path_stopping_before(tree.alt_tree_node);
+    auto res = c02->prune_upward_path_stopping_before(tree.alt_tree_node, true);
     ASSERT_EQ(res.orphan_edges, orphans_expected);
     ASSERT_EQ(res.pruned_path_region_edges, pruned_region_edges_expected);
 }

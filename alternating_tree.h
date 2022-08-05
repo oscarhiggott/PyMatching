@@ -91,7 +91,7 @@ namespace pm{
         void add_child(const AltTreeEdge& child);
         AltTreeNode* make_child(GraphFillRegion* child_inner_region, GraphFillRegion* child_outer_region,
                                 const CompressedEdge& child_inner_to_outer_edge, const CompressedEdge& child_compressed_edge);
-        AltTreePruneResult prune_upward_path_stopping_before(AltTreeNode* prune_parent);
+        AltTreePruneResult prune_upward_path_stopping_before(AltTreeNode* prune_parent, bool back);
         AltTreePruneResult prune_upward_back_edge_path_stopping_before(AltTreeNode* prune_parent);
         const AltTreeNode* find_root() const;
         bool tree_equal(const pm::AltTreeNode& other) const;
