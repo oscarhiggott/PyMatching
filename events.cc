@@ -128,7 +128,7 @@ pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *region, pm::CompressedEdge edge)
 
 pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region,
                          pm::GraphFillRegion *in_child_region)
-     : blossom_shatter_event_data(blossom_region, in_parent_region, in_child_region), event_type(BLOSSOM_IMPLODE){}
+     : blossom_shatter_event_data(blossom_region, in_parent_region, in_child_region), event_type(BLOSSOM_SHATTER){}
 
 bool pm::MwpmEvent::operator==(const pm::MwpmEvent &rhs) const {
     if (event_type != rhs.event_type)
@@ -140,7 +140,7 @@ bool pm::MwpmEvent::operator==(const pm::MwpmEvent &rhs) const {
             return region_hit_region_event_data == rhs.region_hit_region_event_data;
         case REGION_HIT_BOUNDARY:
             return region_hit_boundary_event_data == rhs.region_hit_boundary_event_data;
-        case BLOSSOM_IMPLODE:
+        case BLOSSOM_SHATTER:
             return blossom_shatter_event_data == rhs.blossom_shatter_event_data;
     }
 

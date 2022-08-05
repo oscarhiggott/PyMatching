@@ -219,7 +219,7 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
     g.add_edge(3, 4, 10, 9);
     g.add_boundary_edge(4, 1000, 2);
     pm::GraphFlooder flooder(g);
-    pm::Mwpm mwpm(std::move(flooder));
+    pm::Mwpm mwpm(flooder);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[3]);
     auto e1 = mwpm.flooder.next_event();
@@ -266,7 +266,7 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
     g.add_edge(5, 6, 36, 3);
     g.add_boundary_edge(6, 1000, 2);
     pm::GraphFlooder flooder(g);
-    pm::Mwpm mwpm(std::move(flooder));
+    pm::Mwpm mwpm(flooder);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
     auto r1 = mwpm.flooder.graph.nodes[1].region_that_arrived;
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[4]);
@@ -385,7 +385,7 @@ TEST(GraphFlooder, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
         g.add_edge(i, i + 1, 2, i);
     g.add_boundary_edge(num_nodes - 1, 2, 2);
     pm::GraphFlooder flooder(g);
-    pm::Mwpm mwpm(std::move(flooder));
+    pm::Mwpm mwpm(flooder);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[40]);
     auto r40 = mwpm.flooder.graph.nodes[40].region_that_arrived;
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[42]);

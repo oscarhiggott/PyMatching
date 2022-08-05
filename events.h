@@ -109,7 +109,7 @@ namespace pm{
     enum MwpmEventType : uint8_t {
         REGION_HIT_REGION,
         REGION_HIT_BOUNDARY,
-        BLOSSOM_IMPLODE,
+        BLOSSOM_SHATTER,
         NO_EVENT
     };
 
