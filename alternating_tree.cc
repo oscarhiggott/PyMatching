@@ -132,7 +132,9 @@ std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {
 
 pm::AltTreeNode* pm::AltTreeNode::most_recent_common_ancestor(pm::AltTreeNode &other) {
     pm::AltTreeNode* this_current = this;
+    this_current->visited = true;
     pm::AltTreeNode* other_current = &other;
+    other_current->visited = true;
     pm::AltTreeNode* this_parent;
     pm::AltTreeNode* other_parent;
     pm::AltTreeNode* common_ancestor;

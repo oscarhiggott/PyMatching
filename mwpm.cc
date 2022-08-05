@@ -38,8 +38,6 @@ void pm::Mwpm::handle_tree_hitting_boundary(const pm::RegionHitBoundaryEventData
             nullptr, event.edge
     );
     flooder.set_region_frozen(*event.region);
-    delete node;
-    event.region->alt_tree_node = nullptr;
 }
 
 void pm::Mwpm::handle_tree_hitting_boundary_match(

@@ -51,3 +51,12 @@ void pm::GraphFillRegion::add_match(pm::GraphFillRegion *region, const pm::Compr
 pm::Match::Match(pm::GraphFillRegion *region, pm::CompressedEdge edge) : region(region), edge(edge) {}
 
 pm::Match::Match() : region(nullptr), edge(CompressedEdge()) {}
+
+bool pm::Match::operator==(const pm::Match &rhs) const {
+    return region == rhs.region &&
+           edge == rhs.edge;
+}
+
+bool pm::Match::operator!=(const pm::Match &rhs) const {
+    return !(rhs == *this);
+}

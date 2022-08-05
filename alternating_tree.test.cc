@@ -231,10 +231,10 @@ TEST(AlternatingTree, CommonAncestor) {
             );
     ASSERT_EQ(anc, t.alt_tree_node->children[0].alt_tree_node);
     ASSERT_TRUE(t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->visited);
-    ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->children[1].alt_tree_node->visited);
+    ASSERT_TRUE(t.alt_tree_node->children[0].alt_tree_node->children[1].alt_tree_node->visited);
     ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->visited);
     ASSERT_FALSE(t.alt_tree_node->visited);
-    ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->visited);
+    ASSERT_TRUE(t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->visited);
 
     auto t2 = d.t(
             {
@@ -253,9 +253,9 @@ TEST(AlternatingTree, CommonAncestor) {
             );
     ASSERT_EQ(anc2, nullptr);
     ASSERT_TRUE(t2.alt_tree_node->visited);
-    ASSERT_FALSE(t2.alt_tree_node->children[0].alt_tree_node->visited);
+    ASSERT_TRUE(t2.alt_tree_node->children[0].alt_tree_node->visited);
     ASSERT_TRUE(t3.alt_tree_node->visited);
-    ASSERT_FALSE(t3.alt_tree_node->children[0].alt_tree_node->visited);
+    ASSERT_TRUE(t3.alt_tree_node->children[0].alt_tree_node->visited);
 }
 
 

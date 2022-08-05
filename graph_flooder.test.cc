@@ -255,3 +255,179 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
     ASSERT_EQ(mwpm.flooder.graph.nodes[3].region_that_arrived->radius, pm::Varying(26 << 2));
 }
 
+TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
+    auto g = pm::Graph(10);
+    g.add_boundary_edge(0, 1000, 3);
+    g.add_edge(0, 1, 8, 5);
+    g.add_edge(1, 2, 10, 5);
+    g.add_edge(2, 3, 2, 1);
+    g.add_edge(3, 4, 4, 9);
+    g.add_edge(4, 5, 20, 2);
+    g.add_edge(5, 6, 36, 3);
+    g.add_boundary_edge(6, 1000, 2);
+    pm::GraphFlooder flooder(g);
+    pm::Mwpm mwpm(std::move(flooder));
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
+    auto r1 = mwpm.flooder.graph.nodes[1].region_that_arrived;
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[4]);
+    auto r4 = mwpm.flooder.graph.nodes[4].region_that_arrived;
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[5]);
+    auto r5 = mwpm.flooder.graph.nodes[5].region_that_arrived;
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[6]);
+    auto r6 = mwpm.flooder.graph.nodes[6].region_that_arrived;
+    auto e1 = mwpm.flooder.next_event();
+    auto e1_expected = pm::MwpmEvent(
+            r4,
+            r1,
+            pm::CompressedEdge(
+                    &mwpm.flooder.graph.nodes[4],
+                    &mwpm.flooder.graph.nodes[1],
+                    13
+                    )
+            );
+    ASSERT_EQ(e1, e1_expected);
+    mwpm.process_event(e1);
+    auto e2 = mwpm.flooder.next_event();
+    auto e2_expected = pm::MwpmEvent(
+            r4,
+            r5,
+            pm::CompressedEdge(
+                    &mwpm.flooder.graph.nodes[4],
+                    &mwpm.flooder.graph.nodes[5],
+                    2
+                    )
+            );
+    ASSERT_EQ(e2, e2_expected);
+    ASSERT_EQ(mwpm.flooder.time, 12);
+    mwpm.process_event(e2);
+    auto e3 = mwpm.flooder.next_event();
+    auto e3_expected = pm::MwpmEvent(
+            r6,
+            r5,
+            pm::CompressedEdge(
+                    &mwpm.flooder.graph.nodes[6],
+                    &mwpm.flooder.graph.nodes[5],
+                    3
+                    )
+            );
+    ASSERT_EQ(
+        e3,
+        e3_expected
+            );
+    ASSERT_EQ(mwpm.flooder.time, 18);
+    mwpm.process_event(e3);
+    auto e4 = mwpm.flooder.next_event();
+    ASSERT_EQ(e4.event_type, pm::NO_EVENT);
+    ASSERT_EQ(r1->radius, pm::Varying(14 << 2));
+    std::vector<pm::DetectorNode*> area_1 = {
+            &mwpm.flooder.graph.nodes[1],
+            &mwpm.flooder.graph.nodes[0],
+            &mwpm.flooder.graph.nodes[2],
+            &mwpm.flooder.graph.nodes[3]
+    };
+    ASSERT_EQ(r1->shell_area, area_1);
+    ASSERT_EQ(r4->radius, pm::Varying(2 << 2));
+    std::vector<pm::DetectorNode*> area_4 = {&mwpm.flooder.graph.nodes[4]};
+    ASSERT_EQ(r4->shell_area, area_4);
+    for (auto ri : {r1, r4, r5, r6})
+        ASSERT_EQ(ri->alt_tree_node, nullptr);
+    ASSERT_EQ(
+            r1->match,
+            pm::Match(
+                    r4,
+                    pm::CompressedEdge(
+                            &mwpm.flooder.graph.nodes[1],
+                            &mwpm.flooder.graph.nodes[4],
+                            13
+                            )
+                    )
+              );
+    ASSERT_EQ(
+            r4->match,
+            pm::Match(
+                    r1,
+                    pm::CompressedEdge(
+                            &mwpm.flooder.graph.nodes[4],
+                            &mwpm.flooder.graph.nodes[1],
+                            13
+                    )
+            )
+    );
+    ASSERT_EQ(
+            r5->match,
+            pm::Match(
+                    r6,
+                    pm::CompressedEdge(
+                            &mwpm.flooder.graph.nodes[5],
+                            &mwpm.flooder.graph.nodes[6],
+                            3
+                    )
+            )
+    );
+    ASSERT_EQ(
+            r6->match,
+            pm::Match(
+                    r5,
+                    pm::CompressedEdge(
+                            &mwpm.flooder.graph.nodes[6],
+                            &mwpm.flooder.graph.nodes[5],
+                            3
+                    )
+            )
+    );
+}
+
+TEST(GraphFlooder, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
+    size_t num_nodes = 100;
+    auto g = pm::Graph(num_nodes);
+    g.add_boundary_edge(0, 2, 1);
+    for (size_t i = 0; i < num_nodes - 1; i++)
+        g.add_edge(i, i + 1, 2, i);
+    g.add_boundary_edge(num_nodes - 1, 2, 2);
+    pm::GraphFlooder flooder(g);
+    pm::Mwpm mwpm(std::move(flooder));
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[40]);
+    auto r40 = mwpm.flooder.graph.nodes[40].region_that_arrived;
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[42]);
+    auto r42 = mwpm.flooder.graph.nodes[42].region_that_arrived;
+    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[50]);
+    auto r50 = mwpm.flooder.graph.nodes[50].region_that_arrived;
+    auto e1 = mwpm.flooder.next_event();
+    mwpm.process_event(e1);
+    auto e2 = mwpm.flooder.next_event();
+    mwpm.process_event(e2);
+    auto e3 = mwpm.flooder.next_event();
+    mwpm.process_event(e3);
+    auto e4 = mwpm.flooder.next_event();
+    mwpm.process_event(e4);
+    ASSERT_EQ(mwpm.flooder.time, 94);
+    std::vector<pm::RegionEdge> expected_blossom_regions = {
+            {r40,
+                {&mwpm.flooder.graph.nodes[40], &mwpm.flooder.graph.nodes[42], 40 ^ 41 }
+                },
+            {
+                    r42,
+                    {
+                            &mwpm.flooder.graph.nodes[42], &mwpm.flooder.graph.nodes[50],
+                            42 ^ 43 ^ 44 ^ 45 ^ 46 ^ 47 ^ 48 ^ 49
+                    }
+            },{
+                r50,
+                {&mwpm.flooder.graph.nodes[50], &mwpm.flooder.graph.nodes[40],
+                    40 ^ 41 ^ 42 ^ 43 ^ 44 ^ 45 ^ 46 ^ 47 ^ 48 ^ 49
+                    }},
+
+    };
+    auto blossom = mwpm.flooder.graph.nodes[40].region_that_arrived->blossom_parent;
+    auto actual_blossom_regions =blossom->blossom_children;
+    ASSERT_EQ(actual_blossom_regions, expected_blossom_regions);
+    pm::obs_int obs = 0;
+    for (int i = 0; i < 40; i++)
+        obs ^= i;
+    ASSERT_EQ(
+            blossom->match,
+            pm::Match(
+                    nullptr, {&mwpm.flooder.graph.nodes[40], nullptr, obs ^ 1}
+                    )
+              );
+}

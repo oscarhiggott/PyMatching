@@ -13,6 +13,11 @@ namespace pm {
         pm::GraphFillRegion* region;
         pm::CompressedEdge edge;
         Match(pm::GraphFillRegion* region, pm::CompressedEdge edge);
+
+        bool operator==(const Match &rhs) const;
+
+        bool operator!=(const Match &rhs) const;
+
         Match();
     };
 
