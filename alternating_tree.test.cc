@@ -6,10 +6,11 @@
 struct AltTreeTestData {
     std::vector<pm::GraphFillRegion> gfrs;
     std::vector<pm::DetectorNode> nodes;
-    AltTreeTestData(size_t num_elements) {
+    explicit AltTreeTestData(size_t num_elements) {
         gfrs.resize(num_elements);
         nodes.resize(num_elements);
     };
+    AltTreeTestData(std::vector<pm::GraphFillRegion> gfrs, std::vector<pm::DetectorNode> nodes);
     pm::AltTreeEdge t(
             std::vector<pm::AltTreeEdge> children,
             size_t inner_region_id,
@@ -44,6 +45,9 @@ AltTreeTestData::t(std::vector<pm::AltTreeEdge> children, size_t inner_region_id
     }
     return edge;
 }
+
+AltTreeTestData::AltTreeTestData(std::vector<pm::GraphFillRegion> gfrs, std::vector<pm::DetectorNode> nodes)
+    : gfrs(std::move(gfrs)), nodes(std::move(nodes)) {}
 
 
 pm::AltTreeEdge example_tree(AltTreeTestData& d) {

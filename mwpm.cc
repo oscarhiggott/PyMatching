@@ -117,7 +117,7 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
     // First find indices of in_parent_region and in_child_region
     // in_parent_region is the blossom cycle region connected to the parent of the blossom inner node.
     // in_child_region is the blossom cycle region connected to the child of the inner node
-    auto& blossom_cycle = event.blossom_region->blossom_children;
+    auto blossom_cycle = std::move(event.blossom_region->blossom_children);
     auto blossom_alt_node = event.blossom_region->alt_tree_node;
     size_t bsize = blossom_cycle.size();
     size_t parent_idx, child_idx;
@@ -130,7 +130,7 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
     }
 
     // Length of path starting on in_parent and stopping before in_child
-    size_t gap = ((child_idx - parent_idx) % bsize);
+    size_t gap = ((child_idx + bsize - parent_idx) % bsize);
     AltTreeNode* current_alt_node;
     size_t evens_start, evens_end;
 

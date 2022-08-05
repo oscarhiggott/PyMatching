@@ -1,6 +1,46 @@
 #include <gtest/gtest.h>
 #include "mwpm.h"
 
+
+struct MwpmAltTreeTestData {
+    std::vector<pm::DetectorNode> nodes;
+    explicit MwpmAltTreeTestData(std::vector<pm::DetectorNode>& nodes);
+    pm::AltTreeEdge t(
+            std::vector<pm::AltTreeEdge> children,
+            size_t inner_region_id,
+            size_t outer_region_id,
+            bool root = false
+    );
+};
+
+MwpmAltTreeTestData::MwpmAltTreeTestData(std::vector<pm::DetectorNode>& nodes) : nodes(std::move(nodes)) {}
+
+pm::AltTreeEdge
+MwpmAltTreeTestData::t(std::vector<pm::AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root) {
+    pm::AltTreeNode* node;
+    pm::CompressedEdge parent_ce(nullptr, nullptr, 0);
+    if (root) {
+        node = new pm::AltTreeNode(nodes[outer_region_id].region_that_arrived);
+    } else {
+        node = new pm::AltTreeNode(
+                nodes[inner_region_id].region_that_arrived,
+                nodes[outer_region_id].region_that_arrived,
+                {
+                        &nodes[inner_region_id],
+                        &nodes[outer_region_id],
+                        0
+                }
+        );
+    }
+    auto edge = pm::AltTreeEdge(node, parent_ce);
+    for (auto& child : children) {
+        child.edge.loc_from = &nodes[outer_region_id];
+        child.edge.loc_to = child.alt_tree_node->inner_to_outer_edge.loc_from;
+        edge.alt_tree_node->add_child(child);
+    }
+    return edge;
+}
+
 TEST(Mwpm, BlossomCreatedThenShattered) {
     auto g = pm::Graph(10);
     g.add_edge(0, 1, 10, 1);
@@ -85,4 +125,83 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     ASSERT_EQ(ns[5].region_that_arrived->match, pm::Match(
             nullptr, {&ns[5], nullptr, 8}
             ));
+}
+
+TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
+    size_t n = 10;
+    pm::Graph g(n+3);
+    auto flooder = pm::GraphFlooder(g);
+    auto mwpm = pm::Mwpm(flooder);
+    auto& ns = mwpm.flooder.graph.nodes;
+    for (size_t i = 0; i < n + 3; i++)
+        mwpm.flooder.create_region(&ns[i]);
+
+    auto rhr = [&ns](size_t i, size_t j) {
+        return pm::MwpmEvent(
+                ns[i].region_that_arrived,
+                ns[j].region_that_arrived,
+                {&ns[i], &ns[j], 0}
+                );
+    };
+    // Pair up
+    for (size_t i = 0; i < n; i += 2)
+        mwpm.process_event(rhr(i, i+1));
+    // Form an alternating path
+    for (size_t i = 1; i < n; i += 2)
+        mwpm.process_event(rhr(n-i, n-i+1));
+    // Close the path into a blossom
+    mwpm.process_event(rhr(0, n));
+    auto blossom_id = n + 3;
+    auto blossom = ns[0].region_that_arrived->blossom_parent;
+    // Make the blossom become an inner node
+    mwpm.process_event(
+            {
+                ns[n+1].region_that_arrived,
+                blossom,
+                {&ns[n+1], &ns[5], 0}
+            }
+            );
+    mwpm.process_event(
+            {
+                    ns[n+2].region_that_arrived,
+                    blossom,
+                    {&ns[n+2], &ns[10], 0}
+            }
+    );
+    ASSERT_EQ(blossom->blossom_children.size(), 11);
+    mwpm.process_event(
+            {
+              blossom,
+             ns[10].region_that_arrived,
+             ns[5].region_that_arrived
+            }
+            );
+    auto regions_matched = [&ns](size_t i, size_t j) {
+        bool regions_correct = ns[i].region_that_arrived->match.region == ns[j].region_that_arrived &&
+                               ns[j].region_that_arrived->match.region == ns[i].region_that_arrived;
+        bool edge_locs_correct = ns[i].region_that_arrived->match.edge.loc_from == &ns[i] &&
+                                 ns[i].region_that_arrived->match.edge.loc_to == &ns[j] &&
+                                 ns[j].region_that_arrived->match.edge.loc_from == &ns[j] &&
+                                 ns[j].region_that_arrived->match.edge.loc_to == &ns[i];
+        return regions_correct && edge_locs_correct;
+    };
+    ASSERT_TRUE(regions_matched(8, 9));
+    ASSERT_TRUE(regions_matched(6, 7));
+    auto actual_tree = ns[12].region_that_arrived->alt_tree_node;
+    ASSERT_EQ(actual_tree->parent.alt_tree_node, nullptr);
+
+    MwpmAltTreeTestData d(ns);
+    auto expected_tree = d.t(
+            {
+                    d.t({
+                        d.t({
+                            d.t({
+                                d.t({}, 5, 11)
+                                }, 3, 4)
+                            }, 1, 2)
+                        }, 10, 0)
+                },
+            -1, 12, true
+            ).alt_tree_node;
+    ASSERT_EQ(*actual_tree, *expected_tree);
 }
