@@ -5,10 +5,19 @@
 
 namespace pm {
 
-    class MatchingResult {
-        std::vector<CompressedEdge> match_edges;
-        weight_int total_weight;
-        obs_int observables;
+    struct MatchingResult {
+        pm::obs_int obs_mask;
+        pm::time_int weight;
+        MatchingResult();
+
+        bool operator==(const MatchingResult &rhs) const;
+
+        bool operator!=(const MatchingResult &rhs) const;
+
+        MatchingResult(obs_int obs_mask, time_int weight);
+
+        MatchingResult& operator+=(const MatchingResult& rhs);
+        friend MatchingResult operator+(MatchingResult lhs, const MatchingResult& rhs);
     };
 
     class Mwpm {
@@ -34,6 +43,7 @@ namespace pm {
                 );
         void handle_tree_hitting_self(const RegionHitRegionEventData& event, AltTreeNode* common_ancestor);
         void handle_tree_hitting_other_tree(const RegionHitRegionEventData& event);
+        MatchingResult shatter_blossom_and_extract_matches(GraphFillRegion* region);
         MatchingResult extract_matching_and_reset_graph();
     };
 }

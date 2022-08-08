@@ -33,7 +33,7 @@ namespace pm {
         std::vector<pm::RegionEdge> blossom_children;
         std::vector<pm::DetectorNode*> shell_area;
 
-
+        void cleanup_shell_area();
 
         GraphFillRegion();
         bool tree_equal(const pm::GraphFillRegion& other) const;

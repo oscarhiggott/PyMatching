@@ -31,6 +31,14 @@ pm::MwpmEvent rhr(std::vector<pm::DetectorNode>& ns, size_t i, size_t j) {
     };
 }
 
+pm::MwpmEvent rhr(std::vector<pm::DetectorNode>& ns, size_t i, size_t j, pm::obs_int obs_mask) {
+    return {
+            ns[i].region_that_arrived,
+            ns[j].region_that_arrived,
+            {&ns[i], &ns[j], obs_mask}
+    };
+}
+
 MwpmAltTreeTestData::MwpmAltTreeTestData(std::vector<pm::DetectorNode>* nodes) : nodes(nodes) {}
 
 pm::AltTreeEdge
@@ -292,3 +300,105 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
     ASSERT_TRUE(regions_matched(ns, 1, 0));
     ASSERT_TRUE(regions_matched(ns, 3, 4));
 };
+
+TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
+    size_t num_nodes = 20;
+    auto g = pm::Graph(num_nodes);
+    for (size_t i = 0; i < num_nodes - 1; i++)
+        g.add_edge(i, i + 1, 2, i);
+    auto flooder = pm::GraphFlooder(g);
+    auto mwpm = pm::Mwpm(flooder);
+    auto& ns = mwpm.flooder.graph.nodes;
+    mwpm.flooder.create_region(&ns[6]);
+    mwpm.flooder.create_region(&ns[13]);
+    auto e = mwpm.flooder.next_event();
+    mwpm.process_event(e);
+    ASSERT_EQ(ns[6].region_that_arrived->match.region, ns[13].region_that_arrived);
+    auto res = mwpm.shatter_blossom_and_extract_matches(ns[6].region_that_arrived);
+    ASSERT_EQ(res, pm::MatchingResult(6^7^8^9^10^11^12, 14));
+    for (auto& n : ns){
+        ASSERT_EQ(n.region_that_arrived, nullptr);
+        ASSERT_EQ(n.distance_from_source, 0);
+        ASSERT_EQ(n.observables_crossed_from_source, 0);
+        ASSERT_EQ(n.reached_from_source, nullptr);
+        for (auto& ev : n.neighbor_schedules)
+            ASSERT_EQ(ev, nullptr);
+    }
+}
+
+TEST(Mwpm, ShatterBlossomAndExtractMatches) {
+    auto g = pm::Graph(12);
+    auto flooder = pm::GraphFlooder(g);
+    auto mwpm = pm::Mwpm(flooder);
+    auto& ns = mwpm.flooder.graph.nodes;
+    pm::time_int w = 0;
+    for (auto& n : ns){
+        w += 1;
+        mwpm.flooder.create_region(&n);
+        n.region_that_arrived->radius = pm::Varying((w << 2) + 1);
+    }
+    // Form first blossom
+    mwpm.process_event(rhr(ns, 0, 1, 1));
+    mwpm.process_event(rhr(ns, 2, 3, 1 << 2));
+    mwpm.process_event(rhr(ns, 4, 3, 1 << 3));
+    mwpm.process_event(rhr(ns, 2, 1, 1 << 4));
+    mwpm.process_event(rhr(ns, 0, 4, 1 << 5));
+    auto blossom1 = ns[0].region_that_arrived->blossom_parent;
+    blossom1->radius = blossom1->radius + 2;
+    ASSERT_EQ(blossom1->blossom_children.size(), 5);
+    // Form second blossom
+    mwpm.process_event(rhr(ns, 6, 7, 1 << 6));
+    mwpm.process_event(rhr(ns, 5, 6, 1 << 7));
+    mwpm.process_event(rhr(ns, 5, 7, 1 << 8));
+    auto blossom2 = ns[6].region_that_arrived->blossom_parent;
+    blossom2->radius = blossom2->radius + 3;
+    ASSERT_EQ(blossom2->blossom_children.size(), 3);
+    // Form third blossom
+    mwpm.process_event(rhr(ns, 10, 11, 1 << 9));
+    mwpm.process_event(rhr(ns, 8, 10, 1 << 10));
+    mwpm.process_event(rhr(ns, 8, 11, 1 << 11));
+    auto blossom3 = ns[10].region_that_arrived->blossom_parent;
+    blossom3->radius = blossom3->radius + 5;
+    ASSERT_EQ(blossom3->blossom_children.size(), 3);
+    // Fourth blossom, containing blossom2, blossom3 and region 9
+    mwpm.process_event({
+        blossom2, blossom3, {&ns[5], &ns[8], 1 << 12}
+    });
+    mwpm.process_event({
+                               ns[9].region_that_arrived, blossom2, {&ns[9], &ns[5], 1 << 13}
+                       });
+    mwpm.process_event({
+                               ns[9].region_that_arrived, blossom3, {&ns[9], &ns[8], 1 << 14}
+                       });
+    auto blossom4 = blossom3->blossom_parent;
+    blossom4->radius = blossom4->radius + 11;
+    ASSERT_EQ(blossom4->blossom_children.size(), 3);
+    // blossom1 matches to blossom2
+    mwpm.process_event({
+        blossom1, blossom4, {&ns[0], &ns[5], 1 << 15}
+    });
+    auto res = mwpm.shatter_blossom_and_extract_matches(blossom1);
+
+    auto set_bits_to_obs_mask = [](const std::vector<int>& set_bits){
+        pm::weight_int obs_mask = 0;
+        for (auto i : set_bits)
+            obs_mask ^= (1 << i);
+        return obs_mask;
+    };
+
+    ASSERT_EQ(res.obs_mask, set_bits_to_obs_mask({3, 4, 15, 6, 14, 9}));
+    ASSERT_EQ(res.weight, 2+3+4+5+1+2+6+3+11+7+8+9+10+5+11+12);
+}
+
+TEST(Mwpm, MatchingResult) {
+    pm::MatchingResult mr;
+    ASSERT_EQ(mr.obs_mask, 0);
+    ASSERT_EQ(mr.weight, 0);
+    pm::MatchingResult mr2(2, 10);
+    ASSERT_EQ(mr + mr2, mr2);
+    pm::MatchingResult mr3(3, 15);
+    ASSERT_EQ(mr2+mr3, pm::MatchingResult(1, 25));
+    pm::MatchingResult mr4(7, 7);
+    mr3 += mr4;
+    ASSERT_EQ(mr3, pm::MatchingResult(4, 22));
+}

@@ -1,6 +1,7 @@
 #include<algorithm>
 #include "graph.h"
 #include "events.h"
+#include "stim.h"
 
 namespace pm {
 
@@ -77,6 +78,15 @@ namespace pm {
         if (!region_that_arrived)
             return nullptr;
         return region_that_arrived->top_region();
+    }
+
+    void DetectorNode::reset() {
+        observables_crossed_from_source = 0;
+        reached_from_source = nullptr;
+        distance_from_source = 0;
+        region_that_arrived = nullptr;
+        for (auto & neighbor_schedule : neighbor_schedules)
+            neighbor_schedule = nullptr;
     }
 
 }

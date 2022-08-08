@@ -1,6 +1,3 @@
-
-#include "varying.h"
-
 template<typename T>
 inline Varying<T>::Varying() = default;
 
@@ -17,9 +14,6 @@ inline T Varying<T>::get_distance_at_time(T time) const {
         return data >> 2;
     }
 }
-
-template<typename T>
-inline T Varying<T>::get_frozen_distance_at_time(T time) const {return data >> 2;}
 
 template<typename T>
 inline T Varying<T>::get_growing_distance_at_time(T time) const {return (data >> 2) + time;}

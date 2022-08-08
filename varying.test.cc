@@ -20,7 +20,7 @@ TEST(Varying, GetDistanceAtTime) {
     auto x3 = pm::Varying32((120 << 2));
     ASSERT_EQ(x3.get_distance_at_time(1000), 120);
     ASSERT_EQ(x3.get_distance_at_time(30), 120);
-    ASSERT_EQ(x3.get_frozen_distance_at_time(30), 120);
+    ASSERT_EQ(x3.y_intercept(), 120);
 }
 
 TEST(Varying, VaryingString) {

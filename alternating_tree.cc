@@ -204,7 +204,7 @@ pm::AltTreePruneResult pm::AltTreeNode::prune_upward_path_stopping_before(pm::Al
         }
         pm::unstable_erase(
                 current_node->parent.alt_tree_node->children,
-                [&current_node](AltTreeEdge child_edge){
+                [&current_node](const AltTreeEdge& child_edge){
                     return child_edge.alt_tree_node == current_node;
                 }
         );

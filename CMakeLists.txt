@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.15.3)
 project(PyMatching2)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -10,7 +10,17 @@ FetchContent_Declare(
         GIT_TAG release-1.12.1
 )
 
+
 FetchContent_MakeAvailable(googletest)
+
+FetchContent_Declare(stim
+        GIT_REPOSITORY https://github.com/quantumlib/stim.git
+        GIT_TAG v1.9.0)
+FetchContent_GetProperties(stim)
+if(NOT stim_POPULATED)
+    FetchContent_Populate(stim)
+    add_subdirectory(${stim_SOURCE_DIR})
+endif()
 
 add_executable(PyMatching2 main.cc)
 
@@ -35,10 +45,13 @@ add_executable(
         graph_flooder.test.cc
         mwpm.cc
         mwpm.test.cc
+        stim_io.cc
+        stim_io.test.cc
 )
 target_link_libraries(
         pymatching_tests
         GTest::gtest_main
+        libstim
 )
 
 include(GoogleTest)

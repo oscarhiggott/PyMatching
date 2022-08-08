@@ -40,6 +40,7 @@ namespace pm {
         Varying32 local_radius() const;
         GraphFillRegion * top_region() const;
         bool has_same_owner_as(const DetectorNode& other) const;
+        void reset();
     };
 
 

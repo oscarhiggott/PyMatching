@@ -254,3 +254,102 @@ void pm::Mwpm::process_event(const pm::MwpmEvent &event) {
     }
 }
 
+
+pm::MatchingResult pm::Mwpm::extract_matching_and_reset_graph() {
+    return pm::MatchingResult();
+}
+
+pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRegion* region) {
+    // Assumes this is matched to a region, not the boundary
+    bool this_blossom_trivial = region->blossom_children.empty();
+    auto match_region = region->match.region;
+    bool match_blossom_trivial = match_region->blossom_children.empty();
+    region->cleanup_shell_area();
+    match_region->cleanup_shell_area();
+    if (this_blossom_trivial && match_blossom_trivial) {
+        MatchingResult res = {
+                region->match.edge.obs_mask,
+                region->radius.y_intercept() + match_region->radius.y_intercept()
+        };
+        delete match_region;
+        delete region;
+        return res;
+    }
+    MatchingResult res {0, 0};
+    if (!this_blossom_trivial) {
+        for (auto& r : region->blossom_children)
+            r.region->blossom_parent = nullptr;
+        auto subblossom = region->match.edge.loc_from->top_region();
+        subblossom->match = region->match;
+        match_region->match.region = subblossom;
+        res.weight += region->radius.y_intercept();
+        auto iter = std::find_if(
+                region->blossom_children.begin(),
+                region->blossom_children.end(),
+                [&subblossom](const RegionEdge& e){
+                    return e.region == subblossom;
+                }
+                );
+        size_t index = std::distance(region->blossom_children.begin(), iter);
+        size_t num_children = region->blossom_children.size();
+        for (size_t i = 0; i<num_children-1; i+=2){
+            auto& re1 = region->blossom_children[(index + i + 1) % num_children];
+            auto& re2 = region->blossom_children[(index + i + 2) % num_children];
+            re1.region->add_match(re2.region, re1.edge);
+            res += shatter_blossom_and_extract_matches(re1.region);
+        }
+        delete region;
+        region = subblossom;
+    }
+    if (!match_blossom_trivial) {
+        for (auto& r : match_region->blossom_children)
+            r.region->blossom_parent = nullptr;
+        auto subblossom = match_region->match.edge.loc_from->top_region();
+        subblossom->match = match_region->match;
+        region->match.region = subblossom;
+        res.weight += match_region->radius.y_intercept();
+        auto iter = std::find_if(
+                match_region->blossom_children.begin(),
+                match_region->blossom_children.end(),
+                [&subblossom](const RegionEdge& e){
+                    return e.region == subblossom;
+                }
+        );
+        size_t index = std::distance(match_region->blossom_children.begin(), iter);
+        size_t num_children = match_region->blossom_children.size();
+        for (size_t i = 0; i<num_children-1; i+=2){
+            auto& re1 = match_region->blossom_children[(index + i + 1) % num_children];
+            auto& re2 = match_region->blossom_children[(index + i + 2) % num_children];
+            re1.region->add_match(re2.region, re1.edge);
+            res += shatter_blossom_and_extract_matches(re1.region);
+        }
+        delete match_region;
+    }
+    res += shatter_blossom_and_extract_matches(region);
+    return res;
+}
+
+pm::MatchingResult &pm::MatchingResult::operator+=(const pm::MatchingResult &rhs) {
+    obs_mask ^= rhs.obs_mask;
+    weight += rhs.weight;
+    return *this;
+}
+
+pm::MatchingResult pm::operator+(pm::MatchingResult lhs, const pm::MatchingResult &rhs) {
+    lhs += rhs;
+    return lhs;
+}
+
+pm::MatchingResult::MatchingResult() : obs_mask(0), weight(0) {}
+
+pm::MatchingResult::MatchingResult(pm::obs_int obs_mask, pm::time_int weight)
+    : obs_mask(obs_mask), weight(weight) {}
+
+bool pm::MatchingResult::operator==(const pm::MatchingResult &rhs) const {
+    return obs_mask == rhs.obs_mask &&
+           weight == rhs.weight;
+}
+
+bool pm::MatchingResult::operator!=(const pm::MatchingResult &rhs) const {
+    return !(rhs == *this);
+}
