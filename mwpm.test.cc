@@ -326,6 +326,14 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     }
 }
 
+pm::obs_int set_bits_to_obs_mask(const std::vector<int>& set_bits){
+    pm::obs_int obs_mask = 0;
+    for (auto i : set_bits)
+        obs_mask ^= (1 << i);
+    return obs_mask;
+};
+
+
 TEST(Mwpm, ShatterBlossomAndExtractMatches) {
     auto g = pm::Graph(12);
     auto flooder = pm::GraphFlooder(g);
@@ -338,7 +346,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
         n.region_that_arrived->radius = pm::Varying((w << 2) + 1);
     }
     // Form first blossom
-    mwpm.process_event(rhr(ns, 0, 1, 1));
+    mwpm.process_event(rhr(ns, 0, 1, 1 << 1));
     mwpm.process_event(rhr(ns, 2, 3, 1 << 2));
     mwpm.process_event(rhr(ns, 4, 3, 1 << 3));
     mwpm.process_event(rhr(ns, 2, 1, 1 << 4));
@@ -379,15 +387,44 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
     });
     auto res = mwpm.shatter_blossom_and_extract_matches(blossom1);
 
-    auto set_bits_to_obs_mask = [](const std::vector<int>& set_bits){
-        pm::weight_int obs_mask = 0;
-        for (auto i : set_bits)
-            obs_mask ^= (1 << i);
-        return obs_mask;
-    };
-
     ASSERT_EQ(res.obs_mask, set_bits_to_obs_mask({3, 4, 15, 6, 14, 9}));
     ASSERT_EQ(res.weight, 2+3+4+5+1+2+6+3+11+7+8+9+10+5+11+12);
+}
+
+TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundary) {
+    auto g = pm::Graph(5);
+    auto flooder = pm::GraphFlooder(g);
+    auto mwpm = pm::Mwpm(flooder);
+    auto& ns = mwpm.flooder.graph.nodes;
+    pm::time_int w = 0;
+    for (auto& n : ns){
+        w += 1;
+        mwpm.flooder.create_region(&n);
+        n.region_that_arrived->radius = pm::Varying((w << 2) + 1);
+    }
+    // Form first blossom
+    mwpm.process_event(rhr(ns, 1, 2, 1 << 1));
+    mwpm.process_event(rhr(ns, 0, 1, 1 << 2));
+    mwpm.process_event(rhr(ns, 0, 2, 1 << 3));
+    auto blossom1 = ns[0].region_that_arrived->blossom_parent;
+    ASSERT_EQ(blossom1->blossom_children.size(), 3);
+    blossom1->radius = blossom1->radius + 20;
+    mwpm.process_event(rhr(ns, 3, 4, 1 << 4));
+    mwpm.process_event({
+        blossom1, ns[3].region_that_arrived, {&ns[0], &ns[3], 1 << 10}
+    });
+    mwpm.process_event({
+        blossom1, ns[4].region_that_arrived, {&ns[0], &ns[4], 1 << 20}
+    });
+    auto blossom2 = ns[3].region_that_arrived->blossom_parent;
+    ASSERT_EQ(blossom2->blossom_children.size(), 3);
+    blossom2->radius = blossom2->radius + 30;
+    mwpm.process_event({
+        blossom2, {&ns[0], nullptr, 1 << 30}
+    });
+    auto res = mwpm.shatter_blossom_and_extract_matches(blossom2);
+    pm::MatchingResult res_expected(set_bits_to_obs_mask({4, 1, 30}),1+2+3+4+5+20+30);
+    ASSERT_EQ(res, res_expected);
 }
 
 TEST(Mwpm, MatchingResult) {
@@ -401,4 +438,5 @@ TEST(Mwpm, MatchingResult) {
     pm::MatchingResult mr4(7, 7);
     mr3 += mr4;
     ASSERT_EQ(mr3, pm::MatchingResult(4, 22));
+    ASSERT_NE(mr, mr2);
 }

@@ -262,11 +262,20 @@ pm::MatchingResult pm::Mwpm::extract_matching_and_reset_graph() {
 pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRegion* region) {
     // Assumes this is matched to a region, not the boundary
     bool this_blossom_trivial = region->blossom_children.empty();
-    auto match_region = region->match.region;
-    bool match_blossom_trivial = match_region->blossom_children.empty();
     region->cleanup_shell_area();
-    match_region->cleanup_shell_area();
-    if (this_blossom_trivial && match_blossom_trivial) {
+    auto match_region = region->match.region;
+    if (!match_region && this_blossom_trivial) {
+        MatchingResult res = {
+                region->match.edge.obs_mask,
+                region->radius.y_intercept()
+        };
+        delete region;
+        return res;
+    }
+    bool match_blossom_has_children = match_region && !match_region->blossom_children.empty();
+    if (match_region)
+        match_region->cleanup_shell_area();
+    if (this_blossom_trivial && !match_blossom_has_children) {
         MatchingResult res = {
                 region->match.edge.obs_mask,
                 region->radius.y_intercept() + match_region->radius.y_intercept()
@@ -281,7 +290,8 @@ pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRe
             r.region->blossom_parent = nullptr;
         auto subblossom = region->match.edge.loc_from->top_region();
         subblossom->match = region->match;
-        match_region->match.region = subblossom;
+        if (match_region)
+            match_region->match.region = subblossom;
         res.weight += region->radius.y_intercept();
         auto iter = std::find_if(
                 region->blossom_children.begin(),
@@ -301,7 +311,7 @@ pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRe
         delete region;
         region = subblossom;
     }
-    if (!match_blossom_trivial) {
+    if (match_blossom_has_children) {
         for (auto& r : match_region->blossom_children)
             r.region->blossom_parent = nullptr;
         auto subblossom = match_region->match.edge.loc_from->top_region();
