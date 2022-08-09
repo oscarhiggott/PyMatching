@@ -4,7 +4,7 @@
 #include "mwpm.h"
 
 TEST(GraphFlooder, PriorityQueue){
-    pm::Graph graph(10);
+    pm::MatchingGraph graph(10);
     pm::GraphFillRegion gfr;
     pm::GraphFlooder flooder(graph);
     auto e1 = new pm::TentativeEvent(&graph.nodes[0], 0, &graph.nodes[1], 1, 10);
@@ -37,7 +37,7 @@ TEST(GraphFlooder, PriorityQueue){
 
 
 TEST(GraphFlooder, CreateRegion) {
-    auto g = pm::Graph(5);
+    auto g = pm::MatchingGraph(5);
     g.add_boundary_edge(0, 3, 0);
     g.add_edge(0, 1, 5, 0);
     g.add_edge(1, 2, 11, 0);
@@ -104,7 +104,7 @@ TEST(GraphFlooder, CreateRegion) {
 
 
 TEST(GraphFlooder, RegionGrowingToBoundary){
-    auto g = pm::Graph(10);
+    auto g = pm::MatchingGraph(10);
     g.add_boundary_edge(0, 2, 3);
     g.add_edge(0, 1, 10, 5);
     g.add_edge(1, 2, 21, 0);
@@ -143,7 +143,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary){
 
 
 TEST(GraphFlooder, RegionHitRegion) {
-    auto g = pm::Graph(10);
+    auto g = pm::MatchingGraph(10);
     g.add_boundary_edge(0, 2000, 3);
     g.add_edge(0, 1, 10, 5);
     g.add_edge(1, 2, 24, 0);
@@ -169,7 +169,7 @@ TEST(GraphFlooder, RegionHitRegion) {
 
 
 TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
-    auto g = pm::Graph(10);
+    auto g = pm::MatchingGraph(10);
     g.add_boundary_edge(0, 4, 3);
     g.add_edge(0, 1, 10, 5);
     g.add_edge(1, 2, 22, 0);
@@ -211,7 +211,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
 
 
 TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
-    auto g = pm::Graph(10);
+    auto g = pm::MatchingGraph(10);
     g.add_boundary_edge(0, 4, 3);
     g.add_edge(0, 1, 100, 5);
     g.add_edge(1, 2, 22, 5);
@@ -256,7 +256,7 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
 }
 
 TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
-    auto g = pm::Graph(10);
+    auto g = pm::MatchingGraph(10);
     g.add_boundary_edge(0, 1000, 3);
     g.add_edge(0, 1, 8, 5);
     g.add_edge(1, 2, 10, 5);
@@ -379,7 +379,7 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
 
 TEST(GraphFlooder, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     size_t num_nodes = 100;
-    auto g = pm::Graph(num_nodes);
+    auto g = pm::MatchingGraph(num_nodes);
     g.add_boundary_edge(0, 2, 1);
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, i);

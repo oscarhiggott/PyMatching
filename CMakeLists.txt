@@ -22,7 +22,24 @@ if(NOT stim_POPULATED)
     add_subdirectory(${stim_SOURCE_DIR})
 endif()
 
-add_executable(PyMatching2 main.cc)
+add_executable(
+        PyMatching2
+        main.cc
+        events.cc
+        graph.cc
+        compressed_edge.cc
+        alternating_tree.cc
+        graph_fill_region.cc
+        region_edge.cc
+        graph_flooder.cc
+        mwpm.cc
+        stim_io.cc
+        )
+
+target_link_libraries(
+        PyMatching2
+        libstim
+)
 
 enable_testing()
 

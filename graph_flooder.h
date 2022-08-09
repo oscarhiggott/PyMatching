@@ -20,10 +20,10 @@ namespace pm{
 
     class GraphFlooder {
     public:
-        Graph graph;
+        MatchingGraph graph;
         std::priority_queue<TentativeEvent*, std::vector<TentativeEvent*>, Compare> queue;
         time_int time;
-        explicit GraphFlooder(Graph& graph);
+        explicit GraphFlooder(MatchingGraph& graph);
         GraphFlooder(GraphFlooder&&) noexcept;
         void create_region(DetectorNode* node);
         MwpmEvent next_event();

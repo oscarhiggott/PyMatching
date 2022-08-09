@@ -4,7 +4,7 @@
 #include "varying.h"
 
 
-pm::GraphFlooder::GraphFlooder(pm::Graph &graph) : graph(std::move(graph)), time(0) {};
+pm::GraphFlooder::GraphFlooder(pm::MatchingGraph &graph) : graph(std::move(graph)), time(0) {};
 
 void pm::GraphFlooder::create_region(DetectorNode *node) {
     auto region = new GraphFillRegion();

@@ -5,7 +5,7 @@
 
 namespace pm {
 
-    void Graph::add_edge(size_t u, size_t v, weight_int weight, obs_int observables) {
+    void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, obs_int observables) {
         size_t larger_node = std::max(u, v);
         if (larger_node + 1 > nodes.size()) {
             throw std::invalid_argument("Node " + std::to_string(larger_node) + " exceeds number of nodes "
@@ -24,7 +24,7 @@ namespace pm {
         nodes[v].neighbor_schedules.push_back(nullptr);
     }
 
-    void Graph::add_boundary_edge(size_t u, weight_int weight, obs_int observables) {
+    void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, obs_int observables) {
         if (u > nodes.size() - 1) {
             throw std::invalid_argument("Node " + std::to_string(u) + " exceeds number of nodes "
                           "in graph (" + std::to_string(num_nodes) + ")");
@@ -35,11 +35,13 @@ namespace pm {
         nodes[u].neighbor_schedules.push_back(nullptr);
     }
 
-    Graph::Graph(size_t num_nodes) : num_nodes(num_nodes) {
+    MatchingGraph::MatchingGraph(size_t num_nodes) : num_nodes(num_nodes) {
         nodes.resize(num_nodes);
     }
 
-    Graph::Graph(Graph &&graph)  noexcept : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {}
+    MatchingGraph::MatchingGraph(MatchingGraph &&graph)  noexcept : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {}
+
+    MatchingGraph::MatchingGraph() : num_nodes(0) {}
 
     void DetectorNode::invalidate_involved_schedule_items() {
         for (auto & neighbor_schedule : neighbor_schedules) {
