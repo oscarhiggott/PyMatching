@@ -76,10 +76,11 @@ pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_buc
             double normed_weight = std::log((1-neighbor.probability)/neighbor.probability) / max_weight;
             pm::weight_int w = num_buckets * normed_weight;
             if (!neighbor.node){
-                matching_graph.add_boundary_edge(i, w, neighbor.obs_mask);
+                matching_graph.add_boundary_edge(i, w * 2, neighbor.obs_mask);
             } else {
                 auto j = neighbor.node - &nodes[0];
-                matching_graph.add_edge(i, j, w, neighbor.obs_mask);
+                if (j > i)
+                    matching_graph.add_edge(i, j, w * 2, neighbor.obs_mask);
             }
         }
     }
@@ -87,7 +88,7 @@ pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_buc
 }
 
 
-pm::MatchingGraph pm::detector_error_model_to_matching_graph(stim::DetectorErrorModel& detector_error_model,
+pm::MatchingGraph pm::detector_error_model_to_matching_graph(const stim::DetectorErrorModel& detector_error_model,
                                                              pm::weight_int num_buckets) {
     pm::ProbabilityGraph probability_graph(detector_error_model.count_detectors());
     detector_error_model.iter_flatten_error_instructions(
@@ -101,12 +102,17 @@ pm::MatchingGraph pm::detector_error_model_to_matching_graph(stim::DetectorError
                     } else if (target.is_observable_id()) {
                         obs_mask ^= 1 << target.val();
                     } else if (target.is_separator()) {
-                        probability_graph.handle_dem_instruction(p, dets, obs_mask);
-                        obs_mask = 0;
-                        dets.clear();
+                        if (p > 0) {
+                            probability_graph.handle_dem_instruction(p, dets, obs_mask);
+                            obs_mask = 0;
+                            dets.clear();
+                        }
+
                     }
                 }
-                probability_graph.handle_dem_instruction(p, dets, obs_mask);
+                if (p > 0){
+                    probability_graph.handle_dem_instruction(p, dets, obs_mask);
+                }
             }
             );
 

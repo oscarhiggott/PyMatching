@@ -245,8 +245,11 @@ pm::MwpmEvent pm::GraphFlooder::next_event() {
     while (!queue.empty()){
         auto tentative_event = queue.top();
         queue.pop();
-        if (tentative_event->is_invalidated)
+        if (tentative_event->is_invalidated){
+            delete tentative_event;
             continue;
+        }
+
         tentative_event->invalidate();
 
         time = tentative_event->time;
@@ -263,6 +266,7 @@ pm::MwpmEvent pm::GraphFlooder::next_event() {
                 current_event = do_region_shrinking(tentative_event->region_shrink_event_data);
                 break;
         }
+        delete tentative_event;
         if (current_event.event_type != NO_EVENT)
             return current_event;
     }

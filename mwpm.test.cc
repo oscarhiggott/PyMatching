@@ -96,11 +96,15 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
             mwpm.flooder.graph.nodes[2].region_that_arrived,
             {&mwpm.flooder.graph.nodes[0], &mwpm.flooder.graph.nodes[2], 5}
             ));
+    ASSERT_EQ(ns[0].region_that_arrived->blossom_parent, nullptr);
+    // Form blossom {0, 1, 4, 3, 2}
     mwpm.process_event(e5);
-    // Region 5 matches with blossom containing {0, 1, 4, 3, 2}
+    ASSERT_NE(ns[0].region_that_arrived->blossom_parent, nullptr);
+    auto blossom = ns[0].region_that_arrived->blossom_parent;
+    // Region 5 matches with blossom {0, 1, 4, 3, 2}
     auto e6 = mwpm.flooder.next_event();
     mwpm.process_event(e6);
-    auto blossom = mwpm.flooder.graph.nodes[5].region_that_arrived->match.region;
+    ASSERT_EQ(mwpm.flooder.graph.nodes[5].region_that_arrived->match.region, blossom);
     ASSERT_EQ(blossom->blossom_children.size(), 5);
     std::vector<pm::RegionEdge> expected_blossom_children = {
             {ns[2].region_that_arrived, {&ns[2], &ns[3], 4}},
@@ -110,6 +114,9 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
             {ns[0].region_that_arrived, {&ns[0], &ns[2], 5}},
     };
     ASSERT_EQ(blossom->blossom_children, expected_blossom_children);
+    for (auto& c : blossom->blossom_children) {
+        ASSERT_TRUE(c.region->alt_tree_node == nullptr);
+    }
     ASSERT_EQ(blossom->radius, pm::Varying(8 << 2));
     ASSERT_EQ(mwpm.flooder.time, 25);
     // Region 6 collides with matched blossom

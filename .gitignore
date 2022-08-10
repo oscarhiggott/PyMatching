@@ -7,3 +7,5 @@ PyMatching2.cbp
 Testing/
 _deps/
 *.cmake
+ENV
+circuits

@@ -9,11 +9,11 @@
 //auto reader = stim::MeasureRecordReader::make(nullptr, /*stim::format_name_to_enum_map*/ stim::SAMPLE_FORMAT_B8, 0 ,0, 0);
 //stim::SparseShot sparse_shot;
 //reader->start_and_read_entire_record(sparse_shot);
-////        stim::find_argument()
+//        stim::find_argument()
 
 namespace pm {
-    pm::MatchingGraph detector_error_model_to_matching_graph(stim::DetectorErrorModel &detector_error_model,
-                                                             pm::weight_int num_buckets = 1000);
+    pm::MatchingGraph detector_error_model_to_matching_graph(const stim::DetectorErrorModel &detector_error_model,
+                                                             pm::weight_int num_buckets);
 
     struct Neighbor {
         std::vector<Neighbor> *node;

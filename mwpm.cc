@@ -11,6 +11,9 @@ pm::Mwpm::Mwpm(pm::GraphFlooder& flooder) : flooder(std::move(flooder)) {}
 
 
 void pm::Mwpm::shatter_descendants_into_matches_and_freeze(pm::AltTreeNode &alt_tree_node) {
+    for (auto& child_edge : alt_tree_node.children) {
+        shatter_descendants_into_matches_and_freeze(*child_edge.alt_tree_node);
+    }
     if (alt_tree_node.inner_region) {
         alt_tree_node.parent = pm::AltTreeEdge();
         alt_tree_node.inner_region->add_match(
@@ -20,9 +23,6 @@ void pm::Mwpm::shatter_descendants_into_matches_and_freeze(pm::AltTreeNode &alt_
         flooder.set_region_frozen(*alt_tree_node.outer_region);
         alt_tree_node.inner_region->alt_tree_node = nullptr;
         alt_tree_node.outer_region->alt_tree_node = nullptr;
-    }
-    for (auto& child_edge : alt_tree_node.children) {
-        shatter_descendants_into_matches_and_freeze(*child_edge.alt_tree_node);
     }
     delete &alt_tree_node;
 }
@@ -99,6 +99,7 @@ void pm::Mwpm::handle_tree_hitting_self(const pm::RegionHitRegionEventData &even
     blossom_cycle.emplace_back(
             event.region1, event.edge
     );
+    common_ancestor->outer_region->alt_tree_node = nullptr;
     auto blossom_region = flooder.create_blossom(blossom_cycle);
 
     common_ancestor->outer_region = blossom_region;
@@ -124,7 +125,8 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
     for (size_t i = 0; i < bsize; i++) {
         if (blossom_cycle[i].region == event.in_parent_region){
             parent_idx = i;
-        } else if (blossom_cycle[i].region == event.in_child_region) {
+        }
+        if (blossom_cycle[i].region == event.in_child_region) {
             child_idx = i;
         }
     }
@@ -147,15 +149,16 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
         evens_start = child_idx + 1;
         evens_end = child_idx + bsize - gap;
 
+        // TODO: Add more tests covering this loop
         // Now insert odd-length path starting on in_parent and ending on in_child into alternating tree
         for (size_t i = parent_idx; i < parent_idx + gap; i += 2) {
             current_alt_node = current_alt_node->make_child(
-                    blossom_cycle[i].region,
-                    blossom_cycle[i+1].region,
-                    blossom_cycle[i].edge,
+                    blossom_cycle[i%bsize].region,
+                    blossom_cycle[(i+1)%bsize].region,
+                    blossom_cycle[i%bsize].edge,
                     child_edge
                     );
-            child_edge = blossom_cycle[i+1].edge;
+            child_edge = blossom_cycle[(i+1)%bsize].edge;
             flooder.set_region_shrinking(*current_alt_node->inner_region);
             flooder.set_region_growing(*current_alt_node->outer_region);
         }
@@ -252,11 +255,6 @@ void pm::Mwpm::process_event(const pm::MwpmEvent &event) {
     } else {
         handle_blossom_shattering(event.blossom_shatter_event_data);
     }
-}
-
-
-pm::MatchingResult pm::Mwpm::extract_matching_and_reset_graph() {
-    return pm::MatchingResult();
 }
 
 pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRegion* region) {

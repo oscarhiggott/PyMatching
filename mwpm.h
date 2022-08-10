@@ -25,7 +25,6 @@ namespace pm {
         GraphFlooder flooder;
         // detection_events can go, instead stored locally in decoding method
         std::vector<DetectorNode*> detection_events;
-        void add_detection_event(int detector_node_id);
         void process_event(const MwpmEvent& event);
         explicit Mwpm(GraphFlooder& flooder);
         void handle_blossom_shattering(const BlossomShatterEventData& event);
@@ -44,7 +43,6 @@ namespace pm {
         void handle_tree_hitting_self(const RegionHitRegionEventData& event, AltTreeNode* common_ancestor);
         void handle_tree_hitting_other_tree(const RegionHitRegionEventData& event);
         MatchingResult shatter_blossom_and_extract_matches(GraphFillRegion* region);
-        MatchingResult extract_matching_and_reset_graph();
     };
 }
 

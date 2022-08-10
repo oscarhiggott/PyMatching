@@ -34,6 +34,7 @@ add_executable(
         graph_flooder.cc
         mwpm.cc
         stim_io.cc
+        mwpm_decoding.cc
         )
 
 target_link_libraries(
@@ -64,6 +65,7 @@ add_executable(
         mwpm.test.cc
         stim_io.cc
         stim_io.test.cc
+        mwpm_decoding.cc
 )
 target_link_libraries(
         pymatching_tests
