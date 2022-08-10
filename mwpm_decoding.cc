@@ -21,7 +21,6 @@ pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector
     }
     pm::MatchingResult res;
     for (auto& i : detection_events) {
-
         if (mwpm.flooder.graph.nodes[i].region_that_arrived)
             res += mwpm.shatter_blossom_and_extract_matches(
                     mwpm.flooder.graph.nodes[i].top_region()
