@@ -11,7 +11,7 @@
 
 int main(int argc, char * argv[]) {
     if (argc < 4){
-        std::cout << "Too few arguments" << std::endl;
+        std::cout << "Not enough arguments" << std::endl;
         return 1;
     }
     auto f_dem = std::fopen(argv[1], "r");
@@ -31,7 +31,7 @@ int main(int argc, char * argv[]) {
                                                   0,
                                                   dem.count_detectors(),
                                                   dem.count_observables());
-    pm::weight_int num_buckets = 10000;
+    pm::weight_int num_buckets = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     stim::SparseShot sparse_shot;
