@@ -69,7 +69,7 @@ namespace pm {
     }
 
     bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
-        if ((!region_that_arrived) != (!other.region_that_arrived))
+        if ((region_that_arrived == nullptr) != (other.region_that_arrived == nullptr))
             return false;
         if (region_that_arrived == other.region_that_arrived)
             return true;

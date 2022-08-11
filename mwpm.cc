@@ -343,9 +343,10 @@ pm::MatchingResult &pm::MatchingResult::operator+=(const pm::MatchingResult &rhs
     return *this;
 }
 
-pm::MatchingResult pm::operator+(pm::MatchingResult lhs, const pm::MatchingResult &rhs) {
-    lhs += rhs;
-    return lhs;
+pm::MatchingResult pm::MatchingResult::operator+(const pm::MatchingResult &rhs) const {
+    pm::MatchingResult copy = *this;
+    copy += rhs;
+    return copy;
 }
 
 pm::MatchingResult::MatchingResult() : obs_mask(0), weight(0) {}

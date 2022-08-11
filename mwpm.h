@@ -17,7 +17,7 @@ namespace pm {
         MatchingResult(obs_int obs_mask, time_int weight);
 
         MatchingResult& operator+=(const MatchingResult& rhs);
-        friend MatchingResult operator+(MatchingResult lhs, const MatchingResult& rhs);
+        MatchingResult operator+(const MatchingResult& rhs) const;
     };
 
     class Mwpm {

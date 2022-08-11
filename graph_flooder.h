@@ -20,9 +20,24 @@ namespace pm{
 
     class GraphFlooder {
     public:
+        /// The graph of detector nodes that is being flooded.
         MatchingGraph graph;
+        /// Tracks the next thing that will occur as flooding proceeds.
+        /// The events are "tentative" because processing an event may remove another,
+        /// for example if a region stops growing due to colliding with another region
+        /// then the growing region will no longer reach other nodes even if those
+        /// events were scheduled in this queue before the region collision was processed.
+        ///
+        /// Events are ordered by time; by when they will occur in a timeline.
         std::priority_queue<TentativeEvent*, std::vector<TentativeEvent*>, Compare> queue;
+        /// Tracks where the flooder is in the timeline of events to process.
+        ///
+        /// As time advances, regions grow and shrink and collide and change.
+        /// Because regions grow at a finite rate, collisions and other events
+        /// occur at specific times. This allows them to be processed in the
+        /// correct order.
         time_int time;
+
         explicit GraphFlooder(MatchingGraph& graph);
         GraphFlooder(GraphFlooder&&) noexcept;
         void create_region(DetectorNode* node);
@@ -50,7 +65,7 @@ namespace pm{
         static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
         static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
 
-//        // Put in class called bucket queue. Template with number of buckets. Switch to heapq if number of buckets is big.
+//        // TODO: Put in class called bucket queue. Template with number of buckets. Switch to heapq if number of buckets is big.
 //        // Use standard library heap
 //        std::vector<TentativeEvent*> bucket_queue[MAX_TIME];
     };

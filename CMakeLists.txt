@@ -13,7 +13,6 @@ FetchContent_Declare(
         GIT_TAG release-1.12.1
 )
 
-
 FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(stim
@@ -28,6 +27,7 @@ endif()
 add_executable(
         PyMatching2
         main.cc
+        namespaced_main.cc
         events.cc
         graph.cc
         compressed_edge.cc
@@ -40,6 +40,13 @@ add_executable(
         mwpm_decoding.cc
         )
 
+target_compile_options(PyMatching2 PRIVATE -O3)
+target_link_options(
+        PyMatching2
+        PRIVATE
+        -pthread
+        -O3
+)
 target_link_libraries(
         PyMatching2
         libstim
@@ -52,6 +59,8 @@ add_executable(
         varying.test.cc
         events.cc
         events.test.cc
+        namespaced_main.cc
+        namespaced_main.test.cc
         graph.test.cc
         graph.cc
         fixed_length_vector.test.cc
@@ -69,6 +78,11 @@ add_executable(
         stim_io.cc
         stim_io.test.cc
         mwpm_decoding.cc
+)
+target_link_options(
+        pymatching_tests
+        PRIVATE
+        -pthread
 )
 target_link_libraries(
         pymatching_tests

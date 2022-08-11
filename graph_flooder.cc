@@ -4,7 +4,7 @@
 #include "varying.h"
 
 
-pm::GraphFlooder::GraphFlooder(pm::MatchingGraph &graph) : graph(std::move(graph)), time(0) {};
+pm::GraphFlooder::GraphFlooder(pm::MatchingGraph &graph) : graph(std::move(graph)), time(0) {}
 
 void pm::GraphFlooder::create_region(DetectorNode *node) {
     auto region = new GraphFillRegion();
@@ -130,9 +130,7 @@ pm::MwpmEvent pm::GraphFlooder::do_region_shrinking(const pm::TentativeRegionShr
         leaving_node->observables_crossed_from_source = 0;
         reschedule_events_at_detector_node(*leaving_node);
         schedule_tentative_shrink_event(*event.region);
-        MwpmEvent mwpm_event;
-        mwpm_event.event_type = NO_EVENT;
-        return mwpm_event;
+        return MwpmEvent::no_event();
     }
 }
 
@@ -145,9 +143,7 @@ pm::MwpmEvent pm::GraphFlooder::do_neighbor_interaction(const pm::TentativeNeigh
                 *event.detector_node_1,
                 event.node_1_neighbor_index
                 );
-        MwpmEvent e;
-        e.event_type = NO_EVENT;
-        return e;
+        return MwpmEvent::no_event();
     } else if (event.detector_node_2->region_that_arrived && !event.detector_node_1->region_that_arrived) {
         do_region_arriving_at_empty_detector_node(
                 *event.detector_node_2->top_region(),
@@ -155,12 +151,10 @@ pm::MwpmEvent pm::GraphFlooder::do_neighbor_interaction(const pm::TentativeNeigh
                 *event.detector_node_2,
                 event.node_2_neighbor_index
                 );
-        MwpmEvent e;
-        e.event_type = NO_EVENT;
-        return e;
+        return MwpmEvent::no_event();
     } else {
         // Two regions colliding
-        return {
+        return RegionHitRegionEventData{
                 event.detector_node_1->top_region(),
                 event.detector_node_2->top_region(),
                 CompressedEdge(
@@ -169,14 +163,14 @@ pm::MwpmEvent pm::GraphFlooder::do_neighbor_interaction(const pm::TentativeNeigh
                         event.detector_node_1->observables_crossed_from_source
                         ^ event.detector_node_2->observables_crossed_from_source
                         ^ event.detector_node_1->neighbor_observables[event.node_1_neighbor_index]
-                        )
-                };
+                ),
+        };
     }
 }
 
 pm::MwpmEvent
 pm::GraphFlooder::do_region_hit_boundary_interaction(const pm::TentativeNeighborInteractionEventData &event) {
-    return {
+    return pm::RegionHitBoundaryEventData{
         event.detector_node_1->top_region(),
         CompressedEdge(
                 event.detector_node_1->reached_from_source,
@@ -188,15 +182,15 @@ pm::GraphFlooder::do_region_hit_boundary_interaction(const pm::TentativeNeighbor
 }
 
 pm::MwpmEvent pm::GraphFlooder::do_degenerate_implosion(const pm::GraphFillRegion &region) {
-    return {
+    return pm::RegionHitRegionEventData{
         region.alt_tree_node->parent.alt_tree_node->outer_region,
         region.alt_tree_node->outer_region,
         pm::CompressedEdge(
-                region.alt_tree_node->parent.edge.loc_to,
-                region.alt_tree_node->inner_to_outer_edge.loc_to,
-                region.alt_tree_node->inner_to_outer_edge.obs_mask
-                    ^ region.alt_tree_node->parent.edge.obs_mask
-                )
+            region.alt_tree_node->parent.edge.loc_to,
+            region.alt_tree_node->inner_to_outer_edge.loc_to,
+            region.alt_tree_node->inner_to_outer_edge.obs_mask
+                ^ region.alt_tree_node->parent.edge.obs_mask
+        )
     };
 }
 
@@ -204,7 +198,7 @@ pm::MwpmEvent pm::GraphFlooder::do_blossom_shattering(pm::GraphFillRegion &regio
     for (auto& child : region.blossom_children)
         child.region->blossom_parent = nullptr;
 
-    return {
+    return pm::BlossomShatterEventData{
         &region,
         region.alt_tree_node->parent.edge.loc_from->top_region(),
         region.alt_tree_node->inner_to_outer_edge.loc_from->top_region()
@@ -241,37 +235,37 @@ void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
 }
 
 pm::MwpmEvent pm::GraphFlooder::next_event() {
-    MwpmEvent current_event;
     while (!queue.empty()){
-        auto tentative_event = queue.top();
+        TentativeEvent tentative_event = *queue.top();
+        delete queue.top();
         queue.pop();
-        if (tentative_event->is_invalidated){
-            delete tentative_event;
+        if (tentative_event.is_invalidated){
             continue;
         }
 
-        tentative_event->invalidate();
+        tentative_event.invalidate();
 
-        time = tentative_event->time;
-        switch (tentative_event->tentative_event_type) {
+        time = tentative_event.time;
+        MwpmEvent current_event;
+        switch (tentative_event.tentative_event_type) {
             case INTERACTION:
-                if (tentative_event->neighbor_interaction_event_data.detector_node_2){
-                    current_event = do_neighbor_interaction(tentative_event->neighbor_interaction_event_data);
+                if (tentative_event.neighbor_interaction_event_data.detector_node_2){
+                    current_event = do_neighbor_interaction(tentative_event.neighbor_interaction_event_data);
                 } else {
                     current_event = do_region_hit_boundary_interaction(
-                            tentative_event->neighbor_interaction_event_data);
+                            tentative_event.neighbor_interaction_event_data);
                 }
                 break;
             case SHRINKING:
-                current_event = do_region_shrinking(tentative_event->region_shrink_event_data);
+                current_event = do_region_shrinking(tentative_event.region_shrink_event_data);
                 break;
+            default:
+                throw std::invalid_argument("Unknown tentative event type.");
         }
-        delete tentative_event;
         if (current_event.event_type != NO_EVENT)
             return current_event;
     }
-    current_event.event_type = NO_EVENT;
-    return current_event;
+    return MwpmEvent::no_event();
 }
 
 pm::GraphFlooder::GraphFlooder(pm::GraphFlooder && flooder)  noexcept : graph(std::move(flooder.graph)),

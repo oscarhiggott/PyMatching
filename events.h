@@ -120,16 +120,17 @@ namespace pm{
             BlossomShatterEventData blossom_shatter_event_data;
         };
         MwpmEventType event_type;
-        MwpmEvent() = default;
-        MwpmEvent(GraphFillRegion* region1, GraphFillRegion* region2, CompressedEdge edge);
+
+        MwpmEvent();
+        MwpmEvent(RegionHitRegionEventData region_hit_region_event_data); // NOLINT(google-explicit-constructor)
+        MwpmEvent(RegionHitBoundaryEventData region_hit_boundary_event_data); // NOLINT(google-explicit-constructor)
+        MwpmEvent(BlossomShatterEventData blossom_shatter_event_data); // NOLINT(google-explicit-constructor)
+        inline static MwpmEvent no_event() {
+            return {};
+        }
 
         bool operator==(const MwpmEvent &rhs) const;
-
         bool operator!=(const MwpmEvent &rhs) const;
-
-        MwpmEvent(GraphFillRegion* region, CompressedEdge edge);
-        MwpmEvent(GraphFillRegion* blossom_region, GraphFillRegion* in_parent_region,
-                  GraphFillRegion* in_child_region);
     };
 
     inline bool pm::TentativeEvent::operator<(const pm::TentativeEvent &rhs) const {

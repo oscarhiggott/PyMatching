@@ -68,6 +68,8 @@ bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
             return region_shrink_event_data == rhs.region_shrink_event_data;
         case INTERACTION:
             return neighbor_interaction_event_data == rhs.neighbor_interaction_event_data;
+        default:
+            throw std::invalid_argument("Unrecognized event type");
     }
 }
 
@@ -120,15 +122,20 @@ bool pm::BlossomShatterEventData::operator!=(const pm::BlossomShatterEventData &
     return !(rhs == *this);
 }
 
-pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *region1, pm::GraphFillRegion *region2, pm::CompressedEdge edge)
-    : region_hit_region_event_data(region1, region2, edge), event_type(REGION_HIT_REGION) {}
-
-pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *region, pm::CompressedEdge edge)
-    :  region_hit_boundary_event_data(region, edge), event_type(REGION_HIT_BOUNDARY) {}
-
-pm::MwpmEvent::MwpmEvent(pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region,
-                         pm::GraphFillRegion *in_child_region)
-     : blossom_shatter_event_data(blossom_region, in_parent_region, in_child_region), event_type(BLOSSOM_SHATTER){}
+pm::MwpmEvent::MwpmEvent(pm::RegionHitRegionEventData region_hit_region_event_data)
+    : region_hit_region_event_data(region_hit_region_event_data),
+      event_type(pm::REGION_HIT_REGION) {
+}
+pm::MwpmEvent::MwpmEvent(pm::RegionHitBoundaryEventData region_hit_region_event_data)
+    : region_hit_boundary_event_data(region_hit_region_event_data),
+      event_type(pm::REGION_HIT_BOUNDARY) {
+}
+pm::MwpmEvent::MwpmEvent(pm::BlossomShatterEventData region_hit_region_event_data)
+    : blossom_shatter_event_data(region_hit_region_event_data),
+      event_type(pm::BLOSSOM_SHATTER) {
+}
+pm::MwpmEvent::MwpmEvent() : event_type(NO_EVENT) {
+}
 
 bool pm::MwpmEvent::operator==(const pm::MwpmEvent &rhs) const {
     if (event_type != rhs.event_type)
@@ -142,12 +149,9 @@ bool pm::MwpmEvent::operator==(const pm::MwpmEvent &rhs) const {
             return region_hit_boundary_event_data == rhs.region_hit_boundary_event_data;
         case BLOSSOM_SHATTER:
             return blossom_shatter_event_data == rhs.blossom_shatter_event_data;
+        default:
+            throw std::invalid_argument("Unrecognized event type");
     }
-
-    return region_hit_region_event_data == rhs.region_hit_region_event_data &&
-           region_hit_boundary_event_data == rhs.region_hit_boundary_event_data &&
-           blossom_shatter_event_data == rhs.blossom_shatter_event_data &&
-           event_type == rhs.event_type;
 }
 
 bool pm::MwpmEvent::operator!=(const pm::MwpmEvent &rhs) const {

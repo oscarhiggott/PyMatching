@@ -5,16 +5,29 @@
 
 namespace pm {
 
-
+    /// A compressed edge is a summary of a path between two detection events.
+    /// Specifically, it tracks which observables the path has crossed.
+    ///
+    /// The matching algorithm tracks compressed edges, instead of entire
+    /// paths, because this is more space efficient and more time efficient
+    /// and because the full path information is not actually needed in order
+    /// to predict whether or not observables were flipped (which is the
+    /// minimalist goal of the decoder). (When full path information is
+    /// requested, it can be reconstructed from the compressed edges
+    /// after matching has finished by using Dijkstra's algorithm.)
     struct CompressedEdge{
+        /// The detection event where the path starts.
         DetectorNode* loc_from;
+        /// The detection event where the path ends.
         DetectorNode* loc_to;
+        /// A bit mask of which observables were crossed an odd number of
+        /// times by the path. The bit 1<<K is set if the K'th observable
+        /// was crossed an odd number of times.
         obs_int obs_mask;
 
         CompressedEdge reversed() const;
 
         bool operator==(const CompressedEdge &rhs) const;
-
         bool operator!=(const CompressedEdge &rhs) const;
 
         CompressedEdge merged_with(const CompressedEdge& other) const;

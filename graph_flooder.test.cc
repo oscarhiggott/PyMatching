@@ -114,7 +114,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary){
     pm::GraphFlooder flooder(g);
     flooder.create_region(&flooder.graph.nodes[2]);
     auto e1 = flooder.next_event();
-    auto e1_exp = pm::MwpmEvent(
+    pm::MwpmEvent e1_exp = pm::RegionHitBoundaryEventData(
             flooder.graph.nodes[2].region_that_arrived,
             pm::CompressedEdge(&flooder.graph.nodes[2], nullptr, 6)
     );
@@ -129,8 +129,8 @@ TEST(GraphFlooder, RegionGrowingToBoundary){
                       )
               );
     auto e2 = flooder.next_event();
-    auto e2_exp = pm::MwpmEvent(
-            flooder.graph. nodes[2].region_that_arrived,
+    pm::MwpmEvent e2_exp = pm::RegionHitBoundaryEventData(
+            flooder.graph.nodes[2].region_that_arrived,
             pm::CompressedEdge(&flooder.graph.nodes[2], nullptr, 10)
     );
     ASSERT_EQ(
@@ -155,7 +155,7 @@ TEST(GraphFlooder, RegionHitRegion) {
     flooder.create_region(&flooder.graph.nodes[4]);
     auto e1 = flooder.next_event();
     ASSERT_EQ(flooder.time, 32);
-    auto e1_exp = pm::MwpmEvent(
+    pm::MwpmEvent e1_exp = pm::RegionHitRegionEventData(
             flooder.graph.nodes[4].region_that_arrived,
             flooder.graph.nodes[2].region_that_arrived,
             pm::CompressedEdge(
@@ -181,7 +181,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     auto e1 = flooder.next_event();
     ASSERT_EQ(
             e1,
-            pm::MwpmEvent(
+            pm::MwpmEvent(pm::RegionHitBoundaryEventData(
                     flooder.graph.nodes[2].region_that_arrived,
                     pm::CompressedEdge(
                             &flooder.graph.nodes[2],
@@ -189,7 +189,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
                             6
                             )
                     )
-              );
+              ));
     ASSERT_EQ(flooder.time, 36);
     flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);
     auto e2 = flooder.next_event();
@@ -223,7 +223,7 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[3]);
     auto e1 = mwpm.flooder.next_event();
-    auto e1_expected = pm::MwpmEvent(
+    pm::MwpmEvent e1_expected = pm::RegionHitRegionEventData(
             mwpm.flooder.graph.nodes[1].region_that_arrived,
             mwpm.flooder.graph.nodes[3].region_that_arrived,
             pm::CompressedEdge(
@@ -276,7 +276,7 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[6]);
     auto r6 = mwpm.flooder.graph.nodes[6].region_that_arrived;
     auto e1 = mwpm.flooder.next_event();
-    auto e1_expected = pm::MwpmEvent(
+    pm::MwpmEvent e1_expected = pm::RegionHitRegionEventData(
             r4,
             r1,
             pm::CompressedEdge(
@@ -288,7 +288,7 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
     auto e2 = mwpm.flooder.next_event();
-    auto e2_expected = pm::MwpmEvent(
+    pm::MwpmEvent e2_expected = pm::RegionHitRegionEventData(
             r4,
             r5,
             pm::CompressedEdge(
@@ -301,7 +301,7 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
     ASSERT_EQ(mwpm.flooder.time, 12);
     mwpm.process_event(e2);
     auto e3 = mwpm.flooder.next_event();
-    auto e3_expected = pm::MwpmEvent(
+    pm::MwpmEvent e3_expected = pm::RegionHitRegionEventData(
             r6,
             r5,
             pm::CompressedEdge(

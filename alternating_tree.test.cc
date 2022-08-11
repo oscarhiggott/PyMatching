@@ -22,6 +22,12 @@ struct AltTreeTestData {
 
 pm::AltTreeEdge
 AltTreeTestData::t(std::vector<pm::AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root) {
+    if (inner_region_id != SIZE_MAX && inner_region_id >= nodes.size()) {
+        throw std::invalid_argument("inner_region_id=" + std::to_string(inner_region_id) + " >= nodes.size()=" + std::to_string(nodes.size()));
+    }
+    if (outer_region_id != SIZE_MAX && outer_region_id >= nodes.size()) {
+        throw std::invalid_argument("outer_region_id=" + std::to_string(outer_region_id) + " >= nodes.size()=" + std::to_string(nodes.size()));
+    }
     pm::AltTreeNode* node;
     pm::CompressedEdge parent_ce(nullptr, nullptr, 0);
     if (root) {
@@ -168,7 +174,7 @@ TEST(AlternatingTree, TreeEqual) {
 
 
 TEST(AlternatingTree, BecomeRoot) {
-    AltTreeTestData d(10);
+    AltTreeTestData d(30);
     auto y1 = d.t(
             {d.t({}, 1, 2)},
             -1,
