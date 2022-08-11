@@ -111,5 +111,5 @@ TEST(Main, count_mistakes){
 shot D0 L0
 shot D1 L2
 shot D0 D1 L1)stdin");
-    ASSERT_EQ(stdout, "1 / 4");
+    ASSERT_TRUE((stdout.compare("1 / 4") == 0) || (stdout.compare("1 / 4\n") == 0) );
 }
