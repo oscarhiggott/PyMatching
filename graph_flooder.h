@@ -64,10 +64,6 @@ namespace pm{
         static MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
         static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
         static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
-
-//        // TODO: Put in class called bucket queue. Template with number of buckets. Switch to heapq if number of buckets is big.
-//        // Use standard library heap
-//        std::vector<TentativeEvent*> bucket_queue[MAX_TIME];
     };
 
 }

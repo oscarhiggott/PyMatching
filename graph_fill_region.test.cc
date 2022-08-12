@@ -4,8 +4,15 @@
 #include "graph_fill_region.test.h"
 
 
+void pm::delete_graph_fill_region(pm::GraphFillRegion* region) {
+    for (auto& child : region->blossom_children)
+        delete_graph_fill_region(child.region);
+    delete region;
+}
+
+
 TEST(GraphFillRegion, BlossomBuilder) {
-    GraphFillTestData x(4);
+    pm::GraphFillTestData x(4);
 
     auto t1 = x.b(-1, -1, {
         x.b(1, 2, {}, false), x.b(2, 3, {}, false), x.b(3, 1, {}, false)
@@ -14,11 +21,13 @@ TEST(GraphFillRegion, BlossomBuilder) {
             x.b(1, 2, {}, false), x.b(2, 3, {}, false), x.b(3, 1, {}, false)
     }, true);
     ASSERT_EQ(*t1.region, *t2.region);
+    pm::delete_graph_fill_region(t1.region);
+    pm::delete_graph_fill_region(t2.region);
 }
 
 
 TEST(GraphFillRegion, TopRegion) {
-    GraphFillTestData x(10);
+    pm::GraphFillTestData x(10);
     auto t = x.b(-1, -1, {
         x.b(0, 1, {}, false),
         x.b(1, 2, {}, false),
@@ -31,6 +40,7 @@ TEST(GraphFillRegion, TopRegion) {
 
     ASSERT_EQ(t.region, t.region->blossom_children[2].region->blossom_children[0].region->top_region());
     ASSERT_EQ(t.region, t.region->blossom_children[1].region->top_region());
+    pm::delete_graph_fill_region(t.region);
 }
 
 

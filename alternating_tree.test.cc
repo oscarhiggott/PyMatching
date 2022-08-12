@@ -86,7 +86,7 @@ pm::AltTreeEdge example_tree_four_children(AltTreeTestData& d) {
 
 
 void delete_alternating_tree(pm::AltTreeNode* root) {
-    for (auto child: root->children) {
+    for (auto& child: root->children) {
         delete_alternating_tree(child.alt_tree_node);
     }
     delete root;
@@ -187,6 +187,8 @@ TEST(AlternatingTree, BecomeRoot) {
     auto v = y1.alt_tree_node->children[0].alt_tree_node;
     v->become_root();
     ASSERT_EQ(*v, *y2.alt_tree_node);
+    delete_alternating_tree(v);
+    delete_alternating_tree(y2.alt_tree_node);
 
     auto x1 = d.t(
             {
@@ -216,6 +218,8 @@ TEST(AlternatingTree, BecomeRoot) {
     auto c = x1.alt_tree_node->children[0].alt_tree_node->children[2].alt_tree_node;
     c->become_root();
     ASSERT_EQ(*c, *x2.alt_tree_node);
+    delete_alternating_tree(c);
+    delete_alternating_tree(x2.alt_tree_node);
 }
 
 
@@ -245,6 +249,7 @@ TEST(AlternatingTree, CommonAncestor) {
     ASSERT_FALSE(t.alt_tree_node->children[0].alt_tree_node->visited);
     ASSERT_FALSE(t.alt_tree_node->visited);
     ASSERT_TRUE(t.alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->children[0].alt_tree_node->visited);
+    delete_alternating_tree(t.alt_tree_node);
 
     auto t2 = d.t(
             {
@@ -266,6 +271,8 @@ TEST(AlternatingTree, CommonAncestor) {
     ASSERT_TRUE(t2.alt_tree_node->children[0].alt_tree_node->visited);
     ASSERT_TRUE(t3.alt_tree_node->visited);
     ASSERT_TRUE(t3.alt_tree_node->children[0].alt_tree_node->visited);
+    delete_alternating_tree(t2.alt_tree_node);
+    delete_alternating_tree(t3.alt_tree_node);
 }
 
 
@@ -307,6 +314,7 @@ TEST(AlternatingTree, PrunedUpwardPathStoppingBefore) {
     auto res = c02->prune_upward_path_stopping_before(tree.alt_tree_node, false);
     ASSERT_EQ(res.orphan_edges, orphans_expected);
     ASSERT_EQ(res.pruned_path_region_edges, pruned_region_edges_expected);
+    delete_alternating_tree(tree.alt_tree_node);
 }
 
 TEST(AlternatingTree, PrunedUpwardBackEdgePathStoppingBefore) {
@@ -347,4 +355,5 @@ TEST(AlternatingTree, PrunedUpwardBackEdgePathStoppingBefore) {
     auto res = c02->prune_upward_path_stopping_before(tree.alt_tree_node, true);
     ASSERT_EQ(res.orphan_edges, orphans_expected);
     ASSERT_EQ(res.pruned_path_region_edges, pruned_region_edges_expected);
+    delete_alternating_tree(tree.alt_tree_node);
 }

@@ -30,7 +30,7 @@ TEST(Graph, AddBoundaryEdge) {
 
 
 TEST(Graph, TotalRadius) {
-    GraphFillTestData d(10);
+    pm::GraphFillTestData d(10);
     auto x = d.b(-1, -1, {
         d.b(0, 1, {
             d.b(3, 4, {}, false),
