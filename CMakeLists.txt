@@ -25,7 +25,7 @@ if(NOT stim_POPULATED)
 endif()
 
 add_executable(
-        PyMatching2
+        pymatching
         main.cc
         namespaced_main.cc
         events.cc
@@ -40,15 +40,15 @@ add_executable(
         mwpm_decoding.cc
         )
 
-target_compile_options(PyMatching2 PRIVATE -O3)
+target_compile_options(pymatching PRIVATE -O3)
 target_link_options(
-        PyMatching2
+        pymatching
         PRIVATE
         -pthread
         -O3
 )
 target_link_libraries(
-        PyMatching2
+        pymatching
         libstim
 )
 
@@ -78,6 +78,7 @@ add_executable(
         stim_io.cc
         stim_io.test.cc
         mwpm_decoding.cc
+        mwpm_decoding.test.cc
 )
 target_link_options(
         pymatching_tests

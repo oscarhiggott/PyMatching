@@ -54,7 +54,7 @@ namespace pm {
         if (!reached_from_source)
             return pm::Varying32(0);
         auto curr_region = reached_from_source->region_that_arrived;
-        typeof(curr_region->radius.data) tot_rad = 0;
+        decltype(curr_region->radius.data) tot_rad = 0;
         while (curr_region->blossom_parent) {
             tot_rad += curr_region->radius.y_intercept();
             curr_region = curr_region->blossom_parent;
