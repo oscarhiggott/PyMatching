@@ -11,10 +11,15 @@
 namespace pm {
     typedef int32_t time_int;
 
+    /// A Varying is a value growing linearly with time.
+    /// The only allowed growth rates are +1, 0, or -1.
     template<typename T>
     class Varying {
     public:
+        /// Bit packed value with top 2 bits storing the slope of the line and
+        /// the remaining bits storing the Y intercept of the line.
         T data{};
+
         Varying();
         explicit Varying(T data);
         T get_distance_at_time(T time) const;

@@ -2,31 +2,16 @@
 
 
 pm::TentativeEvent::TentativeEvent(pm::DetectorNode *detector_node_1, size_t node_1_neighbor_index,
-                               pm::DetectorNode *detector_node_2, size_t node_2_neighbor_index, time_int time)
+                               pm::DetectorNode *detector_node_2, size_t node_2_neighbor_index, time_int time, uint32_t validation_index)
                                : neighbor_interaction_event_data(detector_node_1, node_1_neighbor_index,
                                                                  detector_node_2, node_2_neighbor_index),
-                               time(time), tentative_event_type(INTERACTION), is_invalidated(false){}
+                               time(time), tentative_event_type(INTERACTION), validation_index(validation_index){}
 
 
-pm::TentativeEvent::TentativeEvent(pm::GraphFillRegion* region, time_int time)
+pm::TentativeEvent::TentativeEvent(pm::GraphFillRegion* region, time_int time, uint32_t validation_index)
         : region_shrink_event_data(region),
-          time(time), tentative_event_type(SHRINKING), is_invalidated(false){}
+          time(time), tentative_event_type(SHRINKING), validation_index(validation_index){}
 
-
-void pm::TentativeEvent::invalidate() {
-    is_invalidated = true;
-    // Is resetting schedule pointers below needed?
-    if (tentative_event_type == INTERACTION) {
-        neighbor_interaction_event_data.detector_node_1
-            ->neighbor_schedules[neighbor_interaction_event_data.node_1_neighbor_index] = nullptr;
-        if (neighbor_interaction_event_data.detector_node_2){
-            neighbor_interaction_event_data.detector_node_2
-                ->neighbor_schedules[neighbor_interaction_event_data.node_2_neighbor_index] = nullptr;
-        }
-    } else if (tentative_event_type == SHRINKING) {
-        region_shrink_event_data.region->shrink_event = nullptr;
-    }
-}
 
 pm::TentativeNeighborInteractionEventData::TentativeNeighborInteractionEventData(pm::DetectorNode *detector_node_1,
                                                                                  size_t node_1_neighbor_index,
@@ -61,7 +46,7 @@ bool pm::TentativeRegionShrinkEventData::operator!=(const pm::TentativeRegionShr
 
 bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
     if (time != rhs.time || tentative_event_type != rhs.tentative_event_type ||
-        is_invalidated != rhs.is_invalidated)
+        validation_index != rhs.validation_index)
         return false;
     switch (tentative_event_type) {
         case SHRINKING:

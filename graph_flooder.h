@@ -10,11 +10,10 @@
 namespace pm{
 
 //    constexpr int MAX_TIME = 100000; // twice maximum edge weight
-
     class Compare{
     public:
-        bool operator() (TentativeEvent* a, TentativeEvent* b) {
-            return *a > *b;
+        inline bool operator() (TentativeEvent a, TentativeEvent b) {
+            return a > b;
         }
     };
 
@@ -29,7 +28,7 @@ namespace pm{
         /// events were scheduled in this queue before the region collision was processed.
         ///
         /// Events are ordered by time; by when they will occur in a timeline.
-        std::priority_queue<TentativeEvent*, std::vector<TentativeEvent*>, Compare> queue;
+        std::priority_queue<TentativeEvent, std::vector<TentativeEvent>, Compare> raw_queue;
         /// Tracks where the flooder is in the timeline of events to process.
         ///
         /// As time advances, regions grow and shrink and collide and change.
@@ -37,6 +36,7 @@ namespace pm{
         /// occur at specific times. This allows them to be processed in the
         /// correct order.
         time_int time;
+        size_t next_validation_index;
 
         explicit GraphFlooder(MatchingGraph& graph);
         GraphFlooder(GraphFlooder&&) noexcept;

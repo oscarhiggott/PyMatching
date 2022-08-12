@@ -46,7 +46,7 @@ namespace pm {
         pm::Varying32 radius;
         /// If the blossom is shrinking, this is the tentatively scheduled event corresponding to
         /// it shrinking so much that it shatters.
-        pm::TentativeEvent* shrink_event;
+        size_t shrink_event_validation;
         /// If the region is matched, as opposed to growing/shrinking, this says what it is matched to.
         pm::Match match;
 

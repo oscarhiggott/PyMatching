@@ -44,12 +44,12 @@ namespace pm{
         };
         pm::time_int time;
         TentativeType tentative_event_type;
-        bool is_invalidated;
+        uint32_t validation_index;
 
         TentativeEvent(DetectorNode* detector_node_1, size_t node_1_neighbor_index,
                        DetectorNode* detector_node_2, size_t node_2_neighbor_index,
-                       time_int time);
-        TentativeEvent(pm::GraphFillRegion* region, time_int time);
+                       time_int time, uint32_t validation_index);
+        TentativeEvent(pm::GraphFillRegion* region, time_int time, uint32_t validation_index);
         TentativeEvent() = default;
 
         bool operator<(const TentativeEvent &rhs) const;
@@ -63,8 +63,6 @@ namespace pm{
         bool operator!=(const TentativeEvent &rhs) const;
 
         bool operator>=(const TentativeEvent &rhs) const;
-
-        void invalidate();
     };
 
     struct RegionHitRegionEventData {

@@ -16,12 +16,12 @@ namespace pm {
         nodes[u].neighbors.push_back(&(nodes[v]));
         nodes[u].neighbor_weights.push_back(weight);
         nodes[u].neighbor_observables.push_back(observables);
-        nodes[u].neighbor_schedules.push_back(nullptr);
+        nodes[u].neighbor_vids.push_back(0);
 
         nodes[v].neighbors.push_back(&(nodes[u]));
         nodes[v].neighbor_weights.push_back(weight);
         nodes[v].neighbor_observables.push_back(observables);
-        nodes[v].neighbor_schedules.push_back(nullptr);
+        nodes[v].neighbor_vids.push_back(0);
     }
 
     void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, obs_int observables) {
@@ -32,7 +32,7 @@ namespace pm {
         nodes[u].neighbors.push_back(nullptr);
         nodes[u].neighbor_weights.push_back(weight);
         nodes[u].neighbor_observables.push_back(observables);
-        nodes[u].neighbor_schedules.push_back(nullptr);
+        nodes[u].neighbor_vids.push_back(0);
     }
 
     MatchingGraph::MatchingGraph(size_t num_nodes) : num_nodes(num_nodes) {
@@ -44,9 +44,8 @@ namespace pm {
     MatchingGraph::MatchingGraph() : num_nodes(0) {}
 
     void DetectorNode::invalidate_involved_schedule_items() {
-        for (auto & neighbor_schedule : neighbor_schedules) {
-            if (neighbor_schedule)
-                neighbor_schedule->invalidate();
+        for (auto &vid : neighbor_vids) {
+            vid++;
         }
     }
 
@@ -87,8 +86,9 @@ namespace pm {
         reached_from_source = nullptr;
         distance_from_source = 0;
         region_that_arrived = nullptr;
-        for (auto & neighbor_schedule : neighbor_schedules)
-            neighbor_schedule = nullptr;
+        for (auto &vid : neighbor_vids) {
+            vid++;
+        }
     }
 
 }
