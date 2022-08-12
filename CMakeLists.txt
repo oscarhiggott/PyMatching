@@ -79,6 +79,8 @@ add_executable(
         stim_io.test.cc
         mwpm_decoding.cc
         mwpm_decoding.test.cc
+        bucket_queue.cc
+        bucket_queue.test.cc
 )
 target_link_options(
         pymatching_tests
