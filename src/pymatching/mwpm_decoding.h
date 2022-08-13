@@ -2,8 +2,8 @@
 #define PYMATCHING2_MWPM_DECODING_H
 
 #include "pymatching/mwpm.h"
-#include "stim.h"
 #include "pymatching/stim_io.h"
+#include "stim.h"
 
 namespace pm {
 

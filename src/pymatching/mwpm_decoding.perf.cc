@@ -1,16 +1,16 @@
 #include "pymatching/mwpm_decoding.h"
 
 #include "pymatching/perf/util.perf.h"
-
 #include "stim.h"
 
-std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data(size_t distance, size_t rounds, double noise, size_t num_shots) {
+std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data(
+    size_t distance, size_t rounds, double noise, size_t num_shots) {
     stim::CircuitGenParameters gen(rounds, distance, "rotated_memory_x");
     gen.after_clifford_depolarization = noise;
     gen.after_reset_flip_probability = noise;
     gen.before_measure_flip_probability = noise;
     stim::Circuit circuit = stim::generate_surface_code_circuit(gen).circuit;
-    std::mt19937_64 rng(0); // NOLINT(cert-msc51-cpp)
+    std::mt19937_64 rng(0);  // NOLINT(cert-msc51-cpp)
     size_t num_detectors = circuit.count_detectors();
     auto results = stim::detector_samples(circuit, num_shots, false, true, rng);
     std::vector<stim::SparseShot> shots;
@@ -24,14 +24,7 @@ std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data
         }
     }
 
-    auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(
-        circuit,
-        false,
-        true,
-        false,
-        0,
-        false,
-        false);
+    auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, false, true, false, 0, false, false);
 
     return {dem, shots};
 }
@@ -57,7 +50,10 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(350).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(350)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -84,7 +80,10 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(75).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(75)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -111,7 +110,10 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(8).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(8)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -138,7 +140,10 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
                 num_mistakes++;
             }
         }
-    }).goal_micros(900).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_micros(900)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -165,7 +170,10 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(250).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(250)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -192,7 +200,10 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(300).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(300)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -219,7 +230,10 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(60).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(60)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -246,7 +260,10 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
                 num_mistakes++;
             }
         }
-    }).goal_millis(10).show_rate("dets", (double)num_dets).show_rate("shots", (double)shots.size());
+    })
+        .goal_millis(10)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }

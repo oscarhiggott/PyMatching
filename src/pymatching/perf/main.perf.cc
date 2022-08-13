@@ -15,8 +15,8 @@
 #include <cmath>
 #include <iostream>
 
-#include "stim.h"
 #include "pymatching/perf/util.perf.h"
+#include "stim.h"
 
 RegisteredBenchmark *running_benchmark = nullptr;
 std::vector<RegisteredBenchmark> all_registered_benchmarks{};

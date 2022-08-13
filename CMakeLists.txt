@@ -47,6 +47,7 @@ set(TEST_FILES
         src/pymatching/events.test.cc
         src/pymatching/namespaced_main.test.cc
         src/pymatching/graph.test.cc
+        src/pymatching/chunk_list.test.cc
         src/pymatching/fixed_length_vector.test.cc
         src/pymatching/compressed_edge.test.cc
         src/pymatching/compressed_edge.cc

@@ -1,12 +1,14 @@
 #include "pymatching/varying.h"
-#include "pymatching/perf/util.perf.h"
-#include <random>
+
 #include <iostream>
+#include <random>
+
+#include "pymatching/perf/util.perf.h"
 
 BENCHMARK(Varying32_get_distance_at_time) {
     const int NUM_ITEMS = 10000000;
 
-    std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
+    std::mt19937 rng(0);  // NOLINT(cert-msc51-cpp)
     std::vector<pm::Varying32> varyings;
     std::vector<int32_t> times;
     varyings.resize(NUM_ITEMS);
@@ -20,7 +22,9 @@ BENCHMARK(Varying32_get_distance_at_time) {
         for (size_t k = 0; k < NUM_ITEMS; k++) {
             total += varyings[k].get_distance_at_time(times[k]);
         }
-    }).goal_millis(60).show_rate("calls", NUM_ITEMS);
+    })
+        .goal_millis(60)
+        .show_rate("calls", NUM_ITEMS);
     if (total == 0) {
         std::cerr << "data dependence";
     }

@@ -38,11 +38,17 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
     pm::weight_int num_buckets = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
-    std::ifstream is(find_test_data_file("surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_solution_weights_pymatchingv0.7_exact.txt").c_str());
+    std::ifstream is(
+        find_test_data_file(
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_solution_weights_pymatchingv0.7_exact.txt")
+            .c_str());
     std::istream_iterator<int> start(is), end;
     std::vector<int> expected_weights(start, end);
 
-    std::ifstream is2(find_test_data_file("surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_predictions_pymatchingv0.7_exact.txt").c_str());
+    std::ifstream is2(
+        find_test_data_file(
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_predictions_pymatchingv0.7_exact.txt")
+            .c_str());
     std::istream_iterator<int> start2(is2), end2;
     std::vector<int> expected_obs_masks(start2, end2);
 
