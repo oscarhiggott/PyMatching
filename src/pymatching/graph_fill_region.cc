@@ -1,7 +1,7 @@
-#include "graph_fill_region.h"
+#include "pymatching/graph_fill_region.h"
 
-#include "graph.h"
-#include "varying.h"
+#include "pymatching/graph.h"
+#include "pymatching/varying.h"
 
 pm::GraphFillRegion::GraphFillRegion()
     : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event(nullptr) {

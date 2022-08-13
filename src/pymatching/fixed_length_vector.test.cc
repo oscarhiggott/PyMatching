@@ -1,4 +1,4 @@
-#include "fixed_length_vector.h"
+#include "pymatching/fixed_length_vector.h"
 
 #include <gtest/gtest.h>
 

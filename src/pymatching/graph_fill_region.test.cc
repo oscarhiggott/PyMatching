@@ -1,9 +1,9 @@
-#include "graph_fill_region.h"
+#include "pymatching/graph_fill_region.h"
 
 #include <gtest/gtest.h>
 
-#include "graph_fill_region.test.h"
-#include "region_edge.h"
+#include "pymatching/graph_fill_region.test.h"
+#include "pymatching/region_edge.h"
 
 void pm::delete_graph_fill_region(pm::GraphFillRegion* region) {
     for (auto& child : region->blossom_children)

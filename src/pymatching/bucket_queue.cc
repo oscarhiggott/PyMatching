@@ -1,1 +1,1 @@
-#include "bucket_queue.h"
+#include "pymatching/bucket_queue.h"

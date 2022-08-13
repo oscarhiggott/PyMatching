@@ -1,7 +1,7 @@
 #ifndef PYMATCHING2_COMPRESSED_EDGE_H
 #define PYMATCHING2_COMPRESSED_EDGE_H
 
-#include "graph.h"
+#include "pymatching/graph.h"
 
 namespace pm {
 

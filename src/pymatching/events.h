@@ -1,9 +1,9 @@
 #ifndef PYMATCHING2_EVENTS_H
 #define PYMATCHING2_EVENTS_H
 
-#include "graph.h"
-#include "graph_fill_region.h"
-#include "varying.h"
+#include "pymatching/graph.h"
+#include "pymatching/graph_fill_region.h"
+#include "pymatching/varying.h"
 
 namespace pm {
 

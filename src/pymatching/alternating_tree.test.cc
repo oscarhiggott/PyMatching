@@ -1,8 +1,8 @@
-#include "alternating_tree.h"
+#include "pymatching/alternating_tree.h"
 
 #include <gtest/gtest.h>
 
-#include "graph_fill_region.h"
+#include "pymatching/graph_fill_region.h"
 
 struct AltTreeTestData {
     std::vector<pm::GraphFillRegion> gfrs;

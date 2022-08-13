@@ -1,8 +1,8 @@
 #ifndef PYMATCHING2_GRAPH_FILL_REGION_TEST_H
 #define PYMATCHING2_GRAPH_FILL_REGION_TEST_H
 
-#include "graph.h"
-#include "graph_fill_region.h"
+#include "pymatching/graph.h"
+#include "pymatching/graph_fill_region.h"
 
 namespace pm {
 struct GraphFillTestData {

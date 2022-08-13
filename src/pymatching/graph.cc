@@ -1,8 +1,8 @@
-#include "graph.h"
+#include "pymatching/graph.h"
 
 #include <algorithm>
 
-#include "events.h"
+#include "pymatching/events.h"
 #include "stim.h"
 
 namespace pm {

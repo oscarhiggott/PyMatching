@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "namespaced_main.h"
+#include "pymatching/namespaced_main.h"
 
 int main(int argc, const char** argv) {
     try {

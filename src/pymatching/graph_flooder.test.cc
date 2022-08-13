@@ -1,9 +1,9 @@
-#include "graph_flooder.h"
+#include "pymatching/graph_flooder.h"
 
 #include "gtest/gtest.h"
 
-#include "events.h"
-#include "mwpm.h"
+#include "pymatching/events.h"
+#include "pymatching/mwpm.h"
 
 TEST(GraphFlooder, PriorityQueue) {
     pm::MatchingGraph graph(10);

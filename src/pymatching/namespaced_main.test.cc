@@ -1,4 +1,4 @@
-#include "namespaced_main.h"
+#include "pymatching/namespaced_main.h"
 
 #include "gtest/gtest.h"
 

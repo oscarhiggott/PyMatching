@@ -1,4 +1,4 @@
-#include "alternating_tree.h"
+#include "pymatching/alternating_tree.h"
 
 #include <algorithm>
 #include <iterator>

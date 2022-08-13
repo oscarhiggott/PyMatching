@@ -1,7 +1,7 @@
 #ifndef PYMATCHING2_STIM_IO_H
 #define PYMATCHING2_STIM_IO_H
 
-#include "graph.h"
+#include "pymatching/graph.h"
 #include "stim.h"
 
 namespace pm {

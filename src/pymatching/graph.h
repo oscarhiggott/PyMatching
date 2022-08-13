@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "fixed_length_vector.h"
-#include "varying.h"
+#include "pymatching/fixed_length_vector.h"
+#include "pymatching/varying.h"
 
 namespace pm {
 

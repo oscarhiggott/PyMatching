@@ -1,4 +1,4 @@
-#include "stim_io.h"
+#include "pymatching/stim_io.h"
 
 #include "gtest/gtest.h"
 

@@ -1,4 +1,4 @@
-#include "events.h"
+#include "pymatching/events.h"
 
 pm::TentativeEvent::TentativeEvent(
     pm::DetectorNode *detector_node_1,

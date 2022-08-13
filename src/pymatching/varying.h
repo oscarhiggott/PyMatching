@@ -44,7 +44,7 @@ class Varying {
 using Varying32 = Varying<int32_t>;
 using Varying64 = Varying<int64_t>;
 
-#include "varying.inl"
+#include "pymatching/varying.inl"
 
 }  // namespace pm
 

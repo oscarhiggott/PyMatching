@@ -3,7 +3,7 @@
 
 #include <tuple>
 
-#include "compressed_edge.h"
+#include "pymatching/compressed_edge.h"
 
 namespace pm {
 

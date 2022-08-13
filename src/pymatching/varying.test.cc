@@ -1,4 +1,4 @@
-#include "varying.h"
+#include "pymatching/varying.h"
 
 #include <gtest/gtest.h>
 

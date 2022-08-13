@@ -1,9 +1,9 @@
-#include "stim_io.h"
+#include "pymatching/stim_io.h"
 
 #include <algorithm>
 #include <utility>
 
-#include "graph.h"
+#include "pymatching/graph.h"
 
 void pm::ProbabilityGraph::add_or_merge_edge(size_t u, size_t v, double probability, pm::obs_int observables) {
     size_t larger_node = std::max(u, v);

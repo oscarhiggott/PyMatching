@@ -30,7 +30,7 @@ endif()
 
 add_executable(
         pymatching
-        src/pymatching/main.cc
+        src/main.cc
         src/pymatching/namespaced_main.cc
         src/pymatching/events.cc
         src/pymatching/graph.cc

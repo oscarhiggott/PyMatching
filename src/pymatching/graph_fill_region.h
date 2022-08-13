@@ -1,8 +1,8 @@
 #ifndef PYMATCHING2_GRAPH_FILL_REGION_H
 #define PYMATCHING2_GRAPH_FILL_REGION_H
 
-#include "alternating_tree.h"
-#include "region_edge.h"
+#include "pymatching/alternating_tree.h"
+#include "pymatching/region_edge.h"
 
 namespace pm {
 

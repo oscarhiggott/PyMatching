@@ -3,9 +3,9 @@
 
 #include <queue>
 
-#include "events.h"
-#include "graph.h"
-#include "region_edge.h"
+#include "pymatching/events.h"
+#include "pymatching/graph.h"
+#include "pymatching/region_edge.h"
 
 namespace pm {
 

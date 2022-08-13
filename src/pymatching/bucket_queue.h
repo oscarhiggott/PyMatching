@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "events.h"
+#include "pymatching/events.h"
 
 namespace pm {
 

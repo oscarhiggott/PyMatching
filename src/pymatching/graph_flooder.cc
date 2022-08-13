@@ -1,8 +1,8 @@
-#include "graph_flooder.h"
+#include "pymatching/graph_flooder.h"
 
-#include "graph.h"
-#include "graph_fill_region.h"
-#include "varying.h"
+#include "pymatching/graph.h"
+#include "pymatching/graph_fill_region.h"
+#include "pymatching/varying.h"
 
 pm::GraphFlooder::GraphFlooder(pm::MatchingGraph &graph) : graph(std::move(graph)), time(0) {
 }

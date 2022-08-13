@@ -1,4 +1,4 @@
-#include "mwpm.h"
+#include "pymatching/mwpm.h"
 
 #include <gtest/gtest.h>
 

@@ -1,4 +1,4 @@
-#include "mwpm.h"
+#include "pymatching/mwpm.h"
 
 // void pm::Mwpm::add_detection_event(int detector_node_id) {
 //     auto node = &flooder.graph.nodes[detector_node_id];

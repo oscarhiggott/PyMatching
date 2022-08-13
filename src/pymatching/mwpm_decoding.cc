@@ -1,4 +1,4 @@
-#include "mwpm_decoding.h"
+#include "pymatching/mwpm_decoding.h"
 
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_buckets) {

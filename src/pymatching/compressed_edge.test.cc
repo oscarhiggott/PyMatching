@@ -1,8 +1,8 @@
-#include "compressed_edge.h"
+#include "pymatching/compressed_edge.h"
 
 #include <gtest/gtest.h>
 
-#include "graph.h"
+#include "pymatching/graph.h"
 
 TEST(CompressedEdge, Reversed) {
     pm::MatchingGraph g(2);

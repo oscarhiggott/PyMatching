@@ -1,4 +1,4 @@
-#include "region_edge.h"
+#include "pymatching/region_edge.h"
 
 pm::RegionEdge::RegionEdge(pm::GraphFillRegion *region, CompressedEdge edge) : region(region), edge(edge) {
 }

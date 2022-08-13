@@ -1,8 +1,8 @@
-#include "events.h"
+#include "pymatching/events.h"
 
 #include <gtest/gtest.h>
 
-#include "fixed_length_vector.h"
+#include "pymatching/fixed_length_vector.h"
 
 TEST(Events, TentativeEvent) {
     pm::TentativeEvent te{};

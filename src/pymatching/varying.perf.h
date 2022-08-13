@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "varying.h"
+#include "pymatching/varying.h"
 
 namespace pm {
 

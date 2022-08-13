@@ -1,8 +1,8 @@
-#include "graph.h"
+#include "pymatching/graph.h"
 
 #include <gtest/gtest.h>
 
-#include "graph_fill_region.test.h"
+#include "pymatching/graph_fill_region.test.h"
 
 TEST(Graph, AddEdge) {
     pm::MatchingGraph g(4);

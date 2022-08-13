@@ -1,14 +1,14 @@
-#include "namespaced_main.h"
+#include "pymatching/namespaced_main.h"
 
 #include <chrono>
 #include <cstring>
 #include <iostream>
 #include <vector>
 
-#include "mwpm_decoding.h"
+#include "pymatching/mwpm_decoding.h"
 #include "stim.h"
 #include "stim/simulators/detection_simulator.h"
-#include "stim_io.h"
+#include "pymatching/stim_io.h"
 
 int main_predict(int argc, const char **argv) {
     stim::check_for_unknown_arguments(

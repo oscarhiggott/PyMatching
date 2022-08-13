@@ -1,4 +1,4 @@
-#include "mwpm_decoding.h"
+#include "pymatching/mwpm_decoding.h"
 
 #include <fstream>
 
