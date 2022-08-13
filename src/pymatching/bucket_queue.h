@@ -37,7 +37,7 @@ struct bucket_queue {
                 *out = *tentative_event_ptr;
                 delete tentative_event_ptr;
                 _num_enqueued--;
-                if (out->is_invalidated) {
+                if (!out->is_still_valid()) {
                     continue;
                 }
                 return true;
@@ -91,7 +91,7 @@ struct bucket_queue<0> {
             *out = *ptr;
             delete ptr;
             cur_time = out->time;
-            if (out->is_invalidated) {
+            if (!out->is_still_valid()) {
                 continue;
             }
             return true;

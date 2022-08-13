@@ -246,8 +246,6 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
         ASSERT_EQ(n.distance_from_source, 0);
         ASSERT_EQ(n.observables_crossed_from_source, 0);
         ASSERT_EQ(n.reached_from_source, nullptr);
-        for (auto& ev : n.neighbor_schedules)
-            ASSERT_EQ(ev, nullptr);
     }
 }
 

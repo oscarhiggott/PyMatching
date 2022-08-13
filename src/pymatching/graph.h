@@ -37,7 +37,7 @@ class DetectorNode {
     obs_int observables_crossed_from_source;  /// Which observables are crossed, travelling from this node to the source
                                               /// detection event that reached it.
     time_int distance_from_source;  /// How far is it from this node to the source detection event that reached it.
-    std::vector<TentativeEvent*> neighbor_schedules;  /// Easy access to a scheduled event on a neighbor edge.
+    std::vector<uint64_t> edge_event_vids;  /// Event validation indices for events on neighboring edges.
 
     /// == Permanent fields used to define the structure of the graph. ==
     std::vector<DetectorNode*> neighbors;       /// The node's neighbors.

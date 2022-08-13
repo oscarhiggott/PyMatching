@@ -23,6 +23,12 @@ class GraphFlooder {
     /// Events are ordered by time; by when they will occur in a timeline.
     bucket_queue<0> queue;
 
+    /// This counter is used to give each tentative event a unique index. The index is also written
+    /// to objects affected by the event. For an event to be valid, its vid must match the marked
+    /// vids on the objects it affects. This allows you to invalidate all events affecting an
+    /// object by incrementing its vids.
+    uint64_t next_event_vid;
+
     GraphFlooder(MatchingGraph graph, size_t num_buckets);
     GraphFlooder(GraphFlooder&&) noexcept;
     void create_region(DetectorNode* node);
@@ -49,7 +55,7 @@ class GraphFlooder {
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
 
-    pm::MwpmEvent do_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
+    pm::MwpmEvent do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
 };
 
 }  // namespace pm

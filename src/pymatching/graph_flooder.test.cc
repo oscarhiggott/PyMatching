@@ -6,27 +6,31 @@
 #include "pymatching/mwpm.h"
 
 TEST(GraphFlooder, PriorityQueue) {
-    pm::GraphFillRegion gfr;
     pm::GraphFlooder flooder(pm::MatchingGraph(10), 1024);
     auto &graph = flooder.graph;
-    auto e1 = new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    graph.add_edge(0, 1, 10, 0);
+    graph.add_edge(1, 2, 10, 0);
+    graph.add_edge(2, 3, 10, 0);
+    graph.add_edge(3, 4, 10, 0);
+    graph.add_edge(4, 5, 10, 0);
+    graph.add_edge(5, 0, 10, 0);
+
+    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[0], 0, &graph.nodes[1], 1
-    }, 10);
-    flooder.queue.enqueue(e1);
-    auto e2 = new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    }, 10, 0x0));
+    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[1], 0, &graph.nodes[2], 1
-    }, 8);
-    flooder.queue.enqueue(e2);
-    auto e3 = new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    }, 8, 0x0));
+    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[2], 0, &graph.nodes[3], 1
-    }, 5);
-    flooder.queue.enqueue(e3);
-    auto e4 = new pm::TentativeEvent(pm::TentativeRegionShrinkEventData{&gfr}, 70);
-    flooder.queue.enqueue(e4);
-    auto e5 = new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    }, 5, 0x0));
+
+    pm::GraphFillRegion gfr;
+    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeRegionShrinkEventData{&gfr}, 70, 0x0));
+
+    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[4], 0, &graph.nodes[5], 1
-    }, 100);
-    flooder.queue.enqueue(e5);
+    }, 100, 0x0));
     auto e = flooder.queue.force_pop();
     ASSERT_EQ(e.time, 5);
     ASSERT_EQ(e.tentative_event_type, pm::INTERACTION);
@@ -37,7 +41,7 @@ TEST(GraphFlooder, PriorityQueue) {
     ASSERT_EQ(e6.time, 70);
     ASSERT_EQ(e6.tentative_event_type, pm::SHRINKING);
     ASSERT_EQ(e6.region_shrink_event_data.region, &gfr);
-    ASSERT_EQ(e6.is_invalidated, false);
+    ASSERT_TRUE(e6.is_still_valid());
     ASSERT_EQ(flooder.queue.force_pop().time, 100);
 }
 
@@ -54,23 +58,23 @@ TEST(GraphFlooder, CreateRegion) {
     flooder.create_region(&flooder.graph.nodes[3]);
     ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[0], 0, nullptr, (size_t)-1
-    }, 3));
+    }, 3, 0x0));
     ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[0], 1, &flooder.graph.nodes[1], 0
-    }, 5));
+    }, 5, 0x1));
     ASSERT_EQ(flooder.graph.nodes[0].region_that_arrived->shell_area[0], &flooder.graph.nodes[0]);
     ASSERT_EQ(flooder.graph.nodes[0].distance_from_source, 0);
     ASSERT_EQ(flooder.graph.nodes[0].reached_from_source, &flooder.graph.nodes[0]);
     ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[2], 0, &flooder.graph.nodes[1], 1
-    }, 11));
+    }, 11, 0x2));
     ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[3], 0, &flooder.graph.nodes[2], 1
-    }, 50));
+    }, 50, 0x4));
     // t=100 event skipped over because it was invalidated.
     ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[3], 1, nullptr, (size_t)-1
-    }, 1000));
+    }, 1000, 0x5));
     ASSERT_TRUE(flooder.queue.empty());
 }
 
@@ -91,7 +95,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     auto t1 = flooder.queue.force_pop();
     ASSERT_EQ(t1, pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[2], 1, &flooder.graph.nodes[3], 0
-    }, 100));
+    }, 100, 0x1));
     flooder.queue.enqueue(new pm::TentativeEvent(t1));
     auto e2 = flooder.next_event();
     pm::MwpmEvent e2_exp = pm::RegionHitBoundaryEventData(
@@ -147,7 +151,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
         &flooder.graph.nodes[2], &flooder.graph.nodes[1], &flooder.graph.nodes[3], &flooder.graph.nodes[0]};
     ASSERT_EQ(flooder.graph.nodes[2].region_that_arrived->shell_area, expected_area);
     flooder.set_region_shrinking(*flooder.graph.nodes[2].region_that_arrived);
-    ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeRegionShrinkEventData{flooder.graph.nodes[2].region_that_arrived}, 80 + 4));
+    ASSERT_EQ(flooder.queue.force_pop(), pm::TentativeEvent(pm::TentativeRegionShrinkEventData{flooder.graph.nodes[2].region_that_arrived}, 80 + 4, 0x5));
 }
 
 TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {

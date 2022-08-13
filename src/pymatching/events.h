@@ -48,13 +48,23 @@ struct TentativeEvent {
     };
     pm::time_int time;
     TentativeType tentative_event_type;
-    bool is_invalidated;
+
+    /// Validation index for the event. When events are created, this is set to a new unique value
+    /// and the objects affected by the event are marked with the same unique value. When the event
+    /// is actually processed, this value is compared to the markings on the affects objects. If
+    /// they differ, the event is invalid.
+    ///
+    /// This makes invalidating events, starting from an object affected by that event, very cheap:
+    /// simply increment its validation index. (Decrementing is not a safe way to invalidate because
+    /// the previous index may have also been an event affecting that object.)
+    uint64_t vid;
 
     TentativeEvent(
         TentativeNeighborInteractionEventData data,
-        time_int time);
-    TentativeEvent(TentativeRegionShrinkEventData data, time_int time);
-    TentativeEvent(time_int time);
+        time_int time,
+        uint64_t validation_index);
+    TentativeEvent(TentativeRegionShrinkEventData data, time_int time, uint64_t validation_index);
+    TentativeEvent(time_int time, uint64_t validation_index = 0);
     TentativeEvent() = default;
 
     bool operator<(const TentativeEvent &rhs) const;
@@ -64,7 +74,7 @@ struct TentativeEvent {
     bool operator!=(const TentativeEvent &rhs) const;
     bool operator>=(const TentativeEvent &rhs) const;
 
-    void invalidate();
+    bool is_still_valid() const;
 
     std::string str() const;
 };

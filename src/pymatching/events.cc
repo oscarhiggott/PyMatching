@@ -2,32 +2,38 @@
 
 pm::TentativeEvent::TentativeEvent(
     pm::TentativeNeighborInteractionEventData data,
-    time_int time)
+    time_int time,
+    uint64_t validation_index)
     : neighbor_interaction_event_data(data),
       time(time),
       tentative_event_type(INTERACTION),
-      is_invalidated(false) {
+      vid(validation_index) {
 }
 
-pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, time_int time)
-    : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), is_invalidated(false) {
+pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, time_int time, uint64_t validation_index)
+    : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), vid(validation_index) {
 }
-pm::TentativeEvent::TentativeEvent(time_int time) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), is_invalidated(false) {
+pm::TentativeEvent::TentativeEvent(time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
 }
 
 
-void pm::TentativeEvent::invalidate() {
-    is_invalidated = true;
-    // Is resetting schedule pointers below needed?
-    if (tentative_event_type == INTERACTION) {
-        neighbor_interaction_event_data.detector_node_1
-            ->neighbor_schedules[neighbor_interaction_event_data.node_1_neighbor_index] = nullptr;
-        if (neighbor_interaction_event_data.detector_node_2) {
-            neighbor_interaction_event_data.detector_node_2
-                ->neighbor_schedules[neighbor_interaction_event_data.node_2_neighbor_index] = nullptr;
-        }
-    } else if (tentative_event_type == SHRINKING) {
-        region_shrink_event_data.region->shrink_event = nullptr;
+bool pm::TentativeEvent::is_still_valid() const {
+    switch (tentative_event_type) {
+        case INTERACTION: {
+            auto &d = neighbor_interaction_event_data;
+            if (d.detector_node_1->edge_event_vids[d.node_1_neighbor_index] != vid) {
+                return false;
+            }
+            if (d.detector_node_2 != nullptr && d.detector_node_2->edge_event_vids[d.node_2_neighbor_index] != vid) {
+                return false;
+            }
+            return true;
+        } case SHRINKING:
+            return region_shrink_event_data.region->shrink_event_vid == vid;
+        case NO_TENTATIVE_EVENT:
+            return vid == 0;
+        default:
+            throw std::invalid_argument("Unrecognized event type.");
     }
 }
 
@@ -63,7 +69,7 @@ bool pm::TentativeRegionShrinkEventData::operator!=(const pm::TentativeRegionShr
 }
 
 bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
-    if (time != rhs.time || tentative_event_type != rhs.tentative_event_type || is_invalidated != rhs.is_invalidated)
+    if (time != rhs.time || tentative_event_type != rhs.tentative_event_type || vid != rhs.vid)
         return false;
     switch (tentative_event_type) {
         case SHRINKING:
@@ -80,8 +86,8 @@ bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
 std::ostream &pm::operator<<(std::ostream &out, const TentativeEvent &ev) {
     out << "TentativeEvent{.time=";
     out << ev.time;
-    out << ", .is_invalidated=";
-    out << ev.is_invalidated;
+    out << ", .vid=";
+    out << ev.vid;
     out << ", .type=";
     switch (ev.tentative_event_type) {
         case SHRINKING:

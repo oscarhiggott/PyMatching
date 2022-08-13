@@ -4,7 +4,11 @@
 #include "pymatching/graph_fill_region.h"
 #include "pymatching/varying.h"
 
-pm::GraphFlooder::GraphFlooder(pm::MatchingGraph graph, size_t num_buckets) : graph(std::move(graph)), queue(num_buckets) {
+pm::GraphFlooder::GraphFlooder(pm::MatchingGraph graph, size_t num_buckets) : graph(std::move(graph)), queue(num_buckets), next_event_vid(0) {
+}
+
+pm::GraphFlooder::GraphFlooder(pm::GraphFlooder &&flooder) noexcept
+    : graph(std::move(flooder.graph)), queue(std::move(flooder.queue)), next_event_vid(flooder.next_event_vid) {
 }
 
 void pm::GraphFlooder::create_region(DetectorNode *node) {
@@ -59,8 +63,10 @@ void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector
 }
 
 void pm::GraphFlooder::reschedule_events_for_region(pm::GraphFillRegion &region) {
-    if (region.shrink_event)
-        region.shrink_event->invalidate();
+    // Invalidate existing events by setting the vid to an index that doesn't correspond to an event
+    // affecting the object. Note that decrementing would not be safe due to ABA writes.
+    region.shrink_event_vid++;
+
     if (region.radius.is_shrinking()) {
         schedule_tentative_shrink_event(region);
         region.do_op_for_each_node_in_total_area([](DetectorNode *n) {
@@ -79,12 +85,14 @@ void pm::GraphFlooder::schedule_tentative_neighbor_interaction_event(
     pm::DetectorNode *detector_node_2,
     size_t schedule_list_index_2,
     pm::time_int event_time) {
+    auto vid = next_event_vid++;
     auto e = new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         detector_node_1, schedule_list_index_1, detector_node_2, schedule_list_index_2
-    }, event_time);
-    detector_node_1->neighbor_schedules[schedule_list_index_1] = e;
-    if (detector_node_2)
-        detector_node_2->neighbor_schedules[schedule_list_index_2] = e;
+    }, event_time, vid);
+    detector_node_1->edge_event_vids[schedule_list_index_1] = vid;
+    if (detector_node_2 != nullptr) {
+        detector_node_2->edge_event_vids[schedule_list_index_2] = vid;
+    }
     queue.enqueue(e);
 }
 
@@ -95,8 +103,9 @@ void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &regi
     } else {
         t = region.shell_area.back()->local_radius().time_of_x_intercept_for_shrinking();
     }
-    auto tentative_event = new TentativeEvent(TentativeRegionShrinkEventData{&region}, t);
-    region.shrink_event = tentative_event;
+    auto vid = next_event_vid++;
+    auto tentative_event = new TentativeEvent(TentativeRegionShrinkEventData{&region}, t, vid);
+    region.shrink_event_vid = vid;
     queue.enqueue(tentative_event);
 }
 
@@ -198,8 +207,7 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge> &c
     for (auto &region_edge : blossom_region->blossom_children) {
         region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(queue.cur_time);
         region_edge.region->blossom_parent = blossom_region;
-        if (region_edge.region->shrink_event)
-            region_edge.region->shrink_event->invalidate();
+        region_edge.region->shrink_event_vid++; // Invalidate events affecting the region.
     }
     reschedule_events_for_region(*blossom_region);
     return blossom_region;
@@ -220,8 +228,7 @@ void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
     reschedule_events_for_region(region);
 }
 
-pm::MwpmEvent pm::GraphFlooder::do_tentative_event_returning_mwpm_event(TentativeEvent tentative_event) {
-    tentative_event.invalidate();
+pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event) {
     switch (tentative_event.tentative_event_type) {
         case INTERACTION:
             if (tentative_event.neighbor_interaction_event_data.detector_node_2) {
@@ -242,13 +249,9 @@ pm::MwpmEvent pm::GraphFlooder::next_event() {
         if (!queue.try_pop(&tentative_event)) {
             return MwpmEvent::no_event();
         }
-        MwpmEvent processed = do_tentative_event_returning_mwpm_event(tentative_event);
+        MwpmEvent processed = do_valid_tentative_event_returning_mwpm_event(tentative_event);
         if (processed.event_type != NO_EVENT) {
             return processed;
         }
     }
-}
-
-pm::GraphFlooder::GraphFlooder(pm::GraphFlooder &&flooder) noexcept
-    : graph(std::move(flooder.graph)), queue(std::move(flooder.queue)) {
 }
