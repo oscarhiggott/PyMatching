@@ -28,9 +28,7 @@ if(NOT stim_POPULATED)
     add_subdirectory(${stim_SOURCE_DIR})
 endif()
 
-add_executable(
-        pymatching
-        src/main.cc
+set(SOURCE_FILES_NO_MAIN
         src/pymatching/namespaced_main.cc
         src/pymatching/events.cc
         src/pymatching/graph.cc
@@ -44,58 +42,45 @@ add_executable(
         src/pymatching/mwpm_decoding.cc
         )
 
-target_compile_options(pymatching PRIVATE -O3)
-target_link_options(
-        pymatching
-        PRIVATE
-        -pthread
-        -O3
-)
-target_link_libraries(
-        pymatching
-        libstim
-)
-
-enable_testing()
-
-add_executable(
-        pymatching_tests
+set(TEST_FILES
         src/pymatching/varying.test.cc
-        src/pymatching/events.cc
         src/pymatching/events.test.cc
-        src/pymatching/namespaced_main.cc
         src/pymatching/namespaced_main.test.cc
         src/pymatching/graph.test.cc
-        src/pymatching/graph.cc
         src/pymatching/fixed_length_vector.test.cc
         src/pymatching/compressed_edge.test.cc
         src/pymatching/compressed_edge.cc
         src/pymatching/alternating_tree.test.cc
-        src/pymatching/alternating_tree.cc
-        src/pymatching/graph_fill_region.cc
         src/pymatching/graph_fill_region.test.cc
-        src/pymatching/region_edge.cc
-        src/pymatching/graph_flooder.cc
         src/pymatching/graph_flooder.test.cc
-        src/pymatching/mwpm.cc
         src/pymatching/mwpm.test.cc
-        src/pymatching/stim_io.cc
         src/pymatching/stim_io.test.cc
-        src/pymatching/mwpm_decoding.cc
         src/pymatching/mwpm_decoding.test.cc
-        src/pymatching/bucket_queue.cc
         src/pymatching/bucket_queue.test.cc
-)
-target_link_options(
-        pymatching_tests
-        PRIVATE
-        -pthread
-)
-target_link_libraries(
-        pymatching_tests
-        GTest::gtest_main
-        libstim
-)
+        )
+
+set(PERF_FILES
+        src/pymatching/perf/util.perf.cc
+        src/pymatching/perf/main.perf.cc
+        src/pymatching/varying.perf.cc
+        )
+
+add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
+
+target_compile_options(pymatching PRIVATE -O3)
+target_link_options(pymatching PRIVATE -pthread -O3)
+target_link_libraries(pymatching libstim)
+
+enable_testing()
+
+add_executable(pymatching_tests ${SOURCE_FILES_NO_MAIN} ${TEST_FILES})
+target_link_options(pymatching_tests PRIVATE -pthread)
+target_link_libraries(pymatching_tests GTest::gtest_main libstim)
+
+add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})
+target_compile_options(pymatching_perf PRIVATE -O3)
+target_link_options(pymatching_perf PRIVATE -pthread -O3)
+target_link_libraries(pymatching_perf libstim)
 
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
