@@ -51,7 +51,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
             }
         }
     })
-        .goal_millis(190)
+        .goal_millis(120)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -81,7 +81,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(41)
+        .goal_millis(22)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -90,7 +90,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
 }
 
 BENCHMARK(Decode_surface_r11_d11_p10000) {
-    auto data = generate_data(11, 11, 0.0001, 512);
+    auto data = generate_data(11, 11, 0.0001, 256);
     const auto &dem = data.first;
     const auto &shots = data.second;
 
@@ -111,7 +111,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
             }
         }
     })
-        .goal_millis(4)
+        .goal_micros(800)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -141,7 +141,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
             }
         }
     })
-        .goal_micros(590)
+        .goal_micros(200)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -171,10 +171,10 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
             }
         }
     })
-        .goal_millis(170)
+        .goal_millis(100)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
-    if (num_mistakes == shots.size()) {
+    if (num_mistakes == 0) {
         std::cerr << "data dependence";
     }
 }
@@ -201,7 +201,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
             }
         }
     })
-        .goal_millis(220)
+        .goal_millis(80)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -231,7 +231,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
             }
         }
     })
-        .goal_millis(40)
+        .goal_millis(13)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -240,7 +240,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
 }
 
 BENCHMARK(Decode_surface_r21_d21_p100000) {
-    auto data = generate_data(21, 21, 0.00001, 1024);
+    auto data = generate_data(21, 21, 0.00001, 512);
     const auto &dem = data.first;
     const auto &shots = data.second;
 
@@ -261,7 +261,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
             }
         }
     })
-        .goal_millis(8)
+        .goal_micros(900)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {

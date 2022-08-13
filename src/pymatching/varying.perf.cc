@@ -23,7 +23,7 @@ BENCHMARK(Varying32_get_distance_at_time) {
             total += varyings[k].get_distance_at_time(times[k]);
         }
     })
-        .goal_millis(60)
+        .goal_millis(7)
         .show_rate("calls", NUM_ITEMS);
     if (total == 0) {
         std::cerr << "data dependence";
