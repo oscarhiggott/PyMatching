@@ -1,6 +1,5 @@
 #include "pymatching/graph_fill_region.h"
 
-#include "pymatching/graph.h"
 #include "pymatching/varying.h"
 
 pm::GraphFillRegion::GraphFillRegion()

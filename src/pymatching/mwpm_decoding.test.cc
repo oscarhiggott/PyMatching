@@ -32,8 +32,6 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
 
-    size_t num_obs = dem.count_observables();
-    std::unique_ptr<stim::MeasureRecordReader> obs_reader;
     auto reader = stim::MeasureRecordReader::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 

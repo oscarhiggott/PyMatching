@@ -60,8 +60,9 @@ set(TEST_FILES
         )
 
 set(PERF_FILES
-        src/pymatching/perf/util.perf.cc
         src/pymatching/perf/main.perf.cc
+        src/pymatching/mwpm_decoding.perf.cc
+        src/pymatching/perf/util.perf.cc
         src/pymatching/varying.perf.cc
         )
 
@@ -78,7 +79,7 @@ target_link_options(pymatching_tests PRIVATE -pthread)
 target_link_libraries(pymatching_tests GTest::gtest_main libstim)
 
 add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})
-target_compile_options(pymatching_perf PRIVATE -O3)
+target_compile_options(pymatching_perf PRIVATE -O3 -march=native)
 target_link_options(pymatching_perf PRIVATE -pthread -O3)
 target_link_libraries(pymatching_perf libstim)
 
