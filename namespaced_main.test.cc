@@ -1,5 +1,6 @@
-#include "gtest/gtest.h"
 #include "namespaced_main.h"
+
+#include "gtest/gtest.h"
 
 struct RaiiTempNamedFile {
     int descriptor;
@@ -59,7 +60,7 @@ std::string result_of_running_main(const std::vector<std::string> args, const st
     return s;
 }
 
-TEST(Main, predict){
+TEST(Main, predict) {
     RaiiTempNamedFile dem;
     FILE *f = fopen(dem.path.c_str(), "w");
     fprintf(f, "%s", R"DEM(
@@ -69,15 +70,7 @@ TEST(Main, predict){
     )DEM");
     fclose(f);
     auto stdout = result_of_running_main(
-        {
-            "predict",
-            "--dem",
-            dem.path,
-            "--in_format",
-            "dets",
-            "--out_format",
-            "dets"
-        },
+        {"predict", "--dem", dem.path, "--in_format", "dets", "--out_format", "dets"},
         R"stdin(shot
 shot D0
 shot D1
@@ -89,7 +82,7 @@ shot L1
 )stdout");
 }
 
-TEST(Main, count_mistakes){
+TEST(Main, count_mistakes) {
     RaiiTempNamedFile dem;
     FILE *f = fopen(dem.path.c_str(), "w");
     fprintf(f, "%s", R"DEM(
@@ -111,5 +104,5 @@ TEST(Main, count_mistakes){
 shot D0 L0
 shot D1 L2
 shot D0 D1 L1)stdin");
-    ASSERT_TRUE((stdout.compare("1 / 4") == 0) || (stdout.compare("1 / 4\n") == 0) );
+    ASSERT_TRUE((stdout.compare("1 / 4") == 0) || (stdout.compare("1 / 4\n") == 0));
 }

@@ -1,5 +1,7 @@
-#include <gtest/gtest.h>
 #include "compressed_edge.h"
+
+#include <gtest/gtest.h>
+
 #include "graph.h"
 
 TEST(CompressedEdge, Reversed) {

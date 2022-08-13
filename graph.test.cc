@@ -1,11 +1,12 @@
-#include <gtest/gtest.h>
 #include "graph.h"
+
+#include <gtest/gtest.h>
+
 #include "graph_fill_region.test.h"
 
-
-TEST(Graph, AddEdge){
+TEST(Graph, AddEdge) {
     pm::MatchingGraph g(4);
-    g.add_edge(0, 1,2, 1);
+    g.add_edge(0, 1, 2, 1);
     g.add_edge(1, 2, 3, 5);
     g.add_edge(0, 3, 10, 10);
     ASSERT_EQ(g.nodes[0].neighbors[0], &g.nodes[1]);
@@ -28,18 +29,15 @@ TEST(Graph, AddBoundaryEdge) {
     ASSERT_EQ(g.nodes[5].neighbors[0], nullptr);
 }
 
-
 TEST(Graph, TotalRadius) {
     pm::GraphFillTestData d(10);
-    auto x = d.b(-1, -1, {
-        d.b(0, 1, {
-            d.b(3, 4, {}, false),
-            d.b(4, 5, {}, false),
-            d.b(5, 3, {}, false)
-            }, false),
-        d.b(1, 2, {}, false),
-        d.b(2, 0, {}, false)
-        }, true).region;
+    auto x = d.b(-1,
+                 -1,
+                 {d.b(0, 1, {d.b(3, 4, {}, false), d.b(4, 5, {}, false), d.b(5, 3, {}, false)}, false),
+                  d.b(1, 2, {}, false),
+                  d.b(2, 0, {}, false)},
+                 true)
+                 .region;
     d.detectors[3].reached_from_source = &d.detectors[3];
     d.detectors[6].reached_from_source = &d.detectors[3];
     d.detectors[3].region_that_arrived = x->blossom_children[0].region->blossom_children[0].region;

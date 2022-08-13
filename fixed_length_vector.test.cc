@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "fixed_length_vector.h"
+
+#include <gtest/gtest.h>
 
 TEST(FixedLengthVector, PushBack) {
     pm::FixedLengthVector<int, 10> a;

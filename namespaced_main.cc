@@ -1,41 +1,45 @@
+#include "namespaced_main.h"
+
+#include <chrono>
+#include <cstring>
 #include <iostream>
 #include <vector>
 
-#include "stim.h"
-#include "stim_io.h"
-#include "stim/simulators/detection_simulator.h"
 #include "mwpm_decoding.h"
-#include <cstring>
-#include "namespaced_main.h"
-#include <chrono>
+#include "stim.h"
+#include "stim/simulators/detection_simulator.h"
+#include "stim_io.h"
 
-
-int main_predict(int argc, const char** argv) {
-    stim::check_for_unknown_arguments({
-        "--in",
-        "--in_format",
-        "--in_includes_appended_observables",
-        "--out",
-        "--out_format",
-        "--dem",
-    }, {}, "predict", argc, argv);
+int main_predict(int argc, const char **argv) {
+    stim::check_for_unknown_arguments(
+        {
+            "--in",
+            "--in_format",
+            "--in_includes_appended_observables",
+            "--out",
+            "--out_format",
+            "--dem",
+        },
+        {},
+        "predict",
+        argc,
+        argv);
 
     FILE *shots_in = stim::find_open_file_argument("--in", stdin, "r", argc, argv);
     FILE *predictions_out = stim::find_open_file_argument("--out", stdout, "w", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem", nullptr, "r", argc, argv);
-    stim::FileFormatData shots_in_format = stim::find_enum_argument("--in_format", "b8", stim::format_name_to_enum_map, argc, argv);
-    stim::FileFormatData predictions_out_format = stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map, argc, argv);
+    stim::FileFormatData shots_in_format =
+        stim::find_enum_argument("--in_format", "b8", stim::format_name_to_enum_map, argc, argv);
+    stim::FileFormatData predictions_out_format =
+        stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map, argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
 
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
 
     size_t num_obs = dem.count_observables();
-    auto reader = stim::MeasureRecordReader::make(shots_in,
-                                                  shots_in_format.id,
-                                                  0,
-                                                  dem.count_detectors(),
-                                                  append_obs * num_obs);
+    auto reader =
+        stim::MeasureRecordReader::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
     auto writer = stim::MeasureRecordWriter::make(predictions_out, predictions_out_format.id);
     writer->begin_result_type('L');
 
@@ -62,24 +66,31 @@ int main_predict(int argc, const char** argv) {
     return EXIT_SUCCESS;
 }
 
-int main_count_mistakes(int argc, const char** argv) {
-    stim::check_for_unknown_arguments({
-        "--in",
-        "--in_format",
-        "--in_includes_appended_observables",
-        "--obs_in",
-        "--obs_in_format",
-        "--out",
-        "--dem",
-        "--time",
-    }, {}, "count_mistakes", argc, argv);
+int main_count_mistakes(int argc, const char **argv) {
+    stim::check_for_unknown_arguments(
+        {
+            "--in",
+            "--in_format",
+            "--in_includes_appended_observables",
+            "--obs_in",
+            "--obs_in_format",
+            "--out",
+            "--dem",
+            "--time",
+        },
+        {},
+        "count_mistakes",
+        argc,
+        argv);
 
     FILE *shots_in = stim::find_open_file_argument("--in", stdin, "r", argc, argv);
     FILE *obs_in = stim::find_open_file_argument("--obs_in", stdin, "r", argc, argv);
     FILE *stats_out = stim::find_open_file_argument("--out", stdout, "w", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem", nullptr, "r", argc, argv);
-    stim::FileFormatData shots_in_format = stim::find_enum_argument("--in_format", "01", stim::format_name_to_enum_map, argc, argv);
-    stim::FileFormatData obs_in_format = stim::find_enum_argument("--obs_in_format", "01", stim::format_name_to_enum_map, argc, argv);
+    stim::FileFormatData shots_in_format =
+        stim::find_enum_argument("--in_format", "01", stim::format_name_to_enum_map, argc, argv);
+    stim::FileFormatData obs_in_format =
+        stim::find_enum_argument("--obs_in_format", "01", stim::format_name_to_enum_map, argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
     bool time = stim::find_bool_argument("--time", argc, argv);
     if (!append_obs && obs_in == nullptr) {
@@ -94,11 +105,8 @@ int main_count_mistakes(int argc, const char** argv) {
     if (obs_in != stdin) {
         obs_reader = stim::MeasureRecordReader::make(obs_in, obs_in_format.id, 0, 0, num_obs);
     }
-    auto reader = stim::MeasureRecordReader::make(shots_in,
-                                                  shots_in_format.id,
-                                                  0,
-                                                  dem.count_detectors(),
-                                                  append_obs * num_obs);
+    auto reader =
+        stim::MeasureRecordReader::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
     pm::weight_int num_buckets = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
@@ -132,7 +140,7 @@ int main_count_mistakes(int argc, const char** argv) {
         fclose(shots_in);
     }
     auto end = std::chrono::steady_clock::now();
-    auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
+    auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     if (time) {
         std::cerr << "Total decoding time: " << (int)microseconds << "us\n";
         std::cerr << "Decoding time per shot: " << (microseconds / num_shots) << "us\n";
@@ -141,7 +149,7 @@ int main_count_mistakes(int argc, const char** argv) {
     return EXIT_SUCCESS;
 }
 
-int pm::main(int argc, const char** argv) {
+int pm::main(int argc, const char **argv) {
     const char *command = "";
     if (argc >= 2) {
         command = argv[1];
@@ -158,10 +166,11 @@ int pm::main(int argc, const char** argv) {
         return EXIT_FAILURE;
     }
 
-
     std::stringstream ss;
     ss << "Unrecognized command. Available commands are:\n";
-    ss << "    pymatching predict --dem file [--in file] [--out file] [--in_format 01|B8|...] [--out_format 01|B8|...] [--in_includes_appended_observables]\n";
-    ss << "    pymatching count_mistakes --dem file [--in file] [--out file] [--in_format 01|B8|...] [--out_format 01|B8|...] [--in_includes_appended_observables] [--obs_in] [--obs_in_format]\n";
+    ss << "    pymatching predict --dem file [--in file] [--out file] [--in_format 01|B8|...] [--out_format 01|B8|...] "
+          "[--in_includes_appended_observables]\n";
+    ss << "    pymatching count_mistakes --dem file [--in file] [--out file] [--in_format 01|B8|...] [--out_format "
+          "01|B8|...] [--in_includes_appended_observables] [--obs_in] [--obs_in_format]\n";
     throw std::invalid_argument(ss.str());
 }

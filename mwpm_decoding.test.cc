@@ -1,8 +1,10 @@
-#include "gtest/gtest.h"
-#include "stim.h"
 #include "mwpm_decoding.h"
+
 #include <fstream>
 
+#include "gtest/gtest.h"
+
+#include "stim.h"
 
 TEST(MwpmDecoding, CompareSolutionWeights) {
     auto shots_in = std::fopen("../data/surface_code_rotated_memory_x_13_0.01_1000_shots.b8", "r");
@@ -15,22 +17,21 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
 
     size_t num_obs = dem.count_observables();
     std::unique_ptr<stim::MeasureRecordReader> obs_reader;
-    auto reader = stim::MeasureRecordReader::make(shots_in,
-                                                  stim::SAMPLE_FORMAT_B8,
-                                                  0,
-                                                  dem.count_detectors(),
-                                                  dem.count_observables());
+    auto reader = stim::MeasureRecordReader::make(
+        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     pm::weight_int num_buckets = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
-    std::ifstream is("../data/surface_code_rotated_memory_x_13_0.01_1000_shots_1000_"
-                     "buckets_solution_weights_pymatchingv0.7_exact.txt");
+    std::ifstream is(
+        "../data/surface_code_rotated_memory_x_13_0.01_1000_shots_1000_"
+        "buckets_solution_weights_pymatchingv0.7_exact.txt");
     std::istream_iterator<int> start(is), end;
     std::vector<int> expected_weights(start, end);
 
-    std::ifstream is2("../data/surface_code_rotated_memory_x_13_0.01_1000_shots_1000_"
-                      "buckets_predictions_pymatchingv0.7_exact.txt");
+    std::ifstream is2(
+        "../data/surface_code_rotated_memory_x_13_0.01_1000_shots_1000_"
+        "buckets_predictions_pymatchingv0.7_exact.txt");
     std::istream_iterator<int> start2(is2), end2;
     std::vector<int> expected_obs_masks(start2, end2);
 

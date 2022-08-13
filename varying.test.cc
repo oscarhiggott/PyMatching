@@ -1,5 +1,6 @@
-#include <gtest/gtest.h>
 #include "varying.h"
+
+#include <gtest/gtest.h>
 
 TEST(Varying, GrowingZeroRadiusAtTime) {
     pm::Varying32 x = pm::Varying32::growing_varying_with_zero_distance_at_time(3);
@@ -28,7 +29,7 @@ TEST(Varying, VaryingString) {
     ASSERT_EQ(x.str(), "12 - t");
 }
 
-TEST(Varying, ThenSlopeAt){
+TEST(Varying, ThenSlopeAt) {
     auto x = pm::Varying<pm::time_int>::growing_varying_with_zero_distance_at_time(20);
     auto y = x.then_shrinking_at_time(30);
     ASSERT_EQ(y, pm::Varying<pm::time_int>((40 << 2) + 2));
@@ -53,11 +54,11 @@ TEST(Varying, AdditionAndSubtraction) {
 
 TEST(Varying, TimeToXInterceptWhenAddedTo) {
     auto x1 = pm::Varying32((-10 << 2) + 1);
-    auto x2 = pm::Varying32 ((-20 << 2) + 1);
+    auto x2 = pm::Varying32((-20 << 2) + 1);
     int32_t t = x1.time_of_x_intercept_when_added_to(x2 - 100);
     ASSERT_EQ(t, 65);
 
-    auto x3 = pm::Varying32 ((10 << 2));
+    auto x3 = pm::Varying32((10 << 2));
     int32_t t2 = x1.time_of_x_intercept_when_added_to(x3 - 100);
     ASSERT_EQ(t2, 100);
 }

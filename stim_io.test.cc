@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
 #include "stim_io.h"
 
+#include "gtest/gtest.h"
 
 TEST(StimIO, ProbabilityGraph) {
     pm::ProbabilityGraph g(10);

@@ -2,15 +2,15 @@
 #define PYMATCHING2_MWPM_DECODING_H
 
 #include "mwpm.h"
-#include "stim_io.h"
 #include "stim.h"
+#include "stim_io.h"
 
 namespace pm {
 
-    Mwpm detector_error_model_to_mwpm(const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_buckets);
+Mwpm detector_error_model_to_mwpm(const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_buckets);
 
-    pm::MatchingResult decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
+pm::MatchingResult decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
 
-}
+}  // namespace pm
 
-#endif //PYMATCHING2_MWPM_DECODING_H
+#endif  // PYMATCHING2_MWPM_DECODING_H
