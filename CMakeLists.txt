@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.15.3)
 project(PyMatching2)
 
+include_directories(src)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY out)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY out)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY out)
 
 add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
@@ -26,18 +30,18 @@ endif()
 
 add_executable(
         pymatching
-        main.cc
-        namespaced_main.cc
-        events.cc
-        graph.cc
-        compressed_edge.cc
-        alternating_tree.cc
-        graph_fill_region.cc
-        region_edge.cc
-        graph_flooder.cc
-        mwpm.cc
-        stim_io.cc
-        mwpm_decoding.cc
+        src/pymatching/main.cc
+        src/pymatching/namespaced_main.cc
+        src/pymatching/events.cc
+        src/pymatching/graph.cc
+        src/pymatching/compressed_edge.cc
+        src/pymatching/alternating_tree.cc
+        src/pymatching/graph_fill_region.cc
+        src/pymatching/region_edge.cc
+        src/pymatching/graph_flooder.cc
+        src/pymatching/mwpm.cc
+        src/pymatching/stim_io.cc
+        src/pymatching/mwpm_decoding.cc
         )
 
 target_compile_options(pymatching PRIVATE -O3)
@@ -56,31 +60,31 @@ enable_testing()
 
 add_executable(
         pymatching_tests
-        varying.test.cc
-        events.cc
-        events.test.cc
-        namespaced_main.cc
-        namespaced_main.test.cc
-        graph.test.cc
-        graph.cc
-        fixed_length_vector.test.cc
-        compressed_edge.test.cc
-        compressed_edge.cc
-        alternating_tree.test.cc
-        alternating_tree.cc
-        graph_fill_region.cc
-        graph_fill_region.test.cc
-        region_edge.cc
-        graph_flooder.cc
-        graph_flooder.test.cc
-        mwpm.cc
-        mwpm.test.cc
-        stim_io.cc
-        stim_io.test.cc
-        mwpm_decoding.cc
-        mwpm_decoding.test.cc
-        bucket_queue.cc
-        bucket_queue.test.cc
+        src/pymatching/varying.test.cc
+        src/pymatching/events.cc
+        src/pymatching/events.test.cc
+        src/pymatching/namespaced_main.cc
+        src/pymatching/namespaced_main.test.cc
+        src/pymatching/graph.test.cc
+        src/pymatching/graph.cc
+        src/pymatching/fixed_length_vector.test.cc
+        src/pymatching/compressed_edge.test.cc
+        src/pymatching/compressed_edge.cc
+        src/pymatching/alternating_tree.test.cc
+        src/pymatching/alternating_tree.cc
+        src/pymatching/graph_fill_region.cc
+        src/pymatching/graph_fill_region.test.cc
+        src/pymatching/region_edge.cc
+        src/pymatching/graph_flooder.cc
+        src/pymatching/graph_flooder.test.cc
+        src/pymatching/mwpm.cc
+        src/pymatching/mwpm.test.cc
+        src/pymatching/stim_io.cc
+        src/pymatching/stim_io.test.cc
+        src/pymatching/mwpm_decoding.cc
+        src/pymatching/mwpm_decoding.test.cc
+        src/pymatching/bucket_queue.cc
+        src/pymatching/bucket_queue.test.cc
 )
 target_link_options(
         pymatching_tests

@@ -2,6 +2,7 @@
 #define PYMATCHING2_FIXED_LENGTH_VECTOR_H
 
 #include <cstddef>
+#include <vector>
 
 namespace pm {
 
