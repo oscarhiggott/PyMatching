@@ -124,18 +124,20 @@ int main_count_mistakes(int argc, const char** argv) {
         obs_shot.clear();
         num_shots++;
     }
-    fprintf(stats_out, "%zu / %zu\n", num_mistakes, num_shots);
+    if (!time)
+        fprintf(stats_out, "%zu / %zu\n", num_mistakes, num_shots);
+    auto end = std::chrono::steady_clock::now();
+    auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
+    if (time) {
+//        std::cerr << "Total decoding time: " << (int)microseconds << "us\n";
+//        std::cerr << "Decoding time per shot: " << (microseconds / num_shots) << "us\n";
+        std::cout << (microseconds / num_shots);
+    }
     if (stats_out != stdout) {
         fclose(stats_out);
     }
     if (shots_in != stdin) {
         fclose(shots_in);
-    }
-    auto end = std::chrono::steady_clock::now();
-    auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
-    if (time) {
-        std::cerr << "Total decoding time: " << (int)microseconds << "us\n";
-        std::cerr << "Decoding time per shot: " << (microseconds / num_shots) << "us\n";
     }
 
     return EXIT_SUCCESS;
