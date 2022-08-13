@@ -1,20 +1,20 @@
 #include "pymatching/events.h"
 
 pm::TentativeEvent::TentativeEvent(
-    pm::DetectorNode *detector_node_1,
-    size_t node_1_neighbor_index,
-    pm::DetectorNode *detector_node_2,
-    size_t node_2_neighbor_index,
+    pm::TentativeNeighborInteractionEventData data,
     time_int time)
-    : neighbor_interaction_event_data(detector_node_1, node_1_neighbor_index, detector_node_2, node_2_neighbor_index),
+    : neighbor_interaction_event_data(data),
       time(time),
       tentative_event_type(INTERACTION),
       is_invalidated(false) {
 }
 
-pm::TentativeEvent::TentativeEvent(pm::GraphFillRegion *region, time_int time)
-    : region_shrink_event_data(region), time(time), tentative_event_type(SHRINKING), is_invalidated(false) {
+pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, time_int time)
+    : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), is_invalidated(false) {
 }
+pm::TentativeEvent::TentativeEvent(time_int time) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), is_invalidated(false) {
+}
+
 
 void pm::TentativeEvent::invalidate() {
     is_invalidated = true;
@@ -70,9 +70,40 @@ bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
             return region_shrink_event_data == rhs.region_shrink_event_data;
         case INTERACTION:
             return neighbor_interaction_event_data == rhs.neighbor_interaction_event_data;
+        case NO_TENTATIVE_EVENT:
+            return true;
         default:
             throw std::invalid_argument("Unrecognized event type");
     }
+}
+
+std::ostream &pm::operator<<(std::ostream &out, const TentativeEvent &ev) {
+    out << "TentativeEvent{.time=";
+    out << ev.time;
+    out << ", .is_invalidated=";
+    out << ev.is_invalidated;
+    out << ", .type=";
+    switch (ev.tentative_event_type) {
+        case SHRINKING:
+            out << "SHRINKING";
+            break;
+        case INTERACTION:
+            out << "INTERACTION";
+            break;
+        case NO_TENTATIVE_EVENT:
+            out << "NO_TENTATIVE_EVENT";
+            break;
+        default:
+            throw std::invalid_argument("Unrecognized event type");
+    }
+    out << "}";
+    return out;
+}
+
+std::string pm::TentativeEvent::str() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
 }
 
 bool pm::TentativeEvent::operator!=(const TentativeEvent &rhs) const {

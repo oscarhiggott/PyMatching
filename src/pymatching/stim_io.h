@@ -6,7 +6,7 @@
 
 namespace pm {
 pm::MatchingGraph detector_error_model_to_matching_graph(
-    const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_buckets);
+    const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
 
 struct Neighbor {
     std::vector<Neighbor> *node;
@@ -29,7 +29,7 @@ class ProbabilityGraph {
 
     void handle_dem_instruction(double p, const std::vector<size_t> &detectors, pm::obs_int obs_mask);
 
-    pm::MatchingGraph to_matching_graph(pm::weight_int num_buckets);
+    pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
 
     double min_nonzero_probability();
 };

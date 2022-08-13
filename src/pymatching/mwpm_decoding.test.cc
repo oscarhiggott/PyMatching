@@ -35,8 +35,8 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
     auto reader = stim::MeasureRecordReader::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
-    pm::weight_int num_buckets = 1000;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+    pm::weight_int num_distinct_weights = 1001;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
 
     std::ifstream is(
         find_test_data_file(

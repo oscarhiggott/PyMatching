@@ -6,7 +6,7 @@
 //     detection_events.push_back(node);
 // }
 
-pm::Mwpm::Mwpm(pm::GraphFlooder &flooder) : flooder(std::move(flooder)) {
+pm::Mwpm::Mwpm(pm::GraphFlooder flooder) : flooder(std::move(flooder)) {
 }
 
 void pm::Mwpm::shatter_descendants_into_matches_and_freeze(pm::AltTreeNode &alt_tree_node) {

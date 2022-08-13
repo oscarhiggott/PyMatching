@@ -6,17 +6,9 @@
 #include "pymatching/events.h"
 #include "pymatching/graph.h"
 #include "pymatching/region_edge.h"
+#include "pymatching/bucket_queue.h"
 
 namespace pm {
-
-//    constexpr int MAX_TIME = 100000; // twice maximum edge weight
-
-class Compare {
-   public:
-    bool operator()(TentativeEvent* a, TentativeEvent* b) {
-        return *a > *b;
-    }
-};
 
 class GraphFlooder {
    public:
@@ -29,16 +21,9 @@ class GraphFlooder {
     /// events were scheduled in this queue before the region collision was processed.
     ///
     /// Events are ordered by time; by when they will occur in a timeline.
-    std::priority_queue<TentativeEvent*, std::vector<TentativeEvent*>, Compare> queue;
-    /// Tracks where the flooder is in the timeline of events to process.
-    ///
-    /// As time advances, regions grow and shrink and collide and change.
-    /// Because regions grow at a finite rate, collisions and other events
-    /// occur at specific times. This allows them to be processed in the
-    /// correct order.
-    time_int time;
+    bucket_queue<0> queue;
 
-    explicit GraphFlooder(MatchingGraph& graph);
+    GraphFlooder(MatchingGraph graph, size_t num_buckets);
     GraphFlooder(GraphFlooder&&) noexcept;
     void create_region(DetectorNode* node);
     MwpmEvent next_event();
@@ -63,6 +48,8 @@ class GraphFlooder {
     static MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
+
+    pm::MwpmEvent do_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
 };
 
 }  // namespace pm

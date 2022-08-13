@@ -9,20 +9,19 @@ namespace pm {
 
 struct TentativeNeighborInteractionEventData {
     DetectorNode *detector_node_1;
-
-    bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
-
-    bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
-
     size_t node_1_neighbor_index;
     DetectorNode *detector_node_2;
     size_t node_2_neighbor_index;
+
     TentativeNeighborInteractionEventData(
         DetectorNode *detector_node_1,
         size_t node_1_neighbor_index,
         DetectorNode *detector_node_2,
         size_t node_2_neighbor_index);
     TentativeNeighborInteractionEventData() = default;
+
+    bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
+    bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
 };
 
 struct TentativeRegionShrinkEventData {
@@ -36,7 +35,11 @@ struct TentativeRegionShrinkEventData {
     explicit TentativeRegionShrinkEventData(GraphFillRegion *region);
 };
 
-enum TentativeType : uint8_t { INTERACTION, SHRINKING };
+enum TentativeType : uint8_t {
+    NO_TENTATIVE_EVENT,
+    INTERACTION,
+    SHRINKING
+};
 
 struct TentativeEvent {
     union {
@@ -48,28 +51,26 @@ struct TentativeEvent {
     bool is_invalidated;
 
     TentativeEvent(
-        DetectorNode *detector_node_1,
-        size_t node_1_neighbor_index,
-        DetectorNode *detector_node_2,
-        size_t node_2_neighbor_index,
+        TentativeNeighborInteractionEventData data,
         time_int time);
-    TentativeEvent(pm::GraphFillRegion *region, time_int time);
+    TentativeEvent(TentativeRegionShrinkEventData data, time_int time);
+    TentativeEvent(time_int time);
     TentativeEvent() = default;
 
     bool operator<(const TentativeEvent &rhs) const;
-
     bool operator>(const TentativeEvent &rhs) const;
-
     bool operator<=(const TentativeEvent &rhs) const;
-
     bool operator==(const TentativeEvent &rhs) const;
-
     bool operator!=(const TentativeEvent &rhs) const;
-
     bool operator>=(const TentativeEvent &rhs) const;
 
     void invalidate();
+
+    std::string str() const;
 };
+
+std::ostream &operator<<(std::ostream &out, const TentativeEvent &c);
+
 
 struct RegionHitRegionEventData {
     GraphFillRegion *region1;
@@ -110,7 +111,7 @@ struct BlossomShatterEventData {
         GraphFillRegion *blossom_region, GraphFillRegion *in_parent_region, GraphFillRegion *in_child_region);
 };
 
-enum MwpmEventType : uint8_t { REGION_HIT_REGION, REGION_HIT_BOUNDARY, BLOSSOM_SHATTER, NO_EVENT };
+enum MwpmEventType : uint8_t { NO_EVENT, REGION_HIT_REGION, REGION_HIT_BOUNDARY, BLOSSOM_SHATTER };
 
 struct MwpmEvent {
     union {

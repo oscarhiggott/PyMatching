@@ -53,7 +53,8 @@ pm::AltTreeEdge MwpmAltTreeTestData::t(
 }
 
 TEST(Mwpm, BlossomCreatedThenShattered) {
-    auto g = pm::MatchingGraph(10);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(10), 1024));
+    auto &g = mwpm.flooder.graph;
     g.add_edge(0, 1, 10, 1);
     g.add_edge(1, 4, 20, 2);
     g.add_edge(4, 3, 20, 3);
@@ -62,19 +63,13 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     g.add_edge(4, 5, 50, 6);
     g.add_edge(2, 6, 100, 7);
     g.add_boundary_edge(5, 36, 8);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
     for (size_t i = 0; i < 7; i++)
         mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[i]);
     auto& ns = mwpm.flooder.graph.nodes;
-    auto e1 = mwpm.flooder.next_event();
-    mwpm.process_event(e1);
-    auto e2 = mwpm.flooder.next_event();
-    mwpm.process_event(e2);
-    auto e3 = mwpm.flooder.next_event();
-    mwpm.process_event(e3);
-    auto e4 = mwpm.flooder.next_event();
-    mwpm.process_event(e4);
+    mwpm.process_event(mwpm.flooder.next_event());
+    mwpm.process_event(mwpm.flooder.next_event());
+    mwpm.process_event(mwpm.flooder.next_event());
+    mwpm.process_event(mwpm.flooder.next_event());
     auto e5 = mwpm.flooder.next_event();
     ASSERT_EQ(
         e5,
@@ -88,8 +83,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     ASSERT_NE(ns[0].region_that_arrived->blossom_parent, nullptr);
     auto blossom = ns[0].region_that_arrived->blossom_parent;
     // Region 5 matches with blossom {0, 1, 4, 3, 2}
-    auto e6 = mwpm.flooder.next_event();
-    mwpm.process_event(e6);
+    mwpm.process_event(mwpm.flooder.next_event());
     ASSERT_EQ(mwpm.flooder.graph.nodes[5].region_that_arrived->match.region, blossom);
     ASSERT_EQ(blossom->blossom_children.size(), 5);
     std::vector<pm::RegionEdge> expected_blossom_children = {
@@ -104,23 +98,22 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
         ASSERT_TRUE(c.region->alt_tree_node == nullptr);
     }
     ASSERT_EQ(blossom->radius, pm::Varying(8 << 2));
-    ASSERT_EQ(mwpm.flooder.time, 25);
+    ASSERT_EQ(mwpm.flooder.queue.cur_time, 25);
     // Region 6 collides with matched blossom
-    auto e7 = mwpm.flooder.next_event();
-    mwpm.process_event(e7);
-    ASSERT_EQ(mwpm.flooder.time, 83);
+    mwpm.process_event(mwpm.flooder.next_event());
+    ASSERT_EQ(mwpm.flooder.queue.cur_time, 83);
     ASSERT_EQ(
         mwpm.flooder.graph.nodes[6].region_that_arrived->alt_tree_node->children[0].alt_tree_node->inner_region,
         blossom);
     // Blossom shatters
     auto e8 = mwpm.flooder.next_event();
-    ASSERT_EQ(mwpm.flooder.time, 91);
+    ASSERT_EQ(mwpm.flooder.queue.cur_time, 91);
     ASSERT_EQ(e8.event_type, pm::BLOSSOM_SHATTER);
     mwpm.process_event(e8);
     ASSERT_EQ(ns[0].region_that_arrived->match.region, ns[1].region_that_arrived);
     ASSERT_EQ(ns[1].region_that_arrived->match.region, ns[0].region_that_arrived);
     auto e9 = mwpm.flooder.next_event();
-    ASSERT_EQ(mwpm.flooder.time, 94);
+    ASSERT_EQ(mwpm.flooder.queue.cur_time, 94);
     ASSERT_EQ(e9.event_type, pm::REGION_HIT_BOUNDARY);
     mwpm.process_event(e9);
     auto e10 = mwpm.flooder.next_event();
@@ -134,9 +127,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
 
 TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
     size_t n = 10;
-    pm::MatchingGraph g(n + 3);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(n + 3), 2048));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n + 3; i++)
         mwpm.flooder.create_region(&ns[i]);
@@ -149,7 +140,6 @@ TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
         mwpm.process_event(rhr(ns, n - i, n - i + 1));
     // Close the path into a blossom
     mwpm.process_event(rhr(ns, 0, n));
-    auto blossom_id = n + 3;
     auto blossom = ns[0].region_that_arrived->blossom_parent;
     // Make the blossom become an inner node
     mwpm.process_event(pm::RegionHitRegionEventData{ns[n + 1].region_that_arrived, blossom, {&ns[n + 1], &ns[5], 0}});
@@ -168,9 +158,7 @@ TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
 
 TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
     size_t n = 14;
-    pm::MatchingGraph g(n);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(n), 2048));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n; i++)
         mwpm.flooder.create_region(&ns[i]);
@@ -221,9 +209,7 @@ TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
 
 TEST(Mwpm, BoundaryMatchHitsTree) {
     size_t n = 6;
-    pm::MatchingGraph g(n);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(n), 2048));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n; i++)
         mwpm.flooder.create_region(&ns[i]);
@@ -243,11 +229,10 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
 
 TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     size_t num_nodes = 20;
-    auto g = pm::MatchingGraph(num_nodes);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes), 2048));
+    auto &g = mwpm.flooder.graph;
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, i);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
     auto& ns = mwpm.flooder.graph.nodes;
     mwpm.flooder.create_region(&ns[6]);
     mwpm.flooder.create_region(&ns[13]);
@@ -274,9 +259,8 @@ pm::obs_int set_bits_to_obs_mask(const std::vector<int>& set_bits) {
 };
 
 TEST(Mwpm, ShatterBlossomAndExtractMatches) {
-    auto g = pm::MatchingGraph(12);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(12), 2048));
+
     auto& ns = mwpm.flooder.graph.nodes;
     pm::time_int w = 0;
     for (auto& n : ns) {
@@ -323,9 +307,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
 }
 
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundary) {
-    auto g = pm::MatchingGraph(5);
-    auto flooder = pm::GraphFlooder(g);
-    auto mwpm = pm::Mwpm(flooder);
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(5), 2048));
     auto& ns = mwpm.flooder.graph.nodes;
     pm::time_int w = 0;
     for (auto& n : ns) {

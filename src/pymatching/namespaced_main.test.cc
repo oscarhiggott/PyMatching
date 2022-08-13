@@ -42,7 +42,7 @@ std::string result_of_running_main(const std::vector<std::string> args, const st
         throw std::invalid_argument("Failed to write input.");
     }
     fclose(f);
-    if (pm::main(argv.size(), argv.data()) != EXIT_SUCCESS) {
+    if (pm::main((int)argv.size(), argv.data()) != EXIT_SUCCESS) {
         throw std::invalid_argument("Returned not EXIT_SUCCESS");
     }
     f = fopen(out.path.c_str(), "r");

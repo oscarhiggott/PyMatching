@@ -7,7 +7,7 @@
 
 namespace pm {
 
-Mwpm detector_error_model_to_mwpm(const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_buckets);
+Mwpm detector_error_model_to_mwpm(const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights);
 
 pm::MatchingResult decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
 
