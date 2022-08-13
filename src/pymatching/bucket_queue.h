@@ -11,7 +11,7 @@ namespace pm {
 
 template <size_t CHUNK_SIZE>
 struct bucket_queue {
-    std::vector<pm::ChunkList<TentativeEvent*, CHUNK_SIZE>> buckets;
+    std::vector<pm::ChunkList<TentativeEvent, CHUNK_SIZE>> buckets;
     size_t _num_enqueued;
     pm::time_int cur_time;
 
@@ -21,21 +21,18 @@ struct bucket_queue {
         return _num_enqueued;
     }
 
-    void enqueue(TentativeEvent *event) {
+    void enqueue(TentativeEvent event) {
 //        if (event->time < cur_time || event->time >= cur_time + buckets.size()) {
 //            throw std::invalid_argument("event->time is out of bucket range");
 //        }
-        buckets[event->time % buckets.size()].push_anywhere(event);
+        buckets[event.time % buckets.size()].push_anywhere(event);
         _num_enqueued++;
     }
 
     bool try_pop(TentativeEvent *out) {
         while (true) {
             auto &bucket = buckets[cur_time % buckets.size()];
-            TentativeEvent *tentative_event_ptr;
-            while (bucket.try_pop(&tentative_event_ptr)) {
-                *out = *tentative_event_ptr;
-                delete tentative_event_ptr;
+            if (bucket.try_pop(out)) {
                 _num_enqueued--;
                 if (!out->is_still_valid()) {
                     continue;
@@ -64,14 +61,14 @@ struct bucket_queue {
 
 class bucket_queue_compare_helper {
    public:
-    bool operator()(TentativeEvent* a, TentativeEvent* b) {
-        return *a > *b;
+    bool operator()(TentativeEvent a, TentativeEvent b) {
+        return a > b;
     }
 };
 
 template <>
 struct bucket_queue<0> {
-    std::priority_queue<TentativeEvent *, std::vector<TentativeEvent *>, bucket_queue_compare_helper> q;
+    std::priority_queue<TentativeEvent, std::vector<TentativeEvent>, bucket_queue_compare_helper> q;
     pm::time_int cur_time;
 
     explicit bucket_queue(size_t num_buckets) : q(), cur_time(0) {}
@@ -80,16 +77,14 @@ struct bucket_queue<0> {
         return q.size();
     }
 
-    void enqueue(TentativeEvent *event) {
+    void enqueue(TentativeEvent event) {
         q.push(event);
     }
 
     bool try_pop(TentativeEvent *out) {
         while (!q.empty()) {
-            TentativeEvent *ptr = q.top();
+            *out = q.top();
             q.pop();
-            *out = *ptr;
-            delete ptr;
             cur_time = out->time;
             if (!out->is_still_valid()) {
                 continue;

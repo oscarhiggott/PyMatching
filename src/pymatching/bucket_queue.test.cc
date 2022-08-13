@@ -10,9 +10,9 @@ TEST(bucket_queue, basic_usage) {
     pm::TentativeEvent out{};
     ASSERT_FALSE(q.try_pop(&out));
 
-    q.enqueue(new pm::TentativeEvent(3));
-    q.enqueue(new pm::TentativeEvent(6, 0xDEAD));
-    q.enqueue(new pm::TentativeEvent(9));
+    q.enqueue(pm::TentativeEvent(3));
+    q.enqueue(pm::TentativeEvent(6, 0xDEAD));
+    q.enqueue(pm::TentativeEvent(9));
     ASSERT_EQ(q.size(), 3);
     ASSERT_EQ(q.cur_time, 0);
 
@@ -33,9 +33,9 @@ TEST(bucket_queue, fallback_usage) {
     pm::TentativeEvent out{};
     ASSERT_FALSE(q.try_pop(&out));
 
-    q.enqueue(new pm::TentativeEvent(3));
-    q.enqueue(new pm::TentativeEvent(6, 0xDEAD));
-    q.enqueue(new pm::TentativeEvent(9));
+    q.enqueue(pm::TentativeEvent(3));
+    q.enqueue(pm::TentativeEvent(6, 0xDEAD));
+    q.enqueue(pm::TentativeEvent(9));
     ASSERT_EQ(q.size(), 3);
     ASSERT_EQ(q.cur_time, 0);
 

@@ -86,14 +86,17 @@ void pm::GraphFlooder::schedule_tentative_neighbor_interaction_event(
     size_t schedule_list_index_2,
     pm::time_int event_time) {
     auto vid = next_event_vid++;
-    auto e = new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
-        detector_node_1, schedule_list_index_1, detector_node_2, schedule_list_index_2
-    }, event_time, vid);
     detector_node_1->edge_event_vids[schedule_list_index_1] = vid;
     if (detector_node_2 != nullptr) {
         detector_node_2->edge_event_vids[schedule_list_index_2] = vid;
     }
-    queue.enqueue(e);
+    queue.enqueue({
+        pm::TentativeNeighborInteractionEventData{
+            detector_node_1, schedule_list_index_1, detector_node_2, schedule_list_index_2
+        },
+        event_time,
+        vid,
+    });
 }
 
 void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &region) {
@@ -104,9 +107,14 @@ void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &regi
         t = region.shell_area.back()->local_radius().time_of_x_intercept_for_shrinking();
     }
     auto vid = next_event_vid++;
-    auto tentative_event = new TentativeEvent(TentativeRegionShrinkEventData{&region}, t, vid);
     region.shrink_event_vid = vid;
-    queue.enqueue(tentative_event);
+    queue.enqueue({
+        pm::TentativeRegionShrinkEventData{
+            &region,
+        },
+        t,
+        vid,
+    });
 }
 
 void pm::GraphFlooder::do_region_arriving_at_empty_detector_node(

@@ -15,20 +15,20 @@ TEST(GraphFlooder, PriorityQueue) {
     graph.add_edge(4, 5, 10, 0);
     graph.add_edge(5, 0, 10, 0);
 
-    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    flooder.queue.enqueue(pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[0], 0, &graph.nodes[1], 1
     }, 10, 0x0));
-    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    flooder.queue.enqueue(pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[1], 0, &graph.nodes[2], 1
     }, 8, 0x0));
-    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    flooder.queue.enqueue(pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[2], 0, &graph.nodes[3], 1
     }, 5, 0x0));
 
     pm::GraphFillRegion gfr;
-    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeRegionShrinkEventData{&gfr}, 70, 0x0));
+    flooder.queue.enqueue(pm::TentativeEvent(pm::TentativeRegionShrinkEventData{&gfr}, 70, 0x0));
 
-    flooder.queue.enqueue(new pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
+    flooder.queue.enqueue(pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &graph.nodes[4], 0, &graph.nodes[5], 1
     }, 100, 0x0));
     auto e = flooder.queue.force_pop();
@@ -96,7 +96,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     ASSERT_EQ(t1, pm::TentativeEvent(pm::TentativeNeighborInteractionEventData{
         &flooder.graph.nodes[2], 1, &flooder.graph.nodes[3], 0
     }, 100, 0x1));
-    flooder.queue.enqueue(new pm::TentativeEvent(t1));
+    flooder.queue.enqueue(pm::TentativeEvent(t1));
     auto e2 = flooder.next_event();
     pm::MwpmEvent e2_exp = pm::RegionHitBoundaryEventData(
         flooder.graph.nodes[2].region_that_arrived, pm::CompressedEdge(&flooder.graph.nodes[2], nullptr, 10));
