@@ -4,7 +4,7 @@
 #include <random>
 
 TEST(bit_bucket_queue, basic_usage) {
-    pm::bit_bucket_queue q;
+    pm::bit_bucket_queue<true> q;
     ASSERT_EQ(q.size(), 0);
     ASSERT_EQ(q.cur_time, 0);
 
@@ -27,7 +27,7 @@ TEST(bit_bucket_queue, basic_usage) {
 }
 
 TEST(bit_bucket_queue, sorts_fuzz) {
-    pm::bit_bucket_queue q;
+    pm::bit_bucket_queue<true> q;
     std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
 
     std::vector<pm::time_int> s;
@@ -49,7 +49,7 @@ TEST(bit_bucket_queue, sorts_fuzz) {
 }
 
 TEST(bit_bucket_queue, bucket_for) {
-    pm::bit_bucket_queue q;
+    pm::bit_bucket_queue<true> q;
     q.cur_time = 17;
     ASSERT_EQ(q.cur_bit_bucket_for(17), 0);
     ASSERT_EQ(q.cur_bit_bucket_for(18), 2);
@@ -71,4 +71,13 @@ TEST(bit_bucket_queue, bucket_for) {
     ASSERT_EQ(q.cur_bit_bucket_for(63), 6);
     ASSERT_EQ(q.cur_bit_bucket_for(64), 7);
     ASSERT_EQ(q.cur_bit_bucket_for(65), 7);
+}
+
+TEST(bit_bucket_queue, wraparound) {
+    pm::bit_bucket_queue<true> q;
+    q.cur_time = INT32_MAX;
+    q.enqueue(pm::TentativeEvent(INT32_MIN));
+    q.enqueue(pm::TentativeEvent(INT32_MIN + 1));
+    ASSERT_EQ(q.force_pop_valid().time, INT32_MIN);
+    ASSERT_EQ(q.force_pop_valid().time, INT32_MIN + 1);
 }

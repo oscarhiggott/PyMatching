@@ -14,7 +14,7 @@ BENCHMARK(bucket_queue_sort) {
 
     bool dependence = false;
     benchmark_go([&]() {
-        pm::bit_bucket_queue q;
+        pm::bit_bucket_queue<false> q;
         for (pm::time_int t : v) {
             q.enqueue(pm::TentativeEvent(t));
         }
@@ -36,7 +36,7 @@ BENCHMARK(bucket_queue_stream) {
 
     bool dependence = false;
     benchmark_go([&]() {
-        pm::bit_bucket_queue q;
+        pm::bit_bucket_queue<false> q;
         for (size_t k = 0; k < 10; k++) {
             for (size_t r = 0; r < k; r++) {
                 q.enqueue(pm::TentativeEvent((pm::time_int)k));

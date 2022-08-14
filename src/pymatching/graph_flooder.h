@@ -21,7 +21,7 @@ class GraphFlooder {
     /// events were scheduled in this queue before the region collision was processed.
     ///
     /// Events are ordered by time; by when they will occur in a timeline.
-    bit_bucket_queue queue;
+    bit_bucket_queue<false> queue;
 
     /// This counter is used to give each tentative event a unique index. The index is also written
     /// to objects affected by the event. For an event to be valid, its vid must match the marked

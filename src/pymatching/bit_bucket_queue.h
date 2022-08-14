@@ -47,8 +47,9 @@ namespace pm {
 /// - Get redistributed to a slightly lower bucket.
 /// - Repeatedly wait and get redistributed to lower and lower buckets until in bucket 0.
 /// - Get dequeued out of bucket 0 and yielded as a result.
+template <bool use_validation>
 struct bit_bucket_queue {
-    std::array<std::vector<TentativeEvent>, sizeof(pm::time_int)*8> bit_buckets;
+    std::array<std::vector<TentativeEvent>, sizeof(pm::time_int)*8 + 2> bit_buckets;
     pm::time_int cur_time;
     size_t _num_enqueued;
 
@@ -71,23 +72,22 @@ struct bit_bucket_queue {
     }
 
     /// Adds an event to the priority queue.
+    ///
+    /// The event MUST NOT be cycle-before the current time.
     void enqueue(TentativeEvent event) {
-        auto target_bucket = cur_bit_bucket_for(event.time);
-        if (target_bucket == bit_buckets.size() - 1) {
-            std::stringstream ss;
-            if (event.time < cur_time) {
-                ss << "Attempted to schedule a tentative event in the past.\n";
-                ss << "    current time: " << cur_time << "\n";
-                ss << "    tentative event: " << event << "\n";
-            } else {
-                ss << "Attempted to schedule a tentative event too far into the future.\n";
-                ss << "    current time: " << cur_time << "\n";
-                ss << "    tentative event: " << event << "\n";
-                ss << "    time difference: " << ((uint64_t)(event.time - cur_time)) << "\n";
-                ss << "    max time difference: " << (uint64_t{1} << (bit_buckets.size() - 2)) << "\n";
+        if (use_validation) {
+            uint32_t d = (uint32_t) event.time - (uint32_t) cur_time;
+            if (d >= 1 << 31) {
+                std::stringstream ss;
+                if (event.time < cur_time) {
+                    ss << "Attempted to schedule an event cycle-before the present.\n";
+                    ss << "    current time: " << cur_time << "\n";
+                    ss << "    tentative event: " << event << "\n";
+                }
+                throw std::invalid_argument(ss.str());
             }
-            throw std::invalid_argument(ss.str());
         }
+        auto target_bucket = cur_bit_bucket_for(event.time);
         bit_buckets[target_bucket].push_back(event);
         _num_enqueued++;
     }
