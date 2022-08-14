@@ -84,7 +84,16 @@ class AltTreeNode {
     bool operator!=(const AltTreeNode& rhs) const;
 
     void become_root();
-    std::vector<GraphFillRegion> shatter_into_matches();
+    /// Finds the most recent common ancestor of `this` and `other`
+    ///
+    /// Note: breadcrumbs are left (by setting `visited=true`) as the
+    /// tree is traversed upward from `this` and `other`. These are
+    /// reset (`visited=false`) before the method completes for the
+    /// common ancestor and its ancestors, but *not* reset for nodes
+    /// on the paths from `this` and `other` stopping *before* ancestor.
+    /// This does not affect the algorithm, as these nodes are always removed
+    /// from the tree immediately after the common ancestor is found (either
+    /// a blossom is formed, or the two trees shatter into matches).
     AltTreeNode* most_recent_common_ancestor(AltTreeNode& other);
     void add_child(const AltTreeEdge& child);
     AltTreeNode* make_child(
@@ -93,7 +102,6 @@ class AltTreeNode {
         const CompressedEdge& child_inner_to_outer_edge,
         const CompressedEdge& child_compressed_edge);
     AltTreePruneResult prune_upward_path_stopping_before(AltTreeNode* prune_parent, bool back);
-    AltTreePruneResult prune_upward_back_edge_path_stopping_before(AltTreeNode* prune_parent);
     const AltTreeNode* find_root() const;
     bool tree_equal(const pm::AltTreeNode& other) const;
     std::vector<pm::AltTreeNode*> all_nodes_in_tree();

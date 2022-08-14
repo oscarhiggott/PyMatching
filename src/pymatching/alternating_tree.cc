@@ -167,7 +167,7 @@ pm::AltTreeNode *pm::AltTreeNode::most_recent_common_ancestor(pm::AltTreeNode &o
             return nullptr;
         }
     }
-    // Clean up 'visited' flags for ancestors of common_ancestor
+    // Clean up 'visited' flags for the common ancestor, and its ancestors
     common_ancestor->visited = false;
     this_parent = common_ancestor->parent.alt_tree_node;
     while (this_parent) {
