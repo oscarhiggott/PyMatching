@@ -51,7 +51,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
             }
         }
     })
-        .goal_millis(80)
+        .goal_millis(55)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -81,7 +81,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(13)
+        .goal_millis(9)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -111,7 +111,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
             }
         }
     })
-        .goal_micros(500)
+        .goal_micros(430)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -171,7 +171,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
             }
         }
     })
-        .goal_millis(65)
+        .goal_millis(44)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == 0) {
@@ -201,7 +201,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
             }
         }
     })
-        .goal_millis(80)
+        .goal_millis(39)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -231,7 +231,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
             }
         }
     })
-        .goal_millis(13)
+        .goal_millis(8)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -261,7 +261,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
             }
         }
     })
-        .goal_micros(900)
+        .goal_micros(590)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
