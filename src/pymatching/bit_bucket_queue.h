@@ -2,6 +2,7 @@
 #define PYMATCHING2_BUCKET_QUEUE_H
 
 #include <vector>
+#include <cassert>
 #include <queue>
 #include <bit>
 #include <iostream>
@@ -126,20 +127,18 @@ struct bit_bucket_queue {
             } else {
                 auto &source_bucket = bit_buckets[b];
 
+                // Advance time to the minimum time in the bucket.
                 cur_time = source_bucket[0].time;
                 for (size_t k = 1; k < source_bucket.size(); k++) {
                     cur_time = std::min(cur_time, source_bucket[k].time);
                 }
 
-                for (size_t k = 0; k < source_bucket.size(); k++) {
-                    auto target_bucket = cur_bit_bucket_for(source_bucket[k].time);
-                    if (target_bucket != b) {
-                        bit_buckets[target_bucket].push_back(source_bucket[k]);
-                        source_bucket[k] = source_bucket.back();
-                        source_bucket.pop_back();
-                        k--;
-                    }
+                // Redistribute the contents of the bucket.
+                for (auto &e : source_bucket) {
+                    auto target_bucket = cur_bit_bucket_for(e.time);
+                    bit_buckets[target_bucket].push_back(e);
                 }
+                source_bucket.clear();
             }
         }
 

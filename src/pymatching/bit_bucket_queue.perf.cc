@@ -25,7 +25,7 @@ BENCHMARK(bucket_queue_sort) {
         if (out.time == 0) {
             dependence = true;
         }
-    }).goal_micros(70).show_rate("EnqueueDequeues", (double)v.size());
+    }).goal_micros(60).show_rate("EnqueueDequeues", (double)v.size());
     if (dependence) {
         std::cerr << "data dependence";
     }
