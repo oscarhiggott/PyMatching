@@ -139,6 +139,7 @@ int main_count_mistakes(int argc, const char **argv) {
     if (shots_in != stdin) {
         fclose(shots_in);
     }
+
     auto end = std::chrono::steady_clock::now();
     auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     if (time) {

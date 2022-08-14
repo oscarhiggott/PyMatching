@@ -4,24 +4,26 @@
 
 #include "pymatching/perf/util.perf.h"
 
+using namespace pm;
+
 BENCHMARK(bucket_queue_sort) {
     std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
 
-    std::vector<pm::time_int> v;
+    std::vector<cyclic_time_int> v;
     for (size_t k = 0; k < 1000; k++) {
-        v.push_back((pm::time_int)(rng() & 0x3FFFFFFF));
+        v.push_back((cyclic_time_int)(rng() & 0x7FFF));
     }
 
     bool dependence = false;
     benchmark_go([&]() {
-        pm::bit_bucket_queue<false> q;
-        for (pm::time_int t : v) {
-            q.enqueue(pm::TentativeEvent(t));
+        bit_bucket_queue<false> q;
+        for (auto t : v) {
+            q.enqueue(TentativeEvent(t));
         }
-        pm::TentativeEvent out{};
+        TentativeEvent out{};
         while (true) {
             out = q.dequeue();
-            if (out.tentative_event_type == pm::NO_TENTATIVE_EVENT) {
+            if (out.tentative_event_type == NO_TENTATIVE_EVENT) {
                 break;
             }
             if (out.time == 0) {
@@ -39,14 +41,14 @@ BENCHMARK(bucket_queue_stream) {
 
     bool dependence = false;
     benchmark_go([&]() {
-        pm::bit_bucket_queue<false> q;
+        bit_bucket_queue<false> q;
         for (size_t k = 0; k < 10; k++) {
             for (size_t r = 0; r < k; r++) {
-                q.enqueue(pm::TentativeEvent((pm::time_int)k));
+                q.enqueue(TentativeEvent(cyclic_time_int{k}));
             }
         }
         for (size_t k = 0; k < n; k++) {
-            q.enqueue(pm::TentativeEvent(q.dequeue().time));
+            q.enqueue(TentativeEvent(q.dequeue().time));
         }
     }).goal_micros(150).show_rate("EnqueueDequeues", (double)n);
     if (dependence) {

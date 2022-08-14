@@ -1,5 +1,4 @@
 #include "pymatching/graph_flooder.h"
-
 #include "pymatching/graph.h"
 #include "pymatching/alternating_tree.h"
 #include "pymatching/graph_fill_region.h"
@@ -239,6 +238,7 @@ void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
     region.radius = region.radius.then_shrinking_at_time(queue.cur_time);
     reschedule_events_for_region(region);
 }
+
 
 pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event) {
     switch (tentative_event.tentative_event_type) {
