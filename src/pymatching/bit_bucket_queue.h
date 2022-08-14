@@ -7,6 +7,7 @@
 #include <bit>
 #include <iostream>
 
+#include "pymatching/cyclic.h"
 #include "pymatching/events.h"
 
 namespace pm {
@@ -163,15 +164,15 @@ struct bit_bucket_queue {
 };
 
 inline bool is_time_x_cyclebefore_y(pm::time_int x, pm::time_int y) {
-    return (uint32_t)y - (uint32_t)x - (uint32_t)1 <= (1 << 31);
+    return cyclic<uint32_t>{(uint32_t)x} < cyclic<uint32_t>{(uint32_t)y};
 }
 
 inline bool is_time_x_cycleatmost_y(pm::time_int x, pm::time_int y) {
-    return (uint32_t)y - (uint32_t)x <= (1 << 31);
+    return cyclic<uint32_t>{(uint32_t)x} <= cyclic<uint32_t>{(uint32_t)y};
 }
 
 inline bool is_time_x_cycleatleast_y(pm::time_int x, pm::time_int y) {
-    return is_time_x_cycleatmost_y(y, x);
+    return cyclic<uint32_t>{(uint32_t)x} >= cyclic<uint32_t>{(uint32_t)y};
 }
 
 template <bool use_validation>

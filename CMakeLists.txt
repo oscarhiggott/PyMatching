@@ -54,6 +54,7 @@ set(TEST_FILES
         src/pymatching/stim_io.test.cc
         src/pymatching/mwpm_decoding.test.cc
         src/pymatching/bit_bucket_queue.test.cc
+        src/pymatching/cyclic.test.cc
         )
 
 set(PERF_FILES
