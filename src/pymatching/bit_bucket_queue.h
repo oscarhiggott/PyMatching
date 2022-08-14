@@ -32,9 +32,10 @@ namespace pm {
 ///     bucket 8: event time in [128, ..., 255]
 ///     bucket 9: event time in [256, ..., 511]
 ///     ...
-///     bucket K: event time in [2^K - 17, 2^(K+1) - 16]
+///     bucket K: event time in [1<<(K-1), (1<<K)-1]
 ///     ...
-///     bucket 33: event time in [2147483664=0b10000000000000000000000000010000, ..., 16=0b10000]
+///     bucket 31: event time in [1<<30, (1<<31)-1]
+///     bucket 32: [invalid for an event to go into this bucket]
 ///
 /// Dequeueing always happens from bucket 0. Whenever bucket 0 is empty, it's refilled by
 /// redistributing events from the smallest non-empty bucket (after advancing the time to the
