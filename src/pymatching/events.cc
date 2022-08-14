@@ -37,17 +37,6 @@ bool pm::TentativeEvent::is_still_valid() const {
     }
 }
 
-pm::TentativeNeighborInteractionEventData::TentativeNeighborInteractionEventData(
-    pm::DetectorNode *detector_node_1,
-    size_t node_1_neighbor_index,
-    pm::DetectorNode *detector_node_2,
-    size_t node_2_neighbor_index)
-    : detector_node_1(detector_node_1),
-      node_1_neighbor_index(node_1_neighbor_index),
-      detector_node_2(detector_node_2),
-      node_2_neighbor_index(node_2_neighbor_index) {
-}
-
 bool pm::TentativeNeighborInteractionEventData::operator==(const pm::TentativeNeighborInteractionEventData &rhs) const {
     return detector_node_1 == rhs.detector_node_1 && node_1_neighbor_index == rhs.node_1_neighbor_index &&
            detector_node_2 == rhs.detector_node_2 && node_2_neighbor_index == rhs.node_2_neighbor_index;
@@ -55,9 +44,6 @@ bool pm::TentativeNeighborInteractionEventData::operator==(const pm::TentativeNe
 
 bool pm::TentativeNeighborInteractionEventData::operator!=(const pm::TentativeNeighborInteractionEventData &rhs) const {
     return !(rhs == *this);
-}
-
-pm::TentativeRegionShrinkEventData::TentativeRegionShrinkEventData(pm::GraphFillRegion *region) : region(region) {
 }
 
 bool pm::TentativeRegionShrinkEventData::operator==(const pm::TentativeRegionShrinkEventData &rhs) const {
@@ -172,25 +158,17 @@ bool pm::TentativeEvent::operator!=(const TentativeEvent &rhs) const {
     return !(rhs == *this);
 }
 
-pm::RegionHitRegionEventData::RegionHitRegionEventData(
-    pm::GraphFillRegion *region1, pm::GraphFillRegion *region2, pm::CompressedEdge edge)
-    : region1(region1), region2(region2), edge(edge) {
-}
-
 bool pm::RegionHitRegionEventData::operator==(const pm::RegionHitRegionEventData &rhs) const {
     if (region1 == rhs.region1 && region2 == rhs.region2 && edge == rhs.edge) {
         return true;
     }
-    // Reversed also okay.
-    return region1 == rhs.region2 && region1 == rhs.region2 && edge == rhs.edge.reversed();
+
+    // Also equal if reversed.
+    return region2 == rhs.region1 && region1 == rhs.region2 && edge == rhs.edge.reversed();
 }
 
 bool pm::RegionHitRegionEventData::operator!=(const pm::RegionHitRegionEventData &rhs) const {
     return !(rhs == *this);
-}
-
-pm::RegionHitBoundaryEventData::RegionHitBoundaryEventData(pm::GraphFillRegion *region, CompressedEdge edge)
-    : region(region), edge(edge) {
 }
 
 bool pm::RegionHitBoundaryEventData::operator==(const pm::RegionHitBoundaryEventData &rhs) const {
@@ -199,11 +177,6 @@ bool pm::RegionHitBoundaryEventData::operator==(const pm::RegionHitBoundaryEvent
 
 bool pm::RegionHitBoundaryEventData::operator!=(const pm::RegionHitBoundaryEventData &rhs) const {
     return !(rhs == *this);
-}
-
-pm::BlossomShatterEventData::BlossomShatterEventData(
-    pm::GraphFillRegion *blossom_region, pm::GraphFillRegion *in_parent_region, pm::GraphFillRegion *in_child_region)
-    : blossom_region(blossom_region), in_parent_region(in_parent_region), in_child_region(in_child_region) {
 }
 
 bool pm::BlossomShatterEventData::operator==(const pm::BlossomShatterEventData &rhs) const {

@@ -13,26 +13,15 @@ struct TentativeNeighborInteractionEventData {
     DetectorNode *detector_node_2;
     size_t node_2_neighbor_index;
 
-    TentativeNeighborInteractionEventData(
-        DetectorNode *detector_node_1,
-        size_t node_1_neighbor_index,
-        DetectorNode *detector_node_2,
-        size_t node_2_neighbor_index);
-    TentativeNeighborInteractionEventData() = default;
-
     bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
     bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
 };
 
 struct TentativeRegionShrinkEventData {
     GraphFillRegion *region;
-    TentativeRegionShrinkEventData() = default;
 
     bool operator==(const TentativeRegionShrinkEventData &rhs) const;
-
     bool operator!=(const TentativeRegionShrinkEventData &rhs) const;
-
-    explicit TentativeRegionShrinkEventData(GraphFillRegion *region);
 };
 
 enum TentativeType : uint8_t {
@@ -82,14 +71,13 @@ struct RegionHitRegionEventData {
     GraphFillRegion *region1;
     GraphFillRegion *region2;
     CompressedEdge edge;
-    RegionHitRegionEventData() = default;
 
+    inline RegionHitRegionEventData reversed() const {
+        return {region2, region1, edge.reversed()};
+    }
     bool operator==(const RegionHitRegionEventData &rhs) const;
-
     bool operator!=(const RegionHitRegionEventData &rhs) const;
     std::string str() const;
-
-    RegionHitRegionEventData(GraphFillRegion *region1, GraphFillRegion *region2, CompressedEdge edge);
 };
 std::ostream &operator<<(std::ostream &out, const RegionHitRegionEventData &dat);
 
@@ -98,11 +86,7 @@ struct RegionHitBoundaryEventData {
     CompressedEdge edge;
 
     bool operator==(const RegionHitBoundaryEventData &rhs) const;
-
     bool operator!=(const RegionHitBoundaryEventData &rhs) const;
-
-    RegionHitBoundaryEventData() = default;
-    RegionHitBoundaryEventData(GraphFillRegion *region, CompressedEdge edge);
 };
 
 struct BlossomShatterEventData {
@@ -111,13 +95,8 @@ struct BlossomShatterEventData {
     GraphFillRegion *in_child_region;
 
     bool operator==(const BlossomShatterEventData &rhs) const;
-
     bool operator!=(const BlossomShatterEventData &rhs) const;
     std::string str() const;
-
-    BlossomShatterEventData() = default;
-    BlossomShatterEventData(
-        GraphFillRegion *blossom_region, GraphFillRegion *in_parent_region, GraphFillRegion *in_child_region);
 };
 std::ostream &operator<<(std::ostream &out, const BlossomShatterEventData &ev);
 
