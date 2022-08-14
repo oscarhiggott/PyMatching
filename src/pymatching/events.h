@@ -67,12 +67,8 @@ struct TentativeEvent {
     TentativeEvent(time_int time, uint64_t validation_index = 0);
     TentativeEvent() = default;
 
-    bool operator<(const TentativeEvent &rhs) const;
-    bool operator>(const TentativeEvent &rhs) const;
-    bool operator<=(const TentativeEvent &rhs) const;
     bool operator==(const TentativeEvent &rhs) const;
     bool operator!=(const TentativeEvent &rhs) const;
-    bool operator>=(const TentativeEvent &rhs) const;
 
     bool is_still_valid() const;
 
@@ -91,9 +87,11 @@ struct RegionHitRegionEventData {
     bool operator==(const RegionHitRegionEventData &rhs) const;
 
     bool operator!=(const RegionHitRegionEventData &rhs) const;
+    std::string str() const;
 
     RegionHitRegionEventData(GraphFillRegion *region1, GraphFillRegion *region2, CompressedEdge edge);
 };
+std::ostream &operator<<(std::ostream &out, const RegionHitRegionEventData &dat);
 
 struct RegionHitBoundaryEventData {
     GraphFillRegion *region;
@@ -115,11 +113,13 @@ struct BlossomShatterEventData {
     bool operator==(const BlossomShatterEventData &rhs) const;
 
     bool operator!=(const BlossomShatterEventData &rhs) const;
+    std::string str() const;
 
     BlossomShatterEventData() = default;
     BlossomShatterEventData(
         GraphFillRegion *blossom_region, GraphFillRegion *in_parent_region, GraphFillRegion *in_child_region);
 };
+std::ostream &operator<<(std::ostream &out, const BlossomShatterEventData &ev);
 
 enum MwpmEventType : uint8_t { NO_EVENT, REGION_HIT_REGION, REGION_HIT_BOUNDARY, BLOSSOM_SHATTER };
 
@@ -141,23 +141,9 @@ struct MwpmEvent {
 
     bool operator==(const MwpmEvent &rhs) const;
     bool operator!=(const MwpmEvent &rhs) const;
+    std::string str() const;
 };
-
-inline bool pm::TentativeEvent::operator<(const pm::TentativeEvent &rhs) const {
-    return time < rhs.time;
-}
-
-inline bool pm::TentativeEvent::operator>(const pm::TentativeEvent &rhs) const {
-    return rhs < *this;
-}
-
-inline bool pm::TentativeEvent::operator<=(const pm::TentativeEvent &rhs) const {
-    return !(rhs < *this);
-}
-
-inline bool pm::TentativeEvent::operator>=(const pm::TentativeEvent &rhs) const {
-    return !(*this < rhs);
-}
+std::ostream &operator<<(std::ostream &out, const MwpmEvent &ev);
 
 }  // namespace pm
 

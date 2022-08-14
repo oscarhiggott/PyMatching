@@ -106,7 +106,63 @@ std::ostream &pm::operator<<(std::ostream &out, const TentativeEvent &ev) {
     return out;
 }
 
+std::ostream &pm::operator<<(std::ostream &out, const pm::RegionHitRegionEventData &dat) {
+    out << "{.region1=" << dat.region1;
+    out << ", .region2=" << dat.region2;
+    out << ", .edge=" << dat.edge;
+    out << "}";
+    return out;
+}
+
+std::ostream &pm::operator<<(std::ostream &out, const pm::BlossomShatterEventData &dat) {
+    out << "{.blossom=" << dat.blossom_region;
+    out << ", .in_parent_region=" << dat.in_parent_region;
+    out << ", .in_child_region=" << dat.in_child_region;
+    out << "}";
+    return out;
+}
+
+std::ostream &pm::operator<<(std::ostream &out, const MwpmEvent &ev) {
+    out << "MwpmEvent{.type=";
+    switch (ev.event_type) {
+        case NO_EVENT:
+            out << "NO_EVENT";
+            break;
+        case REGION_HIT_REGION:
+            out << "REGION_HIT_REGION, .dat=" << ev.region_hit_region_event_data;
+            break;
+        case BLOSSOM_SHATTER:
+            out << "BLOSSOM_SHATTER, .dat=" << ev.blossom_shatter_event_data;
+            break;
+        case REGION_HIT_BOUNDARY:
+            out << "REGION_HIT_BOUNDARY";
+            break;
+        default:
+            throw std::invalid_argument("Unrecognized event type");
+    }
+    out << "}";
+    return out;
+}
+
+std::string pm::RegionHitRegionEventData::str() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
+std::string pm::BlossomShatterEventData::str() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
 std::string pm::TentativeEvent::str() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
+std::string pm::MwpmEvent::str() const {
     std::stringstream out;
     out << *this;
     return out.str();
