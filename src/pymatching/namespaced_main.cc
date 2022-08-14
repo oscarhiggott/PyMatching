@@ -132,8 +132,7 @@ int main_count_mistakes(int argc, const char **argv) {
         obs_shot.clear();
         num_shots++;
     }
-    if (!time)
-        fprintf(stats_out, "%zu / %zu\n", num_mistakes, num_shots);
+    fprintf(stats_out, "%zu / %zu\n", num_mistakes, num_shots);
     if (stats_out != stdout) {
         fclose(stats_out);
     }
