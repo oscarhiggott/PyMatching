@@ -1,9 +1,8 @@
 #include "pymatching/graph.h"
 
-#include <algorithm>
 
+#include "pymatching/graph_fill_region.h"
 #include "pymatching/events.h"
-#include "stim.h"
 
 namespace pm {
 

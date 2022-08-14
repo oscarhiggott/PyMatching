@@ -1,14 +1,15 @@
 #ifndef PYMATCHING2_BUCKET_QUEUE_H
 #define PYMATCHING2_BUCKET_QUEUE_H
 
-#include <vector>
-#include <cassert>
-#include <queue>
+#include <array>
 #include <bit>
 #include <iostream>
+#include <queue>
+#include <vector>
 
 #include "pymatching/cyclic.h"
 #include "pymatching/events.h"
+#include "pymatching/ints.h"
 
 namespace pm {
 
@@ -51,13 +52,13 @@ namespace pm {
 /// - Get dequeued out of bucket 0 and yielded as a result.
 template <bool use_validation>
 struct bit_bucket_queue {
-    std::array<std::vector<TentativeEvent>, sizeof(pm::time_int)*8 + 2> bit_buckets;
-    pm::time_int cur_time;
+    std::array<std::vector<TentativeEvent>, sizeof(pm::cyclic_time_int)*8 + 2> bit_buckets;
+    pm::cumulative_time_int cur_time;
     size_t _num_enqueued;
 
-    bit_bucket_queue() : cur_time(0), _num_enqueued(0) {
+    bit_bucket_queue() : cur_time{0}, _num_enqueued(0) {
         // Artificial event just to stop the bucket search.
-        bit_buckets.back().push_back(TentativeEvent(0xDEAD));
+        bit_buckets.back().push_back(TentativeEvent(cyclic_time_int{0xDEAD}));
     }
 
     size_t size() const {
@@ -69,8 +70,8 @@ struct bit_bucket_queue {
     }
 
     /// Determines which bucket an event with the given time should go into.
-    inline size_t cur_bit_bucket_for(pm::time_int time) const {
-        return std::bit_width((uint32_t)(time ^ cur_time));
+    inline size_t cur_bit_bucket_for(cyclic_time_int time) const {
+        return std::bit_width((uint64_t)(time.value ^ cyclic_time_int{cur_time}.value));
     }
 
     /// Adds an event to the priority queue.
@@ -78,14 +79,11 @@ struct bit_bucket_queue {
     /// The event MUST NOT be cycle-before the current time.
     void enqueue(TentativeEvent event) {
         if (use_validation) {
-            uint32_t d = (uint32_t) event.time - (uint32_t) cur_time;
-            if (d >= 1 << 31) {
+            if (event.time < cyclic_time_int{cur_time}) {
                 std::stringstream ss;
-                if (event.time < cur_time) {
-                    ss << "Attempted to schedule an event cycle-before the present.\n";
-                    ss << "    current time: " << cur_time << "\n";
-                    ss << "    tentative event: " << event << "\n";
-                }
+                ss << "Attempted to schedule an event cycle-before the present.\n";
+                ss << "    current time: " << cur_time << "\n";
+                ss << "    tentative event: " << event << "\n";
                 throw std::invalid_argument(ss.str());
             }
         }
@@ -120,7 +118,7 @@ struct bit_bucket_queue {
             }
             if (b == bit_buckets.size() - 1) {
                 // We found the fake tail bucket. All real buckets are empty. The queue is empty.
-                return TentativeEvent(0);
+                return TentativeEvent(cyclic_time_int{0});
             }
 
             if (b == 1) {
@@ -131,10 +129,11 @@ struct bit_bucket_queue {
                 auto &source_bucket = bit_buckets[b];
 
                 // Advance time to the minimum time in the bucket.
-                cur_time = source_bucket[0].time;
+                decltype(cyclic_time_int::value) min_time = source_bucket[0].time.value;
                 for (size_t k = 1; k < source_bucket.size(); k++) {
-                    cur_time = std::min(cur_time, source_bucket[k].time);
+                    min_time = std::min(min_time, source_bucket[k].time.value);
                 }
+                cur_time = cyclic_time_int{min_time}.widen_from_nearby_reference(cur_time);
 
                 // Redistribute the contents of the bucket.
                 for (auto &e : source_bucket) {
@@ -163,18 +162,6 @@ struct bit_bucket_queue {
     std::string str() const;
 };
 
-inline bool is_time_x_cyclebefore_y(pm::time_int x, pm::time_int y) {
-    return cyclic<uint32_t>{(uint32_t)x} < cyclic<uint32_t>{(uint32_t)y};
-}
-
-inline bool is_time_x_cycleatmost_y(pm::time_int x, pm::time_int y) {
-    return cyclic<uint32_t>{(uint32_t)x} <= cyclic<uint32_t>{(uint32_t)y};
-}
-
-inline bool is_time_x_cycleatleast_y(pm::time_int x, pm::time_int y) {
-    return cyclic<uint32_t>{(uint32_t)x} >= cyclic<uint32_t>{(uint32_t)y};
-}
-
 template <bool use_validation>
 std::ostream &operator<<(std::ostream &out, bit_bucket_queue<use_validation> q) {
     out << "bit_bucket_queue {\n";
@@ -186,7 +173,7 @@ std::ostream &operator<<(std::ostream &out, bit_bucket_queue<use_validation> q) 
             std::sort(copy.begin(),
                       copy.end(),
                       [](const TentativeEvent &e1, const TentativeEvent &e2) {
-                          return pm::is_time_x_cyclebefore_y(e1.time, e2.time);
+                          return e1.time < e2.time;
                       });
             for (auto &e: copy) {
                 out << "        " << e << ",\n";

@@ -1,6 +1,7 @@
 #include "pymatching/graph_flooder.h"
 
 #include "pymatching/graph.h"
+#include "pymatching/alternating_tree.h"
 #include "pymatching/graph_fill_region.h"
 #include "pymatching/varying.h"
 
@@ -84,7 +85,10 @@ void pm::GraphFlooder::schedule_tentative_neighbor_interaction_event(
     size_t schedule_list_index_1,
     pm::DetectorNode *detector_node_2,
     size_t schedule_list_index_2,
-    pm::time_int event_time) {
+    pm::cumulative_time_int event_time) {
+    if (event_time < queue.cur_time) {
+        return;
+    }
     auto vid = next_event_vid++;
     detector_node_1->edge_event_vids[schedule_list_index_1] = vid;
     if (detector_node_2 != nullptr) {
@@ -94,13 +98,13 @@ void pm::GraphFlooder::schedule_tentative_neighbor_interaction_event(
         pm::TentativeNeighborInteractionEventData{
             detector_node_1, schedule_list_index_1, detector_node_2, schedule_list_index_2
         },
-        event_time,
+        cyclic_time_int{event_time},
         vid,
     });
 }
 
 void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &region) {
-    pm::time_int t;
+    pm::cumulative_time_int t;
     if (region.shell_area.empty()) {
         t = region.radius.time_of_x_intercept_for_shrinking();
     } else {
@@ -112,7 +116,7 @@ void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &regi
         pm::TentativeRegionShrinkEventData{
             &region,
         },
-        t,
+        cyclic_time_int{t},
         vid,
     });
 }

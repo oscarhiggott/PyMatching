@@ -42,7 +42,7 @@ class GraphFlooder {
         size_t schedule_list_index_1,
         DetectorNode* detector_node_2,
         size_t schedule_list_index_2,
-        time_int event_time);
+        cumulative_time_int event_time);
     void schedule_tentative_shrink_event(GraphFillRegion& region);
     void reschedule_events_for_region(GraphFillRegion& region);
     void reschedule_events_at_detector_node(DetectorNode& detector_node);

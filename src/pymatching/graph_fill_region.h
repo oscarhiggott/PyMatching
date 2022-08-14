@@ -1,8 +1,10 @@
 #ifndef PYMATCHING2_GRAPH_FILL_REGION_H
 #define PYMATCHING2_GRAPH_FILL_REGION_H
 
-#include "pymatching/alternating_tree.h"
+#include <vector>
+
 #include "pymatching/region_edge.h"
+#include "pymatching/varying.h"
 
 namespace pm {
 

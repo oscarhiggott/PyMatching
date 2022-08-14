@@ -1,5 +1,6 @@
 #include "pymatching/graph_fill_region.h"
 
+#include "pymatching/graph.h"
 #include "pymatching/varying.h"
 
 pm::GraphFillRegion::GraphFillRegion()
@@ -44,8 +45,9 @@ void pm::GraphFillRegion::add_match(pm::GraphFillRegion *region, const pm::Compr
 }
 
 void pm::GraphFillRegion::cleanup_shell_area() {
-    for (auto &detector_node : shell_area)
+    for (auto &detector_node : shell_area) {
         detector_node->reset();
+    }
 }
 
 pm::Match::Match(pm::GraphFillRegion *region, pm::CompressedEdge edge) : region(region), edge(edge) {

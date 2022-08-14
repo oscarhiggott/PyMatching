@@ -1,11 +1,14 @@
 #ifndef PYMATCHING2_EVENTS_H
 #define PYMATCHING2_EVENTS_H
 
-#include "pymatching/graph.h"
-#include "pymatching/graph_fill_region.h"
+#include "pymatching/compressed_edge.h"
+#include "pymatching/cyclic.h"
 #include "pymatching/varying.h"
 
 namespace pm {
+
+struct DetectorNode;
+struct GraphFillRegion;
 
 struct TentativeNeighborInteractionEventData {
     DetectorNode *detector_node_1;
@@ -35,7 +38,7 @@ struct TentativeEvent {
         TentativeNeighborInteractionEventData neighbor_interaction_event_data;
         TentativeRegionShrinkEventData region_shrink_event_data;
     };
-    pm::time_int time;
+    pm::cyclic_time_int time;
     TentativeType tentative_event_type;
 
     /// Validation index for the event. When events are created, this is set to a new unique value
@@ -50,10 +53,10 @@ struct TentativeEvent {
 
     TentativeEvent(
         TentativeNeighborInteractionEventData data,
-        time_int time,
+        cyclic_time_int time,
         uint64_t validation_index);
-    TentativeEvent(TentativeRegionShrinkEventData data, time_int time, uint64_t validation_index);
-    TentativeEvent(time_int time, uint64_t validation_index = 0);
+    TentativeEvent(TentativeRegionShrinkEventData data, cyclic_time_int time, uint64_t validation_index);
+    TentativeEvent(cyclic_time_int time, uint64_t validation_index = 0);
     TentativeEvent() = default;
 
     bool operator==(const TentativeEvent &rhs) const;

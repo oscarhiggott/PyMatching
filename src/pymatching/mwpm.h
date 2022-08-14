@@ -5,16 +5,18 @@
 
 namespace pm {
 
+struct AltTreeNode;
+
 struct MatchingResult {
     pm::obs_int obs_mask;
-    pm::time_int weight;
+    cumulative_time_int weight;
     MatchingResult();
 
     bool operator==(const MatchingResult& rhs) const;
 
     bool operator!=(const MatchingResult& rhs) const;
 
-    MatchingResult(obs_int obs_mask, time_int weight);
+    MatchingResult(obs_int obs_mask, cumulative_time_int weight);
 
     MatchingResult& operator+=(const MatchingResult& rhs);
     MatchingResult operator+(const MatchingResult& rhs) const;

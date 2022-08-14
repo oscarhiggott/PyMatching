@@ -1,8 +1,10 @@
 #include "pymatching/events.h"
+#include "pymatching/graph.h"
+#include "pymatching/graph_fill_region.h"
 
 pm::TentativeEvent::TentativeEvent(
     pm::TentativeNeighborInteractionEventData data,
-    time_int time,
+    pm::cyclic_time_int time,
     uint64_t validation_index)
     : neighbor_interaction_event_data(data),
       time(time),
@@ -10,10 +12,10 @@ pm::TentativeEvent::TentativeEvent(
       vid(validation_index) {
 }
 
-pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, time_int time, uint64_t validation_index)
+pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, pm::cyclic_time_int time, uint64_t validation_index)
     : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), vid(validation_index) {
 }
-pm::TentativeEvent::TentativeEvent(time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
+pm::TentativeEvent::TentativeEvent(pm::cyclic_time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
 }
 
 

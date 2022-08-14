@@ -20,6 +20,12 @@ struct cyclic {
     T value;
     static constexpr T HALF = (T)(((T)-1 >> 1) + (T)1);
 
+    cyclic() : value(0) {}
+
+    template <typename O, class = typename std::enable_if<std::is_integral<O>::value>::type>
+    explicit cyclic(O value) : value((T)value) {
+    }
+
     inline cyclic<T> operator++() {
         return cyclic<T>(++value);
     }
@@ -32,12 +38,13 @@ struct cyclic {
     inline const cyclic<T> operator--(int) {
         return cyclic<T>(value--);
     }
-    template <typename O>
+
+    template <typename O, class = typename std::enable_if<std::is_integral<O>::value>::type>
     inline cyclic<T> &operator+=(O other) {
         value += other;
         return *this;
     }
-    template <typename O>
+    template <typename O, class = typename std::enable_if<std::is_integral<O>::value>::type>
     inline cyclic<T> &operator-=(O other) {
         value -= other;
         return *this;
@@ -68,7 +75,7 @@ struct cyclic {
         return value != other;
     }
 
-    template <typename O, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
+    template <typename O, class = typename std::enable_if<std::is_integral<O>::value>::type>
     inline O widen_from_nearby_reference(O reference) const {
         cyclic<T> cyclic_reference((T)reference);
         O result = reference;

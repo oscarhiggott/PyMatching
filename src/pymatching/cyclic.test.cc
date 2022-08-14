@@ -116,4 +116,11 @@ TEST(cyclic, widen_from_nearby_reference) {
     ASSERT_EQ(v.widen_from_nearby_reference(2048u + 130u + 127u), 130u + 2048u);
     ASSERT_EQ(v.widen_from_nearby_reference(2048u + 130u - 129u), 130u + 2048u - 256u);
     ASSERT_EQ(v.widen_from_nearby_reference(2048u + 130u + 129u), 130u + 2048u + 256u);
+
+    ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130), 130 - 2048);
+    ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 100), 130 - 2048);
+    ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 - 127), 130 - 2048);
+    ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 + 127), 130 - 2048);
+    ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 - 129), 130 - 2048 - 256u);
+    ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 + 129), 130 - 2048 + 256u);
 }

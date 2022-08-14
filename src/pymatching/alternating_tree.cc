@@ -1,4 +1,5 @@
 #include "pymatching/alternating_tree.h"
+#include "pymatching/graph_fill_region.h"
 
 #include <algorithm>
 #include <iterator>

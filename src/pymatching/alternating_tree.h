@@ -2,8 +2,9 @@
 #define PYMATCHING2_ALTERNATING_TREE_H
 
 #include "pymatching/compressed_edge.h"
-#include "pymatching/graph_fill_region.h"
 #include "pymatching/region_edge.h"
+
+#include <vector>
 
 namespace pm {
 

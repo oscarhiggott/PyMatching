@@ -1,9 +1,11 @@
 #ifndef PYMATCHING2_COMPRESSED_EDGE_H
 #define PYMATCHING2_COMPRESSED_EDGE_H
 
-#include "pymatching/graph.h"
+#include "pymatching/ints.h"
 
 namespace pm {
+
+struct DetectorNode;
 
 /// A compressed edge is a summary of a path between two detection events.
 /// Specifically, it tracks which observables the path has crossed.
