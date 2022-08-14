@@ -6,25 +6,51 @@
 
 #include "pymatching/perf/util.perf.h"
 
-BENCHMARK(compute_min_1) {
-    uint16_t *values = (uint16_t *)_mm_malloc(sizeof(uint16_t) * 1024, 256);
-    std::mt19937 rng(0);
-    for (size_t k = 0; k < 1024; k++) {
-        values[k] = rng();
+BENCHMARK(bucket_queue_sort) {
+    std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
+
+    std::vector<pm::time_int> v;
+    for (size_t k = 0; k < 1000; k++) {
+        v.push_back((pm::time_int)(rng() & 0x3FFFFFFF));
     }
-    size_t total = 0;
+
+    bool dependence = false;
     benchmark_go([&]() {
-        uint16_t m = UINT16_MAX;
-        for (size_t k = 0; k < 1024; k++) {
-            m = std::min(m, values[k]);
+        pm::bit_bucket_queue q;
+        for (pm::time_int t : v) {
+            q.enqueue(pm::TentativeEvent(t));
         }
-        total |= m;
-    });
-    if (total == 0) {
+        pm::TentativeEvent out{};
+        while (q.try_pop_valid(&out)) {
+            q.force_pop_valid();
+        }
+        if (out.time == 0) {
+            dependence = true;
+        }
+    }).goal_micros(70).show_rate("EnqueueDequeues", (double)v.size());
+    if (dependence) {
         std::cerr << "data dependence";
     }
-    std::cerr << total << "\n";
-    delete values;
+}
+
+BENCHMARK(bucket_queue_stream) {
+    size_t n = 10000;
+
+    bool dependence = false;
+    benchmark_go([&]() {
+        pm::bit_bucket_queue q;
+        for (size_t k = 0; k < 10; k++) {
+            for (size_t r = 0; r < k; r++) {
+                q.enqueue(pm::TentativeEvent((pm::time_int)k));
+            }
+        }
+        for (size_t k = 0; k < n; k++) {
+            q.enqueue(pm::TentativeEvent(q.force_pop_valid().time));
+        }
+    }).goal_micros(150).show_rate("EnqueueDequeues", (double)n);
+    if (dependence) {
+        std::cerr << "data dependence";
+    }
 }
 
 BENCHMARK(compute_min_2) {

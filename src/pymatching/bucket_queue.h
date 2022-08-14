@@ -11,235 +11,92 @@
 
 namespace pm {
 
-template <size_t CHUNK_SIZE>
-struct bucket_queue {
-    std::vector<pm::ChunkList<TentativeEvent, CHUNK_SIZE>> buckets;
-    size_t _num_enqueued;
+/// A priority queue for TentativeEvents.
+///
+/// The priority queue assumes that times increase monotonically. The caller must not enqueue a
+/// time that is cycle-before the time of the last popped event. Time t1 is "cycle-before" time t2
+/// iff it takes more increments to get from t1 to t2 than it takes to get from t2 to t1.
+///
+/// The priority queue works by categorizing upcoming events into groups based on the most
+/// significant bit that differs between the event's time and the current time. For example, here
+/// are the times that are stored in each bucket assuming the current time is 17:
+///
+///     (current time = 17)
+///     bucket 0: event time in [17]
+///     bucket 1: event time in [] (empty because 17 & (1 << 0) is non-zero)
+///     bucket 2: event time in [18, 19]
+///     bucket 3: event time in [20, 21, 22, 23]
+///     bucket 4: event time in [24, 25, 26, 27, 28, 29, 30, 31]
+///     bucket 5: event time in [] (empty because 17 & (1 << 4) is non-zero)
+///     bucket 6: event time in [32, ..., 63]
+///     bucket 7: event time in [64, ..., 127]
+///     bucket 8: event time in [128, ..., 255]
+///     bucket 9: event time in [256, ..., 511]
+///     ...
+///     bucket K: event time in [2^K - 17, 2^(K+1) - 16]
+///     ...
+///     bucket 33: event time in [2147483664=0b10000000000000000000000000010000, ..., 16=0b10000]
+///
+/// Dequeueing always happens from bucket 0. Whenever bucket 0 is empty, it's refilled by
+/// redistributing events from the smallest non-empty bucket (after advancing the time to the
+/// minimum time of any event in that bucket).
+///
+/// The experience of a single event going through the queue is, roughly speaking:
+/// - Initially end up in one of the higher buckets.
+/// - Sit there for awhile as the lower buckets are drained.
+/// - Get redistributed to a slightly lower bucket.
+/// - Repeatedly wait and get redistributed to lower and lower buckets until in bucket 0.
+/// - Get dequeued out of bucket 0 and yielded as a result.
+struct bit_bucket_queue {
+    std::array<std::vector<TentativeEvent>, sizeof(pm::time_int)*8> bit_buckets;
     pm::time_int cur_time;
+    size_t _num_enqueued;
 
-    explicit bucket_queue(size_t num_buckets) : buckets(num_buckets), _num_enqueued(0), cur_time(0) {}
+    bit_bucket_queue() : cur_time(0), _num_enqueued(0) {
+        // Artificial event just to stop the bucket search.
+        bit_buckets.back().push_back(TentativeEvent(-1, 0xDEAD));
+    }
 
     size_t size() const {
         return _num_enqueued;
-    }
-
-    void enqueue(TentativeEvent event) {
-//        if (event->time < cur_time || event->time >= cur_time + buckets.size()) {
-//            throw std::invalid_argument("event->time is out of bucket range");
-//        }
-        buckets[event.time % buckets.size()].push_anywhere(event);
-        _num_enqueued++;
-    }
-
-    bool try_pop(TentativeEvent *out) {
-        while (true) {
-            auto &bucket = buckets[cur_time % buckets.size()];
-            if (bucket.try_pop(out)) {
-                _num_enqueued--;
-                if (!out->is_still_valid()) {
-                    continue;
-                }
-                return true;
-            }
-            if (_num_enqueued == 0) {
-                return false;
-            }
-            cur_time++;
-        }
     }
 
     bool empty() const {
         return _num_enqueued == 0;
     }
-    TentativeEvent force_pop() {
-        TentativeEvent out{};
-        bool b = try_pop(&out);
-        if (!b) {
-            throw std::invalid_argument("force_pop failed");
-        }
-        return out;
-    }
-};
 
-class bucket_queue_compare_helper {
-   public:
-    bool operator()(TentativeEvent a, TentativeEvent b) {
-        return a > b;
-    }
-};
-
-template <>
-struct bucket_queue<0> {
-    std::priority_queue<TentativeEvent, std::vector<TentativeEvent>, bucket_queue_compare_helper> q;
-    pm::time_int cur_time;
-
-    explicit bucket_queue(size_t num_buckets) : q(), cur_time(0) {}
-
-    bool empty() const {
-        return q.empty();
-    }
-
-    size_t size() const {
-        return q.size();
-    }
-
-    void enqueue(TentativeEvent event) {
-        q.push(event);
-    }
-
-    bool try_pop(TentativeEvent *out) {
-        while (!q.empty()) {
-            *out = q.top();
-            q.pop();
-            cur_time = out->time;
-            if (!out->is_still_valid()) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    TentativeEvent force_pop() {
-        TentativeEvent out{};
-        bool b = try_pop(&out);
-        if (!b) {
-            throw std::invalid_argument("force_pop failed");
-        }
-        return out;
-    }
-};
-
-template <>
-struct bucket_queue<1> {
-    static constexpr size_t BRANCH_FACTOR = 8;
-    std::vector<TentativeEvent> heap;
-    pm::time_int cur_time;
-
-    explicit bucket_queue(size_t num_buckets) : heap(), cur_time(0) {}
-
-    size_t size() const {
-        return heap.size();
-    }
-
-    bool satisfies_heap_invariant() const {
-        for (size_t k = 0; k < heap.size(); k++) {
-            for (size_t c = k*BRANCH_FACTOR + 1; c < std::min(heap.size(), k*BRANCH_FACTOR + BRANCH_FACTOR); c++) {
-                if (heap[k].time > heap[c].time) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    void bubble_up(TentativeEvent event, size_t index) {
-        auto time = event.time;
-        while (index != 0) {
-            size_t parent = (index - 1) / BRANCH_FACTOR;
-            auto parent_time = heap[parent].time;
-            if (parent_time <= time) {
-                break;
-            }
-            heap[index] = heap[parent];
-            index = parent;
-        }
-        heap[index] = event;
-    }
-
-    void enqueue(TentativeEvent event) {
-        size_t index = heap.size();
-        heap.push_back({});
-        bubble_up(event, index);
-    }
-
-    bool try_pop_once(TentativeEvent *out) {
-        if (heap.empty()) {
-            return false;
-        }
-        *out = heap[0];
-
-        size_t index_to_fill = 0;
-        while (true) {
-            size_t child_start = index_to_fill * BRANCH_FACTOR + 1;
-            size_t child_end = std::min(child_start + BRANCH_FACTOR, heap.size());
-            if (child_start >= child_end) {
-                break;
-            }
-
-            size_t best_child = child_start;
-            auto best_time = heap[child_start].time;
-            for (size_t c = child_start + 1; c < child_end; c++) {
-                auto t = heap[c].time;
-                if (t < best_time) {
-                    best_child = c;
-                    best_time = t;
-                }
-            }
-
-            heap[index_to_fill] = heap[best_child];
-            index_to_fill = best_child;
-        }
-
-        if (index_to_fill != heap.size() - 1) {
-            bubble_up(heap.back(), index_to_fill);
-        }
-        heap.pop_back();
-
-        return true;
-    }
-
-    bool empty() const {
-        return heap.empty();
-    }
-
-    bool try_pop(TentativeEvent *out) {
-        while (try_pop_once(out)) {
-            cur_time = out->time;
-            if (!out->is_still_valid()) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    TentativeEvent force_pop() {
-        TentativeEvent out{};
-        bool b = try_pop(&out);
-        if (!b) {
-            throw std::invalid_argument("force_pop failed");
-        }
-        return out;
-    }
-};
-
-template <>
-struct bucket_queue<2> {
-    std::array<std::vector<TentativeEvent>, 33> buckets;
-    pm::time_int cur_time;
-    size_t _num_enqueued;
-
-    explicit bucket_queue(size_t num_buckets) : cur_time(0), _num_enqueued(0) {}
-
-    size_t size() const {
-        return _num_enqueued;
-    }
-
-    inline size_t bucket_for(pm::time_int time) const {
+    /// Determines which bucket an event with the given time should go into.
+    inline size_t cur_bit_bucket_for(pm::time_int time) const {
         return std::bit_width((uint32_t)(time ^ cur_time));
     }
 
+    /// Adds an event to the priority queue.
     void enqueue(TentativeEvent event) {
-        auto target_bucket = bucket_for(event.time);
-        buckets[target_bucket].push_back(event);
+        auto target_bucket = cur_bit_bucket_for(event.time);
+        if (target_bucket == bit_buckets.size() - 1) {
+            std::stringstream ss;
+            if (event.time < cur_time) {
+                ss << "Attempted to schedule a tentative event in the past.\n";
+                ss << "    current time: " << cur_time << "\n";
+                ss << "    tentative event: " << event << "\n";
+            } else {
+                ss << "Attempted to schedule a tentative event too far into the future.\n";
+                ss << "    current time: " << cur_time << "\n";
+                ss << "    tentative event: " << event << "\n";
+                ss << "    time difference: " << ((uint64_t)(event.time - cur_time)) << "\n";
+                ss << "    max time difference: " << (uint64_t{1} << (bit_buckets.size() - 2)) << "\n";
+            }
+            throw std::invalid_argument(ss.str());
+        }
+        bit_buckets[target_bucket].push_back(event);
         _num_enqueued++;
     }
 
+    /// Checks if all events are in the correct bucket.
     bool satisfies_invariants() const {
-        for (size_t b = 0; b < buckets.size(); b++) {
-            for (size_t k = 0; k < buckets[b].size(); k++) {
-                if (bucket_for(buckets[b][k].time) != b) {
+        for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
+            for (size_t k = 0; k < bit_buckets[b].size(); k++) {
+                if (cur_bit_bucket_for(bit_buckets[b][k].time) != b) {
                     return false;
                 }
             }
@@ -247,46 +104,61 @@ struct bucket_queue<2> {
         return true;
     }
 
-    bool try_pop_once(TentativeEvent *out) {
-        if (buckets[0].empty()) {
+    /// Dequeues the next event, regardless of whether it is invalidated.
+    bool try_pop_any(TentativeEvent *out) {
+        if (bit_buckets[0].empty()) {
+            // Need to refill bucket 0, so we can dequeue from it.
+
+            // Find first non-empty bucket. It has the soonest event.
             size_t b = 1;
-            while (b < buckets.size() && buckets[b].empty()) {
+            while (bit_buckets[b].empty()) {
                 b++;
             }
-            if (b == buckets.size()) {
+            if (b == bit_buckets.size() - 1) {
+                // We found the fake tail bucket. All real buckets are empty. The queue is empty.
                 return false;
             }
 
-            auto &source_bucket = buckets[b];
+            if (b == 1) {
+                // Special case:
+                std::swap(bit_buckets[0], bit_buckets[1]);
+                cur_time++;
+            } else {
+                auto &source_bucket = bit_buckets[b];
 
-            cur_time = source_bucket[0].time;
-            for (size_t k = 1; k < source_bucket.size(); k++) {
-                cur_time = std::min(cur_time, source_bucket[k].time);
-            }
+                cur_time = source_bucket[0].time;
+                for (size_t k = 1; k < source_bucket.size(); k++) {
+                    cur_time = std::min(cur_time, source_bucket[k].time);
+                }
 
-            for (size_t k = 0; k < source_bucket.size(); k++) {
-                auto target_bucket = bucket_for(source_bucket[k].time);
-                if (target_bucket != b) {
-                    buckets[target_bucket].push_back(source_bucket[k]);
-                    source_bucket[k] = source_bucket.back();
-                    source_bucket.pop_back();
-                    k--;
+                for (size_t k = 0; k < source_bucket.size(); k++) {
+                    auto target_bucket = cur_bit_bucket_for(source_bucket[k].time);
+                    if (target_bucket != b) {
+                        bit_buckets[target_bucket].push_back(source_bucket[k]);
+                        source_bucket[k] = source_bucket.back();
+                        source_bucket.pop_back();
+                        k--;
+                    }
                 }
             }
         }
 
         _num_enqueued--;
-        *out = buckets[0].back();
-        buckets[0].pop_back();
+        *out = bit_buckets[0].back();
+        bit_buckets[0].pop_back();
         return true;
     }
 
-    bool empty() const {
-        return _num_enqueued == 0;
-    }
-
-    bool try_pop(TentativeEvent *out) {
-        while (try_pop_once(out)) {
+    /// Dequeues the next event, skipping over invalidated events.
+    ///
+    /// Args:
+    ///     out: Where the dequeued event is written, unless the queue is empty.
+    ///
+    /// Returns:
+    ///     true: Event successfully dequeued.
+    ///     false: Queue was empty.
+    bool try_pop_valid(TentativeEvent *out) {
+        while (try_pop_any(out)) {
             cur_time = out->time;
             if (!out->is_still_valid()) {
                 continue;
@@ -296,11 +168,18 @@ struct bucket_queue<2> {
         return false;
     }
 
-    TentativeEvent force_pop() {
+    /// Dequeues the next event, skipping over invalidated events.
+    ///
+    /// Returns:
+    ///     The dequeued event.
+    ///
+    /// Raises:
+    ///     std::invalid_argument: The queue was empty.
+    TentativeEvent force_pop_valid() {
         TentativeEvent out{};
-        bool b = try_pop(&out);
+        bool b = try_pop_valid(&out);
         if (!b) {
-            throw std::invalid_argument("force_pop failed");
+            throw std::invalid_argument("force_pop_valid failed");
         }
         return out;
     }

@@ -4,7 +4,7 @@
 #include "pymatching/graph_fill_region.h"
 #include "pymatching/varying.h"
 
-pm::GraphFlooder::GraphFlooder(pm::MatchingGraph graph, size_t num_buckets) : graph(std::move(graph)), queue(num_buckets), next_event_vid(0) {
+pm::GraphFlooder::GraphFlooder(pm::MatchingGraph graph, size_t num_buckets) : graph(std::move(graph)), next_event_vid(0) {
 }
 
 pm::GraphFlooder::GraphFlooder(pm::GraphFlooder &&flooder) noexcept
@@ -254,7 +254,7 @@ pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(Te
 pm::MwpmEvent pm::GraphFlooder::next_event() {
     while (true) {
         TentativeEvent tentative_event; // NOLINT(cppcoreguidelines-pro-type-member-init)
-        if (!queue.try_pop(&tentative_event)) {
+        if (!queue.try_pop_valid(&tentative_event)) {
             return MwpmEvent::no_event();
         }
         MwpmEvent processed = do_valid_tentative_event_returning_mwpm_event(tentative_event);
