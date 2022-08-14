@@ -8,22 +8,19 @@ TEST(bit_bucket_queue, basic_usage) {
     ASSERT_EQ(q.size(), 0);
     ASSERT_EQ(q.cur_time, 0);
 
-    pm::TentativeEvent out{};
-    ASSERT_FALSE(q.try_pop_valid(&out));
+    ASSERT_EQ(q.dequeue(), pm::TentativeEvent(0));
 
-    q.enqueue(pm::TentativeEvent(3));
-    q.enqueue(pm::TentativeEvent(6, 0xDEAD));
     q.enqueue(pm::TentativeEvent(9));
-    ASSERT_EQ(q.size(), 3);
+    q.enqueue(pm::TentativeEvent(3));
+    ASSERT_EQ(q.size(), 2);
     ASSERT_EQ(q.cur_time, 0);
 
-    ASSERT_EQ(q.force_pop_valid(), pm::TentativeEvent(3, 0));
-    ASSERT_EQ(q.size(), 2);
-    ASSERT_EQ(q.cur_time, 3);
-
-    ASSERT_EQ(q.force_pop_valid(), pm::TentativeEvent(9, 0));
+    ASSERT_EQ(q.dequeue(), pm::TentativeEvent(3));
+    ASSERT_EQ(q.dequeue(), pm::TentativeEvent(9));
     ASSERT_EQ(q.size(), 0);
     ASSERT_EQ(q.cur_time, 9);
+
+    ASSERT_EQ(q.dequeue(), pm::TentativeEvent(0));
 }
 
 TEST(bit_bucket_queue, sorts_fuzz) {
@@ -40,12 +37,11 @@ TEST(bit_bucket_queue, sorts_fuzz) {
     ASSERT_TRUE(q.satisfies_invariants());
 
     for (size_t k = 0; k < s.size(); k++) {
-        auto t = q.force_pop_valid().time;
+        auto t = q.dequeue().time;
         ASSERT_EQ(t, s[k]) << k;
     }
 
-    pm::TentativeEvent out{};
-    ASSERT_FALSE(q.try_pop_valid(&out));
+    ASSERT_EQ(q.dequeue(), pm::TentativeEvent(0));
 }
 
 TEST(bit_bucket_queue, bucket_for) {
@@ -78,6 +74,32 @@ TEST(bit_bucket_queue, wraparound) {
     q.cur_time = INT32_MAX;
     q.enqueue(pm::TentativeEvent(INT32_MIN));
     q.enqueue(pm::TentativeEvent(INT32_MIN + 1));
-    ASSERT_EQ(q.force_pop_valid().time, INT32_MIN);
-    ASSERT_EQ(q.force_pop_valid().time, INT32_MIN + 1);
+    ASSERT_EQ(q.dequeue().time, INT32_MIN);
+    ASSERT_EQ(q.dequeue().time, INT32_MIN + 1);
+}
+
+TEST(bit_bucket_queue, cycle_comparison) {
+    ASSERT_FALSE(pm::is_time_x_cyclebefore_y(1, 0));
+    ASSERT_FALSE(pm::is_time_x_cycleatmost_y(1, 0));
+    ASSERT_TRUE(pm::is_time_x_cycleatleast_y(1, 0));
+
+    ASSERT_TRUE(pm::is_time_x_cyclebefore_y(0, 1));
+    ASSERT_TRUE(pm::is_time_x_cycleatmost_y(0, 1));
+    ASSERT_FALSE(pm::is_time_x_cycleatleast_y(0, 1));
+
+    ASSERT_FALSE(pm::is_time_x_cyclebefore_y(0, 0));
+    ASSERT_TRUE(pm::is_time_x_cycleatmost_y(0, 0));
+    ASSERT_TRUE(pm::is_time_x_cycleatleast_y(0, 0));
+
+    ASSERT_FALSE(pm::is_time_x_cyclebefore_y(INT32_MIN, INT32_MAX));
+    ASSERT_FALSE(pm::is_time_x_cycleatmost_y(INT32_MIN, INT32_MAX));
+    ASSERT_TRUE(pm::is_time_x_cycleatleast_y(INT32_MIN, INT32_MAX));
+
+    ASSERT_TRUE(pm::is_time_x_cyclebefore_y(INT32_MAX, INT32_MIN));
+    ASSERT_TRUE(pm::is_time_x_cycleatmost_y(INT32_MAX, INT32_MIN));
+    ASSERT_FALSE(pm::is_time_x_cycleatleast_y(INT32_MAX, INT32_MIN));
+
+    ASSERT_FALSE(pm::is_time_x_cyclebefore_y(INT32_MAX, INT32_MAX));
+    ASSERT_TRUE(pm::is_time_x_cycleatmost_y(INT32_MAX, INT32_MAX));
+    ASSERT_TRUE(pm::is_time_x_cycleatleast_y(INT32_MAX, INT32_MAX));
 }

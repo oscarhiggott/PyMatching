@@ -56,7 +56,7 @@ struct bit_bucket_queue {
 
     bit_bucket_queue() : cur_time(0), _num_enqueued(0) {
         // Artificial event just to stop the bucket search.
-        bit_buckets.back().push_back(TentativeEvent(-1, 0xDEAD));
+        bit_buckets.back().push_back(TentativeEvent(0xDEAD));
     }
 
     size_t size() const {
@@ -105,8 +105,10 @@ struct bit_bucket_queue {
         return true;
     }
 
-    /// Dequeues the next event, regardless of whether it is invalidated.
-    bool try_pop_any(TentativeEvent *out) {
+    /// Dequeues the next event.
+    ///
+    /// If the queue is empty, a tentative event with type NO_TENTATIVE_EVENT is returned.
+    TentativeEvent dequeue() {
         if (bit_buckets[0].empty()) {
             // Need to refill bucket 0, so we can dequeue from it.
 
@@ -117,7 +119,7 @@ struct bit_bucket_queue {
             }
             if (b == bit_buckets.size() - 1) {
                 // We found the fake tail bucket. All real buckets are empty. The queue is empty.
-                return false;
+                return TentativeEvent(0);
             }
 
             if (b == 1) {
@@ -143,46 +145,64 @@ struct bit_bucket_queue {
         }
 
         _num_enqueued--;
-        *out = bit_buckets[0].back();
+        TentativeEvent result = bit_buckets[0].back();
         bit_buckets[0].pop_back();
-        return true;
+        return result;
     }
 
-    /// Dequeues the next event, skipping over invalidated events.
-    ///
-    /// Args:
-    ///     out: Where the dequeued event is written, unless the queue is empty.
-    ///
-    /// Returns:
-    ///     true: Event successfully dequeued.
-    ///     false: Queue was empty.
-    bool try_pop_valid(TentativeEvent *out) {
-        while (try_pop_any(out)) {
-            cur_time = out->time;
-            if (!out->is_still_valid()) {
-                continue;
+    TentativeEvent dequeue_valid() {
+        while (true) {
+            TentativeEvent tentative_event = dequeue();
+            if (tentative_event.is_still_valid()) {
+                return tentative_event;
             }
-            return true;
         }
-        return false;
     }
 
-    /// Dequeues the next event, skipping over invalidated events.
-    ///
-    /// Returns:
-    ///     The dequeued event.
-    ///
-    /// Raises:
-    ///     std::invalid_argument: The queue was empty.
-    TentativeEvent force_pop_valid() {
-        TentativeEvent out{};
-        bool b = try_pop_valid(&out);
-        if (!b) {
-            throw std::invalid_argument("force_pop_valid failed");
-        }
-        return out;
-    }
+    std::string str() const;
 };
+
+inline bool is_time_x_cyclebefore_y(pm::time_int x, pm::time_int y) {
+    return (uint32_t)y - (uint32_t)x - (uint32_t)1 <= (1 << 31);
+}
+
+inline bool is_time_x_cycleatmost_y(pm::time_int x, pm::time_int y) {
+    return (uint32_t)y - (uint32_t)x <= (1 << 31);
+}
+
+inline bool is_time_x_cycleatleast_y(pm::time_int x, pm::time_int y) {
+    return is_time_x_cycleatmost_y(y, x);
+}
+
+template <bool use_validation>
+std::ostream &operator<<(std::ostream &out, bit_bucket_queue<use_validation> q) {
+    out << "bit_bucket_queue {\n";
+    out << "    cur_time=" << q.cur_time << "\n";
+    for (size_t b = 0; b < q.bit_buckets.size() - 1; b++) {
+        auto copy = q.bit_buckets[b];
+        if (!copy.empty()) {
+            out << "    bucket[" << b << "] {\n";
+            std::sort(copy.begin(),
+                      copy.end(),
+                      [](const TentativeEvent &e1, const TentativeEvent &e2) {
+                          return pm::is_time_x_cyclebefore_y(e1.time, e2.time);
+                      });
+            for (auto &e: copy) {
+                out << "        " << e << ",\n";
+            }
+            out << "    }\n";
+        }
+    }
+    out << "}";
+    return out;
+}
+
+template <bool use_validation>
+std::string bit_bucket_queue<use_validation>::str() const {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+}
 
 }  // namespace pm
 

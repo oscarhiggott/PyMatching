@@ -19,13 +19,16 @@ BENCHMARK(bucket_queue_sort) {
             q.enqueue(pm::TentativeEvent(t));
         }
         pm::TentativeEvent out{};
-        while (q.try_pop_valid(&out)) {
-            q.force_pop_valid();
+        while (true) {
+            out = q.dequeue();
+            if (out.tentative_event_type == pm::NO_TENTATIVE_EVENT) {
+                break;
+            }
+            if (out.time == 0) {
+                dependence = true;
+            }
         }
-        if (out.time == 0) {
-            dependence = true;
-        }
-    }).goal_micros(60).show_rate("EnqueueDequeues", (double)v.size());
+    }).goal_micros(14).show_rate("EnqueueDequeues", (double)v.size());
     if (dependence) {
         std::cerr << "data dependence";
     }
@@ -43,7 +46,7 @@ BENCHMARK(bucket_queue_stream) {
             }
         }
         for (size_t k = 0; k < n; k++) {
-            q.enqueue(pm::TentativeEvent(q.force_pop_valid().time));
+            q.enqueue(pm::TentativeEvent(q.dequeue().time));
         }
     }).goal_micros(150).show_rate("EnqueueDequeues", (double)n);
     if (dependence) {

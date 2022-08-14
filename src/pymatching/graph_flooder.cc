@@ -253,8 +253,8 @@ pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(Te
 
 pm::MwpmEvent pm::GraphFlooder::next_event() {
     while (true) {
-        TentativeEvent tentative_event; // NOLINT(cppcoreguidelines-pro-type-member-init)
-        if (!queue.try_pop_valid(&tentative_event)) {
+        TentativeEvent tentative_event = queue.dequeue_valid();
+        if (tentative_event.tentative_event_type == NO_TENTATIVE_EVENT) {
             return MwpmEvent::no_event();
         }
         MwpmEvent processed = do_valid_tentative_event_returning_mwpm_event(tentative_event);
