@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <queue>
+#include <bit>
+#include <iostream>
 
 #include "pymatching/events.h"
 #include "pymatching/chunk_list.h"
@@ -110,7 +112,7 @@ struct bucket_queue<0> {
 
 template <>
 struct bucket_queue<1> {
-    static constexpr size_t BRANCH_FACTOR = 64;
+    static constexpr size_t BRANCH_FACTOR = 8;
     std::vector<TentativeEvent> heap;
     pm::time_int cur_time;
 
@@ -189,6 +191,98 @@ struct bucket_queue<1> {
 
     bool empty() const {
         return heap.empty();
+    }
+
+    bool try_pop(TentativeEvent *out) {
+        while (try_pop_once(out)) {
+            cur_time = out->time;
+            if (!out->is_still_valid()) {
+                continue;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    TentativeEvent force_pop() {
+        TentativeEvent out{};
+        bool b = try_pop(&out);
+        if (!b) {
+            throw std::invalid_argument("force_pop failed");
+        }
+        return out;
+    }
+};
+
+template <>
+struct bucket_queue<2> {
+    std::array<std::vector<TentativeEvent>, 33> buckets;
+    pm::time_int cur_time;
+    size_t _num_enqueued;
+
+    explicit bucket_queue(size_t num_buckets) : cur_time(0), _num_enqueued(0) {}
+
+    size_t size() const {
+        return _num_enqueued;
+    }
+
+    inline size_t bucket_for(pm::time_int time) const {
+        return std::bit_width((uint32_t)(time ^ cur_time));
+    }
+
+    void enqueue(TentativeEvent event) {
+        auto target_bucket = bucket_for(event.time);
+        buckets[target_bucket].push_back(event);
+        _num_enqueued++;
+    }
+
+    bool satisfies_invariants() const {
+        for (size_t b = 0; b < buckets.size(); b++) {
+            for (size_t k = 0; k < buckets[b].size(); k++) {
+                if (bucket_for(buckets[b][k].time) != b) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool try_pop_once(TentativeEvent *out) {
+        if (buckets[0].empty()) {
+            size_t b = 1;
+            while (b < buckets.size() && buckets[b].empty()) {
+                b++;
+            }
+            if (b == buckets.size()) {
+                return false;
+            }
+
+            auto &source_bucket = buckets[b];
+
+            cur_time = source_bucket[0].time;
+            for (size_t k = 1; k < source_bucket.size(); k++) {
+                cur_time = std::min(cur_time, source_bucket[k].time);
+            }
+
+            for (size_t k = 0; k < source_bucket.size(); k++) {
+                auto target_bucket = bucket_for(source_bucket[k].time);
+                if (target_bucket != b) {
+                    buckets[target_bucket].push_back(source_bucket[k]);
+                    source_bucket[k] = source_bucket.back();
+                    source_bucket.pop_back();
+                    k--;
+                }
+            }
+        }
+
+        _num_enqueued--;
+        *out = buckets[0].back();
+        buckets[0].pop_back();
+        return true;
+    }
+
+    bool empty() const {
+        return _num_enqueued == 0;
     }
 
     bool try_pop(TentativeEvent *out) {
