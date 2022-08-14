@@ -10,3 +10,6 @@ circuits
 CMakeFiles
 CMakeCache.txt
 lib/
+out/
+perf.data
+perf.data.old
