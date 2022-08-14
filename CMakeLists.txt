@@ -44,7 +44,6 @@ set(TEST_FILES
         src/pymatching/events.test.cc
         src/pymatching/namespaced_main.test.cc
         src/pymatching/graph.test.cc
-        src/pymatching/chunk_list.test.cc
         src/pymatching/fixed_length_vector.test.cc
         src/pymatching/compressed_edge.test.cc
         src/pymatching/compressed_edge.cc
@@ -54,7 +53,7 @@ set(TEST_FILES
         src/pymatching/mwpm.test.cc
         src/pymatching/stim_io.test.cc
         src/pymatching/mwpm_decoding.test.cc
-        src/pymatching/bucket_queue.test.cc
+        src/pymatching/bit_bucket_queue.test.cc
         )
 
 set(PERF_FILES
@@ -62,7 +61,7 @@ set(PERF_FILES
         src/pymatching/mwpm_decoding.perf.cc
         src/pymatching/perf/util.perf.cc
         src/pymatching/varying.perf.cc
-        src/pymatching/bucket_queue.perf.cc
+        src/pymatching/bit_bucket_queue.perf.cc
         )
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})

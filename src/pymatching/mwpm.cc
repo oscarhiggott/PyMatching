@@ -1,11 +1,5 @@
 #include "pymatching/mwpm.h"
 
-// void pm::Mwpm::add_detection_event(int detector_node_id) {
-//     auto node = &flooder.graph.nodes[detector_node_id];
-//     flooder.create_region(node);
-//     detection_events.push_back(node);
-// }
-
 pm::Mwpm::Mwpm(pm::GraphFlooder flooder) : flooder(std::move(flooder)) {
 }
 

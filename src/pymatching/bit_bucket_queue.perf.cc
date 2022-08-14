@@ -1,4 +1,4 @@
-#include "pymatching/bucket_queue.h"
+#include "pymatching/bit_bucket_queue.h"
 #include <random>
 #include <iostream>
 #include <algorithm>

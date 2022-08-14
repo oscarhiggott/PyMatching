@@ -6,7 +6,7 @@
 #include "pymatching/events.h"
 #include "pymatching/graph.h"
 #include "pymatching/region_edge.h"
-#include "pymatching/bucket_queue.h"
+#include "pymatching/bit_bucket_queue.h"
 
 namespace pm {
 

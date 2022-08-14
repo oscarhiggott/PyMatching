@@ -7,7 +7,6 @@
 #include <iostream>
 
 #include "pymatching/events.h"
-#include "pymatching/chunk_list.h"
 
 namespace pm {
 
