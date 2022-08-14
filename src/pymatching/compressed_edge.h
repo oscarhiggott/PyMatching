@@ -33,6 +33,8 @@ struct CompressedEdge {
     CompressedEdge merged_with(const CompressedEdge& other) const;
     CompressedEdge() = default;
     CompressedEdge(DetectorNode* loc_from, DetectorNode* loc_to, obs_int obs_mask);
+
+    std::string str() const;
 };
 
 inline CompressedEdge::CompressedEdge(DetectorNode* loc_from, DetectorNode* loc_to, obs_int obs_mask)
@@ -46,6 +48,8 @@ inline CompressedEdge CompressedEdge::reversed() const {
 inline CompressedEdge CompressedEdge::merged_with(const CompressedEdge& other) const {
     return {loc_from, other.loc_to, obs_mask ^ other.obs_mask};
 }
+
+std::ostream &operator<<(std::ostream &out, const pm::CompressedEdge &edge);
 
 }  // namespace pm
 
