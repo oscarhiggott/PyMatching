@@ -26,7 +26,7 @@ class Mwpm {
     // detection_events can go, instead stored locally in decoding method
     std::vector<DetectorNode*> detection_events;
     void process_event(const MwpmEvent& event);
-    explicit Mwpm(GraphFlooder& flooder);
+    explicit Mwpm(GraphFlooder flooder);
     void handle_blossom_shattering(const BlossomShatterEventData& event);
     void shatter_descendants_into_matches_and_freeze(AltTreeNode& alt_tree_node);
     void handle_tree_hitting_boundary(const RegionHitBoundaryEventData& event);

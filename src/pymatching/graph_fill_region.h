@@ -43,9 +43,8 @@ class GraphFillRegion {
     /// much the blossom has grown since it was created (it's the *extra* radius, not the total
     /// radius starting from the detection events).
     pm::Varying32 radius;
-    /// If the blossom is shrinking, this is the tentatively scheduled event corresponding to
-    /// it shrinking so much that it shatters.
-    pm::TentativeEvent* shrink_event;
+    /// Event validation index for blossom shatter event.
+    uint64_t shrink_event_vid;
     /// If the region is matched, as opposed to growing/shrinking, this says what it is matched to.
     pm::Match match;
 

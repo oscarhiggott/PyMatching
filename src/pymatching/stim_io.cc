@@ -69,21 +69,27 @@ double pm::ProbabilityGraph::min_nonzero_probability() {
     return min_prob;
 }
 
-pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_buckets) {
+pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     double min_prob = min_nonzero_probability();
     double max_weight = std::log((1 - min_prob) / min_prob);
     pm::MatchingGraph matching_graph(nodes.size());
+    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
     for (auto& node : nodes) {
         for (auto& neighbor : node) {
             auto i = &node - &nodes[0];
             double normed_weight = std::log((1 - neighbor.probability) / neighbor.probability) / max_weight;
-            pm::weight_int w = num_buckets * normed_weight;
+            pm::weight_int w = std::min(max_half_edge_weight, (pm::weight_int)(max_half_edge_weight * normed_weight));
+
+            // Extremely important!
+            // If all edge weights are even integers, then all collision events occur at integer times.
+            w *= 2;
+
             if (!neighbor.node) {
-                matching_graph.add_boundary_edge(i, w * 2, neighbor.obs_mask);
+                matching_graph.add_boundary_edge(i, w, neighbor.obs_mask);
             } else {
                 auto j = neighbor.node - &nodes[0];
                 if (j > i)
-                    matching_graph.add_edge(i, j, w * 2, neighbor.obs_mask);
+                    matching_graph.add_edge(i, j, w, neighbor.obs_mask);
             }
         }
     }
@@ -91,7 +97,7 @@ pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_buc
 }
 
 pm::MatchingGraph pm::detector_error_model_to_matching_graph(
-    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_buckets) {
+    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
     pm::ProbabilityGraph probability_graph(detector_error_model.count_detectors());
     detector_error_model.iter_flatten_error_instructions([&probability_graph](const stim::DemInstruction& instruction) {
         std::vector<size_t> dets;
@@ -115,5 +121,5 @@ pm::MatchingGraph pm::detector_error_model_to_matching_graph(
         }
     });
 
-    return probability_graph.to_matching_graph(num_buckets);
+    return probability_graph.to_matching_graph(num_distinct_weights);
 }

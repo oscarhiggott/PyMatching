@@ -42,7 +42,7 @@ std::string result_of_running_main(const std::vector<std::string> args, const st
         throw std::invalid_argument("Failed to write input.");
     }
     fclose(f);
-    if (pm::main(argv.size(), argv.data()) != EXIT_SUCCESS) {
+    if (pm::main((int)argv.size(), argv.data()) != EXIT_SUCCESS) {
         throw std::invalid_argument("Returned not EXIT_SUCCESS");
     }
     f = fopen(out.path.c_str(), "r");
@@ -91,7 +91,7 @@ TEST(Main, count_mistakes) {
         error(0.1) D1 L2
     )DEM");
     fclose(f);
-    auto stdout = result_of_running_main(
+    auto stdout_text = result_of_running_main(
         {
             "count_mistakes",
             "--dem",
@@ -104,5 +104,5 @@ TEST(Main, count_mistakes) {
 shot D0 L0
 shot D1 L2
 shot D0 D1 L1)stdin");
-    ASSERT_TRUE((stdout.compare("1 / 4") == 0) || (stdout.compare("1 / 4\n") == 0));
+ASSERT_EQ(stdout_text, "1 / 4\n");
 }

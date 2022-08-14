@@ -9,20 +9,19 @@ namespace pm {
 
 struct TentativeNeighborInteractionEventData {
     DetectorNode *detector_node_1;
-
-    bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
-
-    bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
-
     size_t node_1_neighbor_index;
     DetectorNode *detector_node_2;
     size_t node_2_neighbor_index;
+
     TentativeNeighborInteractionEventData(
         DetectorNode *detector_node_1,
         size_t node_1_neighbor_index,
         DetectorNode *detector_node_2,
         size_t node_2_neighbor_index);
     TentativeNeighborInteractionEventData() = default;
+
+    bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
+    bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
 };
 
 struct TentativeRegionShrinkEventData {
@@ -36,7 +35,11 @@ struct TentativeRegionShrinkEventData {
     explicit TentativeRegionShrinkEventData(GraphFillRegion *region);
 };
 
-enum TentativeType : uint8_t { INTERACTION, SHRINKING };
+enum TentativeType : uint8_t {
+    NO_TENTATIVE_EVENT,
+    INTERACTION,
+    SHRINKING
+};
 
 struct TentativeEvent {
     union {
@@ -45,31 +48,39 @@ struct TentativeEvent {
     };
     pm::time_int time;
     TentativeType tentative_event_type;
-    bool is_invalidated;
+
+    /// Validation index for the event. When events are created, this is set to a new unique value
+    /// and the objects affected by the event are marked with the same unique value. When the event
+    /// is actually processed, this value is compared to the markings on the affects objects. If
+    /// they differ, the event is invalid.
+    ///
+    /// This makes invalidating events, starting from an object affected by that event, very cheap:
+    /// simply increment its validation index. (Decrementing is not a safe way to invalidate because
+    /// the previous index may have also been an event affecting that object.)
+    uint64_t vid;
 
     TentativeEvent(
-        DetectorNode *detector_node_1,
-        size_t node_1_neighbor_index,
-        DetectorNode *detector_node_2,
-        size_t node_2_neighbor_index,
-        time_int time);
-    TentativeEvent(pm::GraphFillRegion *region, time_int time);
+        TentativeNeighborInteractionEventData data,
+        time_int time,
+        uint64_t validation_index);
+    TentativeEvent(TentativeRegionShrinkEventData data, time_int time, uint64_t validation_index);
+    TentativeEvent(time_int time, uint64_t validation_index = 0);
     TentativeEvent() = default;
 
     bool operator<(const TentativeEvent &rhs) const;
-
     bool operator>(const TentativeEvent &rhs) const;
-
     bool operator<=(const TentativeEvent &rhs) const;
-
     bool operator==(const TentativeEvent &rhs) const;
-
     bool operator!=(const TentativeEvent &rhs) const;
-
     bool operator>=(const TentativeEvent &rhs) const;
 
-    void invalidate();
+    bool is_still_valid() const;
+
+    std::string str() const;
 };
+
+std::ostream &operator<<(std::ostream &out, const TentativeEvent &c);
+
 
 struct RegionHitRegionEventData {
     GraphFillRegion *region1;
@@ -110,7 +121,7 @@ struct BlossomShatterEventData {
         GraphFillRegion *blossom_region, GraphFillRegion *in_parent_region, GraphFillRegion *in_child_region);
 };
 
-enum MwpmEventType : uint8_t { REGION_HIT_REGION, REGION_HIT_BOUNDARY, BLOSSOM_SHATTER, NO_EVENT };
+enum MwpmEventType : uint8_t { NO_EVENT, REGION_HIT_REGION, REGION_HIT_BOUNDARY, BLOSSOM_SHATTER };
 
 struct MwpmEvent {
     union {

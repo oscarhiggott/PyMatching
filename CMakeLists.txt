@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15.3)
+cmake_minimum_required(VERSION 3.13)
 project(PyMatching2)
 
 include_directories(src)
@@ -53,7 +53,7 @@ set(TEST_FILES
         src/pymatching/mwpm.test.cc
         src/pymatching/stim_io.test.cc
         src/pymatching/mwpm_decoding.test.cc
-        src/pymatching/bucket_queue.test.cc
+        src/pymatching/bit_bucket_queue.test.cc
         )
 
 set(PERF_FILES
@@ -61,6 +61,7 @@ set(PERF_FILES
         src/pymatching/mwpm_decoding.perf.cc
         src/pymatching/perf/util.perf.cc
         src/pymatching/varying.perf.cc
+        src/pymatching/bit_bucket_queue.perf.cc
         )
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
@@ -72,7 +73,8 @@ target_link_libraries(pymatching libstim)
 enable_testing()
 
 add_executable(pymatching_tests ${SOURCE_FILES_NO_MAIN} ${TEST_FILES})
-target_link_options(pymatching_tests PRIVATE -pthread)
+target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer)
+target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined)
 target_link_libraries(pymatching_tests GTest::gtest_main libstim)
 
 add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})

@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "pymatching/mwpm_decoding.h"
+#include "pymatching/stim_io.h"
 #include "stim.h"
 #include "stim/simulators/detection_simulator.h"
-#include "pymatching/stim_io.h"
 
 int main_predict(int argc, const char **argv) {
     stim::check_for_unknown_arguments(
@@ -134,19 +134,20 @@ int main_count_mistakes(int argc, const char **argv) {
     }
     if (!time)
         fprintf(stats_out, "%zu / %zu\n", num_mistakes, num_shots);
-    auto end = std::chrono::steady_clock::now();
-    auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
-    if (time) {
-//        std::cerr << "Total decoding time: " << (int)microseconds << "us\n";
-//        std::cerr << "Decoding time per shot: " << (microseconds / num_shots) << "us\n";
-        std::cout << (microseconds / num_shots);
-    }
     if (stats_out != stdout) {
         fclose(stats_out);
     }
     if (shots_in != stdin) {
         fclose(shots_in);
     }
+
+    auto end = std::chrono::steady_clock::now();
+    auto microseconds = (double)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    if (time) {
+        std::cerr << "Total decoding time: " << (int)microseconds << "us\n";
+        std::cerr << "Decoding time per shot: " << (microseconds / num_shots) << "us\n";
+    }
+
     return EXIT_SUCCESS;
 }
 
