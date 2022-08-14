@@ -6,7 +6,7 @@
 #include "pymatching/mwpm.h"
 
 TEST(GraphFlooder, PriorityQueue) {
-    pm::GraphFlooder flooder(pm::MatchingGraph(10), 1024);
+    pm::GraphFlooder flooder(pm::MatchingGraph(10));
     auto &graph = flooder.graph;
     graph.add_edge(0, 1, 10, 0);
     graph.add_edge(1, 2, 10, 0);
@@ -46,7 +46,7 @@ TEST(GraphFlooder, PriorityQueue) {
 }
 
 TEST(GraphFlooder, CreateRegion) {
-    pm::GraphFlooder flooder(pm::MatchingGraph(5), 2048);
+    pm::GraphFlooder flooder(pm::MatchingGraph(5));
     auto &g = flooder.graph;
     g.add_boundary_edge(0, 3, 0);
     g.add_edge(0, 1, 5, 0);
@@ -79,7 +79,7 @@ TEST(GraphFlooder, CreateRegion) {
 }
 
 TEST(GraphFlooder, RegionGrowingToBoundary) {
-    pm::GraphFlooder flooder(pm::MatchingGraph(10), 1024);
+    pm::GraphFlooder flooder(pm::MatchingGraph(10));
     auto &g = flooder.graph;
     g.add_boundary_edge(0, 2, 3);
     g.add_edge(0, 1, 10, 5);
@@ -106,7 +106,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
 }
 
 TEST(GraphFlooder, RegionHitRegion) {
-    pm::GraphFlooder flooder(pm::MatchingGraph(10), 2048);
+    pm::GraphFlooder flooder(pm::MatchingGraph(10));
     auto &g = flooder.graph;
     g.add_boundary_edge(0, 2000, 3);
     g.add_edge(0, 1, 10, 5);
@@ -126,7 +126,7 @@ TEST(GraphFlooder, RegionHitRegion) {
 }
 
 TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
-    pm::GraphFlooder flooder(pm::MatchingGraph(10), 1024);
+    pm::GraphFlooder flooder(pm::MatchingGraph(10));
     auto &g = flooder.graph;
     g.add_boundary_edge(0, 4, 3);
     g.add_edge(0, 1, 10, 5);
@@ -155,7 +155,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
 }
 
 TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
-    pm::Mwpm mwpm(pm::GraphFlooder(pm::MatchingGraph(10), 2048));
+    pm::Mwpm mwpm(pm::GraphFlooder(pm::MatchingGraph(10)));
     auto &g = mwpm.flooder.graph;
     g.add_boundary_edge(0, 4, 3);
     g.add_edge(0, 1, 100, 5);
@@ -184,7 +184,7 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
 }
 
 TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
-    pm::Mwpm mwpm(pm::GraphFlooder(pm::MatchingGraph(10), 2048));
+    pm::Mwpm mwpm(pm::GraphFlooder(pm::MatchingGraph(10)));
     auto &g = mwpm.flooder.graph;
     g.add_boundary_edge(0, 1000, 3);
     g.add_edge(0, 1, 8, 5);
@@ -245,7 +245,7 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
 
 TEST(GraphFlooder, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     size_t num_nodes = 100;
-    pm::Mwpm mwpm{pm::GraphFlooder(pm::MatchingGraph(num_nodes), 2048)};
+    pm::Mwpm mwpm{pm::GraphFlooder(pm::MatchingGraph(num_nodes))};
     auto &g = mwpm.flooder.graph;
     g.add_boundary_edge(0, 2, 1);
     for (size_t i = 0; i < num_nodes - 1; i++)

@@ -178,7 +178,11 @@ pm::RegionHitRegionEventData::RegionHitRegionEventData(
 }
 
 bool pm::RegionHitRegionEventData::operator==(const pm::RegionHitRegionEventData &rhs) const {
-    return region1 == rhs.region1 && region2 == rhs.region2 && edge == rhs.edge;
+    if (region1 == rhs.region1 && region2 == rhs.region2 && edge == rhs.edge) {
+        return true;
+    }
+    // Reversed also okay.
+    return region1 == rhs.region2 && region1 == rhs.region2 && edge == rhs.edge.reversed();
 }
 
 bool pm::RegionHitRegionEventData::operator!=(const pm::RegionHitRegionEventData &rhs) const {

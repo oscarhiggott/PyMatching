@@ -4,7 +4,7 @@
 #include "pymatching/graph_fill_region.h"
 #include "pymatching/varying.h"
 
-pm::GraphFlooder::GraphFlooder(pm::MatchingGraph graph, size_t num_buckets) : graph(std::move(graph)), next_event_vid(0) {
+pm::GraphFlooder::GraphFlooder(pm::MatchingGraph graph) : graph(std::move(graph)), next_event_vid(0) {
 }
 
 pm::GraphFlooder::GraphFlooder(pm::GraphFlooder &&flooder) noexcept

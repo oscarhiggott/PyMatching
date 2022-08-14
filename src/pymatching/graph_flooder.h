@@ -29,7 +29,7 @@ class GraphFlooder {
     /// object by incrementing its vids.
     uint64_t next_event_vid;
 
-    GraphFlooder(MatchingGraph graph, size_t num_buckets);
+    GraphFlooder(MatchingGraph graph);
     GraphFlooder(GraphFlooder&&) noexcept;
     void create_region(DetectorNode* node);
     MwpmEvent next_event();
