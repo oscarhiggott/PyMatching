@@ -55,20 +55,18 @@ MatchingGraph::MatchingGraph() : num_nodes(0) {
 }
 
 Varying32 DetectorNode::total_radius() const {
-    if (!reached_from_source)
-        return pm::Varying32(0);
-    auto curr_region = reached_from_source->region_that_arrived;
-    decltype(curr_region->radius.data) tot_rad = 0;
-    while (curr_region->blossom_parent) {
-        tot_rad += curr_region->radius.y_intercept();
-        curr_region = curr_region->blossom_parent;
+    Varying32 result{0};
+    if (reached_from_source != nullptr) {
+        auto r = reached_from_source->region_that_arrived;
+        while (r != nullptr) {
+            result.inplace_freeze_then_add(r->radius);
+            r = r->blossom_parent;
+        }
     }
-    return curr_region->radius + tot_rad;
+    return result;
 }
 
 Varying32 DetectorNode::local_radius() const {
-    if (!reached_from_source)
-        return Varying32(0);
     return total_radius() - distance_from_source;
 }
 
