@@ -242,7 +242,7 @@ struct QueuedEventTracker {
     /// queue. The result of this method is whether or not to discard the event (due to it being
     /// no longer desired) instead of continuing processing it. Returning false means discard,
     /// returning true means keep. This method also handles requeueing another look-at-me event
-    /// if doing os was defered while the earlier event was in the queue.
+    /// if doing so was deferred while the earlier event was in the queue.
     template <bool use_validation>
     inline bool dequeue_decision(TentativeEvent ev, bit_bucket_queue<use_validation> &queue) {
         // Only the most recent event this tracker put into the queue is valid. Older events
