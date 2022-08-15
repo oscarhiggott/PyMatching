@@ -120,10 +120,10 @@ TEST(AlternatingTree, AllNodesInTree) {
         x.alt_tree_node->all_nodes_in_tree(),
         std::vector<pm::AltTreeNode*>(
             {x.alt_tree_node,
+             x.alt_tree_node->children[0].alt_tree_node,
              x.alt_tree_node->children[1].alt_tree_node,
-             x.alt_tree_node->children[1].alt_tree_node->children[1].alt_tree_node,
              x.alt_tree_node->children[1].alt_tree_node->children[0].alt_tree_node,
-             x.alt_tree_node->children[0].alt_tree_node}));
+             x.alt_tree_node->children[1].alt_tree_node->children[1].alt_tree_node}));
     delete_alternating_tree(x.alt_tree_node);
 }
 

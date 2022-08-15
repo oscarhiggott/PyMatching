@@ -58,14 +58,29 @@ struct AltTreePruneResult {
     AltTreePruneResult(std::vector<AltTreeEdge> orphan_edges, std::vector<pm::RegionEdge> pruned_path_region_edges);
 };
 
+/// An alternating tree is a tree with 2-colored nodes where one color grows and the other shrinks.
+///
+/// Additionally, an alternating tree requires that the leaves and the root are growing.
+/// Additionally, it is required that each shrinking node has exactly 1 child.
+///
+/// These additional constraints allow an optimization used here, where each AltTreeNode is actually
+/// two nodes from the alternating tree: a growing node and its single shrinking parent (the parent
+/// is null for the root node).
 class AltTreeNode {
    public:
+    /// The shrinking node in this combined alternating tree double-node.
     GraphFillRegion* inner_region;
+    /// The growing node in this combined alternating tree double-node.
     GraphFillRegion* outer_region;
+    /// The edge from the shrinking region to the growing region.
     CompressedEdge inner_to_outer_edge;
+    /// The edge from the shrinking region to its parent (i.e. from this double node to its parent).
     AltTreeEdge parent;
-    std::vector<AltTreeEdge> children;  // Maybe make linked list?
+    /// The children of the growing node (i.e. the children of this double node).
+    std::vector<AltTreeEdge> children;
+    /// Ephemeral state used during algorithms.
     bool visited;
+
     AltTreeNode();
     AltTreeNode(
         GraphFillRegion* inner_region,
@@ -80,14 +95,19 @@ class AltTreeNode {
     AltTreeNode(pm::GraphFillRegion* outer_region);
     ~AltTreeNode();
 
+    /// Two trees are equal if they have the same structure and they refer to the same underlying
+    /// regions and have the same compressed edges.
     bool operator==(const AltTreeNode& rhs) const;
-
     bool operator!=(const AltTreeNode& rhs) const;
 
+    /// Perform a tree rotation where the growing node of this double node becomes the root
+    /// of the tree. The undirected edges in the underlying alternating tree do not change; only
+    /// the direction of the edges (all leading away from the root) is changed.
     void become_root();
-    /// Finds the most recent common ancestor of `this` and `other`
+    /// Finds the most recent common ancestor between this node and the other node.
     ///
-    /// Note: breadcrumbs are left (by setting `visited=true`) as the
+    /// Would be const except it uses ephemeral state to go faster.
+    /// More specifically, breadcrumbs are left (by setting `visited=true`) as the
     /// tree is traversed upward from `this` and `other`. These are
     /// reset (`visited=false`) before the method completes for the
     /// common ancestor and its ancestors, but *not* reset for nodes
@@ -104,7 +124,12 @@ class AltTreeNode {
         const CompressedEdge& child_compressed_edge);
     AltTreePruneResult prune_upward_path_stopping_before(AltTreeNode* prune_parent, bool back);
     const AltTreeNode* find_root() const;
+
+    /// Helper method for operator==.
     bool tree_equal(const pm::AltTreeNode& other) const;
+
+    /// Lists all the nodes in the tree. Not used during the algorithm; might be useful for tests
+    /// at some point.
     std::vector<pm::AltTreeNode*> all_nodes_in_tree();
 };
 
