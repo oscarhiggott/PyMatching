@@ -1,62 +1,53 @@
 #ifndef PYMATCHING2_EVENTS_H
 #define PYMATCHING2_EVENTS_H
 
-#include "pymatching/compressed_edge.h"
-#include "pymatching/cyclic.h"
 #include "pymatching/varying.h"
+#include "pymatching/compressed_edge.h"
 
 namespace pm {
 
 struct DetectorNode;
 struct GraphFillRegion;
 
-struct TentativeNeighborInteractionEventData {
-    DetectorNode *detector_node_1;
-    size_t node_1_neighbor_index;
-    DetectorNode *detector_node_2;
-    size_t node_2_neighbor_index;
+enum TentativeType : uint8_t {
+    /// A placeholder value indicating there was no event.
+    NO_TENTATIVE_EVENT,
 
-    bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
-    bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
+    /// Indicates that an event may be happening at a detector node. The event could be:
+    /// - The node's region colliding with an adjacent boundary.
+    /// - The node's region colliding with an adjacent region.
+    LOOK_AT_NODE,
+
+    /// Indicates that a region-level event might be happening. The event could be:
+    /// - The region shrinking enough that a detector node needs to be removed from it.
+    /// - The region being a blossom and shrinking to the point where it must shatter.
+    /// - The region shrinking to point and causing a degenerate collision between its neighbors.
+    LOOK_AT_SHRINKING_REGION,
+};
+
+struct TentativeEventData_LookAtNode {
+    DetectorNode *detector_node;
+    bool operator==(const TentativeEventData_LookAtNode &rhs) const;
+    bool operator!=(const TentativeEventData_LookAtNode &rhs) const;
 };
 
 struct TentativeEventData_LookAtShrinkingRegion {
     GraphFillRegion *region;
-
     bool operator==(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
     bool operator!=(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
 };
 
-enum TentativeType : uint8_t {
-    NO_TENTATIVE_EVENT,
-    INTERACTION,
-    LOOK_AT_SHRINKING_REGION
-};
-
 struct TentativeEvent {
     union {
-        TentativeNeighborInteractionEventData neighbor_interaction_event_data;
+        TentativeEventData_LookAtNode data_look_at_node;
         TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region;
     };
-    pm::cyclic_time_int time;
+    cyclic_time_int time;
     TentativeType tentative_event_type;
 
-    /// Validation index for the event. When events are created, this is set to a new unique value
-    /// and the objects affected by the event are marked with the same unique value. When the event
-    /// is actually processed, this value is compared to the markings on the affects objects. If
-    /// they differ, the event is invalid.
-    ///
-    /// This makes invalidating events, starting from an object affected by that event, very cheap:
-    /// simply increment its validation index. (Decrementing is not a safe way to invalidate because
-    /// the previous index may have also been an event affecting that object.)
-    uint64_t vid;
-
-    TentativeEvent(
-        TentativeNeighborInteractionEventData data,
-        cyclic_time_int time,
-        uint64_t validation_index);
+    TentativeEvent(TentativeEventData_LookAtNode data, cyclic_time_int time);
     TentativeEvent(TentativeEventData_LookAtShrinkingRegion data, cyclic_time_int time);
-    TentativeEvent(cyclic_time_int time, uint64_t validation_index = 0);
+    explicit TentativeEvent(cyclic_time_int time);
     TentativeEvent() = default;
 
     bool operator==(const TentativeEvent &rhs) const;
@@ -89,6 +80,7 @@ struct RegionHitBoundaryEventData {
     bool operator==(const RegionHitBoundaryEventData &rhs) const;
     bool operator!=(const RegionHitBoundaryEventData &rhs) const;
 };
+std::ostream &operator<<(std::ostream &out, const RegionHitBoundaryEventData &ev);
 
 struct BlossomShatterEventData {
     GraphFillRegion *blossom_region;

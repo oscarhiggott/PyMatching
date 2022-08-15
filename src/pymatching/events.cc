@@ -1,29 +1,23 @@
 #include "pymatching/events.h"
-#include "pymatching/graph.h"
-#include "pymatching/graph_fill_region.h"
 
-pm::TentativeEvent::TentativeEvent(
-    pm::TentativeNeighborInteractionEventData data,
-    pm::cyclic_time_int time,
-    uint64_t validation_index)
-    : neighbor_interaction_event_data(data),
+pm::TentativeEvent::TentativeEvent(pm::TentativeEventData_LookAtNode data_look_at_node, cyclic_time_int time)
+    : data_look_at_node(data_look_at_node),
       time(time),
-      tentative_event_type(INTERACTION),
-      vid(validation_index) {
+      tentative_event_type(LOOK_AT_NODE) {
 }
 
-pm::TentativeEvent::TentativeEvent(pm::TentativeEventData_LookAtShrinkingRegion data, pm::cyclic_time_int time)
-    : data_look_at_shrinking_region(data), time(time), tentative_event_type(LOOK_AT_SHRINKING_REGION), vid(0) {
+pm::TentativeEvent::TentativeEvent(pm::TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region, cyclic_time_int time)
+    : data_look_at_shrinking_region(data_look_at_shrinking_region), time(time), tentative_event_type(LOOK_AT_SHRINKING_REGION) {
 }
-pm::TentativeEvent::TentativeEvent(pm::cyclic_time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
-}
-
-bool pm::TentativeNeighborInteractionEventData::operator==(const pm::TentativeNeighborInteractionEventData &rhs) const {
-    return detector_node_1 == rhs.detector_node_1 && node_1_neighbor_index == rhs.node_1_neighbor_index &&
-           detector_node_2 == rhs.detector_node_2 && node_2_neighbor_index == rhs.node_2_neighbor_index;
+pm::TentativeEvent::TentativeEvent(cyclic_time_int time) : time(time), tentative_event_type(NO_TENTATIVE_EVENT) {
 }
 
-bool pm::TentativeNeighborInteractionEventData::operator!=(const pm::TentativeNeighborInteractionEventData &rhs) const {
+
+bool pm::TentativeEventData_LookAtNode::operator==(const pm::TentativeEventData_LookAtNode &rhs) const {
+    return detector_node == rhs.detector_node;
+}
+
+bool pm::TentativeEventData_LookAtNode::operator!=(const pm::TentativeEventData_LookAtNode &rhs) const {
     return !(rhs == *this);
 }
 
@@ -36,13 +30,13 @@ bool pm::TentativeEventData_LookAtShrinkingRegion::operator!=(const pm::Tentativ
 }
 
 bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
-    if (time != rhs.time || tentative_event_type != rhs.tentative_event_type || vid != rhs.vid)
+    if (time != rhs.time || tentative_event_type != rhs.tentative_event_type)
         return false;
     switch (tentative_event_type) {
+        case LOOK_AT_NODE:
+            return data_look_at_node == rhs.data_look_at_node;
         case LOOK_AT_SHRINKING_REGION:
             return data_look_at_shrinking_region == rhs.data_look_at_shrinking_region;
-        case INTERACTION:
-            return neighbor_interaction_event_data == rhs.neighbor_interaction_event_data;
         case NO_TENTATIVE_EVENT:
             return true;
         default:
@@ -53,15 +47,13 @@ bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
 std::ostream &pm::operator<<(std::ostream &out, const TentativeEvent &ev) {
     out << "TentativeEvent{.time=";
     out << ev.time;
-    out << ", .vid=";
-    out << ev.vid;
     out << ", .type=";
     switch (ev.tentative_event_type) {
         case LOOK_AT_SHRINKING_REGION:
-            out << "SHRINKING";
+            out << "LOOK_AT_SHRINKING_REGION, .region=" << ev.data_look_at_shrinking_region.region;
             break;
-        case INTERACTION:
-            out << "INTERACTION";
+        case LOOK_AT_NODE:
+            out << "LOOK_AT_NODE, .node=" << ev.data_look_at_node.detector_node;
             break;
         case NO_TENTATIVE_EVENT:
             out << "NO_TENTATIVE_EVENT";
@@ -77,6 +69,13 @@ std::ostream &pm::operator<<(std::ostream &out, const pm::RegionHitRegionEventDa
     out << "{.region1=" << dat.region1;
     out << ", .region2=" << dat.region2;
     out << ", .edge=" << dat.edge;
+    out << "}";
+    return out;
+}
+
+std::ostream &pm::operator<<(std::ostream &out, const RegionHitBoundaryEventData &ev) {
+    out << "{.region=" << ev.region;
+    out << ", .edge=" << ev.edge;
     out << "}";
     return out;
 }
@@ -102,7 +101,7 @@ std::ostream &pm::operator<<(std::ostream &out, const MwpmEvent &ev) {
             out << "BLOSSOM_SHATTER, .dat=" << ev.blossom_shatter_event_data;
             break;
         case REGION_HIT_BOUNDARY:
-            out << "REGION_HIT_BOUNDARY";
+            out << "REGION_HIT_BOUNDARY, .dat=" << ev.region_hit_boundary_event_data;
             break;
         default:
             throw std::invalid_argument("Unrecognized event type");

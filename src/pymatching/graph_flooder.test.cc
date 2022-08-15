@@ -19,15 +19,15 @@ TEST(GraphFlooder, PriorityQueue) {
     graph.add_edge(4, 5, 10, 0);
     graph.add_edge(5, 0, 10, 0);
 
-    flooder.queue.enqueue(TentativeEvent(TentativeNeighborInteractionEventData{
-        &graph.nodes[0], 0, &graph.nodes[1], 1
-    }, cyclic_time_int{10}, 0x0));
-    flooder.queue.enqueue(TentativeEvent(TentativeNeighborInteractionEventData{
-        &graph.nodes[1], 0, &graph.nodes[2], 1
-    }, cyclic_time_int{8}, 0x0));
-    flooder.queue.enqueue(TentativeEvent(TentativeNeighborInteractionEventData{
-        &graph.nodes[2], 0, &graph.nodes[3], 1
-    }, cyclic_time_int{5}, 0x0));
+    auto qn = [&](int i, int t) {
+        graph.nodes[i].node_event_tracker.set_desired_event({TentativeEventData_LookAtNode{
+            &graph.nodes[i],
+        }, cyclic_time_int{t}}, flooder.queue);
+    };
+
+    qn(0, 10);
+    qn(1, 8);
+    qn(2, 5);
 
     GraphFillRegion gfr;
     gfr.shrink_event_tracker.set_desired_event({
@@ -35,13 +35,11 @@ TEST(GraphFlooder, PriorityQueue) {
         cyclic_time_int{70}
     }, flooder.queue);
 
-    flooder.queue.enqueue(TentativeEvent(TentativeNeighborInteractionEventData{
-        &graph.nodes[4], 0, &graph.nodes[5], 1
-    }, cyclic_time_int{100}, 0x0));
+    qn(4, 100);
     auto e = flooder.dequeue_valid();
     ASSERT_EQ(e.time, 5);
-    ASSERT_EQ(e.tentative_event_type, INTERACTION);
-    ASSERT_EQ(e.neighbor_interaction_event_data.detector_node_1, &graph.nodes[2]);
+    ASSERT_EQ(e.tentative_event_type, LOOK_AT_NODE);
+    ASSERT_EQ(e.data_look_at_node.detector_node, &graph.nodes[2]);
     ASSERT_EQ(flooder.dequeue_valid().time, 8);
     ASSERT_EQ(flooder.dequeue_valid().time, 10);
     auto e6 = flooder.dequeue_valid();
@@ -62,25 +60,18 @@ TEST(GraphFlooder, CreateRegion) {
     flooder.create_region(&flooder.graph.nodes[0]);
     flooder.create_region(&flooder.graph.nodes[2]);
     flooder.create_region(&flooder.graph.nodes[3]);
-    ASSERT_EQ(flooder.dequeue_valid(), TentativeEvent(TentativeNeighborInteractionEventData{
-        &flooder.graph.nodes[0], 0, nullptr, (size_t)-1
-    }, cyclic_time_int{3}, 0x0));
-    ASSERT_EQ(flooder.dequeue_valid(), TentativeEvent(TentativeNeighborInteractionEventData{
-        &flooder.graph.nodes[0], 1, &flooder.graph.nodes[1], 0
-    }, cyclic_time_int{5}, 0x1));
+    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(TentativeEventData_LookAtNode{
+        &flooder.graph.nodes[0]
+    }, cyclic_time_int{3}));
+    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(TentativeEventData_LookAtNode{
+        &flooder.graph.nodes[2]
+    }, cyclic_time_int{11}));
     ASSERT_EQ(flooder.graph.nodes[0].region_that_arrived->shell_area[0], &flooder.graph.nodes[0]);
     ASSERT_EQ(flooder.graph.nodes[0].distance_from_source, 0);
     ASSERT_EQ(flooder.graph.nodes[0].reached_from_source, &flooder.graph.nodes[0]);
-    ASSERT_EQ(flooder.dequeue_valid(), TentativeEvent(TentativeNeighborInteractionEventData{
-        &flooder.graph.nodes[2], 0, &flooder.graph.nodes[1], 1
-    }, cyclic_time_int{11}, 0x2));
-    ASSERT_EQ(flooder.dequeue_valid(), TentativeEvent(TentativeNeighborInteractionEventData{
-        &flooder.graph.nodes[3], 0, &flooder.graph.nodes[2], 1
-    }, cyclic_time_int{50}, 0x4));
-    // t=100 event skipped over because it was invalidated.
-    ASSERT_EQ(flooder.dequeue_valid(), TentativeEvent(TentativeNeighborInteractionEventData{
-        &flooder.graph.nodes[3], 1, nullptr, (size_t)-1
-    }, cyclic_time_int{1000}, 0x5));
+    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(TentativeEventData_LookAtNode{
+        &flooder.graph.nodes[3]
+    }, cyclic_time_int{50}));
     ASSERT_TRUE(flooder.queue.empty());
 }
 
@@ -94,21 +85,23 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     g.add_edge(3, 4, 7, 9);
     g.add_boundary_edge(4, 5, 2);
     flooder.create_region(&flooder.graph.nodes[2]);
-    auto e1 = flooder.next_event();
-    MwpmEvent e1_exp = RegionHitBoundaryEventData{
-        flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 6)};
-    ASSERT_EQ(e1, e1_exp);
-    auto t1 = flooder.dequeue_valid();
-    ASSERT_EQ(t1, TentativeEvent(TentativeNeighborInteractionEventData{
-        &flooder.graph.nodes[2], 1, &flooder.graph.nodes[3], 0
-    }, cyclic_time_int{100}, 0x1));
+    ASSERT_EQ(flooder.next_event(), (MwpmEvent{
+        RegionHitBoundaryEventData{
+            flooder.graph.nodes[2].region_that_arrived,
+            CompressedEdge(&flooder.graph.nodes[2], nullptr, 6),
+        },
+    }));
+
+    flooder.queue.dequeue();
+    auto t1 = flooder.queue.dequeue();
+    ASSERT_EQ(t1, TentativeEvent(TentativeEventData_LookAtNode{
+        &flooder.graph.nodes[2]
+    }, cyclic_time_int{100}));
     flooder.queue.enqueue(TentativeEvent(t1));
     auto e2 = flooder.next_event();
     MwpmEvent e2_exp = RegionHitBoundaryEventData{
         flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 10)};
     ASSERT_EQ(e2, e2_exp);
-    auto e3 = flooder.next_event();
-    ASSERT_EQ(e3.event_type, NO_EVENT);
 }
 
 TEST(GraphFlooder, RegionHitRegion) {

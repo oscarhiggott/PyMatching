@@ -202,6 +202,12 @@ struct QueuedEventTracker {
     bool has_desired_time{false};
     bool has_queued_time{false};
 
+    void clear() {
+        desired_time = cyclic_time_int{0};
+        queued_time = cyclic_time_int{0};
+        has_desired_time = {false};
+        has_queued_time = {false};
+    }
     template <bool use_validation>
     inline void set_desired_event(TentativeEvent ev, bit_bucket_queue<use_validation> &queue) {
         has_desired_time = true;

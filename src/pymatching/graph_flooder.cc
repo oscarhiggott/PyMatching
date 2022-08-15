@@ -26,39 +26,58 @@ void pm::GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion 
     reschedule_events_at_detector_node(detector_node);
 }
 
-void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector_node) {
-    detector_node.invalidate_involved_schedule_items();
+std::pair<size_t, pm::cumulative_time_int> pm::GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(DetectorNode &detector_node) const {
+    pm::cumulative_time_int best_time = std::numeric_limits<pm::cumulative_time_int>::max();
+    size_t best_neighbor = SIZE_MAX;
+
     auto rad1 = detector_node.local_radius();
-    for (size_t i = 0; i < detector_node.neighbors.size(); i++) {
-        auto weight = detector_node.neighbor_weights[i];
-        if (!detector_node.neighbors[i]) {
-            // If growing towards boundary
-            if (rad1.is_growing()) {
-                auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
-                schedule_tentative_neighbor_interaction_event(
-                    &detector_node, i, nullptr, -1, collision_time);
+
+    size_t start = 0;
+    if (!detector_node.neighbors.empty() && detector_node.neighbors[0] == nullptr) {
+        // If growing towards boundary
+        if (rad1.is_growing()) {
+            auto weight = detector_node.neighbor_weights[0];
+            auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
+            if (collision_time >= queue.cur_time && collision_time < best_time) {
+                best_time = collision_time;
+                best_neighbor = 0;
             }
+        }
+        start++;
+    }
+
+    // Handle non-boundary neighbors.
+    for (size_t i = start; i < detector_node.neighbors.size(); i++) {
+        auto weight = detector_node.neighbor_weights[i];
+
+        auto neighbor = detector_node.neighbors[i];
+        if (detector_node.has_same_owner_as(*neighbor)) {
             continue;
         }
-        auto neighbor = detector_node.neighbors[i];
-        if (detector_node.has_same_owner_as(*neighbor))
-            continue;
         auto rad2 = neighbor->local_radius();
-        if (!rad1.colliding_with(rad2))
-            continue;
-        auto collision_time = rad1.time_of_x_intercept_when_added_to(rad2 - weight);
-        if (collision_time < (int64_t)queue.cur_time) {
+        if (!rad1.colliding_with(rad2)) {
             continue;
         }
 
-        // Find index of detector_node from neighbor
-        size_t j = 0;
-        for (auto &n : neighbor->neighbors) {
-            if (n == &detector_node)
-                break;
-            j++;
+        auto collision_time = rad1.time_of_x_intercept_when_added_to(rad2 - weight);
+        if (collision_time >= queue.cur_time && collision_time < best_time) {
+            best_time = collision_time;
+            best_neighbor = i;
         }
-        schedule_tentative_neighbor_interaction_event(&detector_node, i, neighbor, j, collision_time);
+    }
+
+    return {best_neighbor, best_time};
+}
+
+void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector_node) {
+    auto x = find_next_event_at_node_returning_neighbor_index_and_time(detector_node);
+    if (x.first == SIZE_MAX) {
+        detector_node.node_event_tracker.set_no_desired_event();
+    } else {
+        detector_node.node_event_tracker.set_desired_event({
+            TentativeEventData_LookAtNode{&detector_node},
+            cyclic_time_int{x.second},
+        }, queue);
     }
 }
 
@@ -75,29 +94,6 @@ void pm::GraphFlooder::reschedule_events_for_region(pm::GraphFillRegion &region)
             reschedule_events_at_detector_node(*n);
         });
     }
-}
-
-void pm::GraphFlooder::schedule_tentative_neighbor_interaction_event(
-    pm::DetectorNode *detector_node_1,
-    size_t schedule_list_index_1,
-    pm::DetectorNode *detector_node_2,
-    size_t schedule_list_index_2,
-    pm::cumulative_time_int event_time) {
-    if (event_time < queue.cur_time) {
-        return;
-    }
-    auto vid = next_event_vid++;
-    detector_node_1->edge_event_vids[schedule_list_index_1] = vid;
-    if (detector_node_2 != nullptr) {
-        detector_node_2->edge_event_vids[schedule_list_index_2] = vid;
-    }
-    queue.enqueue({
-        pm::TentativeNeighborInteractionEventData{
-            detector_node_1, schedule_list_index_1, detector_node_2, schedule_list_index_2
-        },
-        cyclic_time_int{event_time},
-        vid,
-    });
 }
 
 void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &region) {
@@ -142,46 +138,48 @@ pm::MwpmEvent pm::GraphFlooder::do_region_shrinking(const pm::TentativeEventData
     }
 }
 
-pm::MwpmEvent pm::GraphFlooder::do_neighbor_interaction(const pm::TentativeNeighborInteractionEventData &event) {
+pm::MwpmEvent pm::GraphFlooder::do_neighbor_interaction(
+    DetectorNode &src,
+    size_t src_to_dst_index,
+    DetectorNode &dst,
+    size_t dst_to_src_index) {
     // First check if one region is moving into an empty location
-    if (event.detector_node_1->region_that_arrived && !event.detector_node_2->region_that_arrived) {
+    if (src.region_that_arrived && !dst.region_that_arrived) {
         do_region_arriving_at_empty_detector_node(
-            *event.detector_node_1->top_region(),
-            *event.detector_node_2,
-            *event.detector_node_1,
-            event.node_1_neighbor_index);
+            *src.top_region(),
+            dst,
+            src,
+            src_to_dst_index);
         return MwpmEvent::no_event();
-    } else if (event.detector_node_2->region_that_arrived && !event.detector_node_1->region_that_arrived) {
+    } else if (dst.region_that_arrived && !src.region_that_arrived) {
         do_region_arriving_at_empty_detector_node(
-            *event.detector_node_2->top_region(),
-            *event.detector_node_1,
-            *event.detector_node_2,
-            event.node_2_neighbor_index);
+            *dst.top_region(),
+            src,
+            dst,
+            dst_to_src_index);
         return MwpmEvent::no_event();
     } else {
         // Two regions colliding
         return RegionHitRegionEventData{
-            event.detector_node_1->top_region(),
-            event.detector_node_2->top_region(),
+            src.top_region(),
+            dst.top_region(),
             CompressedEdge(
-                event.detector_node_1->reached_from_source,
-                event.detector_node_2->reached_from_source,
-                event.detector_node_1->observables_crossed_from_source ^
-                    event.detector_node_2->observables_crossed_from_source ^
-                    event.detector_node_1->neighbor_observables[event.node_1_neighbor_index]),
+                src.reached_from_source,
+                dst.reached_from_source,
+                src.observables_crossed_from_source ^
+                    dst.observables_crossed_from_source ^
+                    src.neighbor_observables[src_to_dst_index]),
         };
     }
 }
 
-pm::MwpmEvent pm::GraphFlooder::do_region_hit_boundary_interaction(
-    const pm::TentativeNeighborInteractionEventData &event) {
+pm::MwpmEvent pm::GraphFlooder::do_region_hit_boundary_interaction(DetectorNode &node) {
     return pm::RegionHitBoundaryEventData{
-        event.detector_node_1->top_region(),
+        node.top_region(),
         CompressedEdge(
-            event.detector_node_1->reached_from_source,
+            node.reached_from_source,
             nullptr,
-            event.detector_node_1->observables_crossed_from_source ^
-                event.detector_node_1->neighbor_observables[event.node_1_neighbor_index])};
+            node.observables_crossed_from_source ^ node.neighbor_observables[0])};
 }
 
 pm::MwpmEvent pm::GraphFlooder::do_degenerate_implosion(const pm::GraphFillRegion &region) {
@@ -219,20 +217,14 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge> &c
 
 bool pm::GraphFlooder::dequeue_decision(pm::TentativeEvent ev) {
     switch (ev.tentative_event_type) {
-        case pm::TentativeType::INTERACTION: {
-            auto &d = ev.neighbor_interaction_event_data;
-            if (d.detector_node_1->edge_event_vids[d.node_1_neighbor_index] != ev.vid) {
-                return false;
-            }
-            if (d.detector_node_2 != nullptr && d.detector_node_2->edge_event_vids[d.node_2_neighbor_index] != ev.vid) {
-                return false;
-            }
-            return true;
+        case pm::TentativeType::LOOK_AT_NODE: {
+            auto &d = ev.data_look_at_node;
+            return d.detector_node->node_event_tracker.dequeue_decision(ev, queue);
         } case pm::TentativeType::LOOK_AT_SHRINKING_REGION: {
             auto &dat = ev.data_look_at_shrinking_region;
             return dat.region->shrink_event_tracker.dequeue_decision(ev, queue);
         } case pm::TentativeType::NO_TENTATIVE_EVENT:
-            return ev.vid == 0;
+            return true;
         default:
             throw std::invalid_argument("Unrecognized event type.");
     }
@@ -265,15 +257,31 @@ void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
 
 pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event) {
     switch (tentative_event.tentative_event_type) {
-        case INTERACTION:
-            if (tentative_event.neighbor_interaction_event_data.detector_node_2) {
-                return do_neighbor_interaction(tentative_event.neighbor_interaction_event_data);
-            } else {
-                return do_region_hit_boundary_interaction(tentative_event.neighbor_interaction_event_data);
+        case LOOK_AT_NODE: {
+            auto &node = *tentative_event.data_look_at_node.detector_node;
+
+            auto ev = find_next_event_at_node_returning_neighbor_index_and_time(node);
+            if (ev.second != queue.cur_time) {
+                // The event was invalidated by a change between enqueuing and now.
+                return pm::MwpmEvent::no_event();
             }
-        case LOOK_AT_SHRINKING_REGION:
+
+            auto *neighbor = node.neighbors[ev.first];
+            if (neighbor == nullptr) {
+                return do_region_hit_boundary_interaction(node);
+            } else {
+                size_t back_index = SIZE_MAX >> 2;  // Well into segfault land, please.
+                for (size_t k = 0; k < neighbor->neighbors.size(); k++) {
+                    if (neighbor->neighbors[k] == &node) {
+                        back_index = k;
+                        break;
+                    }
+                }
+                return do_neighbor_interaction(node, ev.first, *neighbor, back_index);
+            }
+        } case LOOK_AT_SHRINKING_REGION: {
             return do_region_shrinking(tentative_event.data_look_at_shrinking_region);
-        default:
+        } default:
             throw std::invalid_argument("Unknown tentative event type.");
     }
 }
@@ -285,6 +293,9 @@ pm::MwpmEvent pm::GraphFlooder::next_event() {
             return MwpmEvent::no_event();
         }
         MwpmEvent processed = do_valid_tentative_event_returning_mwpm_event(tentative_event);
+        if (tentative_event.tentative_event_type == LOOK_AT_NODE) {
+            reschedule_events_at_detector_node(*tentative_event.data_look_at_node.detector_node);
+        }
         if (processed.event_type != NO_EVENT) {
             return processed;
         }
