@@ -71,15 +71,6 @@ TEST(bit_bucket_queue, bucket_for) {
     ASSERT_EQ(q.cur_bit_bucket_for(cyclic_time_int{65}), 7);
 }
 
-TEST(bit_bucket_queue, wraparound) {
-    bit_bucket_queue<true> q;
-    q.cur_time = INT32_MAX;
-    q.enqueue(TentativeEvent(cyclic_time_int{INT32_MIN}));
-    q.enqueue(TentativeEvent(cyclic_time_int{INT32_MIN + 1}));
-    ASSERT_EQ(q.dequeue().time, INT32_MIN);
-    ASSERT_EQ(q.dequeue().time, INT32_MIN + 1);
-}
-
 TEST(bit_bucket_queue, QueuedEventTracker) {
     auto ev = [](int x){ return TentativeEvent{cyclic_time_int{x}}; };
     auto evs = [&](std::vector<int> x){
