@@ -55,14 +55,14 @@ struct TentativeEvent {
         TentativeNeighborInteractionEventData data,
         cyclic_time_int time,
         uint64_t validation_index);
-    TentativeEvent(TentativeRegionShrinkEventData data, cyclic_time_int time, uint64_t validation_index);
+    TentativeEvent(TentativeRegionShrinkEventData data, cyclic_time_int time);
     TentativeEvent(cyclic_time_int time, uint64_t validation_index = 0);
     TentativeEvent() = default;
 
     bool operator==(const TentativeEvent &rhs) const;
     bool operator!=(const TentativeEvent &rhs) const;
 
-    bool is_still_valid() const;
+    bool consume_valid();
 
     std::string str() const;
 };

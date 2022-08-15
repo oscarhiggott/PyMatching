@@ -30,7 +30,7 @@ TEST(GraphFlooder, PriorityQueue) {
     }, cyclic_time_int{5}, 0x0));
 
     GraphFillRegion gfr;
-    flooder.queue.enqueue(TentativeEvent(TentativeRegionShrinkEventData{&gfr}, cyclic_time_int{70}, 0x0));
+    flooder.queue.tracked_enqueue(TentativeEvent(TentativeRegionShrinkEventData{&gfr}, cyclic_time_int{70}), gfr.shrink_event_tracker);
 
     flooder.queue.enqueue(TentativeEvent(TentativeNeighborInteractionEventData{
         &graph.nodes[4], 0, &graph.nodes[5], 1
@@ -45,7 +45,6 @@ TEST(GraphFlooder, PriorityQueue) {
     ASSERT_EQ(e6.time, 70);
     ASSERT_EQ(e6.tentative_event_type, SHRINKING);
     ASSERT_EQ(e6.region_shrink_event_data.region, &gfr);
-    ASSERT_TRUE(e6.is_still_valid());
     ASSERT_EQ(flooder.queue.dequeue_valid().time, 100);
 }
 
@@ -93,8 +92,8 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     g.add_boundary_edge(4, 5, 2);
     flooder.create_region(&flooder.graph.nodes[2]);
     auto e1 = flooder.next_event();
-    MwpmEvent e1_exp = RegionHitBoundaryEventData(
-        flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 6));
+    MwpmEvent e1_exp = RegionHitBoundaryEventData{
+        flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 6)};
     ASSERT_EQ(e1, e1_exp);
     auto t1 = flooder.queue.dequeue_valid();
     ASSERT_EQ(t1, TentativeEvent(TentativeNeighborInteractionEventData{
@@ -102,8 +101,8 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     }, cyclic_time_int{100}, 0x1));
     flooder.queue.enqueue(TentativeEvent(t1));
     auto e2 = flooder.next_event();
-    MwpmEvent e2_exp = RegionHitBoundaryEventData(
-        flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 10));
+    MwpmEvent e2_exp = RegionHitBoundaryEventData{
+        flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 10)};
     ASSERT_EQ(e2, e2_exp);
     auto e3 = flooder.next_event();
     ASSERT_EQ(e3.event_type, NO_EVENT);
@@ -122,10 +121,10 @@ TEST(GraphFlooder, RegionHitRegion) {
     flooder.create_region(&flooder.graph.nodes[4]);
     auto e1 = flooder.next_event();
     ASSERT_EQ(flooder.queue.cur_time, 32);
-    MwpmEvent e1_exp = RegionHitRegionEventData(
+    MwpmEvent e1_exp = RegionHitRegionEventData{
         flooder.graph.nodes[4].region_that_arrived,
         flooder.graph.nodes[2].region_that_arrived,
-        CompressedEdge(&flooder.graph.nodes[4], &flooder.graph.nodes[2], 8));
+        CompressedEdge(&flooder.graph.nodes[4], &flooder.graph.nodes[2], 8)};
     ASSERT_EQ(e1, e1_exp);
 }
 
@@ -142,8 +141,8 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     auto e1 = flooder.next_event();
     ASSERT_EQ(
         e1,
-        MwpmEvent(RegionHitBoundaryEventData(
-            flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 6))));
+        MwpmEvent(RegionHitBoundaryEventData{
+            flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 6)}));
     ASSERT_EQ(flooder.queue.cur_time, 36);
     flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);
     auto e2 = flooder.next_event();
@@ -156,7 +155,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     ASSERT_EQ(flooder.graph.nodes[2].region_that_arrived->shell_area, expected_area);
     flooder.set_region_shrinking(*flooder.graph.nodes[2].region_that_arrived);
     ASSERT_EQ(flooder.queue.dequeue_valid(), TentativeEvent(TentativeRegionShrinkEventData{flooder.graph.nodes[2].region_that_arrived},
-                                                            cyclic_time_int{80 + 4}, 0x5));
+                                                            cyclic_time_int{80 + 4}));
 }
 
 TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
@@ -171,10 +170,10 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[3]);
     auto e1 = mwpm.flooder.next_event();
-    MwpmEvent e1_expected = RegionHitRegionEventData(
+    MwpmEvent e1_expected = RegionHitRegionEventData{
         mwpm.flooder.graph.nodes[1].region_that_arrived,
         mwpm.flooder.graph.nodes[3].region_that_arrived,
-        CompressedEdge(&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[3], 4));
+        CompressedEdge(&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[3], 4)};
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
     auto e2 = mwpm.flooder.next_event();
@@ -208,19 +207,19 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[6]);
     auto r6 = mwpm.flooder.graph.nodes[6].region_that_arrived;
     auto e1 = mwpm.flooder.next_event();
-    MwpmEvent e1_expected = RegionHitRegionEventData(
-        r4, r1, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13));
+    MwpmEvent e1_expected = RegionHitRegionEventData{
+        r4, r1, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13)};
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
     auto e2 = mwpm.flooder.next_event();
-    MwpmEvent e2_expected = RegionHitRegionEventData(
-        r4, r5, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[5], 2));
+    MwpmEvent e2_expected = RegionHitRegionEventData{
+        r4, r5, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[5], 2)};
     ASSERT_EQ(e2, e2_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 12);
     mwpm.process_event(e2);
     auto e3 = mwpm.flooder.next_event();
-    MwpmEvent e3_expected = RegionHitRegionEventData(
-        r6, r5, CompressedEdge(&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3));
+    MwpmEvent e3_expected = RegionHitRegionEventData{
+        r6, r5, CompressedEdge(&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3)};
     ASSERT_EQ(e3, e3_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 18);
     mwpm.process_event(e3);

@@ -13,6 +13,46 @@
 
 namespace pm {
 
+enum QueuedEventStatus : uint8_t {
+    EVENT_SOURCE_NOT_QUEUED = 0,
+    EVENT_SOURCE_QUEUED = 1,
+    EVENT_SOURCE_QUEUED_BUT_IGNORE = 2,
+};
+
+struct QueuedEventTracker {
+    cyclic_time_int queued_time{0};
+    QueuedEventStatus queued_state{EVENT_SOURCE_NOT_QUEUED};
+
+    inline bool decide_to_queue(cyclic_time_int new_time) {
+        if (queued_state == EVENT_SOURCE_QUEUED && queued_time <= new_time) {
+            return false;
+        }
+
+        if (queued_state == EVENT_SOURCE_QUEUED_BUT_IGNORE && queued_time == new_time) {
+            queued_state = EVENT_SOURCE_QUEUED;
+            return false;
+        }
+
+        queued_state = EVENT_SOURCE_QUEUED;
+        queued_time = new_time;
+        return true;
+    }
+
+    inline void invalidate() {
+        if (queued_state == EVENT_SOURCE_QUEUED) {
+            queued_state = EVENT_SOURCE_QUEUED_BUT_IGNORE;
+        }
+    }
+    inline bool decide_to_dequeue(cyclic_time_int dequeue_time) {
+        if (dequeue_time != queued_time) {
+            return false;
+        }
+        bool result = queued_state == EVENT_SOURCE_QUEUED;
+        queued_state = EVENT_SOURCE_NOT_QUEUED;
+        return result;
+    }
+};
+
 /// A priority queue for TentativeEvents.
 ///
 /// The priority queue assumes that times increase monotonically. The caller must not enqueue a
@@ -92,6 +132,12 @@ struct bit_bucket_queue {
         _num_enqueued++;
     }
 
+    void tracked_enqueue(TentativeEvent event, QueuedEventTracker &tracker) {
+        if (tracker.decide_to_queue(event.time)) {
+            enqueue(event);
+        }
+    }
+
     /// Checks if all events are in the correct bucket.
     bool satisfies_invariants() const {
         for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
@@ -153,7 +199,7 @@ struct bit_bucket_queue {
     TentativeEvent dequeue_valid() {
         while (true) {
             TentativeEvent tentative_event = dequeue();
-            if (tentative_event.is_still_valid()) {
+            if (tentative_event.consume_valid()) {
                 return tentative_event;
             }
         }

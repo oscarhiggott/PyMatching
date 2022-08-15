@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "pymatching/bit_bucket_queue.h"
 #include "pymatching/region_edge.h"
 #include "pymatching/varying.h"
 
@@ -46,7 +47,7 @@ class GraphFillRegion {
     /// radius starting from the detection events).
     pm::Varying32 radius;
     /// Event validation index for blossom shatter event.
-    uint64_t shrink_event_vid;
+    QueuedEventTracker shrink_event_tracker;
     /// If the region is matched, as opposed to growing/shrinking, this says what it is matched to.
     pm::Match match;
 

@@ -12,14 +12,14 @@ pm::TentativeEvent::TentativeEvent(
       vid(validation_index) {
 }
 
-pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, pm::cyclic_time_int time, uint64_t validation_index)
-    : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), vid(validation_index) {
+pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, pm::cyclic_time_int time)
+    : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), vid(0) {
 }
 pm::TentativeEvent::TentativeEvent(pm::cyclic_time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
 }
 
 
-bool pm::TentativeEvent::is_still_valid() const {
+bool pm::TentativeEvent::consume_valid() {
     switch (tentative_event_type) {
         case INTERACTION: {
             auto &d = neighbor_interaction_event_data;
@@ -30,9 +30,10 @@ bool pm::TentativeEvent::is_still_valid() const {
                 return false;
             }
             return true;
-        } case SHRINKING:
-            return region_shrink_event_data.region->shrink_event_vid == vid;
-        case NO_TENTATIVE_EVENT:
+        } case SHRINKING: {
+            auto &dat = region_shrink_event_data;
+            return dat.region->shrink_event_tracker.decide_to_dequeue(time);
+        } case NO_TENTATIVE_EVENT:
             return vid == 0;
         default:
             throw std::invalid_argument("Unrecognized event type.");

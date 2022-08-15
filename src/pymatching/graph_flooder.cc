@@ -63,9 +63,7 @@ void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector
 }
 
 void pm::GraphFlooder::reschedule_events_for_region(pm::GraphFillRegion &region) {
-    // Invalidate existing events by setting the vid to an index that doesn't correspond to an event
-    // affecting the object. Note that decrementing would not be safe due to ABA writes.
-    region.shrink_event_vid++;
+    region.shrink_event_tracker.invalidate();
 
     if (region.radius.is_shrinking()) {
         schedule_tentative_shrink_event(region);
@@ -109,15 +107,12 @@ void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &regi
     } else {
         t = region.shell_area.back()->local_radius().time_of_x_intercept_for_shrinking();
     }
-    auto vid = next_event_vid++;
-    region.shrink_event_vid = vid;
-    queue.enqueue({
-        pm::TentativeRegionShrinkEventData{
-            &region,
-        },
-        cyclic_time_int{t},
-        vid,
-    });
+    region.shrink_event_tracker.invalidate();
+    cyclic_time_int ct{t};
+    queue.tracked_enqueue({
+        pm::TentativeRegionShrinkEventData{&region},
+        ct,
+    }, region.shrink_event_tracker);
 }
 
 void pm::GraphFlooder::do_region_arriving_at_empty_detector_node(
@@ -218,7 +213,7 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge> &c
     for (auto &region_edge : blossom_region->blossom_children) {
         region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(queue.cur_time);
         region_edge.region->blossom_parent = blossom_region;
-        region_edge.region->shrink_event_vid++; // Invalidate events affecting the region.
+        region_edge.region->shrink_event_tracker.invalidate();
     }
     reschedule_events_for_region(*blossom_region);
     return blossom_region;

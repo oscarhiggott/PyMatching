@@ -4,7 +4,7 @@
 #include "pymatching/varying.h"
 
 pm::GraphFillRegion::GraphFillRegion()
-    : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_vid(0) {
+    : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
 }
 
 pm::GraphFillRegion *pm::GraphFillRegion::top_region() const {

@@ -79,3 +79,61 @@ TEST(bit_bucket_queue, wraparound) {
     ASSERT_EQ(q.dequeue().time, INT32_MIN);
     ASSERT_EQ(q.dequeue().time, INT32_MIN + 1);
 }
+
+TEST(bit_bucket_queue, QueuedEventTracker) {
+    QueuedEventTracker tracker;
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+
+    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{0}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+
+    tracker.invalidate();
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+
+    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{5}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 5);
+
+    ASSERT_FALSE(tracker.decide_to_queue(cyclic_time_int{5}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 5);
+
+    ASSERT_FALSE(tracker.decide_to_queue(cyclic_time_int{6}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 5);
+
+    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{4}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 4);
+
+    tracker.invalidate();
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED_BUT_IGNORE);
+    ASSERT_EQ(tracker.queued_time, 4);
+
+    ASSERT_FALSE(tracker.decide_to_queue(cyclic_time_int{4}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 4);
+
+    tracker.invalidate();
+    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{7}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 7);
+
+    tracker.invalidate();
+    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{8}));
+    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{4}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED_BUT_IGNORE);
+    ASSERT_EQ(tracker.queued_time, 7);
+
+    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{7}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+
+    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{10}));
+    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{11}));
+    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{9}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
+    ASSERT_EQ(tracker.queued_time, 10);
+
+    ASSERT_TRUE(tracker.decide_to_dequeue(cyclic_time_int{10}));
+    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+}
