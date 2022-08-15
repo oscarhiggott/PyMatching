@@ -33,8 +33,6 @@ struct Match {
 
 class GraphFillRegion {
    public:
-    // TODO: Maybe one field for blossom_parent or alt_tree_node eventually by using union?
-
     /// If this region has merged with others into a blossom, this is that blossom.
     GraphFillRegion* blossom_parent;
     /// If this is a top-level region (not a blossom child), this is the alternating tree that

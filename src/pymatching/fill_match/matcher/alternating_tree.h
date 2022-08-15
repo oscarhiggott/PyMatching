@@ -107,6 +107,15 @@ class AltTreeNode {
     /// Finds the most recent common ancestor between this node and the other node.
     ///
     /// Would be const except it uses ephemeral state to go faster.
+    ///
+    /// Note: breadcrumbs are left (by setting `visited=true`) as the
+    /// tree is traversed upward from `this` and `other`. These are
+    /// reset (`visited=false`) before the method completes for the
+    /// common ancestor and its ancestors, but *not* reset for nodes
+    /// on the paths from `this` and `other` stopping *before* ancestor.
+    /// This does not affect the algorithm, as these nodes are always removed
+    /// from the tree immediately after the common ancestor is found (either
+    /// a blossom is formed, or the two trees shatter into matches).
     AltTreeNode* most_recent_common_ancestor(AltTreeNode& other);
     void add_child(const AltTreeEdge& child);
     AltTreeNode* make_child(
