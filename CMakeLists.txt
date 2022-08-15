@@ -26,43 +26,42 @@ if(NOT stim_POPULATED)
 endif()
 
 set(SOURCE_FILES_NO_MAIN
-        src/pymatching/namespaced_main.cc
-        src/pymatching/events.cc
-        src/pymatching/graph.cc
-        src/pymatching/compressed_edge.cc
-        src/pymatching/alternating_tree.cc
-        src/pymatching/graph_fill_region.cc
-        src/pymatching/region_edge.cc
-        src/pymatching/graph_flooder.cc
-        src/pymatching/mwpm.cc
-        src/pymatching/stim_io.cc
-        src/pymatching/mwpm_decoding.cc
+        src/pymatching/fill_match/driver/namespaced_main.cc
+        src/pymatching/fill_match/driver/stim_io.cc
+        src/pymatching/fill_match/driver/mwpm_decoding.cc
+        src/pymatching/fill_match/flooder/graph.cc
+        src/pymatching/fill_match/flooder/compressed_edge.cc
+        src/pymatching/fill_match/flooder/graph_fill_region.cc
+        src/pymatching/fill_match/flooder/graph_flooder.cc
+        src/pymatching/fill_match/matcher/alternating_tree.cc
+        src/pymatching/fill_match/matcher/mwpm.cc
+        src/pymatching/fill_match/matcher/region_edge.cc
+        src/pymatching/fill_match/tracker/events.cc
         )
 
 set(TEST_FILES
-        src/pymatching/varying.test.cc
-        src/pymatching/events.test.cc
-        src/pymatching/namespaced_main.test.cc
-        src/pymatching/graph.test.cc
         src/pymatching/fixed_length_vector.test.cc
-        src/pymatching/compressed_edge.test.cc
-        src/pymatching/compressed_edge.cc
-        src/pymatching/alternating_tree.test.cc
-        src/pymatching/graph_fill_region.test.cc
-        src/pymatching/graph_flooder.test.cc
-        src/pymatching/mwpm.test.cc
-        src/pymatching/stim_io.test.cc
-        src/pymatching/mwpm_decoding.test.cc
-        src/pymatching/bit_bucket_queue.test.cc
-        src/pymatching/cyclic.test.cc
+        src/pymatching/fill_match/driver/namespaced_main.test.cc
+        src/pymatching/fill_match/driver/stim_io.test.cc
+        src/pymatching/fill_match/driver/mwpm_decoding.test.cc
+        src/pymatching/fill_match/flooder/varying.test.cc
+        src/pymatching/fill_match/flooder/graph.test.cc
+        src/pymatching/fill_match/flooder/compressed_edge.test.cc
+        src/pymatching/fill_match/flooder/graph_fill_region.test.cc
+        src/pymatching/fill_match/flooder/graph_flooder.test.cc
+        src/pymatching/fill_match/matcher/alternating_tree.test.cc
+        src/pymatching/fill_match/matcher/mwpm.test.cc
+        src/pymatching/fill_match/tracker/events.test.cc
+        src/pymatching/fill_match/tracker/bit_bucket_queue.test.cc
+        src/pymatching/fill_match/tracker/cyclic.test.cc
         )
 
 set(PERF_FILES
         src/pymatching/perf/main.perf.cc
-        src/pymatching/mwpm_decoding.perf.cc
         src/pymatching/perf/util.perf.cc
-        src/pymatching/varying.perf.cc
-        src/pymatching/bit_bucket_queue.perf.cc
+        src/pymatching/fill_match/driver/mwpm_decoding.perf.cc
+        src/pymatching/fill_match/flooder/varying.perf.cc
+        src/pymatching/fill_match/tracker/bit_bucket_queue.perf.cc
         )
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
