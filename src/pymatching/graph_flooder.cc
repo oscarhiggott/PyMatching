@@ -245,13 +245,17 @@ void pm::GraphFlooder::set_region_growing(pm::GraphFillRegion &region) {
 }
 
 void pm::GraphFlooder::set_region_frozen(pm::GraphFillRegion &region) {
+    bool was_shrinking = region.radius.is_shrinking();
     region.radius = region.radius.then_frozen_at_time(queue.cur_time);
-    reschedule_events_for_region(region);
+    if (was_shrinking) {
+        // No need to reschedule events because interactions can only have been deferred.
+        reschedule_events_for_region(region);
+    }
 }
 
 void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
     region.radius = region.radius.then_shrinking_at_time(queue.cur_time);
-    reschedule_events_for_region(region);
+    // No need to reschedule events because interactions can only have been deferred.
 }
 
 pm::MwpmEvent pm::GraphFlooder::do_look_at_node_event(DetectorNode &node) {
