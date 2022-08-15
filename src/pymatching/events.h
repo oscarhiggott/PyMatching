@@ -1,80 +1,57 @@
 #ifndef PYMATCHING2_EVENTS_H
 #define PYMATCHING2_EVENTS_H
 
-#include "pymatching/graph.h"
-#include "pymatching/graph_fill_region.h"
 #include "pymatching/varying.h"
+#include "pymatching/compressed_edge.h"
 
 namespace pm {
 
-struct TentativeNeighborInteractionEventData {
-    DetectorNode *detector_node_1;
-    size_t node_1_neighbor_index;
-    DetectorNode *detector_node_2;
-    size_t node_2_neighbor_index;
-
-    TentativeNeighborInteractionEventData(
-        DetectorNode *detector_node_1,
-        size_t node_1_neighbor_index,
-        DetectorNode *detector_node_2,
-        size_t node_2_neighbor_index);
-    TentativeNeighborInteractionEventData() = default;
-
-    bool operator==(const TentativeNeighborInteractionEventData &rhs) const;
-    bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
-};
-
-struct TentativeRegionShrinkEventData {
-    GraphFillRegion *region;
-    TentativeRegionShrinkEventData() = default;
-
-    bool operator==(const TentativeRegionShrinkEventData &rhs) const;
-
-    bool operator!=(const TentativeRegionShrinkEventData &rhs) const;
-
-    explicit TentativeRegionShrinkEventData(GraphFillRegion *region);
-};
+struct DetectorNode;
+struct GraphFillRegion;
 
 enum TentativeType : uint8_t {
+    /// A placeholder value indicating there was no event.
     NO_TENTATIVE_EVENT,
-    INTERACTION,
-    SHRINKING
+
+    /// Indicates that an event may be happening at a detector node. The event could be:
+    /// - The node's region colliding with an adjacent boundary.
+    /// - The node's region colliding with an adjacent region.
+    LOOK_AT_NODE,
+
+    /// Indicates that a region-level event might be happening. The event could be:
+    /// - The region shrinking enough that a detector node needs to be removed from it.
+    /// - The region being a blossom and shrinking to the point where it must shatter.
+    /// - The region shrinking to point and causing a degenerate collision between its neighbors.
+    LOOK_AT_SHRINKING_REGION,
+};
+
+struct TentativeEventData_LookAtNode {
+    DetectorNode *detector_node;
+    bool operator==(const TentativeEventData_LookAtNode &rhs) const;
+    bool operator!=(const TentativeEventData_LookAtNode &rhs) const;
+};
+
+struct TentativeEventData_LookAtShrinkingRegion {
+    GraphFillRegion *region;
+    bool operator==(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
+    bool operator!=(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
 };
 
 struct TentativeEvent {
     union {
-        TentativeNeighborInteractionEventData neighbor_interaction_event_data;
-        TentativeRegionShrinkEventData region_shrink_event_data;
+        TentativeEventData_LookAtNode data_look_at_node;
+        TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region;
     };
-    pm::time_int time;
+    cyclic_time_int time;
     TentativeType tentative_event_type;
 
-    /// Validation index for the event. When events are created, this is set to a new unique value
-    /// and the objects affected by the event are marked with the same unique value. When the event
-    /// is actually processed, this value is compared to the markings on the affects objects. If
-    /// they differ, the event is invalid.
-    ///
-    /// This makes invalidating events, starting from an object affected by that event, very cheap:
-    /// simply increment its validation index. (Decrementing is not a safe way to invalidate because
-    /// the previous index may have also been an event affecting that object.)
-    uint64_t vid;
-
-    TentativeEvent(
-        TentativeNeighborInteractionEventData data,
-        time_int time,
-        uint64_t validation_index);
-    TentativeEvent(TentativeRegionShrinkEventData data, time_int time, uint64_t validation_index);
-    TentativeEvent(time_int time, uint64_t validation_index = 0);
+    TentativeEvent(TentativeEventData_LookAtNode data, cyclic_time_int time);
+    TentativeEvent(TentativeEventData_LookAtShrinkingRegion data, cyclic_time_int time);
+    explicit TentativeEvent(cyclic_time_int time);
     TentativeEvent() = default;
 
-    bool operator<(const TentativeEvent &rhs) const;
-    bool operator>(const TentativeEvent &rhs) const;
-    bool operator<=(const TentativeEvent &rhs) const;
     bool operator==(const TentativeEvent &rhs) const;
     bool operator!=(const TentativeEvent &rhs) const;
-    bool operator>=(const TentativeEvent &rhs) const;
-
-    bool is_still_valid() const;
 
     std::string str() const;
 };
@@ -86,26 +63,24 @@ struct RegionHitRegionEventData {
     GraphFillRegion *region1;
     GraphFillRegion *region2;
     CompressedEdge edge;
-    RegionHitRegionEventData() = default;
 
+    inline RegionHitRegionEventData reversed() const {
+        return {region2, region1, edge.reversed()};
+    }
     bool operator==(const RegionHitRegionEventData &rhs) const;
-
     bool operator!=(const RegionHitRegionEventData &rhs) const;
-
-    RegionHitRegionEventData(GraphFillRegion *region1, GraphFillRegion *region2, CompressedEdge edge);
+    std::string str() const;
 };
+std::ostream &operator<<(std::ostream &out, const RegionHitRegionEventData &dat);
 
 struct RegionHitBoundaryEventData {
     GraphFillRegion *region;
     CompressedEdge edge;
 
     bool operator==(const RegionHitBoundaryEventData &rhs) const;
-
     bool operator!=(const RegionHitBoundaryEventData &rhs) const;
-
-    RegionHitBoundaryEventData() = default;
-    RegionHitBoundaryEventData(GraphFillRegion *region, CompressedEdge edge);
 };
+std::ostream &operator<<(std::ostream &out, const RegionHitBoundaryEventData &ev);
 
 struct BlossomShatterEventData {
     GraphFillRegion *blossom_region;
@@ -113,13 +88,10 @@ struct BlossomShatterEventData {
     GraphFillRegion *in_child_region;
 
     bool operator==(const BlossomShatterEventData &rhs) const;
-
     bool operator!=(const BlossomShatterEventData &rhs) const;
-
-    BlossomShatterEventData() = default;
-    BlossomShatterEventData(
-        GraphFillRegion *blossom_region, GraphFillRegion *in_parent_region, GraphFillRegion *in_child_region);
+    std::string str() const;
 };
+std::ostream &operator<<(std::ostream &out, const BlossomShatterEventData &ev);
 
 enum MwpmEventType : uint8_t { NO_EVENT, REGION_HIT_REGION, REGION_HIT_BOUNDARY, BLOSSOM_SHATTER };
 
@@ -141,23 +113,9 @@ struct MwpmEvent {
 
     bool operator==(const MwpmEvent &rhs) const;
     bool operator!=(const MwpmEvent &rhs) const;
+    std::string str() const;
 };
-
-inline bool pm::TentativeEvent::operator<(const pm::TentativeEvent &rhs) const {
-    return time < rhs.time;
-}
-
-inline bool pm::TentativeEvent::operator>(const pm::TentativeEvent &rhs) const {
-    return rhs < *this;
-}
-
-inline bool pm::TentativeEvent::operator<=(const pm::TentativeEvent &rhs) const {
-    return !(rhs < *this);
-}
-
-inline bool pm::TentativeEvent::operator>=(const pm::TentativeEvent &rhs) const {
-    return !(*this < rhs);
-}
+std::ostream &operator<<(std::ostream &out, const MwpmEvent &ev);
 
 }  // namespace pm
 

@@ -3,13 +3,11 @@
 
 #include <vector>
 
+#include "pymatching/bit_bucket_queue.h"
 #include "pymatching/fixed_length_vector.h"
 #include "pymatching/varying.h"
 
 namespace pm {
-
-typedef uint64_t obs_int;
-typedef uint16_t weight_int;
 
 class GraphFillRegion;
 struct TentativeEvent;
@@ -36,8 +34,8 @@ class DetectorNode {
         reached_from_source;  /// Of the detection events within the owning region, which one is this node linked to.
     obs_int observables_crossed_from_source;  /// Which observables are crossed, travelling from this node to the source
                                               /// detection event that reached it.
-    time_int distance_from_source;  /// How far is it from this node to the source detection event that reached it.
-    std::vector<uint64_t> edge_event_vids;  /// Event validation indices for events on neighboring edges.
+    cumulative_time_int distance_from_source;  /// How far is it from this node to the source detection event that reached it.
+    QueuedEventTracker node_event_tracker;
 
     /// == Permanent fields used to define the structure of the graph. ==
     std::vector<DetectorNode*> neighbors;       /// The node's neighbors.
@@ -57,6 +55,7 @@ class DetectorNode {
     /// Doesn't free anything or propagate a signal to other objects. Just zeros the fields.
     void reset();
 
+    size_t index_of_neighbor(DetectorNode *neighbor) const;
     Varying32 total_radius() const;  /// implementation detail of local_radius.
 };
 

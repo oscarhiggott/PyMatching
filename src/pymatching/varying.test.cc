@@ -25,16 +25,16 @@ TEST(Varying, GetDistanceAtTime) {
 }
 
 TEST(Varying, VaryingString) {
-    auto x = pm::Varying<pm::time_int>((12 << 2) + 2);
+    auto x = pm::Varying<int32_t>((12 << 2) + 2);
     ASSERT_EQ(x.str(), "12 - t");
 }
 
 TEST(Varying, ThenSlopeAt) {
-    auto x = pm::Varying<pm::time_int>::growing_varying_with_zero_distance_at_time(20);
+    auto x = pm::Varying<int32_t>::growing_varying_with_zero_distance_at_time(20);
     auto y = x.then_shrinking_at_time(30);
-    ASSERT_EQ(y, pm::Varying<pm::time_int>((40 << 2) + 2));
+    ASSERT_EQ(y, pm::Varying<int32_t>((40 << 2) + 2));
     auto y2 = y.then_frozen_at_time(50);
-    ASSERT_EQ(y2, pm::Varying<pm::time_int>((-10 << 2)));
+    ASSERT_EQ(y2, pm::Varying<int32_t>((-10 << 2)));
     auto y3 = y2.then_growing_at_time(60);
     ASSERT_EQ(y3.str(), "-70 + t");
 }

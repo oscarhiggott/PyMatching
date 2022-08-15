@@ -1,9 +1,8 @@
 #include "pymatching/graph.h"
 
-#include <algorithm>
 
+#include "pymatching/graph_fill_region.h"
 #include "pymatching/events.h"
-#include "stim.h"
 
 namespace pm {
 
@@ -21,26 +20,27 @@ void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, obs_int obse
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(weight);
     nodes[u].neighbor_observables.push_back(observables);
-    nodes[u].edge_event_vids.push_back(0);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(weight);
     nodes[v].neighbor_observables.push_back(observables);
-    nodes[v].edge_event_vids.push_back(0);
 }
 
 void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, obs_int observables) {
-    if (u > nodes.size() - 1) {
+    if (u >= nodes.size()) {
         throw std::invalid_argument(
             "Node " + std::to_string(u) +
             " exceeds number of nodes "
             "in graph (" +
             std::to_string(num_nodes) + ")");
     }
-    nodes[u].neighbors.push_back(nullptr);
-    nodes[u].neighbor_weights.push_back(weight);
-    nodes[u].neighbor_observables.push_back(observables);
-    nodes[u].edge_event_vids.push_back(0);
+    auto &n = nodes[u];
+    if (!n.neighbors.empty() && n.neighbors[0] == nullptr) {
+        throw std::invalid_argument("Max one boundary edge.");
+    }
+    n.neighbors.insert(n.neighbors.begin(), 1, nullptr);
+    n.neighbor_weights.insert(n.neighbor_weights.begin(), 1, weight);
+    n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, observables);
 }
 
 MatchingGraph::MatchingGraph(size_t num_nodes) : num_nodes(num_nodes) {
@@ -55,9 +55,7 @@ MatchingGraph::MatchingGraph() : num_nodes(0) {
 }
 
 void DetectorNode::invalidate_involved_schedule_items() {
-    for (auto &vid : edge_event_vids) {
-        vid++;
-    }
+    node_event_tracker.set_no_desired_event();
 }
 
 Varying32 DetectorNode::total_radius() const {
@@ -97,9 +95,16 @@ void DetectorNode::reset() {
     reached_from_source = nullptr;
     distance_from_source = 0;
     region_that_arrived = nullptr;
-    for (auto &vid : edge_event_vids) {
-        vid = 0;
+    node_event_tracker.clear();
+}
+
+size_t DetectorNode::index_of_neighbor(DetectorNode *target) const {
+    for (size_t k = 0; k < neighbors.size(); k++) {
+        if (neighbors[k] == target) {
+            return k;
+        }
     }
+    throw std::invalid_argument("Failed to find neighbor.");
 }
 
 }  // namespace pm

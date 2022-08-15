@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "pymatching/graph_fill_region.h"
+#include "pymatching/graph.h"
 
 struct AltTreeTestData {
     std::vector<pm::GraphFillRegion> gfrs;

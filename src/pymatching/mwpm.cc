@@ -1,3 +1,5 @@
+#include "pymatching/alternating_tree.h"
+#include "pymatching/graph_fill_region.h"
 #include "pymatching/mwpm.h"
 
 pm::Mwpm::Mwpm(pm::GraphFlooder flooder) : flooder(std::move(flooder)) {
@@ -312,7 +314,7 @@ pm::MatchingResult pm::MatchingResult::operator+(const pm::MatchingResult &rhs) 
 pm::MatchingResult::MatchingResult() : obs_mask(0), weight(0) {
 }
 
-pm::MatchingResult::MatchingResult(pm::obs_int obs_mask, pm::time_int weight) : obs_mask(obs_mask), weight(weight) {
+pm::MatchingResult::MatchingResult(pm::obs_int obs_mask, pm::cumulative_time_int weight) : obs_mask(obs_mask), weight(weight) {
 }
 
 bool pm::MatchingResult::operator==(const pm::MatchingResult &rhs) const {

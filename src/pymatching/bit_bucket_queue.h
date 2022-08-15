@@ -1,18 +1,19 @@
 #ifndef PYMATCHING2_BUCKET_QUEUE_H
 #define PYMATCHING2_BUCKET_QUEUE_H
 
-#include <vector>
-#include <cassert>
-#include <queue>
+#include <array>
 #include <bit>
 #include <iostream>
-#include <array>
+#include <queue>
+#include <vector>
 
+#include "pymatching/cyclic.h"
 #include "pymatching/events.h"
+#include "pymatching/ints.h"
 
 namespace pm {
 
-/// A priority queue for TentativeEvents.
+/// A monotonic priority queue for TentativeEvents.
 ///
 /// The priority queue assumes that times increase monotonically. The caller must not enqueue a
 /// time that is cycle-before the time of the last popped event. Time t1 is "cycle-before" time t2
@@ -51,13 +52,13 @@ namespace pm {
 /// - Get dequeued out of bucket 0 and yielded as a result.
 template <bool use_validation>
 struct bit_bucket_queue {
-    std::array<std::vector<TentativeEvent>, sizeof(pm::time_int)*8 + 2> bit_buckets;
-    pm::time_int cur_time;
+    std::array<std::vector<TentativeEvent>, sizeof(pm::cyclic_time_int)*8 + 2> bit_buckets;
+    pm::cumulative_time_int cur_time;
     size_t _num_enqueued;
 
-    bit_bucket_queue() : cur_time(0), _num_enqueued(0) {
+    bit_bucket_queue() : cur_time{0}, _num_enqueued(0) {
         // Artificial event just to stop the bucket search.
-        bit_buckets.back().push_back(TentativeEvent(-1, 0xDEAD));
+        bit_buckets.back().push_back(TentativeEvent(cyclic_time_int{0xDEAD}));
     }
 
     size_t size() const {
@@ -69,8 +70,8 @@ struct bit_bucket_queue {
     }
 
     /// Determines which bucket an event with the given time should go into.
-    inline size_t cur_bit_bucket_for(pm::time_int time) const {
-        return std::bit_width((uint32_t)(time ^ cur_time));
+    inline size_t cur_bit_bucket_for(cyclic_time_int time) const {
+        return std::bit_width((uint64_t)(time.value ^ cyclic_time_int{cur_time}.value));
     }
 
     /// Adds an event to the priority queue.
@@ -78,14 +79,11 @@ struct bit_bucket_queue {
     /// The event MUST NOT be cycle-before the current time.
     void enqueue(TentativeEvent event) {
         if (use_validation) {
-            uint32_t d = (uint32_t) event.time - (uint32_t) cur_time;
-            if (d >= 1 << 31) {
+            if (event.time < cyclic_time_int{cur_time}) {
                 std::stringstream ss;
-                if (event.time < cur_time) {
-                    ss << "Attempted to schedule an event cycle-before the present.\n";
-                    ss << "    current time: " << cur_time << "\n";
-                    ss << "    tentative event: " << event << "\n";
-                }
+                ss << "Attempted to schedule an event cycle-before the present.\n";
+                ss << "    current time: " << cur_time << "\n";
+                ss << "    tentative event: " << event << "\n";
                 throw std::invalid_argument(ss.str());
             }
         }
@@ -106,8 +104,10 @@ struct bit_bucket_queue {
         return true;
     }
 
-    /// Dequeues the next event, regardless of whether it is invalidated.
-    bool try_pop_any(TentativeEvent *out) {
+    /// Dequeues the next event.
+    ///
+    /// If the queue is empty, a tentative event with type NO_TENTATIVE_EVENT is returned.
+    TentativeEvent dequeue() {
         if (bit_buckets[0].empty()) {
             // Need to refill bucket 0, so we can dequeue from it.
 
@@ -118,7 +118,7 @@ struct bit_bucket_queue {
             }
             if (b == bit_buckets.size() - 1) {
                 // We found the fake tail bucket. All real buckets are empty. The queue is empty.
-                return false;
+                return TentativeEvent(cyclic_time_int{0});
             }
 
             if (b == 1) {
@@ -129,10 +129,11 @@ struct bit_bucket_queue {
                 auto &source_bucket = bit_buckets[b];
 
                 // Advance time to the minimum time in the bucket.
-                cur_time = source_bucket[0].time;
+                decltype(cyclic_time_int::value) min_time = source_bucket[0].time.value;
                 for (size_t k = 1; k < source_bucket.size(); k++) {
-                    cur_time = std::min(cur_time, source_bucket[k].time);
+                    min_time = std::min(min_time, source_bucket[k].time.value);
                 }
+                cur_time = cyclic_time_int{min_time}.widen_from_nearby_reference(cur_time);
 
                 // Redistribute the contents of the bucket.
                 for (auto &e : source_bucket) {
@@ -144,44 +145,130 @@ struct bit_bucket_queue {
         }
 
         _num_enqueued--;
-        *out = bit_buckets[0].back();
+        TentativeEvent result = bit_buckets[0].back();
         bit_buckets[0].pop_back();
-        return true;
+        return result;
     }
 
-    /// Dequeues the next event, skipping over invalidated events.
+    /// Lists the sorted events in the queue.
     ///
-    /// Args:
-    ///     out: Where the dequeued event is written, unless the queue is empty.
-    ///
-    /// Returns:
-    ///     true: Event successfully dequeued.
-    ///     false: Queue was empty.
-    bool try_pop_valid(TentativeEvent *out) {
-        while (try_pop_any(out)) {
-            cur_time = out->time;
-            if (!out->is_still_valid()) {
-                continue;
+    /// This method mostly exacts to facilitate testing. It doesn't really make sense to use it
+    /// during normal operation.
+    std::vector<TentativeEvent> to_vector() const {
+        std::vector<TentativeEvent> result;
+        for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
+            result.insert(result.begin(), bit_buckets[b].begin(), bit_buckets[b].end());
+        }
+        std::sort(result.begin(),
+                  result.end(),
+                  [](const TentativeEvent &e1, const TentativeEvent &e2) {
+                      return e1.time < e2.time;
+                  });
+        return result;
+    }
+
+    std::string str() const;
+};
+
+template <bool use_validation>
+std::ostream &operator<<(std::ostream &out, bit_bucket_queue<use_validation> q) {
+    out << "bit_bucket_queue {\n";
+    out << "    cur_time=" << q.cur_time << "\n";
+    for (size_t b = 0; b < q.bit_buckets.size() - 1; b++) {
+        auto copy = q.bit_buckets[b];
+        if (!copy.empty()) {
+            out << "    bucket[" << b << "] {\n";
+            std::sort(copy.begin(),
+                      copy.end(),
+                      [](const TentativeEvent &e1, const TentativeEvent &e2) {
+                          return e1.time < e2.time;
+                      });
+            for (auto &e: copy) {
+                out << "        " << e << ",\n";
             }
-            return true;
+            out << "    }\n";
         }
-        return false;
+    }
+    out << "}";
+    return out;
+}
+
+template <bool use_validation>
+std::string bit_bucket_queue<use_validation>::str() const {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
+}
+
+/// This class is responsible for ensuring that a "look at me!" event is in the event queue.
+///
+/// This object also attempts to avoid spamming the event queue with redundant events. If there are
+/// two reasons to look at an object at a specific time, it will only put one event into the queue.
+/// If an object is already going to be looked at at time T, and it wants to be looked at at time
+/// T+2, the look-event for time T+2 will not be enqueued right away. Instead, as part of processing
+/// the time T event, the tracker will take care of enqueueing the time T+2 event.
+struct QueuedEventTracker {
+    cyclic_time_int desired_time{0};
+    cyclic_time_int queued_time{0};
+    bool has_desired_time{false};
+    bool has_queued_time{false};
+
+    /// Resets the tracker to its initial idle state.
+    void clear() {
+        desired_time = cyclic_time_int{0};
+        queued_time = cyclic_time_int{0};
+        has_desired_time = {false};
+        has_queued_time = {false};
     }
 
-    /// Dequeues the next event, skipping over invalidated events.
-    ///
-    /// Returns:
-    ///     The dequeued event.
-    ///
-    /// Raises:
-    ///     std::invalid_argument: The queue was empty.
-    TentativeEvent force_pop_valid() {
-        TentativeEvent out{};
-        bool b = try_pop_valid(&out);
-        if (!b) {
-            throw std::invalid_argument("force_pop_valid failed");
+    /// Tells the tracker a desired look-at-me event. The tracker will handle inserting an event
+    /// into the event queue, if necessary.
+    template <bool use_validation>
+    inline void set_desired_event(TentativeEvent ev, bit_bucket_queue<use_validation> &queue) {
+        has_desired_time = true;
+        desired_time = ev.time;
+        if (!has_queued_time || queued_time > ev.time) {
+            queued_time = ev.time;
+            has_queued_time = true;
+            queue.enqueue(ev);
         }
-        return out;
+    }
+
+    inline void set_no_desired_event() {
+        has_desired_time = false;
+    }
+
+    /// Notifies the tracker that a relevant look-at-me event has been dequeued from the event
+    /// queue. The result of this method is whether or not to discard the event (due to it being
+    /// no longer desired) instead of continuing processing it. Returning false means discard,
+    /// returning true means keep. This method also handles requeueing another look-at-me event
+    /// if doing so was deferred while the earlier event was in the queue.
+    template <bool use_validation>
+    inline bool dequeue_decision(TentativeEvent ev, bit_bucket_queue<use_validation> &queue) {
+        // Only the most recent event this tracker put into the queue is valid. Older events
+        // are forgotten and must not be processed, because otherwise an event storm can be
+        // created as stale events trigger redundant enqueues.
+        if (!has_queued_time || ev.time != queued_time) {
+            return false;
+        }
+        has_queued_time = false;
+
+        // If the event isn't for the CURRENTLY desired look-at-me time, discard it.
+        if (!has_desired_time) {
+            return false;
+        }
+        if (ev.time != desired_time) {
+            // Requeue the event if the desired time is a little later.
+            has_queued_time = true;
+            queued_time = desired_time;
+            ev.time = desired_time;
+            queue.enqueue(ev);
+            return false;
+        }
+
+        // All systems go! Process away!
+        has_desired_time = false;
+        return true;
     }
 };
 

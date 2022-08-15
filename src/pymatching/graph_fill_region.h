@@ -1,8 +1,11 @@
 #ifndef PYMATCHING2_GRAPH_FILL_REGION_H
 #define PYMATCHING2_GRAPH_FILL_REGION_H
 
-#include "pymatching/alternating_tree.h"
+#include <vector>
+
+#include "pymatching/bit_bucket_queue.h"
 #include "pymatching/region_edge.h"
+#include "pymatching/varying.h"
 
 namespace pm {
 
@@ -29,8 +32,6 @@ struct Match {
 
 class GraphFillRegion {
    public:
-    // TODO: Maybe one field for blossom_parent or alt_tree_node eventually by using union?
-
     /// If this region has merged with others into a blossom, this is that blossom.
     GraphFillRegion* blossom_parent;
     /// If this is a top-level region (not a blossom child), this is the alternating tree that
@@ -43,8 +44,9 @@ class GraphFillRegion {
     /// much the blossom has grown since it was created (it's the *extra* radius, not the total
     /// radius starting from the detection events).
     pm::Varying32 radius;
-    /// Event validation index for blossom shatter event.
-    uint64_t shrink_event_vid;
+    /// Event tracker for shrink events. Handles ensuring at least, and ideally exactly, one event
+    /// to look at the region is in the event queue.
+    QueuedEventTracker shrink_event_tracker;
     /// If the region is matched, as opposed to growing/shrinking, this says what it is matched to.
     pm::Match match;
 

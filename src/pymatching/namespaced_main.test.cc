@@ -104,5 +104,5 @@ TEST(Main, count_mistakes) {
 shot D0 L0
 shot D1 L2
 shot D0 D1 L1)stdin");
-ASSERT_EQ(stdout_text, "1 / 4\n");
+    ASSERT_EQ(stdout_text, "1 / 4\n");
 }

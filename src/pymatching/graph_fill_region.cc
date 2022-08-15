@@ -1,9 +1,10 @@
 #include "pymatching/graph_fill_region.h"
 
+#include "pymatching/graph.h"
 #include "pymatching/varying.h"
 
 pm::GraphFillRegion::GraphFillRegion()
-    : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_vid(0) {
+    : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
 }
 
 pm::GraphFillRegion *pm::GraphFillRegion::top_region() const {
@@ -44,8 +45,9 @@ void pm::GraphFillRegion::add_match(pm::GraphFillRegion *region, const pm::Compr
 }
 
 void pm::GraphFillRegion::cleanup_shell_area() {
-    for (auto &detector_node : shell_area)
+    for (auto &detector_node : shell_area) {
         detector_node->reset();
+    }
 }
 
 pm::Match::Match(pm::GraphFillRegion *region, pm::CompressedEdge edge) : region(region), edge(edge) {

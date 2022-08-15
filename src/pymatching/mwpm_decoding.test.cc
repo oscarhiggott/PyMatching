@@ -63,7 +63,7 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
         if (sparse_shot.obs_mask != res.obs_mask) {
             num_mistakes++;
         }
-        ASSERT_EQ(res.weight, expected_weights[num_shots]);
+        EXPECT_EQ(res.weight, expected_weights[num_shots]);
         // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
         ASSERT_EQ(res.obs_mask, expected_obs_masks[num_shots]);
         sparse_shot.clear();

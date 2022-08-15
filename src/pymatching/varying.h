@@ -8,7 +8,6 @@
 #include <string>
 
 namespace pm {
-typedef int32_t time_int;
 
 /// A Varying is a value growing linearly with time.
 /// The only allowed growth rates are +1, 0, or -1.

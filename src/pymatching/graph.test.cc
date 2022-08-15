@@ -24,8 +24,8 @@ TEST(Graph, AddBoundaryEdge) {
     g.add_edge(0, 1, 2, 3);
     g.add_boundary_edge(0, 7, 4);
     g.add_boundary_edge(5, 10, 11);
-    ASSERT_EQ(g.nodes[0].neighbors[1], nullptr);
-    ASSERT_EQ(g.nodes[0].neighbors[0], &g.nodes[1]);
+    ASSERT_EQ(g.nodes[0].neighbors[0], nullptr);
+    ASSERT_EQ(g.nodes[0].neighbors[1], &g.nodes[1]);
     ASSERT_EQ(g.nodes[5].neighbors[0], nullptr);
 }
 
