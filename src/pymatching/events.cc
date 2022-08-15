@@ -12,8 +12,8 @@ pm::TentativeEvent::TentativeEvent(
       vid(validation_index) {
 }
 
-pm::TentativeEvent::TentativeEvent(pm::TentativeRegionShrinkEventData data, pm::cyclic_time_int time)
-    : region_shrink_event_data(data), time(time), tentative_event_type(SHRINKING), vid(0) {
+pm::TentativeEvent::TentativeEvent(pm::TentativeEventData_LookAtShrinkingRegion data, pm::cyclic_time_int time)
+    : data_look_at_shrinking_region(data), time(time), tentative_event_type(LOOK_AT_SHRINKING_REGION), vid(0) {
 }
 pm::TentativeEvent::TentativeEvent(pm::cyclic_time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
 }
@@ -30,8 +30,8 @@ bool pm::TentativeEvent::consume_valid() {
                 return false;
             }
             return true;
-        } case SHRINKING: {
-            auto &dat = region_shrink_event_data;
+        } case LOOK_AT_SHRINKING_REGION: {
+            auto &dat = data_look_at_shrinking_region;
             return dat.region->shrink_event_tracker.decide_to_dequeue(time);
         } case NO_TENTATIVE_EVENT:
             return vid == 0;
@@ -49,11 +49,11 @@ bool pm::TentativeNeighborInteractionEventData::operator!=(const pm::TentativeNe
     return !(rhs == *this);
 }
 
-bool pm::TentativeRegionShrinkEventData::operator==(const pm::TentativeRegionShrinkEventData &rhs) const {
+bool pm::TentativeEventData_LookAtShrinkingRegion::operator==(const pm::TentativeEventData_LookAtShrinkingRegion &rhs) const {
     return region == rhs.region;
 }
 
-bool pm::TentativeRegionShrinkEventData::operator!=(const pm::TentativeRegionShrinkEventData &rhs) const {
+bool pm::TentativeEventData_LookAtShrinkingRegion::operator!=(const pm::TentativeEventData_LookAtShrinkingRegion &rhs) const {
     return !(rhs == *this);
 }
 
@@ -61,8 +61,8 @@ bool pm::TentativeEvent::operator==(const TentativeEvent &rhs) const {
     if (time != rhs.time || tentative_event_type != rhs.tentative_event_type || vid != rhs.vid)
         return false;
     switch (tentative_event_type) {
-        case SHRINKING:
-            return region_shrink_event_data == rhs.region_shrink_event_data;
+        case LOOK_AT_SHRINKING_REGION:
+            return data_look_at_shrinking_region == rhs.data_look_at_shrinking_region;
         case INTERACTION:
             return neighbor_interaction_event_data == rhs.neighbor_interaction_event_data;
         case NO_TENTATIVE_EVENT:
@@ -79,7 +79,7 @@ std::ostream &pm::operator<<(std::ostream &out, const TentativeEvent &ev) {
     out << ev.vid;
     out << ", .type=";
     switch (ev.tentative_event_type) {
-        case SHRINKING:
+        case LOOK_AT_SHRINKING_REGION:
             out << "SHRINKING";
             break;
         case INTERACTION:

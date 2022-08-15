@@ -110,7 +110,7 @@ void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &regi
     region.shrink_event_tracker.invalidate();
     cyclic_time_int ct{t};
     queue.tracked_enqueue({
-        pm::TentativeRegionShrinkEventData{&region},
+        pm::TentativeEventData_LookAtShrinkingRegion{&region},
         ct,
     }, region.shrink_event_tracker);
 }
@@ -126,7 +126,7 @@ void pm::GraphFlooder::do_region_arriving_at_empty_detector_node(
     reschedule_events_at_detector_node(empty_node);
 }
 
-pm::MwpmEvent pm::GraphFlooder::do_region_shrinking(const pm::TentativeRegionShrinkEventData &event) {
+pm::MwpmEvent pm::GraphFlooder::do_region_shrinking(const pm::TentativeEventData_LookAtShrinkingRegion &event) {
     if (event.region->shell_area.empty()) {
         return do_blossom_shattering(*event.region);
     } else if (event.region->shell_area.size() == 1 && event.region->blossom_children.empty()) {
@@ -243,8 +243,8 @@ pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(Te
             } else {
                 return do_region_hit_boundary_interaction(tentative_event.neighbor_interaction_event_data);
             }
-        case SHRINKING:
-            return do_region_shrinking(tentative_event.region_shrink_event_data);
+        case LOOK_AT_SHRINKING_REGION:
+            return do_region_shrinking(tentative_event.data_look_at_shrinking_region);
         default:
             throw std::invalid_argument("Unknown tentative event type.");
     }

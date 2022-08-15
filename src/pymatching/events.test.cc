@@ -6,5 +6,5 @@
 
 TEST(Events, TentativeEvent) {
     pm::TentativeEvent te{};
-    te.tentative_event_type = pm::SHRINKING;
+    te.tentative_event_type = pm::LOOK_AT_SHRINKING_REGION;
 }

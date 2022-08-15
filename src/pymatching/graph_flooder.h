@@ -49,7 +49,7 @@ class GraphFlooder {
     void do_region_created_at_empty_detector_node(GraphFillRegion& region, DetectorNode& detector_node);
     void do_region_arriving_at_empty_detector_node(
         GraphFillRegion& region, DetectorNode& empty_node, DetectorNode& from_node, size_t neighbor_index);
-    MwpmEvent do_region_shrinking(const TentativeRegionShrinkEventData& event);
+    MwpmEvent do_region_shrinking(const TentativeEventData_LookAtShrinkingRegion& event);
     MwpmEvent do_neighbor_interaction(const TentativeNeighborInteractionEventData& event);
     static MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);

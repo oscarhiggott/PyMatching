@@ -30,7 +30,7 @@ TEST(GraphFlooder, PriorityQueue) {
     }, cyclic_time_int{5}, 0x0));
 
     GraphFillRegion gfr;
-    flooder.queue.tracked_enqueue(TentativeEvent(TentativeRegionShrinkEventData{&gfr}, cyclic_time_int{70}), gfr.shrink_event_tracker);
+    flooder.queue.tracked_enqueue(TentativeEvent(TentativeEventData_LookAtShrinkingRegion{&gfr}, cyclic_time_int{70}), gfr.shrink_event_tracker);
 
     flooder.queue.enqueue(TentativeEvent(TentativeNeighborInteractionEventData{
         &graph.nodes[4], 0, &graph.nodes[5], 1
@@ -43,8 +43,8 @@ TEST(GraphFlooder, PriorityQueue) {
     ASSERT_EQ(flooder.queue.dequeue_valid().time, 10);
     auto e6 = flooder.queue.dequeue_valid();
     ASSERT_EQ(e6.time, 70);
-    ASSERT_EQ(e6.tentative_event_type, SHRINKING);
-    ASSERT_EQ(e6.region_shrink_event_data.region, &gfr);
+    ASSERT_EQ(e6.tentative_event_type, LOOK_AT_SHRINKING_REGION);
+    ASSERT_EQ(e6.data_look_at_shrinking_region.region, &gfr);
     ASSERT_EQ(flooder.queue.dequeue_valid().time, 100);
 }
 
@@ -154,7 +154,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
         &flooder.graph.nodes[2], &flooder.graph.nodes[1], &flooder.graph.nodes[3], &flooder.graph.nodes[0]};
     ASSERT_EQ(flooder.graph.nodes[2].region_that_arrived->shell_area, expected_area);
     flooder.set_region_shrinking(*flooder.graph.nodes[2].region_that_arrived);
-    ASSERT_EQ(flooder.queue.dequeue_valid(), TentativeEvent(TentativeRegionShrinkEventData{flooder.graph.nodes[2].region_that_arrived},
+    ASSERT_EQ(flooder.queue.dequeue_valid(), TentativeEvent(TentativeEventData_LookAtShrinkingRegion{flooder.graph.nodes[2].region_that_arrived},
                                                             cyclic_time_int{80 + 4}));
 }
 

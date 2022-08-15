@@ -20,23 +20,23 @@ struct TentativeNeighborInteractionEventData {
     bool operator!=(const TentativeNeighborInteractionEventData &rhs) const;
 };
 
-struct TentativeRegionShrinkEventData {
+struct TentativeEventData_LookAtShrinkingRegion {
     GraphFillRegion *region;
 
-    bool operator==(const TentativeRegionShrinkEventData &rhs) const;
-    bool operator!=(const TentativeRegionShrinkEventData &rhs) const;
+    bool operator==(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
+    bool operator!=(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
 };
 
 enum TentativeType : uint8_t {
     NO_TENTATIVE_EVENT,
     INTERACTION,
-    SHRINKING
+    LOOK_AT_SHRINKING_REGION
 };
 
 struct TentativeEvent {
     union {
         TentativeNeighborInteractionEventData neighbor_interaction_event_data;
-        TentativeRegionShrinkEventData region_shrink_event_data;
+        TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region;
     };
     pm::cyclic_time_int time;
     TentativeType tentative_event_type;
@@ -55,7 +55,7 @@ struct TentativeEvent {
         TentativeNeighborInteractionEventData data,
         cyclic_time_int time,
         uint64_t validation_index);
-    TentativeEvent(TentativeRegionShrinkEventData data, cyclic_time_int time);
+    TentativeEvent(TentativeEventData_LookAtShrinkingRegion data, cyclic_time_int time);
     TentativeEvent(cyclic_time_int time, uint64_t validation_index = 0);
     TentativeEvent() = default;
 
