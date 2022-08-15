@@ -13,46 +13,6 @@
 
 namespace pm {
 
-enum QueuedEventStatus : uint8_t {
-    EVENT_SOURCE_NOT_QUEUED = 0,
-    EVENT_SOURCE_QUEUED = 1,
-    EVENT_SOURCE_QUEUED_BUT_IGNORE = 2,
-};
-
-struct QueuedEventTracker {
-    cyclic_time_int queued_time{0};
-    QueuedEventStatus queued_state{EVENT_SOURCE_NOT_QUEUED};
-
-    inline bool decide_to_queue(cyclic_time_int new_time) {
-        if (queued_state == EVENT_SOURCE_QUEUED && queued_time <= new_time) {
-            return false;
-        }
-
-        if (queued_state == EVENT_SOURCE_QUEUED_BUT_IGNORE && queued_time == new_time) {
-            queued_state = EVENT_SOURCE_QUEUED;
-            return false;
-        }
-
-        queued_state = EVENT_SOURCE_QUEUED;
-        queued_time = new_time;
-        return true;
-    }
-
-    inline void invalidate() {
-        if (queued_state == EVENT_SOURCE_QUEUED) {
-            queued_state = EVENT_SOURCE_QUEUED_BUT_IGNORE;
-        }
-    }
-    inline bool decide_to_dequeue(cyclic_time_int dequeue_time) {
-        if (dequeue_time != queued_time) {
-            return false;
-        }
-        bool result = queued_state == EVENT_SOURCE_QUEUED;
-        queued_state = EVENT_SOURCE_NOT_QUEUED;
-        return result;
-    }
-};
-
 /// A priority queue for TentativeEvents.
 ///
 /// The priority queue assumes that times increase monotonically. The caller must not enqueue a
@@ -132,12 +92,6 @@ struct bit_bucket_queue {
         _num_enqueued++;
     }
 
-    void tracked_enqueue(TentativeEvent event, QueuedEventTracker &tracker) {
-        if (tracker.decide_to_queue(event.time)) {
-            enqueue(event);
-        }
-    }
-
     /// Checks if all events are in the correct bucket.
     bool satisfies_invariants() const {
         for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
@@ -196,13 +150,17 @@ struct bit_bucket_queue {
         return result;
     }
 
-    TentativeEvent dequeue_valid() {
-        while (true) {
-            TentativeEvent tentative_event = dequeue();
-            if (tentative_event.consume_valid()) {
-                return tentative_event;
-            }
+    std::vector<TentativeEvent> to_vector() const {
+        std::vector<TentativeEvent> result;
+        for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
+            result.insert(result.begin(), bit_buckets[b].begin(), bit_buckets[b].end());
         }
+        std::sort(result.begin(),
+                  result.end(),
+                  [](const TentativeEvent &e1, const TentativeEvent &e2) {
+                      return e1.time < e2.time;
+                  });
+        return result;
     }
 
     std::string str() const;
@@ -237,6 +195,50 @@ std::string bit_bucket_queue<use_validation>::str() const {
     ss << *this;
     return ss.str();
 }
+
+struct QueuedEventTracker {
+    cyclic_time_int desired_time{0};
+    cyclic_time_int queued_time{0};
+    bool has_desired_time{false};
+    bool has_queued_time{false};
+
+    template <bool use_validation>
+    inline void set_desired_event(TentativeEvent ev, bit_bucket_queue<use_validation> &queue) {
+        has_desired_time = true;
+        desired_time = ev.time;
+        if (!has_queued_time || queued_time > ev.time) {
+            queued_time = ev.time;
+            has_queued_time = true;
+            queue.enqueue(ev);
+        }
+    }
+
+    inline void set_no_desired_event() {
+        has_desired_time = false;
+    }
+
+    template <bool use_validation>
+    inline bool dequeue_decision(TentativeEvent ev, bit_bucket_queue<use_validation> &queue) {
+        if (!has_queued_time || ev.time != queued_time) {
+            return false;
+        }
+        has_queued_time = false;
+
+        if (!has_desired_time) {
+            return false;
+        }
+        if (ev.time != desired_time) {
+            has_queued_time = true;
+            queued_time = desired_time;
+            ev.time = desired_time;
+            queue.enqueue(ev);
+            return false;
+        }
+
+        has_desired_time = false;
+        return true;
+    }
+};
 
 }  // namespace pm
 

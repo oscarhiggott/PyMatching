@@ -106,6 +106,12 @@ TEST(cyclic, arithmetic) {
     ASSERT_EQ(c, 1);
     c -= 5;
     ASSERT_EQ(c, (uint16_t)-4);
+
+    cyclic<uint16_t> d{8};
+    ASSERT_EQ(c + d, 4);
+    ASSERT_EQ(d + c, 4);
+    ASSERT_EQ(c - d, (uint16_t)-12);
+    ASSERT_EQ(d - c, 12);
 }
 
 TEST(cyclic, widen_from_nearby_reference) {

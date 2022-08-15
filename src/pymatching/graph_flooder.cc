@@ -63,7 +63,7 @@ void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector
 }
 
 void pm::GraphFlooder::reschedule_events_for_region(pm::GraphFillRegion &region) {
-    region.shrink_event_tracker.invalidate();
+    region.shrink_event_tracker.set_no_desired_event();
 
     if (region.radius.is_shrinking()) {
         schedule_tentative_shrink_event(region);
@@ -107,12 +107,10 @@ void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &regi
     } else {
         t = region.shell_area.back()->local_radius().time_of_x_intercept_for_shrinking();
     }
-    region.shrink_event_tracker.invalidate();
-    cyclic_time_int ct{t};
-    queue.tracked_enqueue({
+    region.shrink_event_tracker.set_desired_event({
         pm::TentativeEventData_LookAtShrinkingRegion{&region},
-        ct,
-    }, region.shrink_event_tracker);
+        cyclic_time_int{t},
+    }, queue);
 }
 
 void pm::GraphFlooder::do_region_arriving_at_empty_detector_node(
@@ -213,10 +211,40 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge> &c
     for (auto &region_edge : blossom_region->blossom_children) {
         region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(queue.cur_time);
         region_edge.region->blossom_parent = blossom_region;
-        region_edge.region->shrink_event_tracker.invalidate();
+        region_edge.region->shrink_event_tracker.set_no_desired_event();
     }
     reschedule_events_for_region(*blossom_region);
     return blossom_region;
+}
+
+bool pm::GraphFlooder::dequeue_decision(pm::TentativeEvent ev) {
+    switch (ev.tentative_event_type) {
+        case pm::TentativeType::INTERACTION: {
+            auto &d = ev.neighbor_interaction_event_data;
+            if (d.detector_node_1->edge_event_vids[d.node_1_neighbor_index] != ev.vid) {
+                return false;
+            }
+            if (d.detector_node_2 != nullptr && d.detector_node_2->edge_event_vids[d.node_2_neighbor_index] != ev.vid) {
+                return false;
+            }
+            return true;
+        } case pm::TentativeType::LOOK_AT_SHRINKING_REGION: {
+            auto &dat = ev.data_look_at_shrinking_region;
+            return dat.region->shrink_event_tracker.dequeue_decision(ev, queue);
+        } case pm::TentativeType::NO_TENTATIVE_EVENT:
+            return ev.vid == 0;
+        default:
+            throw std::invalid_argument("Unrecognized event type.");
+    }
+}
+
+pm::TentativeEvent pm::GraphFlooder::dequeue_valid() {
+    while (true) {
+        TentativeEvent ev = queue.dequeue();
+        if (dequeue_decision(ev)) {
+            return ev;
+        }
+    }
 }
 
 void pm::GraphFlooder::set_region_growing(pm::GraphFillRegion &region) {
@@ -252,7 +280,7 @@ pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(Te
 
 pm::MwpmEvent pm::GraphFlooder::next_event() {
     while (true) {
-        TentativeEvent tentative_event = queue.dequeue_valid();
+        TentativeEvent tentative_event = dequeue_valid();
         if (tentative_event.tentative_event_type == NO_TENTATIVE_EVENT) {
             return MwpmEvent::no_event();
         }

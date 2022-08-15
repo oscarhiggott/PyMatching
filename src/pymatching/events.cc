@@ -18,28 +18,6 @@ pm::TentativeEvent::TentativeEvent(pm::TentativeEventData_LookAtShrinkingRegion 
 pm::TentativeEvent::TentativeEvent(pm::cyclic_time_int time, uint64_t validation_index) : time(time), tentative_event_type(NO_TENTATIVE_EVENT), vid(validation_index) {
 }
 
-
-bool pm::TentativeEvent::consume_valid() {
-    switch (tentative_event_type) {
-        case INTERACTION: {
-            auto &d = neighbor_interaction_event_data;
-            if (d.detector_node_1->edge_event_vids[d.node_1_neighbor_index] != vid) {
-                return false;
-            }
-            if (d.detector_node_2 != nullptr && d.detector_node_2->edge_event_vids[d.node_2_neighbor_index] != vid) {
-                return false;
-            }
-            return true;
-        } case LOOK_AT_SHRINKING_REGION: {
-            auto &dat = data_look_at_shrinking_region;
-            return dat.region->shrink_event_tracker.decide_to_dequeue(time);
-        } case NO_TENTATIVE_EVENT:
-            return vid == 0;
-        default:
-            throw std::invalid_argument("Unrecognized event type.");
-    }
-}
-
 bool pm::TentativeNeighborInteractionEventData::operator==(const pm::TentativeNeighborInteractionEventData &rhs) const {
     return detector_node_1 == rhs.detector_node_1 && node_1_neighbor_index == rhs.node_1_neighbor_index &&
            detector_node_2 == rhs.detector_node_2 && node_2_neighbor_index == rhs.node_2_neighbor_index;

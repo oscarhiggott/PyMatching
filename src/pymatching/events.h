@@ -62,8 +62,6 @@ struct TentativeEvent {
     bool operator==(const TentativeEvent &rhs) const;
     bool operator!=(const TentativeEvent &rhs) const;
 
-    bool consume_valid();
-
     std::string str() const;
 };
 

@@ -26,6 +26,12 @@ struct cyclic {
     explicit cyclic(O value) : value((T)value) {
     }
 
+    inline cyclic<T> operator+(cyclic<T> other) const {
+        return cyclic<T>{(T)(value + other.value)};
+    }
+    inline cyclic<T> operator-(cyclic<T> other) const {
+        return cyclic<T>{(T)(value - other.value)};
+    }
     inline cyclic<T> operator++() {
         return cyclic<T>(++value);
     }

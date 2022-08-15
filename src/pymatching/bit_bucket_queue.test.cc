@@ -81,59 +81,151 @@ TEST(bit_bucket_queue, wraparound) {
 }
 
 TEST(bit_bucket_queue, QueuedEventTracker) {
+    auto ev = [](int x){ return TentativeEvent{cyclic_time_int{x}}; };
+    auto evs = [&](std::vector<int> x){
+        std::vector<TentativeEvent> r;
+        for (auto e : x) {
+            r.push_back(ev(e));
+        }
+        return r;
+    };
+    bit_bucket_queue<true> queue;
     QueuedEventTracker tracker;
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
 
-    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{0}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+    ASSERT_EQ(tracker.has_queued_time, false);
+    ASSERT_EQ(tracker.has_desired_time, false);
 
-    tracker.invalidate();
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+    tracker.set_desired_event(ev(5), queue);
+    ASSERT_EQ(queue.cur_time, 0);
+    ASSERT_EQ(queue.to_vector(), evs({5}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{5});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{5});
 
-    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{5}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 5);
+    tracker.set_desired_event(ev(6), queue);
+    ASSERT_EQ(queue.cur_time, 0);
+    ASSERT_EQ(queue.to_vector(), evs({5}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{5});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{6});
 
-    ASSERT_FALSE(tracker.decide_to_queue(cyclic_time_int{5}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 5);
+    tracker.set_desired_event(ev(4), queue);
+    ASSERT_EQ(queue.cur_time, 0);
+    ASSERT_EQ(queue.to_vector(), evs({4, 5}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{4});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{4});
 
-    ASSERT_FALSE(tracker.decide_to_queue(cyclic_time_int{6}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 5);
+    tracker.set_desired_event(ev(4), queue);
+    ASSERT_EQ(queue.cur_time, 0);
+    ASSERT_EQ(queue.to_vector(), evs({4, 5}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{4});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{4});
 
-    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{4}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 4);
+    tracker.set_desired_event(ev(3), queue);
+    ASSERT_EQ(queue.cur_time, 0);
+    ASSERT_EQ(queue.to_vector(), evs({3, 4, 5}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{3});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{3});
 
-    tracker.invalidate();
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED_BUT_IGNORE);
-    ASSERT_EQ(tracker.queued_time, 4);
+    auto deq = queue.dequeue();
+    ASSERT_EQ(deq, ev(3));
+    ASSERT_EQ(queue.cur_time, 3);
+    ASSERT_EQ(queue.to_vector(), evs({4, 5}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{3});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{3});
 
-    ASSERT_FALSE(tracker.decide_to_queue(cyclic_time_int{4}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 4);
+    ASSERT_TRUE(tracker.dequeue_decision(deq, queue));
+    ASSERT_EQ(queue.cur_time, 3);
+    ASSERT_EQ(queue.to_vector(), evs({4, 5}));
+    ASSERT_EQ(tracker.has_queued_time, false);
+    ASSERT_EQ(tracker.has_desired_time, false);
 
-    tracker.invalidate();
-    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{7}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 7);
+    deq = queue.dequeue();
+    ASSERT_EQ(deq, ev(4));
+    ASSERT_EQ(queue.cur_time, 4);
+    ASSERT_EQ(queue.to_vector(), evs({5}));
+    ASSERT_EQ(tracker.has_queued_time, false);
+    ASSERT_EQ(tracker.has_desired_time, false);
 
-    tracker.invalidate();
-    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{8}));
-    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{4}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED_BUT_IGNORE);
-    ASSERT_EQ(tracker.queued_time, 7);
+    ASSERT_FALSE(tracker.dequeue_decision(deq, queue));
+    ASSERT_EQ(queue.cur_time, 4);
+    ASSERT_EQ(queue.to_vector(), evs({5}));
+    ASSERT_EQ(tracker.has_queued_time, false);
+    ASSERT_EQ(tracker.has_desired_time, false);
 
-    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{7}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+    tracker.set_desired_event(ev(10), queue);
+    ASSERT_EQ(queue.cur_time, 4);
+    ASSERT_EQ(queue.to_vector(), evs({5, 10}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{10});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{10});
 
-    ASSERT_TRUE(tracker.decide_to_queue(cyclic_time_int{10}));
-    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{11}));
-    ASSERT_FALSE(tracker.decide_to_dequeue(cyclic_time_int{9}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_QUEUED);
-    ASSERT_EQ(tracker.queued_time, 10);
+    deq = queue.dequeue();
+    ASSERT_EQ(deq, ev(5));
+    ASSERT_EQ(queue.cur_time, 5);
+    ASSERT_EQ(queue.to_vector(), evs({10}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{10});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{10});
 
-    ASSERT_TRUE(tracker.decide_to_dequeue(cyclic_time_int{10}));
-    ASSERT_EQ(tracker.queued_state, EVENT_SOURCE_NOT_QUEUED);
+    ASSERT_FALSE(tracker.dequeue_decision(deq, queue));
+    ASSERT_EQ(deq, ev(5));
+    ASSERT_EQ(queue.cur_time, 5);
+    ASSERT_EQ(queue.to_vector(), evs({10}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{10});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{10});
+
+    tracker.set_desired_event(ev(11), queue);
+    ASSERT_EQ(queue.cur_time, 5);
+    ASSERT_EQ(queue.to_vector(), evs({10}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{10});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{11});
+
+    deq = queue.dequeue();
+    ASSERT_EQ(deq, ev(10));
+    ASSERT_EQ(queue.cur_time, 10);
+    ASSERT_EQ(queue.to_vector(), evs({}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{10});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{11});
+
+    ASSERT_FALSE(tracker.dequeue_decision(deq, queue));
+    ASSERT_EQ(queue.cur_time, 10);
+    ASSERT_EQ(queue.to_vector(), evs({11}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{11});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{11});
+
+    tracker.set_no_desired_event();
+    ASSERT_EQ(queue.cur_time, 10);
+    ASSERT_EQ(queue.to_vector(), evs({11}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, false);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{11});
+
+    tracker.set_desired_event(ev(12), queue);
+    ASSERT_EQ(queue.cur_time, 10);
+    ASSERT_EQ(queue.to_vector(), evs({11}));
+    ASSERT_EQ(tracker.has_queued_time, true);
+    ASSERT_EQ(tracker.has_desired_time, true);
+    ASSERT_EQ(tracker.queued_time, cyclic_time_int{11});
+    ASSERT_EQ(tracker.desired_time, cyclic_time_int{12});
 }

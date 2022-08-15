@@ -54,7 +54,9 @@ class GraphFlooder {
     static MwpmEvent do_region_hit_boundary_interaction(const TentativeNeighborInteractionEventData& event);
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
+    bool dequeue_decision(pm::TentativeEvent ev);
 
+    pm::TentativeEvent dequeue_valid();
     pm::MwpmEvent do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
 };
 
