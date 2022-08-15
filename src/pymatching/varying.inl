@@ -1,3 +1,6 @@
+
+#include "varying.h"
+
 template<typename T>
 inline Varying<T>::Varying() = default;
 
@@ -92,6 +95,19 @@ inline Varying<T> Varying<T>::growing_varying_with_zero_distance_at_time(T time)
 }
 
 template<typename T>
+Varying<T> Varying<T>::from_base_and_growth(T base, int8_t growth) {
+    Varying<T> result{base << 2};
+    if (growth == +1) {
+        result.data |= 1;
+    } else if (growth == -1) {
+        result.data |= 2;
+    } else if (growth != 0) {
+        throw std::invalid_argument("growth must be 0 or +1 or -1");
+    }
+    return result;
+}
+
+template<typename T>
 inline std::ostream &operator<<(std::ostream &os, Varying<T> varying) {
     os << (varying.data >> 2);
     if (varying.data & 1){
@@ -114,12 +130,24 @@ inline bool Varying<T>::operator!=(Varying<T> rhs) const {
 
 template<typename T>
 inline Varying<T> Varying<T>::operator+(T offset) const {
-    return Varying<T>(this->data + (offset<<2));
+    return Varying<T>(data + (offset<<2));
 }
 
 template<typename T>
 inline Varying<T> Varying<T>::operator-(T offset) const {
-    return pm::Varying<T>(this->data - (offset << 2));
+    return pm::Varying<T>(data - (offset << 2));
+}
+
+template<typename T>
+inline Varying<T> &Varying<T>::operator+=(T offset) {
+    data += offset << 2;
+    return *this;
+}
+
+template<typename T>
+inline Varying<T> &Varying<T>::operator-=(T offset) {
+    data -= offset << 2;
+    return *this;
 }
 
 template<typename T>
@@ -140,4 +168,10 @@ bool Varying<T>::is_frozen() const {
 template<typename T>
 bool Varying<T>::is_growing() const {
     return data & 1;
+}
+
+template<typename T>
+void Varying<T>::inplace_freeze_then_add(Varying<T> other) {
+    data &= ~(T)3;
+    data += other.data;
 }
