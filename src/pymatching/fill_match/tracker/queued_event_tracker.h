@@ -29,7 +29,7 @@ struct QueuedEventTracker {
     /// Tells the tracker a desired look-at-me event. The tracker will handle inserting an event
     /// into the event queue, if necessary.
     template <bool use_validation>
-    inline void set_desired_event(TentativeEvent ev, radix_heap_queue<use_validation> &queue) {
+    inline void set_desired_event(FloodCheckEvent ev, radix_heap_queue<use_validation> &queue) {
         has_desired_time = true;
         desired_time = ev.time;
         if (!has_queued_time || queued_time > ev.time) {
@@ -50,7 +50,7 @@ struct QueuedEventTracker {
     /// returning true means keep. This method also handles requeueing another look-at-me event
     /// if doing so was deferred while the earlier event was in the queue.
     template <bool use_validation>
-    inline bool dequeue_decision(TentativeEvent ev, radix_heap_queue<use_validation> &queue) {
+    inline bool dequeue_decision(FloodCheckEvent ev, radix_heap_queue<use_validation> &queue) {
         // Only the most recent event this tracker put into the queue is valid. Older events
         // are forgotten and must not be processed, because otherwise an event storm can be
         // created as stale events trigger redundant enqueues.

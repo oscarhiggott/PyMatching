@@ -1,4 +1,4 @@
-#include "pymatching/fill_match/tracker/events.h"
+#include "pymatching/fill_match/tracker/mwpm_event.h"
 
 #include <gtest/gtest.h>
 
@@ -8,8 +8,8 @@
 
 using namespace pm;
 
-TEST(Events, TentativeEvent) {
-    TentativeEvent ev(cyclic_time_int{6});
+TEST(flood_check_event, basic_usage) {
+    FloodCheckEvent ev(cyclic_time_int{6});
 
     ASSERT_EQ(ev.tentative_event_type, NO_TENTATIVE_EVENT);
     ASSERT_EQ(ev.time, 6);

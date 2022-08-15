@@ -11,7 +11,7 @@
 namespace pm {
 
 class GraphFillRegion;
-struct TentativeEvent;
+struct FloodCheckEvent;
 
 /// A detector node is a location where a detection event might occur.
 ///

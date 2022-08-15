@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-#include "pymatching/fill_match/tracker/events.h"
+#include "pymatching/fill_match/tracker/mwpm_event.h"
 #include "pymatching/fill_match/matcher/mwpm.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/ints.h"
@@ -60,16 +60,16 @@ TEST(GraphFlooder, CreateRegion) {
     flooder.create_region(&flooder.graph.nodes[0]);
     flooder.create_region(&flooder.graph.nodes[2]);
     flooder.create_region(&flooder.graph.nodes[3]);
-    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(TentativeEventData_LookAtNode{
+    ASSERT_EQ(flooder.queue.dequeue(), FloodCheckEvent(TentativeEventData_LookAtNode{
         &flooder.graph.nodes[0]
     }, cyclic_time_int{3}));
-    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(TentativeEventData_LookAtNode{
+    ASSERT_EQ(flooder.queue.dequeue(), FloodCheckEvent(TentativeEventData_LookAtNode{
         &flooder.graph.nodes[2]
     }, cyclic_time_int{11}));
     ASSERT_EQ(flooder.graph.nodes[0].region_that_arrived->shell_area[0], &flooder.graph.nodes[0]);
     ASSERT_EQ(flooder.graph.nodes[0].distance_from_source, 0);
     ASSERT_EQ(flooder.graph.nodes[0].reached_from_source, &flooder.graph.nodes[0]);
-    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(TentativeEventData_LookAtNode{
+    ASSERT_EQ(flooder.queue.dequeue(), FloodCheckEvent(TentativeEventData_LookAtNode{
         &flooder.graph.nodes[3]
     }, cyclic_time_int{50}));
     ASSERT_TRUE(flooder.queue.empty());
@@ -94,7 +94,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
 
     flooder.queue.dequeue();
     auto t1 = flooder.queue.dequeue();
-    ASSERT_EQ(t1, TentativeEvent(TentativeEventData_LookAtNode{
+    ASSERT_EQ(t1, FloodCheckEvent(TentativeEventData_LookAtNode{
         &flooder.graph.nodes[2]
     }, cyclic_time_int{100}));
     flooder.queue.enqueue(t1);
@@ -105,7 +105,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     };
     ASSERT_EQ(e2, e2_exp);
     flooder.queue.dequeue();
-    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(cyclic_time_int{0}));
+    ASSERT_EQ(flooder.queue.dequeue(), FloodCheckEvent(cyclic_time_int{0}));
 }
 
 TEST(GraphFlooder, RegionHitRegion) {
@@ -156,8 +156,8 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
         &flooder.graph.nodes[2], &flooder.graph.nodes[1], &flooder.graph.nodes[3], &flooder.graph.nodes[0]};
     ASSERT_EQ(flooder.graph.nodes[2].region_that_arrived->shell_area, expected_area);
     flooder.set_region_shrinking(*flooder.graph.nodes[2].region_that_arrived);
-    ASSERT_EQ(flooder.dequeue_valid(), TentativeEvent(TentativeEventData_LookAtShrinkingRegion{flooder.graph.nodes[2].region_that_arrived},
-                                                            cyclic_time_int{80 + 4}));
+    ASSERT_EQ(flooder.dequeue_valid(), FloodCheckEvent(TentativeEventData_LookAtShrinkingRegion{flooder.graph.nodes[2].region_that_arrived},
+                                                       cyclic_time_int{80 + 4}));
 }
 
 TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {

@@ -18,9 +18,9 @@ BENCHMARK(bucket_queue_sort) {
     benchmark_go([&]() {
         radix_heap_queue<false> q;
         for (auto t : v) {
-            q.enqueue(TentativeEvent(t));
+            q.enqueue(FloodCheckEvent(t));
         }
-        TentativeEvent out{};
+        FloodCheckEvent out{};
         while (true) {
             out = q.dequeue();
             if (out.tentative_event_type == NO_TENTATIVE_EVENT) {
@@ -44,11 +44,11 @@ BENCHMARK(bucket_queue_stream) {
         radix_heap_queue<false> q;
         for (size_t k = 0; k < 10; k++) {
             for (size_t r = 0; r < k; r++) {
-                q.enqueue(TentativeEvent(cyclic_time_int{k}));
+                q.enqueue(FloodCheckEvent(cyclic_time_int{k}));
             }
         }
         for (size_t k = 0; k < n; k++) {
-            q.enqueue(TentativeEvent(q.dequeue().time));
+            q.enqueue(FloodCheckEvent(q.dequeue().time));
         }
     }).goal_micros(150).show_rate("EnqueueDequeues", (double)n);
     if (dependence) {

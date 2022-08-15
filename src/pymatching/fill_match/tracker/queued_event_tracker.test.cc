@@ -6,9 +6,9 @@
 using namespace pm;
 
 TEST(QueuedEventTracker, basic_usage) {
-    auto ev = [](int x){ return TentativeEvent{cyclic_time_int{x}}; };
+    auto ev = [](int x){ return FloodCheckEvent{cyclic_time_int{x}}; };
     auto evs = [&](std::vector<int> x){
-        std::vector<TentativeEvent> r;
+        std::vector<FloodCheckEvent> r;
         for (auto e : x) {
             r.push_back(ev(e));
         }

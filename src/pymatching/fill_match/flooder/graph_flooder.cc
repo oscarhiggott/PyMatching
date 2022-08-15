@@ -213,7 +213,7 @@ GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained
     return blossom_region;
 }
 
-bool GraphFlooder::dequeue_decision(TentativeEvent ev) {
+bool GraphFlooder::dequeue_decision(FloodCheckEvent ev) {
     switch (ev.tentative_event_type) {
         case TentativeType::LOOK_AT_NODE: {
             auto &d = ev.data_look_at_node;
@@ -228,9 +228,9 @@ bool GraphFlooder::dequeue_decision(TentativeEvent ev) {
     }
 }
 
-TentativeEvent GraphFlooder::dequeue_valid() {
+FloodCheckEvent GraphFlooder::dequeue_valid() {
     while (true) {
-        TentativeEvent ev = queue.dequeue();
+        FloodCheckEvent ev = queue.dequeue();
         if (dequeue_decision(ev)) {
             return ev;
         }
@@ -304,7 +304,7 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
     return MwpmEvent::no_event();
 }
 
-MwpmEvent GraphFlooder::process_tentative_event_returning_mwpm_event(TentativeEvent tentative_event) {
+MwpmEvent GraphFlooder::process_tentative_event_returning_mwpm_event(FloodCheckEvent tentative_event) {
     switch (tentative_event.tentative_event_type) {
         case LOOK_AT_NODE: {
             return do_look_at_node_event(*tentative_event.data_look_at_node.detector_node);
@@ -317,7 +317,7 @@ MwpmEvent GraphFlooder::process_tentative_event_returning_mwpm_event(TentativeEv
 
 MwpmEvent GraphFlooder::run_until_next_mwpm_notification() {
     while (true) {
-        TentativeEvent tentative_event = dequeue_valid();
+        FloodCheckEvent tentative_event = dequeue_valid();
         if (tentative_event.tentative_event_type == NO_TENTATIVE_EVENT) {
             return MwpmEvent::no_event();
         }

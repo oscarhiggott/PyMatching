@@ -10,19 +10,19 @@ TEST(radix_heap_queue, basic_usage) {
     ASSERT_EQ(q.size(), 0);
     ASSERT_EQ(q.cur_time, 0);
 
-    ASSERT_EQ(q.dequeue(), TentativeEvent(cyclic_time_int{0}));
+    ASSERT_EQ(q.dequeue(), FloodCheckEvent(cyclic_time_int{0}));
 
-    q.enqueue(TentativeEvent(cyclic_time_int{9}));
-    q.enqueue(TentativeEvent(cyclic_time_int{3}));
+    q.enqueue(FloodCheckEvent(cyclic_time_int{9}));
+    q.enqueue(FloodCheckEvent(cyclic_time_int{3}));
     ASSERT_EQ(q.size(), 2);
     ASSERT_EQ(q.cur_time, 0);
 
-    ASSERT_EQ(q.dequeue(), TentativeEvent(cyclic_time_int{3}));
-    ASSERT_EQ(q.dequeue(), TentativeEvent(cyclic_time_int{9}));
+    ASSERT_EQ(q.dequeue(), FloodCheckEvent(cyclic_time_int{3}));
+    ASSERT_EQ(q.dequeue(), FloodCheckEvent(cyclic_time_int{9}));
     ASSERT_EQ(q.size(), 0);
     ASSERT_EQ(q.cur_time, 9);
 
-    ASSERT_EQ(q.dequeue(), TentativeEvent(cyclic_time_int{0}));
+    ASSERT_EQ(q.dequeue(), FloodCheckEvent(cyclic_time_int{0}));
 }
 
 TEST(radix_heap_queue, sorts_fuzz) {
@@ -33,7 +33,7 @@ TEST(radix_heap_queue, sorts_fuzz) {
     for (size_t k = 0; k < 1000; k++) {
         auto v = cyclic_time_int{rng() & 0x00007FFF};
         s.push_back(v);
-        q.enqueue(TentativeEvent(v));
+        q.enqueue(FloodCheckEvent(v));
     }
     std::sort(s.begin(), s.end());
     ASSERT_TRUE(q.satisfies_invariants());
@@ -43,7 +43,7 @@ TEST(radix_heap_queue, sorts_fuzz) {
         ASSERT_EQ(t, s[k]) << k;
     }
 
-    ASSERT_EQ(q.dequeue(), TentativeEvent(cyclic_time_int{0}));
+    ASSERT_EQ(q.dequeue(), FloodCheckEvent(cyclic_time_int{0}));
 }
 
 TEST(radix_heap_queue, bucket_for) {
@@ -75,7 +75,7 @@ TEST(radix_heap_queue, wraparound_all_the_way_around) {
     std::priority_queue<int64_t> reference_queue;
     radix_heap_queue<true> actual_queue;
     for (size_t k = 0; k < 100; k++) {
-        actual_queue.enqueue(TentativeEvent{cyclic_time_int{k}});
+        actual_queue.enqueue(FloodCheckEvent{cyclic_time_int{k}});
         reference_queue.push(-(int64_t)k);
     }
 
@@ -89,7 +89,7 @@ TEST(radix_heap_queue, wraparound_all_the_way_around) {
         n++;
         if (n < (1 << 17)) {
             t += rng() % 1000;
-            actual_queue.enqueue(TentativeEvent{cyclic_time_int{t}});
+            actual_queue.enqueue(FloodCheckEvent{cyclic_time_int{t}});
             reference_queue.push(-(int64_t)t);
         }
     }

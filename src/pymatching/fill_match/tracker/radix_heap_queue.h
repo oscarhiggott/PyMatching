@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "pymatching/fill_match/tracker/cyclic.h"
-#include "pymatching/fill_match/tracker/events.h"
+#include "pymatching/fill_match/tracker/flood_check_event.h"
 #include "pymatching/fill_match/ints.h"
 
 namespace pm {
@@ -52,13 +52,13 @@ namespace pm {
 /// - Get dequeued out of bucket 0 and yielded as a result.
 template <bool use_validation>
 struct radix_heap_queue {
-    std::array<std::vector<TentativeEvent>, sizeof(pm::cyclic_time_int)*8 + 2> bit_buckets;
+    std::array<std::vector<FloodCheckEvent>, sizeof(pm::cyclic_time_int)*8 + 2> bit_buckets;
     pm::cumulative_time_int cur_time;
     size_t _num_enqueued;
 
     radix_heap_queue() : cur_time{0}, _num_enqueued(0) {
         // Artificial event just to stop the bucket search.
-        bit_buckets.back().push_back(TentativeEvent(cyclic_time_int{0xDEAD}));
+        bit_buckets.back().push_back(FloodCheckEvent(cyclic_time_int{0xDEAD}));
     }
 
     size_t size() const {
@@ -77,7 +77,7 @@ struct radix_heap_queue {
     /// Adds an event to the priority queue.
     ///
     /// The event MUST NOT be cycle-before the current time.
-    void enqueue(TentativeEvent event) {
+    void enqueue(FloodCheckEvent event) {
         if (use_validation) {
             if (event.time < cyclic_time_int{cur_time}) {
                 std::stringstream ss;
@@ -107,7 +107,7 @@ struct radix_heap_queue {
     /// Dequeues the next event.
     ///
     /// If the queue is empty, a tentative event with type NO_TENTATIVE_EVENT is returned.
-    TentativeEvent dequeue() {
+    FloodCheckEvent dequeue() {
         if (bit_buckets[0].empty()) {
             // Need to refill bucket 0, so we can dequeue from it.
 
@@ -118,7 +118,7 @@ struct radix_heap_queue {
             }
             if (b == bit_buckets.size() - 1) {
                 // We found the fake tail bucket. All real buckets are empty. The queue is empty.
-                return TentativeEvent(cyclic_time_int{0});
+                return FloodCheckEvent(cyclic_time_int{0});
             }
 
             if (b == 1) {
@@ -145,7 +145,7 @@ struct radix_heap_queue {
         }
 
         _num_enqueued--;
-        TentativeEvent result = bit_buckets[0].back();
+        FloodCheckEvent result = bit_buckets[0].back();
         bit_buckets[0].pop_back();
         return result;
     }
@@ -154,14 +154,14 @@ struct radix_heap_queue {
     ///
     /// This method mostly exacts to facilitate testing. It doesn't really make sense to use it
     /// during normal operation.
-    std::vector<TentativeEvent> to_vector() const {
-        std::vector<TentativeEvent> result;
+    std::vector<FloodCheckEvent> to_vector() const {
+        std::vector<FloodCheckEvent> result;
         for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
             result.insert(result.begin(), bit_buckets[b].begin(), bit_buckets[b].end());
         }
         std::sort(result.begin(),
                   result.end(),
-                  [](const TentativeEvent &e1, const TentativeEvent &e2) {
+                  [](const FloodCheckEvent &e1, const FloodCheckEvent &e2) {
                       return e1.time < e2.time;
                   });
         return result;
@@ -180,7 +180,7 @@ std::ostream &operator<<(std::ostream &out, radix_heap_queue<use_validation> q) 
             out << "    bucket[" << b << "] {\n";
             std::sort(copy.begin(),
                       copy.end(),
-                      [](const TentativeEvent &e1, const TentativeEvent &e2) {
+                      [](const FloodCheckEvent &e1, const FloodCheckEvent &e2) {
                           return e1.time < e2.time;
                       });
             for (auto &e: copy) {

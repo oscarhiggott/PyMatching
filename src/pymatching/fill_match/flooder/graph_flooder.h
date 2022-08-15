@@ -3,7 +3,7 @@
 
 #include <queue>
 
-#include "pymatching/fill_match/tracker/events.h"
+#include "pymatching/fill_match/tracker/mwpm_event.h"
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/matcher/region_edge.h"
 #include "pymatching/fill_match/tracker/radix_heap_queue.h"
@@ -51,12 +51,12 @@ class GraphFlooder {
     pm::MwpmEvent do_region_hit_boundary_interaction(DetectorNode &node);
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
-    bool dequeue_decision(pm::TentativeEvent ev);
+    bool dequeue_decision(pm::FloodCheckEvent ev);
     std::pair<size_t, pm::cumulative_time_int> find_next_event_at_node_returning_neighbor_index_and_time(DetectorNode &detector_node) const;
     pm::MwpmEvent do_look_at_node_event(DetectorNode &node);
 
-    pm::TentativeEvent dequeue_valid();
-    pm::MwpmEvent process_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
+    pm::FloodCheckEvent dequeue_valid();
+    pm::MwpmEvent process_tentative_event_returning_mwpm_event(FloodCheckEvent tentative_event);
 };
 
 }  // namespace pm

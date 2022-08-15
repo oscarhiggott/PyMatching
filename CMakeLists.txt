@@ -36,7 +36,8 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/matcher/alternating_tree.cc
         src/pymatching/fill_match/matcher/mwpm.cc
         src/pymatching/fill_match/matcher/region_edge.cc
-        src/pymatching/fill_match/tracker/events.cc
+        src/pymatching/fill_match/tracker/mwpm_event.cc
+        src/pymatching/fill_match/tracker/flood_check_event.cc
         )
 
 set(TEST_FILES
@@ -51,8 +52,9 @@ set(TEST_FILES
         src/pymatching/fill_match/flooder/graph_flooder.test.cc
         src/pymatching/fill_match/matcher/alternating_tree.test.cc
         src/pymatching/fill_match/matcher/mwpm.test.cc
-        src/pymatching/fill_match/tracker/events.test.cc
+        src/pymatching/fill_match/tracker/flood_check_event.test.cc
         src/pymatching/fill_match/tracker/radix_heap_queue.test.cc
+        src/pymatching/fill_match/tracker/mwpm_event.test.cc
         src/pymatching/fill_match/tracker/queued_event_tracker.test.cc
         src/pymatching/fill_match/tracker/cyclic.test.cc
         )

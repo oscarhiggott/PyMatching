@@ -2,7 +2,7 @@
 
 
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
-#include "pymatching/fill_match/tracker/events.h"
+#include "pymatching/fill_match/tracker/mwpm_event.h"
 
 namespace pm {
 
