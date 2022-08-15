@@ -85,7 +85,7 @@ struct cyclic {
     inline O widen_from_nearby_reference(O reference) const {
         cyclic<T> cyclic_reference((T)reference);
         O result = reference;
-        result += (O)((O)value - (O)cyclic_reference.value);
+        result += (O)(T)(value - cyclic_reference.value);
         if (cyclic_reference > *this) {
             // Move backwards by one full cycle.
             result -= (O)((O)(T)-1 + (O)1);
