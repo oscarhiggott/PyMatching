@@ -234,6 +234,7 @@ struct QueuedEventTracker {
         }
     }
 
+    /// Indicates that it's no longer necessary to look at the object at a later time.
     inline void set_no_desired_event() {
         has_desired_time = false;
     }
