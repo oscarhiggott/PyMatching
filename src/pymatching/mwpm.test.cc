@@ -73,7 +73,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     auto& ns = mwpm.flooder.graph.nodes;
 
     auto dequeued_and_processed = [&](size_t expected_time){
-        auto ev = mwpm.flooder.next_event();
+        auto ev = mwpm.flooder.run_until_next_mwpm_notification();
         EXPECT_EQ(expected_time, mwpm.flooder.queue.cur_time);
         mwpm.process_event(ev);
         return ev;
@@ -160,11 +160,11 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     ASSERT_EQ(ns[0].region_that_arrived->match.region, ns[1].region_that_arrived);
     ASSERT_EQ(ns[1].region_that_arrived->match.region, ns[0].region_that_arrived);
 
-    auto e9 = mwpm.flooder.next_event();
+    auto e9 = mwpm.flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 94);
     ASSERT_EQ(e9.event_type, REGION_HIT_BOUNDARY);
     mwpm.process_event(e9);
-    auto e10 = mwpm.flooder.next_event();
+    auto e10 = mwpm.flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(e10.event_type, NO_EVENT);
     ASSERT_EQ(ns[3].region_that_arrived->blossom_parent, nullptr);
     ASSERT_TRUE(regions_matched(ns, 4, 3));
@@ -245,7 +245,8 @@ TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
     ASSERT_EQ(blossom->blossom_children.size(), 9);
     ASSERT_EQ(blossom->alt_tree_node->children, expected_blossom_tree_children);
     // Region 13 matches to boundary
-    mwpm.process_event(RegionHitBoundaryEventData{ns[13].region_that_arrived, {&ns[13], nullptr, 0}});
+    mwpm.process_event(RegionHitBoundaryEventData{ns[13].region_that_arrived,
+                                                  {&ns[13], nullptr, 0}});
     // Blossom matches to region 13
     mwpm.process_event(
         MwpmEvent(RegionHitRegionEventData{blossom, ns[13].region_that_arrived, {&ns[4], &ns[13], 1}}));
@@ -267,7 +268,8 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
     mwpm.process_event(rhr(ns, 0, 1));
     mwpm.process_event(rhr(ns, 0, 3));
     // 5 matches to boundary
-    mwpm.process_event(RegionHitBoundaryEventData{ns[5].region_that_arrived, {&ns[5], nullptr, 1}});
+    mwpm.process_event(RegionHitBoundaryEventData{ns[5].region_that_arrived,
+                                                  {&ns[5], nullptr, 1}});
     // Tree matches to 5
     mwpm.process_event(rhr(ns, 5, 2));
     ASSERT_TRUE(regions_matched(ns, 5, 2));
@@ -284,7 +286,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     auto& ns = mwpm.flooder.graph.nodes;
     mwpm.flooder.create_region(&ns[6]);
     mwpm.flooder.create_region(&ns[13]);
-    auto e = mwpm.flooder.next_event();
+    auto e = mwpm.flooder.run_until_next_mwpm_notification();
     mwpm.process_event(e);
     ASSERT_EQ(ns[6].region_that_arrived->match.region, ns[13].region_that_arrived);
     auto res = mwpm.shatter_blossom_and_extract_matches(ns[6].region_that_arrived);
@@ -374,7 +376,8 @@ TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundary) {
     auto blossom2 = ns[3].region_that_arrived->blossom_parent;
     ASSERT_EQ(blossom2->blossom_children.size(), 3);
     blossom2->radius = blossom2->radius + 30;
-    mwpm.process_event(RegionHitBoundaryEventData{blossom2, {&ns[0], nullptr, 1 << 30}});
+    mwpm.process_event(RegionHitBoundaryEventData{blossom2,
+                                                  {&ns[0], nullptr, 1 << 30}});
     auto res = mwpm.shatter_blossom_and_extract_matches(blossom2);
     MatchingResult res_expected(set_bits_to_obs_mask({4, 1, 30}), 1 + 2 + 3 + 4 + 5 + 20 + 30);
     ASSERT_EQ(res, res_expected);

@@ -2,15 +2,17 @@
 #include "pymatching/graph_fill_region.h"
 #include "pymatching/mwpm.h"
 
-pm::Mwpm::Mwpm(pm::GraphFlooder flooder) : flooder(std::move(flooder)) {
+using namespace pm;
+
+Mwpm::Mwpm(GraphFlooder flooder) : flooder(std::move(flooder)) {
 }
 
-void pm::Mwpm::shatter_descendants_into_matches_and_freeze(pm::AltTreeNode &alt_tree_node) {
+void Mwpm::shatter_descendants_into_matches_and_freeze(AltTreeNode &alt_tree_node) {
     for (auto &child_edge : alt_tree_node.children) {
         shatter_descendants_into_matches_and_freeze(*child_edge.alt_tree_node);
     }
     if (alt_tree_node.inner_region) {
-        alt_tree_node.parent = pm::AltTreeEdge();
+        alt_tree_node.parent = AltTreeEdge();
         alt_tree_node.inner_region->add_match(alt_tree_node.outer_region, alt_tree_node.inner_to_outer_edge);
         flooder.set_region_frozen(*alt_tree_node.inner_region);
         flooder.set_region_frozen(*alt_tree_node.outer_region);
@@ -20,21 +22,21 @@ void pm::Mwpm::shatter_descendants_into_matches_and_freeze(pm::AltTreeNode &alt_
     delete &alt_tree_node;
 }
 
-void pm::Mwpm::handle_tree_hitting_boundary(const pm::RegionHitBoundaryEventData &event) {
+void Mwpm::handle_tree_hitting_boundary(const RegionHitBoundaryEventData &event) {
     auto node = event.region->alt_tree_node;
     node->become_root();
     // Match descendents, deleting AltTreeNodes and freezing GraphFillRegions
     shatter_descendants_into_matches_and_freeze(*node);
 
     // Now match the event region to the boundary and freeze
-    event.region->match = pm::Match(nullptr, event.edge);
+    event.region->match = Match(nullptr, event.edge);
     flooder.set_region_frozen(*event.region);
 }
 
-void pm::Mwpm::handle_tree_hitting_boundary_match(
-    pm::GraphFillRegion *unmatched_region,
-    pm::GraphFillRegion *matched_region,
-    const pm::CompressedEdge &unmatched_to_matched_edge) {
+void Mwpm::handle_tree_hitting_boundary_match(
+    GraphFillRegion *unmatched_region,
+    GraphFillRegion *matched_region,
+    const CompressedEdge &unmatched_to_matched_edge) {
     auto &alt_tree_node = unmatched_region->alt_tree_node;
     unmatched_region->add_match(matched_region, unmatched_to_matched_edge);
     flooder.set_region_frozen(*unmatched_region);
@@ -42,7 +44,7 @@ void pm::Mwpm::handle_tree_hitting_boundary_match(
     shatter_descendants_into_matches_and_freeze(*alt_tree_node);
 }
 
-void pm::Mwpm::handle_tree_hitting_other_tree(const pm::RegionHitRegionEventData &event) {
+void Mwpm::handle_tree_hitting_other_tree(const RegionHitRegionEventData &event) {
     auto alt_node_1 = event.region1->alt_tree_node;
     auto alt_node_2 = event.region2->alt_tree_node;
     // Tree rotation
@@ -58,10 +60,10 @@ void pm::Mwpm::handle_tree_hitting_other_tree(const pm::RegionHitRegionEventData
     flooder.set_region_frozen(*event.region2);
 }
 
-void pm::Mwpm::handle_tree_hitting_match(
-    pm::GraphFillRegion *unmatched_region,
-    pm::GraphFillRegion *matched_region,
-    const pm::CompressedEdge &unmatched_to_matched_edge) {
+void Mwpm::handle_tree_hitting_match(
+    GraphFillRegion *unmatched_region,
+    GraphFillRegion *matched_region,
+    const CompressedEdge &unmatched_to_matched_edge) {
     auto alt_tree_node = unmatched_region->alt_tree_node;
     alt_tree_node->make_child(
         matched_region, matched_region->match.region, matched_region->match.edge, unmatched_to_matched_edge);
@@ -72,7 +74,7 @@ void pm::Mwpm::handle_tree_hitting_match(
     flooder.set_region_growing(*other_match);
 }
 
-void pm::Mwpm::handle_tree_hitting_self(const pm::RegionHitRegionEventData &event, pm::AltTreeNode *common_ancestor) {
+void Mwpm::handle_tree_hitting_self(const RegionHitRegionEventData &event, AltTreeNode *common_ancestor) {
     auto alt_node_1 = event.region1->alt_tree_node;
     auto alt_node_2 = event.region2->alt_tree_node;
     auto prune_result_1 = alt_node_1->prune_upward_path_stopping_before(common_ancestor, true);
@@ -100,7 +102,7 @@ void pm::Mwpm::handle_tree_hitting_self(const pm::RegionHitRegionEventData &even
     }
 }
 
-void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &event) {
+void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
     // First find indices of in_parent_region and in_child_region
     // in_parent_region is the blossom cycle region connected to the parent of the blossom inner node.
     // in_child_region is the blossom cycle region connected to the child of the inner node
@@ -123,7 +125,7 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
     size_t evens_start, evens_end;
 
     current_alt_node = event.blossom_region->alt_tree_node->parent.alt_tree_node;
-    pm::unstable_erase(current_alt_node->children, [blossom_alt_node](AltTreeEdge x) {
+    unstable_erase(current_alt_node->children, [blossom_alt_node](AltTreeEdge x) {
         return x.alt_tree_node == blossom_alt_node;
     });
     auto child_edge = blossom_alt_node->parent.edge.reversed();
@@ -149,7 +151,7 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
         }
     } else {
         // The path starting after in_parent and stopping before in_child is even length. Regions will
-        // be matched along this path
+        // be matched along this path.
         evens_start = parent_idx + 1;
         evens_end = parent_idx + gap;
 
@@ -171,8 +173,15 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
         k1 = j % bsize;
         k2 = (j + 1) % bsize;
         blossom_cycle[k1].region->add_match(blossom_cycle[k2].region, blossom_cycle[k1].edge);
-        flooder.reschedule_events_for_region(*blossom_cycle[k1].region);
-        flooder.reschedule_events_for_region(*blossom_cycle[k2].region);
+
+        // The blossom regions were previously shrinking. Now they are stopped. This can create new
+        // events on the nodes, and so the nodes must be reprocessed.
+        blossom_cycle[k1].region->do_op_for_each_node_in_total_area([this](DetectorNode *n) {
+            flooder.reschedule_events_at_detector_node(*n);
+        });
+        blossom_cycle[k2].region->do_op_for_each_node_in_total_area([this](DetectorNode *n) {
+            flooder.reschedule_events_at_detector_node(*n);
+        });
     }
 
     blossom_alt_node->inner_region = blossom_cycle[child_idx].region;
@@ -183,52 +192,53 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
     delete event.blossom_region;
 }
 
-void pm::Mwpm::process_event(const pm::MwpmEvent &event) {
-    if (event.event_type == pm::REGION_HIT_REGION) {
-        auto alt_node_1 = event.region_hit_region_event_data.region1->alt_tree_node;
-        auto alt_node_2 = event.region_hit_region_event_data.region2->alt_tree_node;
-        if (alt_node_1 && alt_node_2) {
-            auto common_ancestor = alt_node_1->most_recent_common_ancestor(*alt_node_2);
-            if (!common_ancestor) {
-                handle_tree_hitting_other_tree(event.region_hit_region_event_data);
-            } else {
-                handle_tree_hitting_self(event.region_hit_region_event_data, common_ancestor);
-            }
-        } else if (alt_node_1) {
-            // Region 2 is not in the tree, so must be matched to the boundary or another region
-            if (event.region_hit_region_event_data.region2->match.region) {
-                handle_tree_hitting_match(
-                    event.region_hit_region_event_data.region1,
-                    event.region_hit_region_event_data.region2,
-                    event.region_hit_region_event_data.edge);
-            } else {
-                handle_tree_hitting_boundary_match(
-                    event.region_hit_region_event_data.region1,
-                    event.region_hit_region_event_data.region2,
-                    event.region_hit_region_event_data.edge);
-            }
+void Mwpm::handle_region_hit_region(const MwpmEvent event) {
+    const auto &d = event.region_hit_region_event_data;
+    auto alt_node_1 = d.region1->alt_tree_node;
+    auto alt_node_2 = d.region2->alt_tree_node;
+    if (alt_node_1 && alt_node_2) {
+        auto common_ancestor = alt_node_1->most_recent_common_ancestor(*alt_node_2);
+        if (!common_ancestor) {
+            handle_tree_hitting_other_tree(d);
         } else {
-            // Region 1 is not in the tree, so must be matched to the boundary or another region
-            if (event.region_hit_region_event_data.region1->match.region) {
-                handle_tree_hitting_match(
-                    event.region_hit_region_event_data.region2,
-                    event.region_hit_region_event_data.region1,
-                    event.region_hit_region_event_data.edge.reversed());
-            } else {
-                handle_tree_hitting_boundary_match(
-                    event.region_hit_region_event_data.region2,
-                    event.region_hit_region_event_data.region1,
-                    event.region_hit_region_event_data.edge.reversed());
-            }
+            handle_tree_hitting_self(d, common_ancestor);
         }
-    } else if (event.event_type == pm::REGION_HIT_BOUNDARY) {
-        handle_tree_hitting_boundary(event.region_hit_boundary_event_data);
+    } else if (alt_node_1) {
+        // Region 2 is not in the tree, so must be matched to the boundary or another region
+        if (d.region2->match.region) {
+            handle_tree_hitting_match(d.region1, d.region2, d.edge);
+        } else {
+            handle_tree_hitting_boundary_match(d.region1, d.region2, d.edge);
+        }
     } else {
-        handle_blossom_shattering(event.blossom_shatter_event_data);
+        // Region 1 is not in the tree, so must be matched to the boundary or another region
+        if (d.region1->match.region) {
+            handle_tree_hitting_match(d.region2, d.region1, d.edge.reversed());
+        } else {
+            handle_tree_hitting_boundary_match(d.region2, d.region1, d.edge.reversed());
+        }
+    }
+}
+void Mwpm::process_event(const MwpmEvent &event) {
+    switch (event.event_type) {
+        case REGION_HIT_REGION:
+            handle_region_hit_region(event);
+            break;
+        case REGION_HIT_BOUNDARY:
+            handle_tree_hitting_boundary(event.region_hit_boundary_event_data);
+            break;
+        case BLOSSOM_SHATTER:
+            handle_blossom_shattering(event.blossom_shatter_event_data);
+            break;
+        case NO_EVENT:
+            // Do nothing.
+            break;
+        default:
+            throw std::invalid_argument("Unrecognized event type");
     }
 }
 
-pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRegion *region) {
+MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region) {
     // Assumes this is matched to a region, not the boundary
     bool this_blossom_trivial = region->blossom_children.empty();
     region->cleanup_shell_area();
@@ -299,28 +309,28 @@ pm::MatchingResult pm::Mwpm::shatter_blossom_and_extract_matches(pm::GraphFillRe
     return res;
 }
 
-pm::MatchingResult &pm::MatchingResult::operator+=(const pm::MatchingResult &rhs) {
+MatchingResult &MatchingResult::operator+=(const MatchingResult &rhs) {
     obs_mask ^= rhs.obs_mask;
     weight += rhs.weight;
     return *this;
 }
 
-pm::MatchingResult pm::MatchingResult::operator+(const pm::MatchingResult &rhs) const {
-    pm::MatchingResult copy = *this;
+MatchingResult MatchingResult::operator+(const MatchingResult &rhs) const {
+    MatchingResult copy = *this;
     copy += rhs;
     return copy;
 }
 
-pm::MatchingResult::MatchingResult() : obs_mask(0), weight(0) {
+MatchingResult::MatchingResult() : obs_mask(0), weight(0) {
 }
 
-pm::MatchingResult::MatchingResult(pm::obs_int obs_mask, pm::cumulative_time_int weight) : obs_mask(obs_mask), weight(weight) {
+MatchingResult::MatchingResult(obs_int obs_mask, cumulative_time_int weight) : obs_mask(obs_mask), weight(weight) {
 }
 
-bool pm::MatchingResult::operator==(const pm::MatchingResult &rhs) const {
+bool MatchingResult::operator==(const MatchingResult &rhs) const {
     return obs_mask == rhs.obs_mask && weight == rhs.weight;
 }
 
-bool pm::MatchingResult::operator!=(const pm::MatchingResult &rhs) const {
+bool MatchingResult::operator!=(const MatchingResult &rhs) const {
     return !(rhs == *this);
 }

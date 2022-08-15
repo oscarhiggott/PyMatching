@@ -35,15 +35,13 @@ class DetectorNode {
     obs_int observables_crossed_from_source;  /// Which observables are crossed, travelling from this node to the source
                                               /// detection event that reached it.
     cumulative_time_int distance_from_source;  /// How far is it from this node to the source detection event that reached it.
-    QueuedEventTracker node_event_tracker;
+    QueuedEventTracker node_event_tracker;   /// Manages the next "look at me!" event for the node.
 
     /// == Permanent fields used to define the structure of the graph. ==
     std::vector<DetectorNode*> neighbors;       /// The node's neighbors.
     std::vector<weight_int> neighbor_weights;   /// Distance crossed by the edge to each neighbor.
     std::vector<obs_int> neighbor_observables;  /// Observables crossed by the edge to each neighbor.
 
-    /// Invalidates all tentatively scheduled events on this node and it's neighbor edges.
-    void invalidate_involved_schedule_items();
     /// After it reached this node, how much further did the owning search region grow? Also is it currently growing?
     Varying32 local_radius() const;
     /// What's the top-level region that owns this node? The blossom-with-no-blossom-parent that this node is inside.

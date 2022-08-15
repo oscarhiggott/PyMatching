@@ -54,10 +54,6 @@ MatchingGraph::MatchingGraph(MatchingGraph &&graph) noexcept
 MatchingGraph::MatchingGraph() : num_nodes(0) {
 }
 
-void DetectorNode::invalidate_involved_schedule_items() {
-    node_event_tracker.set_no_desired_event();
-}
-
 Varying32 DetectorNode::total_radius() const {
     if (!reached_from_source)
         return pm::Varying32(0);

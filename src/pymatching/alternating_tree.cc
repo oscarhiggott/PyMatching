@@ -124,14 +124,13 @@ bool pm::AltTreeNode::tree_equal(const pm::AltTreeNode &other) const {
 
 std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {
     std::vector<pm::AltTreeNode *> all_nodes;
-    std::vector<pm::AltTreeNode *> to_visit;
-    to_visit.push_back(this);
-    while (!to_visit.empty()) {
-        pm::AltTreeNode *current = to_visit.back();
-        to_visit.pop_back();
-        all_nodes.push_back(current);
-        for (auto &c : current->children)
-            to_visit.push_back(c.alt_tree_node);
+    size_t k = 0;
+    all_nodes.push_back(this);
+    while (k < all_nodes.size()) {
+        for (auto &c: all_nodes[k]->children) {
+            all_nodes.push_back(c.alt_tree_node);
+        }
+        k++;
     }
     return all_nodes;
 }

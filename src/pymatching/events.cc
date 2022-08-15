@@ -122,6 +122,12 @@ std::string pm::BlossomShatterEventData::str() const {
     return out.str();
 }
 
+std::string pm::RegionHitBoundaryEventData::str() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
 std::string pm::TentativeEvent::str() const {
     std::stringstream out;
     out << *this;
