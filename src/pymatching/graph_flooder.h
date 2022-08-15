@@ -32,7 +32,7 @@ class GraphFlooder {
     GraphFlooder(MatchingGraph graph);
     GraphFlooder(GraphFlooder&&) noexcept;
     void create_region(DetectorNode* node);
-    MwpmEvent next_event();
+    MwpmEvent run_until_next_mwpm_notification();
     void set_region_growing(pm::GraphFillRegion& region);
     void set_region_frozen(pm::GraphFillRegion& region);
     void set_region_shrinking(pm::GraphFillRegion& region);
@@ -56,7 +56,7 @@ class GraphFlooder {
     pm::MwpmEvent do_look_at_node_event(DetectorNode &node);
 
     pm::TentativeEvent dequeue_valid();
-    pm::MwpmEvent do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
+    pm::MwpmEvent process_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
 };
 
 }  // namespace pm

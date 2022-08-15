@@ -85,7 +85,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     g.add_edge(3, 4, 7, 9);
     g.add_boundary_edge(4, 5, 2);
     flooder.create_region(&flooder.graph.nodes[2]);
-    ASSERT_EQ(flooder.next_event(), (MwpmEvent{
+    ASSERT_EQ(flooder.run_until_next_mwpm_notification(), (MwpmEvent{
         RegionHitBoundaryEventData{
             flooder.graph.nodes[2].region_that_arrived,
             CompressedEdge(&flooder.graph.nodes[2], nullptr, 6),
@@ -97,11 +97,15 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     ASSERT_EQ(t1, TentativeEvent(TentativeEventData_LookAtNode{
         &flooder.graph.nodes[2]
     }, cyclic_time_int{100}));
-    flooder.queue.enqueue(TentativeEvent(t1));
-    auto e2 = flooder.next_event();
+    flooder.queue.enqueue(t1);
+    auto e2 = flooder.run_until_next_mwpm_notification();
     MwpmEvent e2_exp = RegionHitBoundaryEventData{
-        flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 10)};
+        flooder.graph.nodes[2].region_that_arrived,
+        CompressedEdge(&flooder.graph.nodes[2], nullptr, 10),
+    };
     ASSERT_EQ(e2, e2_exp);
+    flooder.queue.dequeue();
+    ASSERT_EQ(flooder.queue.dequeue(), TentativeEvent(cyclic_time_int{0}));
 }
 
 TEST(GraphFlooder, RegionHitRegion) {
@@ -115,7 +119,7 @@ TEST(GraphFlooder, RegionHitRegion) {
     g.add_boundary_edge(4, 1000, 2);
     flooder.create_region(&flooder.graph.nodes[2]);
     flooder.create_region(&flooder.graph.nodes[4]);
-    auto e1 = flooder.next_event();
+    auto e1 = flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(flooder.queue.cur_time, 32);
     MwpmEvent e1_exp = RegionHitRegionEventData{
         flooder.graph.nodes[4].region_that_arrived,
@@ -134,14 +138,16 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     g.add_edge(3, 4, 50, 9);
     g.add_boundary_edge(4, 100, 2);
     flooder.create_region(&flooder.graph.nodes[2]);
-    auto e1 = flooder.next_event();
+    auto e1 = flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(
         e1,
         MwpmEvent(RegionHitBoundaryEventData{
-            flooder.graph.nodes[2].region_that_arrived, CompressedEdge(&flooder.graph.nodes[2], nullptr, 6)}));
+            flooder.graph.nodes[2].region_that_arrived,
+            CompressedEdge(&flooder.graph.nodes[2], nullptr, 6),
+        }));
     ASSERT_EQ(flooder.queue.cur_time, 36);
     flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);
-    auto e2 = flooder.next_event();
+    auto e2 = flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(e2.event_type, NO_EVENT);
     ASSERT_EQ(flooder.queue.cur_time, 80);
     ASSERT_TRUE(flooder.queue.empty());
@@ -165,14 +171,14 @@ TEST(GraphFlooder, TwoRegionsGrowingThenMatching) {
     g.add_boundary_edge(4, 1000, 2);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[3]);
-    auto e1 = mwpm.flooder.next_event();
+    auto e1 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e1_expected = RegionHitRegionEventData{
         mwpm.flooder.graph.nodes[1].region_that_arrived,
         mwpm.flooder.graph.nodes[3].region_that_arrived,
         CompressedEdge(&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[3], 4)};
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
-    auto e2 = mwpm.flooder.next_event();
+    auto e2 = mwpm.flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(e2.event_type, NO_EVENT);
     ASSERT_TRUE(mwpm.flooder.queue.empty());
     std::vector<DetectorNode*> expected_area_1 = {&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[2]};
@@ -202,24 +208,24 @@ TEST(GraphFlooder, RegionHittingMatchThenMatchedToOtherRegion) {
     auto r5 = mwpm.flooder.graph.nodes[5].region_that_arrived;
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[6]);
     auto r6 = mwpm.flooder.graph.nodes[6].region_that_arrived;
-    auto e1 = mwpm.flooder.next_event();
+    auto e1 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e1_expected = RegionHitRegionEventData{
         r4, r1, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13)};
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
-    auto e2 = mwpm.flooder.next_event();
+    auto e2 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e2_expected = RegionHitRegionEventData{
         r4, r5, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[5], 2)};
     ASSERT_EQ(e2, e2_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 12);
     mwpm.process_event(e2);
-    auto e3 = mwpm.flooder.next_event();
+    auto e3 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e3_expected = RegionHitRegionEventData{
         r6, r5, CompressedEdge(&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3)};
     ASSERT_EQ(e3, e3_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 18);
     mwpm.process_event(e3);
-    auto e4 = mwpm.flooder.next_event();
+    auto e4 = mwpm.flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(e4.event_type, NO_EVENT);
     ASSERT_EQ(r1->radius, Varying(14 << 2));
     std::vector<DetectorNode*> area_1 = {
@@ -257,10 +263,10 @@ TEST(GraphFlooder, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     auto r42 = mwpm.flooder.graph.nodes[42].region_that_arrived;
     mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[50]);
     auto r50 = mwpm.flooder.graph.nodes[50].region_that_arrived;
-    mwpm.process_event(mwpm.flooder.next_event());
-    mwpm.process_event(mwpm.flooder.next_event());
-    mwpm.process_event(mwpm.flooder.next_event());
-    mwpm.process_event(mwpm.flooder.next_event());
+    mwpm.process_event(mwpm.flooder.run_until_next_mwpm_notification());
+    mwpm.process_event(mwpm.flooder.run_until_next_mwpm_notification());
+    mwpm.process_event(mwpm.flooder.run_until_next_mwpm_notification());
+    mwpm.process_event(mwpm.flooder.run_until_next_mwpm_notification());
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 94);
     std::vector<RegionEdge> expected_blossom_regions = {
         {r40, {&mwpm.flooder.graph.nodes[40], &mwpm.flooder.graph.nodes[42], 40 ^ 41}},

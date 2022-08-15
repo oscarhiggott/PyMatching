@@ -21,7 +21,7 @@ pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector
     }
 
     while (true) {
-        auto event = mwpm.flooder.next_event();
+        auto event = mwpm.flooder.run_until_next_mwpm_notification();
         if (event.event_type == pm::NO_EVENT)
             break;
         mwpm.process_event(event);
