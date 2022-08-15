@@ -51,7 +51,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
             }
         }
     })
-        .goal_millis(50)
+        .goal_millis(30)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -81,7 +81,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(9)
+        .goal_millis(5)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -111,7 +111,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
             }
         }
     })
-        .goal_micros(400)
+        .goal_micros(180)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -141,7 +141,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
             }
         }
     })
-        .goal_micros(150)
+        .goal_micros(80)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -171,7 +171,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
             }
         }
     })
-        .goal_millis(44)
+        .goal_millis(20)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == 0) {
@@ -201,7 +201,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
             }
         }
     })
-        .goal_millis(32)
+        .goal_millis(17)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -231,7 +231,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
             }
         }
     })
-        .goal_millis(6)
+        .goal_millis(3)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
@@ -261,7 +261,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
             }
         }
     })
-        .goal_micros(590)
+        .goal_micros(250)
         .show_rate("dets", (double)num_dets)
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
