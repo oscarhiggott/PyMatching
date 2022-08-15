@@ -98,4 +98,13 @@ void DetectorNode::reset() {
     node_event_tracker.clear();
 }
 
+size_t DetectorNode::index_of_neighbor(DetectorNode *target) const {
+    for (size_t k = 0; k < neighbors.size(); k++) {
+        if (neighbors[k] == target) {
+            return k;
+        }
+    }
+    throw std::invalid_argument("Failed to find neighbor.");
+}
+
 }  // namespace pm

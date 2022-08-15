@@ -254,31 +254,48 @@ void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
     reschedule_events_for_region(region);
 }
 
+pm::MwpmEvent pm::GraphFlooder::do_look_at_node_event(DetectorNode &node) {
+    auto rad1 = node.local_radius();
+
+    size_t start = 0;
+    if (!node.neighbors.empty() && node.neighbors[0] == nullptr) {
+        // If growing towards boundary
+        if (rad1.is_growing()) {
+            auto weight = node.neighbor_weights[0];
+            auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
+            if (collision_time == queue.cur_time) {
+                return do_region_hit_boundary_interaction(node);
+            }
+        }
+        start++;
+    }
+
+    // Handle non-boundary neighbors.
+    for (size_t i = start; i < node.neighbors.size(); i++) {
+        auto weight = node.neighbor_weights[i];
+
+        auto neighbor = node.neighbors[i];
+        if (node.has_same_owner_as(*neighbor)) {
+            continue;
+        }
+        auto rad2 = neighbor->local_radius();
+        if (!rad1.colliding_with(rad2)) {
+            continue;
+        }
+
+        auto collision_time = rad1.time_of_x_intercept_when_added_to(rad2 - weight);
+        if (collision_time == queue.cur_time) {
+            return do_neighbor_interaction(node, i, *neighbor, neighbor->index_of_neighbor(&node));
+        }
+    }
+
+    return pm::MwpmEvent::no_event();
+}
 
 pm::MwpmEvent pm::GraphFlooder::do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event) {
     switch (tentative_event.tentative_event_type) {
         case LOOK_AT_NODE: {
-            auto &node = *tentative_event.data_look_at_node.detector_node;
-
-            auto ev = find_next_event_at_node_returning_neighbor_index_and_time(node);
-            if (ev.second != queue.cur_time) {
-                // The event was invalidated by a change between enqueuing and now.
-                return pm::MwpmEvent::no_event();
-            }
-
-            auto *neighbor = node.neighbors[ev.first];
-            if (neighbor == nullptr) {
-                return do_region_hit_boundary_interaction(node);
-            } else {
-                size_t back_index = SIZE_MAX >> 2;  // Well into segfault land, please.
-                for (size_t k = 0; k < neighbor->neighbors.size(); k++) {
-                    if (neighbor->neighbors[k] == &node) {
-                        back_index = k;
-                        break;
-                    }
-                }
-                return do_neighbor_interaction(node, ev.first, *neighbor, back_index);
-            }
+            return do_look_at_node_event(*tentative_event.data_look_at_node.detector_node);
         } case LOOK_AT_SHRINKING_REGION: {
             return do_region_shrinking(tentative_event.data_look_at_shrinking_region);
         } default:

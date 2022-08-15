@@ -55,6 +55,7 @@ class DetectorNode {
     /// Doesn't free anything or propagate a signal to other objects. Just zeros the fields.
     void reset();
 
+    size_t index_of_neighbor(DetectorNode *neighbor) const;
     Varying32 total_radius() const;  /// implementation detail of local_radius.
 };
 

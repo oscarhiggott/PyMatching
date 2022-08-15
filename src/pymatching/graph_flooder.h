@@ -54,6 +54,7 @@ class GraphFlooder {
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
     bool dequeue_decision(pm::TentativeEvent ev);
     std::pair<size_t, pm::cumulative_time_int> find_next_event_at_node_returning_neighbor_index_and_time(DetectorNode &detector_node) const;
+    pm::MwpmEvent do_look_at_node_event(DetectorNode &node);
 
     pm::TentativeEvent dequeue_valid();
     pm::MwpmEvent do_valid_tentative_event_returning_mwpm_event(TentativeEvent tentative_event);
