@@ -3,7 +3,8 @@
 
 #include <vector>
 
-#include "pymatching/fill_match/tracker/bit_bucket_queue.h"
+#include "pymatching/fill_match/tracker/radix_heap_queue.h"
+#include "pymatching/fill_match/tracker/queued_event_tracker.h"
 #include "pymatching/fill_match/flooder/varying.h"
 #include "pymatching/fill_match/matcher/region_edge.h"
 

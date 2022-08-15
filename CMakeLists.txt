@@ -52,7 +52,8 @@ set(TEST_FILES
         src/pymatching/fill_match/matcher/alternating_tree.test.cc
         src/pymatching/fill_match/matcher/mwpm.test.cc
         src/pymatching/fill_match/tracker/events.test.cc
-        src/pymatching/fill_match/tracker/bit_bucket_queue.test.cc
+        src/pymatching/fill_match/tracker/radix_heap_queue.test.cc
+        src/pymatching/fill_match/tracker/queued_event_tracker.test.cc
         src/pymatching/fill_match/tracker/cyclic.test.cc
         )
 
@@ -61,7 +62,7 @@ set(PERF_FILES
         src/pymatching/perf/util.perf.cc
         src/pymatching/fill_match/driver/mwpm_decoding.perf.cc
         src/pymatching/fill_match/flooder/varying.perf.cc
-        src/pymatching/fill_match/tracker/bit_bucket_queue.perf.cc
+        src/pymatching/fill_match/tracker/radix_heap_queue.perf.cc
         )
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
@@ -73,8 +74,8 @@ target_link_libraries(pymatching libstim)
 enable_testing()
 
 add_executable(pymatching_tests ${SOURCE_FILES_NO_MAIN} ${TEST_FILES})
-target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer)
-target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined)
+target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer -coverage)
+target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined -coverage)
 target_link_libraries(pymatching_tests GTest::gtest_main libstim)
 
 add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})

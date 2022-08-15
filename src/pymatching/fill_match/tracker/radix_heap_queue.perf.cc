@@ -1,4 +1,4 @@
-#include "pymatching/fill_match/tracker/bit_bucket_queue.h"
+#include "pymatching/fill_match/tracker/radix_heap_queue.h"
 #include <random>
 #include <iostream>
 
@@ -16,7 +16,7 @@ BENCHMARK(bucket_queue_sort) {
 
     bool dependence = false;
     benchmark_go([&]() {
-        bit_bucket_queue<false> q;
+        radix_heap_queue<false> q;
         for (auto t : v) {
             q.enqueue(TentativeEvent(t));
         }
@@ -41,7 +41,7 @@ BENCHMARK(bucket_queue_stream) {
 
     bool dependence = false;
     benchmark_go([&]() {
-        bit_bucket_queue<false> q;
+        radix_heap_queue<false> q;
         for (size_t k = 0; k < 10; k++) {
             for (size_t r = 0; r < k; r++) {
                 q.enqueue(TentativeEvent(cyclic_time_int{k}));
