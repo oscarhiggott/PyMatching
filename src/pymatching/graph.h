@@ -29,13 +29,18 @@ class DetectorNode {
     }
 
     /// == Ephemeral fields used to track algorithmic state during matching. ==
-    GraphFillRegion* region_that_arrived;  /// The region that reached and owns this node.
-    DetectorNode*
-        reached_from_source;  /// Of the detection events within the owning region, which one is this node linked to.
-    obs_int observables_crossed_from_source;  /// Which observables are crossed, travelling from this node to the source
-                                              /// detection event that reached it.
-    cumulative_time_int distance_from_source;  /// How far is it from this node to the source detection event that reached it.
-    QueuedEventTracker node_event_tracker;   /// Manages the next "look at me!" event for the node.
+    /// The region that reached and owns this node.
+    GraphFillRegion* region_that_arrived;
+    /// Of the detection events within the owning region, which one is this node linked to.
+    DetectorNode* reached_from_source;
+    /// Which observables are crossed, travelling from this node to the source
+    /// detection event that reached it. Must be 0 if reached_from_source == nullptr.
+    obs_int observables_crossed_from_source;
+    /// How far is it from this node to the source detection event that reached it.
+    /// Must be 0 if reached_from_source == nullptr.
+    cumulative_time_int distance_from_source;
+    /// Manages the next "look at me!" event for the node.
+    QueuedEventTracker node_event_tracker;
 
     /// == Permanent fields used to define the structure of the graph. ==
     std::vector<DetectorNode*> neighbors;       /// The node's neighbors.
@@ -54,7 +59,13 @@ class DetectorNode {
     void reset();
 
     size_t index_of_neighbor(DetectorNode *neighbor) const;
-    Varying32 total_radius() const;  /// implementation detail of local_radius.
+
+    /// Implementation detail of local_radius.
+    ///
+    /// Tallies up the distance all the way from this detector node to the detection event that
+    /// reached it first. Adds up the incremental radius of each blossom region nested on top of
+    /// that detection event until reaching the top-level region that contains this node.
+    Varying32 total_radius() const;
 };
 
 /// A collection of detector nodes. It's expected that all detector nodes in the graph

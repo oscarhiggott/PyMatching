@@ -15,6 +15,8 @@ namespace pm {
 
 /// A monotonic priority queue for TentativeEvents.
 ///
+/// Also know as a "RADIX HEAP".
+///
 /// The priority queue assumes that times increase monotonically. The caller must not enqueue a
 /// time that is cycle-before the time of the last popped event. Time t1 is "cycle-before" time t2
 /// iff it takes more increments to get from t1 to t2 than it takes to get from t2 to t1.

@@ -129,4 +129,7 @@ TEST(cyclic, widen_from_nearby_reference) {
     ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 + 127), 130 - 2048);
     ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 - 129), 130 - 2048 - 256u);
     ASSERT_EQ(v.widen_from_nearby_reference(-2048 + 130 + 129), 130 - 2048 + 256u);
+
+    ASSERT_EQ(cyclic<uint16_t>{16}.widen_from_nearby_reference(int32_t{65535}), 65536 + 16);
+    ASSERT_EQ(cyclic<uint16_t>{16}.widen_from_nearby_reference(int32_t{-65535}), -65536 + 16);
 }

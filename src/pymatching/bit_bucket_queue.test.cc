@@ -229,3 +229,27 @@ TEST(bit_bucket_queue, QueuedEventTracker) {
     ASSERT_EQ(tracker.queued_time, cyclic_time_int{11});
     ASSERT_EQ(tracker.desired_time, cyclic_time_int{12});
 }
+
+TEST(bit_bucket_queue, wraparound_all_the_way_around) {
+    std::priority_queue<int64_t> reference_queue;
+    bit_bucket_queue<true> actual_queue;
+    for (size_t k = 0; k < 100; k++) {
+        actual_queue.enqueue(TentativeEvent{cyclic_time_int{k}});
+        reference_queue.push(-(int64_t)k);
+    }
+
+    std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
+    size_t n = 0;
+    while (!reference_queue.empty()) {
+        auto actual = (size_t)-reference_queue.top();
+        auto t = (size_t)actual_queue.dequeue().time.widen_from_nearby_reference(actual_queue.cur_time);
+        ASSERT_EQ(t, actual) << n;
+        reference_queue.pop();
+        n++;
+        if (n < (1 << 17)) {
+            t += rng() % 1000;
+            actual_queue.enqueue(TentativeEvent{cyclic_time_int{t}});
+            reference_queue.push(-(int64_t)t);
+        }
+    }
+}
