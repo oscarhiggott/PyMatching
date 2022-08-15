@@ -149,7 +149,7 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
         }
     } else {
         // The path starting after in_parent and stopping before in_child is even length. Regions will
-        // be matched along this path
+        // be matched along this path.
         evens_start = parent_idx + 1;
         evens_end = parent_idx + gap;
 
@@ -171,8 +171,15 @@ void pm::Mwpm::handle_blossom_shattering(const pm::BlossomShatterEventData &even
         k1 = j % bsize;
         k2 = (j + 1) % bsize;
         blossom_cycle[k1].region->add_match(blossom_cycle[k2].region, blossom_cycle[k1].edge);
-        flooder.reschedule_events_for_region(*blossom_cycle[k1].region);
-        flooder.reschedule_events_for_region(*blossom_cycle[k2].region);
+
+        // The blossom regions were previously shrinking. Now they are stopped. This can create new
+        // events on the nodes, and so the nodes must be reprocessed.
+        blossom_cycle[k1].region->do_op_for_each_node_in_total_area([this](DetectorNode *n) {
+            flooder.reschedule_events_at_detector_node(*n);
+        });
+        blossom_cycle[k2].region->do_op_for_each_node_in_total_area([this](DetectorNode *n) {
+            flooder.reschedule_events_at_detector_node(*n);
+        });
     }
 
     blossom_alt_node->inner_region = blossom_cycle[child_idx].region;
@@ -223,8 +230,12 @@ void pm::Mwpm::process_event(const pm::MwpmEvent &event) {
         }
     } else if (event.event_type == pm::REGION_HIT_BOUNDARY) {
         handle_tree_hitting_boundary(event.region_hit_boundary_event_data);
-    } else {
+    } else if (event.event_type == pm::BLOSSOM_SHATTER) {
         handle_blossom_shattering(event.blossom_shatter_event_data);
+    } else if (event.event_type == pm::NO_EVENT) {
+        // Do nothing.
+    } else {
+        throw std::invalid_argument("Unrecognized event type");
     }
 }
 

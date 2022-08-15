@@ -38,7 +38,6 @@ class GraphFlooder {
     void set_region_shrinking(pm::GraphFillRegion& region);
     GraphFillRegion* create_blossom(std::vector<RegionEdge>& contained_regions);
     void schedule_tentative_shrink_event(GraphFillRegion& region);
-    void reschedule_events_for_region(GraphFillRegion& region);
     void reschedule_events_at_detector_node(DetectorNode& detector_node);
     void do_region_created_at_empty_detector_node(GraphFillRegion& region, DetectorNode& detector_node);
     void do_region_arriving_at_empty_detector_node(

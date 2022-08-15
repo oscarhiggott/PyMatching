@@ -81,21 +81,6 @@ void pm::GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector
     }
 }
 
-void pm::GraphFlooder::reschedule_events_for_region(pm::GraphFillRegion &region) {
-    region.shrink_event_tracker.set_no_desired_event();
-
-    if (region.radius.is_shrinking()) {
-        schedule_tentative_shrink_event(region);
-        region.do_op_for_each_node_in_total_area([](DetectorNode *n) {
-            n->invalidate_involved_schedule_items();
-        });
-    } else {
-        region.do_op_for_each_node_in_total_area([this](DetectorNode *n) {
-            reschedule_events_at_detector_node(*n);
-        });
-    }
-}
-
 void pm::GraphFlooder::schedule_tentative_shrink_event(pm::GraphFillRegion &region) {
     pm::cumulative_time_int t;
     if (region.shell_area.empty()) {
@@ -211,7 +196,11 @@ pm::GraphFillRegion *pm::GraphFlooder::create_blossom(std::vector<RegionEdge> &c
         region_edge.region->blossom_parent = blossom_region;
         region_edge.region->shrink_event_tracker.set_no_desired_event();
     }
-    reschedule_events_for_region(*blossom_region);
+
+    blossom_region->do_op_for_each_node_in_total_area([this](DetectorNode *n) {
+        reschedule_events_at_detector_node(*n);
+    });
+
     return blossom_region;
 }
 
@@ -241,21 +230,44 @@ pm::TentativeEvent pm::GraphFlooder::dequeue_valid() {
 
 void pm::GraphFlooder::set_region_growing(pm::GraphFillRegion &region) {
     region.radius = region.radius.then_growing_at_time(queue.cur_time);
-    reschedule_events_for_region(region);
+
+    // No shrinking event can occur while growing.
+    region.shrink_event_tracker.set_no_desired_event();
+
+    // Node events can occur while growing, and events in the queue may occur sooner than
+    // previously scheduled. Therefore, we must reschedule all the nodes.
+    region.do_op_for_each_node_in_total_area([this](DetectorNode *n) {
+        reschedule_events_at_detector_node(*n);
+    });
 }
 
 void pm::GraphFlooder::set_region_frozen(pm::GraphFillRegion &region) {
     bool was_shrinking = region.radius.is_shrinking();
     region.radius = region.radius.then_frozen_at_time(queue.cur_time);
+
+    // No shrinking event can occur while frozen.
+    region.shrink_event_tracker.set_no_desired_event();
+
+    // Node events can occur while frozen, from other regions growing into this one.
+    // However, those events can only be sooner than the currently scheduled events
+    // if the region was previously shrinking (as opposed to growing).
     if (was_shrinking) {
-        // No need to reschedule events because interactions can only have been deferred.
-        reschedule_events_for_region(region);
+        region.do_op_for_each_node_in_total_area([&](DetectorNode *n) {
+            reschedule_events_at_detector_node(*n);
+        });
     }
 }
 
 void pm::GraphFlooder::set_region_shrinking(pm::GraphFillRegion &region) {
     region.radius = region.radius.then_shrinking_at_time(queue.cur_time);
-    // No need to reschedule events because interactions can only have been deferred.
+
+    // Shrinking events can now occur.
+    schedule_tentative_shrink_event(region);
+
+    // No node events can occur while shrinking.
+    region.do_op_for_each_node_in_total_area([&](DetectorNode *n) {
+        n->node_event_tracker.set_no_desired_event();
+    });
 }
 
 pm::MwpmEvent pm::GraphFlooder::do_look_at_node_event(DetectorNode &node) {
