@@ -1,9 +1,10 @@
 #include "pymatching/fill_match/matcher/alternating_tree.h"
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 #include <algorithm>
 #include <iterator>
 #include <utility>
+
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 pm::AltTreeEdge::AltTreeEdge() : alt_tree_node(nullptr), edge(nullptr, nullptr, 0) {
 }
@@ -127,7 +128,7 @@ std::vector<pm::AltTreeNode *> pm::AltTreeNode::all_nodes_in_tree() {
     size_t k = 0;
     all_nodes.push_back(this);
     while (k < all_nodes.size()) {
-        for (auto &c: all_nodes[k]->children) {
+        for (auto &c : all_nodes[k]->children) {
             all_nodes.push_back(c.alt_tree_node);
         }
         k++;

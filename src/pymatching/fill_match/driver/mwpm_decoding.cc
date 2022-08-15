@@ -3,8 +3,7 @@
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
     return pm::Mwpm(
-        pm::GraphFlooder(
-            pm::detector_error_model_to_matching_graph(detector_error_model, num_distinct_weights)));
+        pm::GraphFlooder(pm::detector_error_model_to_matching_graph(detector_error_model, num_distinct_weights)));
 }
 
 pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {

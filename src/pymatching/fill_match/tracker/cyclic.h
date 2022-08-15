@@ -20,7 +20,8 @@ struct cyclic {
     T value;
     static constexpr T HALF = (T)(((T)-1 >> 1) + (T)1);
 
-    cyclic() : value(0) {}
+    cyclic() : value(0) {
+    }
 
     template <typename O, class = typename std::enable_if<std::is_integral<O>::value>::type>
     explicit cyclic(O value) : value((T)value) {

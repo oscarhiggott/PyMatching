@@ -7,9 +7,9 @@
 #include <queue>
 #include <vector>
 
+#include "pymatching/fill_match/ints.h"
 #include "pymatching/fill_match/tracker/cyclic.h"
 #include "pymatching/fill_match/tracker/flood_check_event.h"
-#include "pymatching/fill_match/ints.h"
 
 namespace pm {
 
@@ -52,7 +52,7 @@ namespace pm {
 /// - Get dequeued out of bucket 0 and yielded as a result.
 template <bool use_validation>
 struct radix_heap_queue {
-    std::array<std::vector<FloodCheckEvent>, sizeof(pm::cyclic_time_int)*8 + 2> bit_buckets;
+    std::array<std::vector<FloodCheckEvent>, sizeof(pm::cyclic_time_int) * 8 + 2> bit_buckets;
     pm::cumulative_time_int cur_time;
     size_t _num_enqueued;
 
@@ -159,11 +159,9 @@ struct radix_heap_queue {
         for (size_t b = 0; b < bit_buckets.size() - 1; b++) {
             result.insert(result.begin(), bit_buckets[b].begin(), bit_buckets[b].end());
         }
-        std::sort(result.begin(),
-                  result.end(),
-                  [](const FloodCheckEvent &e1, const FloodCheckEvent &e2) {
-                      return e1.time < e2.time;
-                  });
+        std::sort(result.begin(), result.end(), [](const FloodCheckEvent &e1, const FloodCheckEvent &e2) {
+            return e1.time < e2.time;
+        });
         return result;
     }
 
@@ -178,12 +176,10 @@ std::ostream &operator<<(std::ostream &out, radix_heap_queue<use_validation> q) 
         auto copy = q.bit_buckets[b];
         if (!copy.empty()) {
             out << "    bucket[" << b << "] {\n";
-            std::sort(copy.begin(),
-                      copy.end(),
-                      [](const FloodCheckEvent &e1, const FloodCheckEvent &e2) {
-                          return e1.time < e2.time;
-                      });
-            for (auto &e: copy) {
+            std::sort(copy.begin(), copy.end(), [](const FloodCheckEvent &e1, const FloodCheckEvent &e2) {
+                return e1.time < e2.time;
+            });
+            for (auto &e : copy) {
                 out << "        " << e << ",\n";
             }
             out << "    }\n";

@@ -3,17 +3,17 @@
 using namespace pm;
 
 FloodCheckEvent::FloodCheckEvent(TentativeEventData_LookAtNode data_look_at_node, cyclic_time_int time)
-    : data_look_at_node(data_look_at_node),
-      time(time),
-      tentative_event_type(LOOK_AT_NODE) {
+    : data_look_at_node(data_look_at_node), time(time), tentative_event_type(LOOK_AT_NODE) {
 }
 
-FloodCheckEvent::FloodCheckEvent(TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region, cyclic_time_int time)
-    : data_look_at_shrinking_region(data_look_at_shrinking_region), time(time), tentative_event_type(LOOK_AT_SHRINKING_REGION) {
+FloodCheckEvent::FloodCheckEvent(
+    TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region, cyclic_time_int time)
+    : data_look_at_shrinking_region(data_look_at_shrinking_region),
+      time(time),
+      tentative_event_type(LOOK_AT_SHRINKING_REGION) {
 }
 FloodCheckEvent::FloodCheckEvent(cyclic_time_int time) : time(time), tentative_event_type(NO_TENTATIVE_EVENT) {
 }
-
 
 bool TentativeEventData_LookAtNode::operator==(const TentativeEventData_LookAtNode &rhs) const {
     return detector_node == rhs.detector_node;

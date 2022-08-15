@@ -1,13 +1,14 @@
 #include "pymatching/fill_match/tracker/radix_heap_queue.h"
-#include <random>
+
 #include <iostream>
+#include <random>
 
 #include "pymatching/perf/util.perf.h"
 
 using namespace pm;
 
 BENCHMARK(bucket_queue_sort) {
-    std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
+    std::mt19937 rng(0);  // NOLINT(cert-msc51-cpp)
 
     std::vector<cyclic_time_int> v;
     for (size_t k = 0; k < 1000; k++) {
@@ -30,7 +31,9 @@ BENCHMARK(bucket_queue_sort) {
                 dependence = true;
             }
         }
-    }).goal_micros(14).show_rate("EnqueueDequeues", (double)v.size());
+    })
+        .goal_micros(14)
+        .show_rate("EnqueueDequeues", (double)v.size());
     if (dependence) {
         std::cerr << "data dependence";
     }
@@ -50,7 +53,9 @@ BENCHMARK(bucket_queue_stream) {
         for (size_t k = 0; k < n; k++) {
             q.enqueue(FloodCheckEvent(q.dequeue().time));
         }
-    }).goal_micros(150).show_rate("EnqueueDequeues", (double)n);
+    })
+        .goal_micros(150)
+        .show_rate("EnqueueDequeues", (double)n);
     if (dependence) {
         std::cerr << "data dependence";
     }

@@ -27,7 +27,7 @@ TEST(radix_heap_queue, basic_usage) {
 
 TEST(radix_heap_queue, sorts_fuzz) {
     radix_heap_queue<true> q;
-    std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
+    std::mt19937 rng(0);  // NOLINT(cert-msc51-cpp)
 
     std::vector<cyclic_time_int> s;
     for (size_t k = 0; k < 1000; k++) {
@@ -79,7 +79,7 @@ TEST(radix_heap_queue, wraparound_all_the_way_around) {
         reference_queue.push(-(int64_t)k);
     }
 
-    std::mt19937 rng(0); // NOLINT(cert-msc51-cpp)
+    std::mt19937 rng(0);  // NOLINT(cert-msc51-cpp)
     size_t n = 0;
     while (!reference_queue.empty()) {
         auto actual = (size_t)-reference_queue.top();

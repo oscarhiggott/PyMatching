@@ -2,8 +2,8 @@
 
 #include <gtest/gtest.h>
 
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/flooder/graph.h"
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 struct AltTreeTestData {
     std::vector<pm::GraphFillRegion> gfrs;

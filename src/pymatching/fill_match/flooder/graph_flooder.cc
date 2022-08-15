@@ -1,8 +1,9 @@
 #include "pymatching/fill_match/flooder/graph_flooder.h"
+
 #include "pymatching/fill_match/flooder/graph.h"
-#include "pymatching/fill_match/matcher/alternating_tree.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/flooder/varying.h"
+#include "pymatching/fill_match/matcher/alternating_tree.h"
 
 using namespace pm;
 
@@ -28,17 +29,18 @@ void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &reg
     reschedule_events_at_detector_node(detector_node);
 }
 
-std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(DetectorNode &detector_node) const {
+std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(
+    DetectorNode &detector_node) const {
     cumulative_time_int best_time = std::numeric_limits<cumulative_time_int>::max();
     size_t best_neighbor = SIZE_MAX;
 
-//    auto rad1 = detector_node.total_radius();
-//    if (rad1.is_shrinking()) {
-//        // No node collision events can occur while shrinking.
-//        return {best_neighbor, best_time};
-//    }
-//
-//    rad1 -= detector_node.distance_from_source;
+    //    auto rad1 = detector_node.total_radius();
+    //    if (rad1.is_shrinking()) {
+    //        // No node collision events can occur while shrinking.
+    //        return {best_neighbor, best_time};
+    //    }
+    //
+    //    rad1 -= detector_node.distance_from_source;
     auto rad1 = detector_node.local_radius();
 
     size_t start = 0;
@@ -83,10 +85,12 @@ void GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector_nod
     if (x.first == SIZE_MAX) {
         detector_node.node_event_tracker.set_no_desired_event();
     } else {
-        detector_node.node_event_tracker.set_desired_event({
-            TentativeEventData_LookAtNode{&detector_node},
-            cyclic_time_int{x.second},
-        }, queue);
+        detector_node.node_event_tracker.set_desired_event(
+            {
+                TentativeEventData_LookAtNode{&detector_node},
+                cyclic_time_int{x.second},
+            },
+            queue);
     }
 }
 
@@ -97,10 +101,12 @@ void GraphFlooder::schedule_tentative_shrink_event(GraphFillRegion &region) {
     } else {
         t = region.shell_area.back()->local_radius().time_of_x_intercept_for_shrinking();
     }
-    region.shrink_event_tracker.set_desired_event({
-        TentativeEventData_LookAtShrinkingRegion{&region},
-        cyclic_time_int{t},
-    }, queue);
+    region.shrink_event_tracker.set_desired_event(
+        {
+            TentativeEventData_LookAtShrinkingRegion{&region},
+            cyclic_time_int{t},
+        },
+        queue);
 }
 
 void GraphFlooder::do_region_arriving_at_empty_detector_node(
@@ -133,24 +139,13 @@ MwpmEvent GraphFlooder::do_region_shrinking(const TentativeEventData_LookAtShrin
 }
 
 MwpmEvent GraphFlooder::do_neighbor_interaction(
-    DetectorNode &src,
-    size_t src_to_dst_index,
-    DetectorNode &dst,
-    size_t dst_to_src_index) {
+    DetectorNode &src, size_t src_to_dst_index, DetectorNode &dst, size_t dst_to_src_index) {
     // First check if one region is moving into an empty location
     if (src.region_that_arrived && !dst.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(
-            *src.top_region(),
-            dst,
-            src,
-            src_to_dst_index);
+        do_region_arriving_at_empty_detector_node(*src.top_region(), dst, src, src_to_dst_index);
         return MwpmEvent::no_event();
     } else if (dst.region_that_arrived && !src.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(
-            *dst.top_region(),
-            src,
-            dst,
-            dst_to_src_index);
+        do_region_arriving_at_empty_detector_node(*dst.top_region(), src, dst, dst_to_src_index);
         return MwpmEvent::no_event();
     } else {
         // Two regions colliding
@@ -160,8 +155,7 @@ MwpmEvent GraphFlooder::do_neighbor_interaction(
             CompressedEdge(
                 src.reached_from_source,
                 dst.reached_from_source,
-                src.observables_crossed_from_source ^
-                    dst.observables_crossed_from_source ^
+                src.observables_crossed_from_source ^ dst.observables_crossed_from_source ^
                     src.neighbor_observables[src_to_dst_index]),
         };
     }
@@ -171,9 +165,7 @@ MwpmEvent GraphFlooder::do_region_hit_boundary_interaction(DetectorNode &node) {
     return RegionHitBoundaryEventData{
         node.top_region(),
         CompressedEdge(
-            node.reached_from_source,
-            nullptr,
-            node.observables_crossed_from_source ^ node.neighbor_observables[0])};
+            node.reached_from_source, nullptr, node.observables_crossed_from_source ^ node.neighbor_observables[0])};
 }
 
 MwpmEvent GraphFlooder::do_degenerate_implosion(const GraphFillRegion &region) {
@@ -218,10 +210,12 @@ bool GraphFlooder::dequeue_decision(FloodCheckEvent ev) {
         case TentativeType::LOOK_AT_NODE: {
             auto &d = ev.data_look_at_node;
             return d.detector_node->node_event_tracker.dequeue_decision(ev, queue);
-        } case TentativeType::LOOK_AT_SHRINKING_REGION: {
+        }
+        case TentativeType::LOOK_AT_SHRINKING_REGION: {
             auto &dat = ev.data_look_at_shrinking_region;
             return dat.region->shrink_event_tracker.dequeue_decision(ev, queue);
-        } case TentativeType::NO_TENTATIVE_EVENT:
+        }
+        case TentativeType::NO_TENTATIVE_EVENT:
             return true;
         default:
             throw std::invalid_argument("Unrecognized event type.");
@@ -283,10 +277,12 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
     auto next = find_next_event_at_node_returning_neighbor_index_and_time(node);
     if (next.second == queue.cur_time) {
         // Need to revisit this node immediately after the mwpm event is handled.
-        node.node_event_tracker.set_desired_event({
-            TentativeEventData_LookAtNode{&node},
-            cyclic_time_int{queue.cur_time},
-        }, queue);
+        node.node_event_tracker.set_desired_event(
+            {
+                TentativeEventData_LookAtNode{&node},
+                cyclic_time_int{queue.cur_time},
+            },
+            queue);
 
         if (node.neighbors[next.first] == nullptr) {
             return do_region_hit_boundary_interaction(node);
@@ -295,10 +291,12 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
         return do_neighbor_interaction(node, next.first, neighbor, neighbor.index_of_neighbor(&node));
     } else if (next.first != SIZE_MAX) {
         // Need to revisit this node at a later time.
-        node.node_event_tracker.set_desired_event({
-            TentativeEventData_LookAtNode{&node},
-            cyclic_time_int{next.second},
-        }, queue);
+        node.node_event_tracker.set_desired_event(
+            {
+                TentativeEventData_LookAtNode{&node},
+                cyclic_time_int{next.second},
+            },
+            queue);
     }
 
     return MwpmEvent::no_event();
@@ -308,9 +306,11 @@ MwpmEvent GraphFlooder::process_tentative_event_returning_mwpm_event(FloodCheckE
     switch (tentative_event.tentative_event_type) {
         case LOOK_AT_NODE: {
             return do_look_at_node_event(*tentative_event.data_look_at_node.detector_node);
-        } case LOOK_AT_SHRINKING_REGION: {
+        }
+        case LOOK_AT_SHRINKING_REGION: {
             return do_region_shrinking(tentative_event.data_look_at_shrinking_region);
-        } default:
+        }
+        default:
             throw std::invalid_argument("Unknown tentative event type.");
     }
 }

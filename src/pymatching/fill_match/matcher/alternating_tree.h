@@ -1,10 +1,10 @@
 #ifndef PYMATCHING2_ALTERNATING_TREE_H
 #define PYMATCHING2_ALTERNATING_TREE_H
 
+#include <vector>
+
 #include "pymatching/fill_match/flooder/compressed_edge.h"
 #include "pymatching/fill_match/matcher/region_edge.h"
-
-#include <vector>
 
 namespace pm {
 

@@ -1,6 +1,7 @@
-#include "pymatching/fill_match/matcher/alternating_tree.h"
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/matcher/mwpm.h"
+
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
+#include "pymatching/fill_match/matcher/alternating_tree.h"
 
 using namespace pm;
 

@@ -51,7 +51,7 @@ inline CompressedEdge CompressedEdge::merged_with(const CompressedEdge& other) c
     return {loc_from, other.loc_to, obs_mask ^ other.obs_mask};
 }
 
-std::ostream &operator<<(std::ostream &out, const pm::CompressedEdge &edge);
+std::ostream& operator<<(std::ostream& out, const pm::CompressedEdge& edge);
 
 }  // namespace pm
 

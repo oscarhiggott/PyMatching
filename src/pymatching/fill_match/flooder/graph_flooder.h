@@ -3,9 +3,9 @@
 
 #include <queue>
 
-#include "pymatching/fill_match/tracker/mwpm_event.h"
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/matcher/region_edge.h"
+#include "pymatching/fill_match/tracker/mwpm_event.h"
 #include "pymatching/fill_match/tracker/radix_heap_queue.h"
 
 namespace pm {
@@ -44,16 +44,14 @@ class GraphFlooder {
         GraphFillRegion& region, DetectorNode& empty_node, DetectorNode& from_node, size_t neighbor_index);
     MwpmEvent do_region_shrinking(const TentativeEventData_LookAtShrinkingRegion& event);
     pm::MwpmEvent do_neighbor_interaction(
-        DetectorNode &src,
-        size_t src_to_dst_index,
-        DetectorNode &dst,
-        size_t dst_to_src_index);
-    pm::MwpmEvent do_region_hit_boundary_interaction(DetectorNode &node);
+        DetectorNode& src, size_t src_to_dst_index, DetectorNode& dst, size_t dst_to_src_index);
+    pm::MwpmEvent do_region_hit_boundary_interaction(DetectorNode& node);
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
     bool dequeue_decision(pm::FloodCheckEvent ev);
-    std::pair<size_t, pm::cumulative_time_int> find_next_event_at_node_returning_neighbor_index_and_time(DetectorNode &detector_node) const;
-    pm::MwpmEvent do_look_at_node_event(DetectorNode &node);
+    std::pair<size_t, pm::cumulative_time_int> find_next_event_at_node_returning_neighbor_index_and_time(
+        DetectorNode& detector_node) const;
+    pm::MwpmEvent do_look_at_node_event(DetectorNode& node);
 
     pm::FloodCheckEvent dequeue_valid();
     pm::MwpmEvent process_tentative_event_returning_mwpm_event(FloodCheckEvent tentative_event);
