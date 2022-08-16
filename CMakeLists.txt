@@ -81,7 +81,7 @@ enable_testing()
 add_executable(pymatching_tests ${SOURCE_FILES_NO_MAIN} ${TEST_FILES})
 target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer -coverage)
 target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined -coverage)
-target_link_libraries(pymatching_tests GTest::gtest_main libstim)
+target_link_libraries(pymatching_tests GTest::gtest_main GTest::gmock_main libstim)
 
 add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})
 target_compile_options(pymatching_perf PRIVATE -O3 -march=native)
