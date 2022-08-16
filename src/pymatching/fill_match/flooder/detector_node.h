@@ -58,12 +58,8 @@ class DetectorNode {
 
     size_t index_of_neighbor(DetectorNode* neighbor) const;
 
-    /// Implementation detail of local_radius.
-    ///
-    /// Tallies up the distance all the way from this detector node to the detection event that
-    /// reached it first. Adds up the incremental radius of each blossom region nested on top of
-    /// that detection event until reaching the top-level region that contains this node.
-    Varying32 total_radius() const;
+    int32_t compute_wrapped_radius() const;
+    int32_t compute_radius_of_arrival() const;
 };
 
 }  // namespace pm

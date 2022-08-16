@@ -4,20 +4,37 @@
 
 namespace pm {
 
-Varying32 DetectorNode::total_radius() const {
-    Varying32 result{0};
-    if (reached_from_source != nullptr) {
-        auto r = reached_from_source->region_that_arrived;
-        while (r != nullptr) {
-            result.inplace_freeze_then_add(r->radius);
-            r = r->blossom_parent;
-        }
+int32_t DetectorNode::compute_radius_of_arrival() const {
+    if (reached_from_source == nullptr) {
+        return 0;
     }
-    return result;
+    int32_t total = 0;
+    GraphFillRegion *r = reached_from_source->region_that_arrived;
+    while (r != region_that_arrived) {
+        total += r->radius.y_intercept();
+        r = r->blossom_parent;
+    }
+    return distance_from_source - total;
+}
+
+int32_t DetectorNode::compute_wrapped_radius() const {
+    if (reached_from_source == nullptr) {
+        return 0;
+    }
+    int32_t total = 0;
+    auto r = region_that_arrived;
+    while (r != region_that_arrived_top) {
+        total += r->radius.y_intercept();
+        r = r->blossom_parent;
+    }
+    return total - compute_radius_of_arrival();
 }
 
 Varying32 DetectorNode::local_radius() const {
-    return total_radius() - distance_from_source;
+    if (region_that_arrived_top == nullptr) {
+        return Varying32{0};
+    }
+    return region_that_arrived_top->radius + compute_wrapped_radius();
 }
 
 bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
@@ -30,6 +47,7 @@ void DetectorNode::reset() {
     distance_from_source = 0;
     region_that_arrived = nullptr;
     region_that_arrived_top = nullptr;
+    accumulated_radius_cached = 0;
     node_event_tracker.clear();
 }
 
