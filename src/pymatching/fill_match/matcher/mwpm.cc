@@ -277,7 +277,7 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
     MatchingResult res{0, 0};
     if (!this_blossom_trivial) {
         for (auto &r : region->blossom_children) {
-            r.region->set_blossom_parent(nullptr);
+            r.region->clear_blossom_parent();
         }
         auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
         subblossom->match = region->match;
@@ -301,7 +301,7 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
     }
     if (match_blossom_has_children) {
         for (auto &r : match_region->blossom_children) {
-            r.region->set_blossom_parent(nullptr);
+            r.region->clear_blossom_parent();
         }
         auto subblossom = match_region->match.edge.loc_from->region_that_arrived_top;
         subblossom->match = match_region->match;

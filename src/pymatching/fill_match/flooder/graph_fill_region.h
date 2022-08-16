@@ -55,7 +55,8 @@ struct GraphFillRegion {
     void do_op_for_each_node_in_total_area(const Callable& func);
     template <typename Callable>
     void do_op_for_each_descendant_and_self(const Callable& func);
-    void set_blossom_parent(GraphFillRegion *new_blossom_parent);
+    void clear_blossom_parent();
+    void wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_top);
 
     bool operator==(const GraphFillRegion& rhs) const;
 

@@ -169,7 +169,7 @@ MwpmEvent GraphFlooder::do_degenerate_implosion(const GraphFillRegion &region) {
 
 MwpmEvent GraphFlooder::do_blossom_shattering(GraphFillRegion &region) {
     for (auto &child : region.blossom_children) {
-        child.region->set_blossom_parent(nullptr);
+        child.region->clear_blossom_parent();
     }
 
     return BlossomShatterEventData{
@@ -184,7 +184,7 @@ GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained
     blossom_region->blossom_children = std::move(contained_regions);
     for (auto &region_edge : blossom_region->blossom_children) {
         region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(queue.cur_time);
-        region_edge.region->set_blossom_parent(blossom_region);
+        region_edge.region->wrap_into_blossom(blossom_region);
         region_edge.region->shrink_event_tracker.set_no_desired_event();
     }
 

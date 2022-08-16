@@ -16,7 +16,7 @@ struct GraphFillTestData {
         auto r = arena.alloc_default_constructed();
         r->blossom_children = std::move(edges);
         for (auto c : r->blossom_children) {
-            c.region->set_blossom_parent(r);
+            c.region->wrap_into_blossom(r);
         }
         auto ce = root ? CompressedEdge{nullptr, nullptr, 0} : CompressedEdge{&detectors[loc_from], &detectors[loc_to], 0};
         auto region_edge = RegionEdge{r, ce};
