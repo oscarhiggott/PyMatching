@@ -255,7 +255,6 @@ void Mwpm::process_event(const MwpmEvent &event) {
 }
 
 MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region) {
-    // Assumes this is matched to a region, not the boundary
     bool this_blossom_trivial = region->blossom_children.empty();
     region->cleanup_shell_area();
     auto match_region = region->match.region;
