@@ -64,7 +64,7 @@ pm::AltTreeNode::AltTreeNode(
 }
 
 pm::AltTreeNode::AltTreeNode(pm::GraphFillRegion *outer_region)
-    : inner_region(nullptr), outer_region(outer_region), inner_to_outer_edge(nullptr, nullptr, 0), visited(false) {
+    : inner_region(nullptr), outer_region(outer_region), inner_to_outer_edge{nullptr, nullptr, 0}, visited(false) {
 }
 
 const pm::AltTreeNode *pm::AltTreeNode::find_root() const {
@@ -76,10 +76,12 @@ const pm::AltTreeNode *pm::AltTreeNode::find_root() const {
 }
 
 pm::AltTreeNode::~AltTreeNode() {
-    if (outer_region)
+    if (outer_region != nullptr) {
         outer_region->alt_tree_node = nullptr;
-    if (inner_region)
+    }
+    if (inner_region != nullptr) {
         inner_region->alt_tree_node = nullptr;
+    }
 }
 
 void pm::AltTreeNode::become_root() {
@@ -193,13 +195,14 @@ pm::AltTreePruneResult pm::AltTreeNode::prune_upward_path_stopping_before(pm::Al
     while (current_node != prune_parent) {
         pm::move_append(current_node->children, orphan_edges);
         if (back) {
-            pruned_path_region_edges.emplace_back(current_node->inner_region, current_node->inner_to_outer_edge);
-            pruned_path_region_edges.emplace_back(
-                current_node->parent.alt_tree_node->outer_region, current_node->parent.edge.reversed());
+            pruned_path_region_edges.push_back({current_node->inner_region, current_node->inner_to_outer_edge});
+            pruned_path_region_edges.push_back({
+                current_node->parent.alt_tree_node->outer_region, current_node->parent.edge.reversed()});
         } else {
-            pruned_path_region_edges.emplace_back(
-                current_node->outer_region, current_node->inner_to_outer_edge.reversed());
-            pruned_path_region_edges.emplace_back(current_node->inner_region, current_node->parent.edge);
+            pruned_path_region_edges.push_back({
+                current_node->outer_region, current_node->inner_to_outer_edge.reversed()});
+            pruned_path_region_edges.push_back({
+                current_node->inner_region, current_node->parent.edge});
         }
         pm::unstable_erase(
             current_node->parent.alt_tree_node->children, [&current_node](const AltTreeEdge &child_edge) {

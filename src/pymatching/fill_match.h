@@ -1,8 +1,3 @@
-#include "pymatching/fill_match/tracker.h"
-#include "pymatching/fill_match/flooder.h"
-#include "pymatching/fill_match/flooder_matcher_interop.h"
-#include "pymatching/fill_match/matcher.h"
-#include "pymatching/fill_match/driver.h"
 #include "pymatching/fill_match/flooder_matcher_interop/compressed_edge.h"
 #include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 #include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"

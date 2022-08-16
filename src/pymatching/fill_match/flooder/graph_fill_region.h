@@ -12,8 +12,7 @@ namespace pm {
 
 class AltTreeNode;
 
-class GraphFillRegion {
-   public:
+struct GraphFillRegion {
     /// If this region has merged with others into a blossom, this is that blossom.
     GraphFillRegion* blossom_parent;
     /// If this is a top-level region (not a blossom child), this is the alternating tree that

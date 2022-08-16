@@ -2,6 +2,7 @@
 
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/matcher/alternating_tree.h"
+#include <set>
 
 using namespace pm;
 
