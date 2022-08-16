@@ -27,13 +27,6 @@ std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_ret
     cumulative_time_int best_time = std::numeric_limits<cumulative_time_int>::max();
     size_t best_neighbor = SIZE_MAX;
 
-    //    auto rad1 = detector_node.total_radius();
-    //    if (rad1.is_shrinking()) {
-    //        // No node collision events can occur while shrinking.
-    //        return {best_neighbor, best_time};
-    //    }
-    //
-    //    rad1 -= detector_node.distance_from_source;
     auto rad1 = detector_node.local_radius();
 
     size_t start = 0;
