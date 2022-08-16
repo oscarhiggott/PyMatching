@@ -54,7 +54,7 @@ struct GraphFillRegion {
     template <typename Callable>
     void do_op_for_each_node_in_total_area(const Callable& func);
     template <typename Callable>
-    void do_op_for_each_descendant(const Callable& func);
+    void do_op_for_each_descendant_and_self(const Callable& func);
     void set_blossom_parent(GraphFillRegion *new_blossom_parent);
 
     bool operator==(const GraphFillRegion& rhs) const;
@@ -73,10 +73,10 @@ inline void pm::GraphFillRegion::do_op_for_each_node_in_total_area(const Callabl
 }
 
 template <typename Callable>
-inline void pm::GraphFillRegion::do_op_for_each_descendant(const Callable& func) {
+inline void pm::GraphFillRegion::do_op_for_each_descendant_and_self(const Callable& func) {
+    func(this);
     for (RegionEdge &child : blossom_children) {
-        func(child.region);
-        child.region->do_op_for_each_descendant(func);
+        child.region->do_op_for_each_descendant_and_self(func);
     }
 }
 

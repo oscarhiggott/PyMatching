@@ -56,15 +56,11 @@ void GraphFillRegion::cleanup_shell_area() {
 
 void GraphFillRegion::set_blossom_parent(GraphFillRegion *new_blossom_parent) {
     blossom_parent = new_blossom_parent;
-    if (new_blossom_parent == nullptr) {
-        blossom_parent_top = this;
-    } else {
-        blossom_parent_top = new_blossom_parent;
-    }
-    do_op_for_each_node_in_total_area([&](DetectorNode *n) {
-        n->region_that_arrived_top = blossom_parent_top;
-    });
-    do_op_for_each_descendant([&](GraphFillRegion *descendant) {
-        descendant->blossom_parent_top = blossom_parent_top;
+    GraphFillRegion *new_top = new_blossom_parent == nullptr ? this : new_blossom_parent;
+    do_op_for_each_descendant_and_self([&](GraphFillRegion *descendant) {
+        descendant->blossom_parent_top = new_top;
+        for (DetectorNode *n: descendant->shell_area) {
+            n->region_that_arrived_top = new_top;
+        }
     });
 }
