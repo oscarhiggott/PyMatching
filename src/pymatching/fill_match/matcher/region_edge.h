@@ -16,7 +16,6 @@ struct RegionEdge {
     RegionEdge(GraphFillRegion* region, CompressedEdge edge);
 
     bool operator==(const RegionEdge& rhs) const;
-
     bool operator!=(const RegionEdge& rhs) const;
 };
 

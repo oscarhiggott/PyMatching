@@ -1,8 +1,7 @@
 #ifndef PYMATCHING2_FLOOD_CHECK_EVENT_H
 #define PYMATCHING2_FLOOD_CHECK_EVENT_H
 
-#include "pymatching/fill_match/flooder/compressed_edge.h"
-#include "pymatching/fill_match/flooder/varying.h"
+#include "pymatching/fill_match/ints.h"
 
 namespace pm {
 

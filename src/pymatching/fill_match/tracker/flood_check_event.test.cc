@@ -1,9 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "pymatching/fill_match/flooder/graph.h"
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
-#include "pymatching/fill_match/flooder/mwpm_event.h"
-#include "pymatching/fixed_length_vector.h"
+#include "pymatching/fill_match/flooder.h"
 
 using namespace pm;
 
