@@ -18,6 +18,7 @@ void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &reg
     detector_node.reached_from_source = &detector_node;
     detector_node.distance_from_source = 0;
     detector_node.region_that_arrived = &region;
+    detector_node.region_that_arrived_top = &region;
     region.shell_area.push_back(&detector_node);
     reschedule_events_at_detector_node(detector_node);
 }
@@ -102,6 +103,7 @@ void GraphFlooder::do_region_arriving_at_empty_detector_node(
     empty_node.reached_from_source = from_node.reached_from_source;
     empty_node.distance_from_source = from_node.distance_from_source + from_node.neighbor_weights[neighbor_index];
     empty_node.region_that_arrived = &region;
+    empty_node.region_that_arrived_top = region.blossom_parent_top;
     region.shell_area.push_back(&empty_node);
     reschedule_events_at_detector_node(empty_node);
 }
@@ -115,6 +117,7 @@ MwpmEvent GraphFlooder::do_region_shrinking(GraphFillRegion &region) {
         auto leaving_node = region.shell_area.back();
         region.shell_area.pop_back();
         leaving_node->region_that_arrived = nullptr;
+        leaving_node->region_that_arrived_top = nullptr;
         leaving_node->reached_from_source = nullptr;
         leaving_node->distance_from_source = 0;
         leaving_node->observables_crossed_from_source = 0;
@@ -128,16 +131,16 @@ MwpmEvent GraphFlooder::do_neighbor_interaction(
     DetectorNode &src, size_t src_to_dst_index, DetectorNode &dst, size_t dst_to_src_index) {
     // First check if one region is moving into an empty location
     if (src.region_that_arrived && !dst.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(*src.top_region(), dst, src, src_to_dst_index);
+        do_region_arriving_at_empty_detector_node(*src.region_that_arrived_top, dst, src, src_to_dst_index);
         return MwpmEvent::no_event();
     } else if (dst.region_that_arrived && !src.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(*dst.top_region(), src, dst, dst_to_src_index);
+        do_region_arriving_at_empty_detector_node(*dst.region_that_arrived_top, src, dst, dst_to_src_index);
         return MwpmEvent::no_event();
     } else {
         // Two regions colliding
         return RegionHitRegionEventData{
-            src.top_region(),
-            dst.top_region(),
+            src.region_that_arrived_top,
+            dst.region_that_arrived_top,
             CompressedEdge{
                 src.reached_from_source,
                 dst.reached_from_source,
@@ -149,7 +152,7 @@ MwpmEvent GraphFlooder::do_neighbor_interaction(
 
 MwpmEvent GraphFlooder::do_region_hit_boundary_interaction(DetectorNode &node) {
     return RegionHitBoundaryEventData{
-        node.top_region(),
+        node.region_that_arrived_top,
         CompressedEdge{
             node.reached_from_source, nullptr, node.observables_crossed_from_source ^ node.neighbor_observables[0]}};
 }
@@ -165,13 +168,14 @@ MwpmEvent GraphFlooder::do_degenerate_implosion(const GraphFillRegion &region) {
 }
 
 MwpmEvent GraphFlooder::do_blossom_shattering(GraphFillRegion &region) {
-    for (auto &child : region.blossom_children)
-        child.region->blossom_parent = nullptr;
+    for (auto &child : region.blossom_children) {
+        child.region->set_blossom_parent(nullptr);
+    }
 
     return BlossomShatterEventData{
         &region,
-        region.alt_tree_node->parent.edge.loc_from->top_region(),
-        region.alt_tree_node->inner_to_outer_edge.loc_from->top_region()};
+        region.alt_tree_node->parent.edge.loc_from->region_that_arrived_top,
+        region.alt_tree_node->inner_to_outer_edge.loc_from->region_that_arrived_top};
 }
 
 GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained_regions) {
@@ -180,7 +184,7 @@ GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained
     blossom_region->blossom_children = std::move(contained_regions);
     for (auto &region_edge : blossom_region->blossom_children) {
         region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(queue.cur_time);
-        region_edge.region->blossom_parent = blossom_region;
+        region_edge.region->set_blossom_parent(blossom_region);
         region_edge.region->shrink_event_tracker.set_no_desired_event();
     }
 

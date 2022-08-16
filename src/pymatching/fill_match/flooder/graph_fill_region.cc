@@ -6,15 +6,17 @@
 using namespace pm;
 
 GraphFillRegion::GraphFillRegion()
-    : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
+    : blossom_parent(nullptr), blossom_parent_top(this), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
 }
-
-GraphFillRegion *GraphFillRegion::top_region() const {
-    auto current = const_cast<GraphFillRegion *>(this);
-    while (current->blossom_parent) {
-        current = current->blossom_parent;
-    }
-    return current;
+GraphFillRegion::GraphFillRegion(GraphFillRegion &&other) :
+    blossom_parent(other.blossom_parent),
+    blossom_parent_top(other.blossom_parent_top == &other ? this : other.blossom_parent_top),
+    alt_tree_node(std::move(other.alt_tree_node)),
+    radius(std::move(other.radius)),
+    shrink_event_tracker(std::move(other.shrink_event_tracker)),
+    match(std::move(other.match)),
+    blossom_children(std::move(other.blossom_children)),
+    shell_area(std::move(other.shell_area)) {
 }
 
 bool GraphFillRegion::tree_equal(const GraphFillRegion &other) const {
@@ -50,4 +52,19 @@ void GraphFillRegion::cleanup_shell_area() {
     for (auto &detector_node : shell_area) {
         detector_node->reset();
     }
+}
+
+void GraphFillRegion::set_blossom_parent(GraphFillRegion *new_blossom_parent) {
+    blossom_parent = new_blossom_parent;
+    if (new_blossom_parent == nullptr) {
+        blossom_parent_top = this;
+    } else {
+        blossom_parent_top = new_blossom_parent;
+    }
+    do_op_for_each_node_in_total_area([&](DetectorNode *n) {
+        n->region_that_arrived_top = blossom_parent_top;
+    });
+    do_op_for_each_descendant([&](GraphFillRegion *descendant) {
+        descendant->blossom_parent_top = blossom_parent_top;
+    });
 }

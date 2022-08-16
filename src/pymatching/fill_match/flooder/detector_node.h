@@ -21,12 +21,16 @@ class DetectorNode {
         : observables_crossed_from_source(0),
           reached_from_source(nullptr),
           distance_from_source(0),
-          region_that_arrived(nullptr) {
+          region_that_arrived(nullptr),
+          region_that_arrived_top(nullptr) {
     }
 
     /// == Ephemeral fields used to track algorithmic state during matching. ==
     /// The region that reached and owns this node.
     GraphFillRegion* region_that_arrived;
+    /// The topmost region containing this node. Must be kept up to date as
+    /// the region structure changes.
+    GraphFillRegion* region_that_arrived_top;
     /// Of the detection events within the owning region, which one is this node linked to.
     DetectorNode* reached_from_source;
     /// Which observables are crossed, travelling from this node to the source
@@ -45,8 +49,6 @@ class DetectorNode {
 
     /// After it reached this node, how much further did the owning search region grow? Also is it currently growing?
     Varying32 local_radius() const;
-    /// What's the top-level region that owns this node? The blossom-with-no-blossom-parent that this node is inside.
-    GraphFillRegion* top_region() const;
     /// Check if this node is part the same top-level region as another.
     /// Note that they may have different lower level owners that still merge into the same top level owned.
     bool has_same_owner_as(const DetectorNode& other) const;

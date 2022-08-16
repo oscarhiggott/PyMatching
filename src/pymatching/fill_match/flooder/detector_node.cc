@@ -21,17 +21,7 @@ Varying32 DetectorNode::local_radius() const {
 }
 
 bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
-    if ((region_that_arrived == nullptr) != (other.region_that_arrived == nullptr))
-        return false;
-    if (region_that_arrived == other.region_that_arrived)
-        return true;
-    return top_region() == other.top_region();
-}
-
-GraphFillRegion *DetectorNode::top_region() const {
-    if (!region_that_arrived)
-        return nullptr;
-    return region_that_arrived->top_region();
+    return region_that_arrived_top == other.region_that_arrived_top;
 }
 
 void DetectorNode::reset() {
@@ -39,6 +29,7 @@ void DetectorNode::reset() {
     reached_from_source = nullptr;
     distance_from_source = 0;
     region_that_arrived = nullptr;
+    region_that_arrived_top = nullptr;
     node_event_tracker.clear();
 }
 

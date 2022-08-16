@@ -41,7 +41,9 @@ TEST(Graph, TotalRadius) {
     d.detectors[3].reached_from_source = &d.detectors[3];
     d.detectors[6].reached_from_source = &d.detectors[3];
     d.detectors[3].region_that_arrived = x->blossom_children[0].region->blossom_children[0].region;
+    d.detectors[3].region_that_arrived_top = d.detectors[3].region_that_arrived->blossom_parent_top;
     d.detectors[6].region_that_arrived = x;
+    d.detectors[6].region_that_arrived_top = d.detectors[6].region_that_arrived->blossom_parent_top;
     x->blossom_children[0].region->blossom_children[0].region->radius = pm::Varying32(5 << 2);
     x->blossom_children[0].region->radius = pm::Varying32(6 << 2);
     x->radius = pm::Varying32((1 << 2) + 1);

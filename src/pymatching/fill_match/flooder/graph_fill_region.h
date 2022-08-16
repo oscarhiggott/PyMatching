@@ -15,6 +15,9 @@ class AltTreeNode;
 struct GraphFillRegion {
     /// If this region has merged with others into a blossom, this is that blossom.
     GraphFillRegion* blossom_parent;
+    /// The topmost fill region that contains this region. This field must be kept up to date as
+    /// the region structure changes.
+    GraphFillRegion* blossom_parent_top;
     /// If this is a top-level region (not a blossom child), this is the alternating tree that
     /// it is part of. Note that it may be a degenerate alternating tree with just a single
     /// graph fill region (this one).
@@ -42,13 +45,17 @@ struct GraphFillRegion {
     void cleanup_shell_area();
 
     GraphFillRegion();
+    GraphFillRegion(GraphFillRegion &&);
+    GraphFillRegion(const GraphFillRegion &) = delete;
     bool tree_equal(const pm::GraphFillRegion& other) const;
 
-    GraphFillRegion* top_region() const;
     void add_match(pm::GraphFillRegion* match, const pm::CompressedEdge& edge);
 
     template <typename Callable>
     void do_op_for_each_node_in_total_area(const Callable& func);
+    template <typename Callable>
+    void do_op_for_each_descendant(const Callable& func);
+    void set_blossom_parent(GraphFillRegion *new_blossom_parent);
 
     bool operator==(const GraphFillRegion& rhs) const;
 
@@ -62,6 +69,14 @@ inline void pm::GraphFillRegion::do_op_for_each_node_in_total_area(const Callabl
     }
     for (auto& child : blossom_children) {
         child.region->do_op_for_each_node_in_total_area(func);
+    }
+}
+
+template <typename Callable>
+inline void pm::GraphFillRegion::do_op_for_each_descendant(const Callable& func) {
+    for (RegionEdge &child : blossom_children) {
+        func(child.region);
+        child.region->do_op_for_each_descendant(func);
     }
 }
 

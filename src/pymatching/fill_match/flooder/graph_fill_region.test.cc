@@ -25,8 +25,8 @@ TEST(GraphFillRegion, TopRegion) {
              x.b(2, 0, {x.b(3, 4, {}, false), x.b(4, 5, {}, false), x.b(5, 3, {}, false)}, false)},
             true);
 
-    ASSERT_EQ(t.region, t.region->blossom_children[2].region->blossom_children[0].region->top_region());
-    ASSERT_EQ(t.region, t.region->blossom_children[1].region->top_region());
+    ASSERT_EQ(t.region, t.region->blossom_children[2].region->blossom_children[0].region->blossom_parent_top);
+    ASSERT_EQ(t.region, t.region->blossom_children[1].region->blossom_parent_top);
 }
 
 TEST(GraphFillRegion, AddMatch) {
