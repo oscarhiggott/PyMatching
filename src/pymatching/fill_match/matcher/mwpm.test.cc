@@ -5,14 +5,34 @@
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/matcher/alternating_tree.h"
+#include "pymatching/fill_match/arena.h"
 
 using namespace pm;
 
 struct MwpmAltTreeTestData {
-    std::vector<DetectorNode>* nodes;
-    explicit MwpmAltTreeTestData(std::vector<DetectorNode>* nodes);
+    Mwpm &mwpm;
+    explicit MwpmAltTreeTestData(Mwpm &mwpm) : mwpm(mwpm) {}
     AltTreeEdge t(
-        std::vector<AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root = false) const;
+        std::vector<AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root = false) {
+        AltTreeNode* node = mwpm.node_arena.alloc_unconstructed();
+        auto &ns = mwpm.flooder.graph.nodes;
+        CompressedEdge parent_ce{nullptr, nullptr, 0};
+        if (root) {
+            new (node) AltTreeNode(ns[outer_region_id].region_that_arrived);
+        } else {
+            new (node) AltTreeNode(
+                ns[inner_region_id].region_that_arrived,
+                ns[outer_region_id].region_that_arrived,
+                {&ns[inner_region_id], &ns[outer_region_id], 0});
+        }
+        auto edge = AltTreeEdge(node, parent_ce);
+        for (auto& child : children) {
+            child.edge.loc_from = &ns[outer_region_id];
+            child.edge.loc_to = child.alt_tree_node->inner_to_outer_edge.loc_from;
+            edge.alt_tree_node->add_child(child);
+        }
+        return edge;
+    }
 };
 
 bool regions_matched(std::vector<DetectorNode>& ns, size_t i, size_t j) {
@@ -33,29 +53,6 @@ MwpmEvent rhr(std::vector<DetectorNode>& ns, size_t i, size_t j, obs_int obs_mas
     return RegionHitRegionEventData{ns[i].region_that_arrived, ns[j].region_that_arrived, {&ns[i], &ns[j], obs_mask}};
 }
 
-MwpmAltTreeTestData::MwpmAltTreeTestData(std::vector<DetectorNode>* nodes) : nodes(nodes) {
-}
-
-AltTreeEdge MwpmAltTreeTestData::t(
-    std::vector<AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root) const {
-    AltTreeNode* node;
-    CompressedEdge parent_ce{nullptr, nullptr, 0};
-    if (root) {
-        node = new AltTreeNode((*nodes)[outer_region_id].region_that_arrived);
-    } else {
-        node = new AltTreeNode(
-            (*nodes)[inner_region_id].region_that_arrived,
-            (*nodes)[outer_region_id].region_that_arrived,
-            {&(*nodes)[inner_region_id], &(*nodes)[outer_region_id], 0});
-    }
-    auto edge = AltTreeEdge(node, parent_ce);
-    for (auto& child : children) {
-        child.edge.loc_from = &(*nodes)[outer_region_id];
-        child.edge.loc_to = child.alt_tree_node->inner_to_outer_edge.loc_from;
-        edge.alt_tree_node->add_child(child);
-    }
-    return edge;
-}
 
 TEST(Mwpm, BlossomCreatedThenShattered) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(10)));
@@ -69,7 +66,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     g.add_edge(2, 6, 100, 7);
     g.add_boundary_edge(5, 36, 8);
     for (size_t i = 0; i < 7; i++) {
-        mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[i]);
+        mwpm.create_detection_event(&mwpm.flooder.graph.nodes[i]);
     }
     auto& ns = mwpm.flooder.graph.nodes;
 
@@ -152,15 +149,18 @@ TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
     size_t n = 10;
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n + 3)));
     auto& ns = mwpm.flooder.graph.nodes;
-    for (size_t i = 0; i < n + 3; i++)
-        mwpm.flooder.create_region(&ns[i]);
+    for (size_t i = 0; i < n + 3; i++) {
+        mwpm.create_detection_event(&ns[i]);
+    }
 
     // Pair up
-    for (size_t i = 0; i < n; i += 2)
+    for (size_t i = 0; i < n; i += 2) {
         mwpm.process_event(rhr(ns, i, i + 1));
+    }
     // Form an alternating path
-    for (size_t i = 1; i < n; i += 2)
+    for (size_t i = 1; i < n; i += 2) {
         mwpm.process_event(rhr(ns, n - i, n - i + 1));
+    }
     // Close the path into a blossom
     mwpm.process_event(rhr(ns, 0, n));
     auto blossom = ns[0].region_that_arrived->blossom_parent;
@@ -174,7 +174,7 @@ TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
     auto actual_tree = ns[12].region_that_arrived->alt_tree_node;
     ASSERT_EQ(actual_tree->parent.alt_tree_node, nullptr);
 
-    MwpmAltTreeTestData d(&ns);
+    MwpmAltTreeTestData d(mwpm);
     auto expected_tree = d.t({d.t({d.t({d.t({d.t({}, 5, 11)}, 3, 4)}, 1, 2)}, 10, 0)}, -1, 12, true).alt_tree_node;
     ASSERT_EQ(*actual_tree, *expected_tree);
 }
@@ -183,8 +183,9 @@ TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
     size_t n = 14;
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n)));
     auto& ns = mwpm.flooder.graph.nodes;
-    for (size_t i = 0; i < n; i++)
-        mwpm.flooder.create_region(&ns[i]);
+    for (size_t i = 0; i < n; i++) {
+        mwpm.create_detection_event(&ns[i]);
+    }
 
     // Form matches
     mwpm.process_event(rhr(ns, 1, 3));
@@ -206,7 +207,7 @@ TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
     mwpm.process_event(rhr(ns, 3, 6));
     mwpm.process_event(rhr(ns, 4, 7));
     mwpm.process_event(rhr(ns, 4, 8));
-    MwpmAltTreeTestData d(&ns);
+    MwpmAltTreeTestData d(mwpm);
     auto expected_tree =
         d.t({d.t({d.t({}, 5, 9), d.t({}, 6, 10)}, 1, 3), d.t({d.t({}, 7, 11), d.t({}, 8, 12)}, 2, 4)}, -1, 0, true)
             .alt_tree_node;
@@ -234,7 +235,7 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n)));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n; i++)
-        mwpm.flooder.create_region(&ns[i]);
+        mwpm.create_detection_event(&ns[i]);
     // Form alternating tree
     mwpm.process_event(rhr(ns, 1, 2));
     mwpm.process_event(rhr(ns, 3, 4));
@@ -256,8 +257,8 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, i);
     auto& ns = mwpm.flooder.graph.nodes;
-    mwpm.flooder.create_region(&ns[6]);
-    mwpm.flooder.create_region(&ns[13]);
+    mwpm.create_detection_event(&ns[6]);
+    mwpm.create_detection_event(&ns[13]);
     auto e = mwpm.flooder.run_until_next_mwpm_notification();
     mwpm.process_event(e);
     ASSERT_EQ(ns[6].region_that_arrived->match.region, ns[13].region_that_arrived);
@@ -285,7 +286,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
     cumulative_time_int w = 0;
     for (auto& n : ns) {
         w += 1;
-        mwpm.flooder.create_region(&n);
+        mwpm.create_detection_event(&n);
         n.region_that_arrived->radius = Varying((w << 2) + 1);
     }
     // Form first blossom
@@ -332,7 +333,7 @@ TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundary) {
     cumulative_time_int w = 0;
     for (auto& n : ns) {
         w += 1;
-        mwpm.flooder.create_region(&n);
+        mwpm.create_detection_event(&n);
         n.region_that_arrived->radius = Varying((w << 2) + 1);
     }
     // Form first blossom
@@ -377,8 +378,8 @@ TEST(Mwpm, TwoRegionsGrowingThenMatching) {
     g.add_edge(2, 3, 30, 1);
     g.add_edge(3, 4, 10, 9);
     g.add_boundary_edge(4, 1000, 2);
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[3]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[1]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[3]);
     auto e1 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e1_expected = RegionHitRegionEventData{
         mwpm.flooder.graph.nodes[1].region_that_arrived,
@@ -408,13 +409,13 @@ TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     g.add_edge(4, 5, 20, 2);
     g.add_edge(5, 6, 36, 3);
     g.add_boundary_edge(6, 1000, 2);
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[1]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[1]);
     auto r1 = mwpm.flooder.graph.nodes[1].region_that_arrived;
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[4]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[4]);
     auto r4 = mwpm.flooder.graph.nodes[4].region_that_arrived;
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[5]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[5]);
     auto r5 = mwpm.flooder.graph.nodes[5].region_that_arrived;
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[6]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[6]);
     auto r6 = mwpm.flooder.graph.nodes[6].region_that_arrived;
     auto e1 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e1_expected = RegionHitRegionEventData{
@@ -461,11 +462,11 @@ TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, i);
     g.add_boundary_edge(num_nodes - 1, 2, 2);
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[40]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[40]);
     auto r40 = mwpm.flooder.graph.nodes[40].region_that_arrived;
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[42]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[42]);
     auto r42 = mwpm.flooder.graph.nodes[42].region_that_arrived;
-    mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[50]);
+    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[50]);
     auto r50 = mwpm.flooder.graph.nodes[50].region_that_arrived;
     mwpm.process_event(mwpm.flooder.run_until_next_mwpm_notification());
     mwpm.process_event(mwpm.flooder.run_until_next_mwpm_notification());
@@ -488,4 +489,122 @@ TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     for (int i = 0; i < 40; i++)
         obs ^= i;
     ASSERT_EQ(blossom->match, (Match{nullptr, {&mwpm.flooder.graph.nodes[40], nullptr, obs ^ 1}}));
+}
+
+TEST(GraphFlooder, CreateRegion) {
+    Mwpm mwpm{GraphFlooder(MatchingGraph(5))};
+    auto &flooder = mwpm.flooder;
+    auto &g = flooder.graph;
+    g.add_boundary_edge(0, 3, 0);
+    g.add_edge(0, 1, 5, 0);
+    g.add_edge(1, 2, 11, 0);
+    g.add_edge(2, 3, 100, 0);
+    g.add_boundary_edge(3, 1000, 0);
+    mwpm.create_detection_event(&flooder.graph.nodes[0]);
+    mwpm.create_detection_event(&flooder.graph.nodes[2]);
+    mwpm.create_detection_event(&flooder.graph.nodes[3]);
+    ASSERT_EQ(
+        flooder.queue.dequeue(),
+        FloodCheckEvent(&flooder.graph.nodes[0], cyclic_time_int{3}));
+    ASSERT_EQ(
+        flooder.queue.dequeue(),
+        FloodCheckEvent(&flooder.graph.nodes[2], cyclic_time_int{11}));
+    ASSERT_EQ(flooder.graph.nodes[0].region_that_arrived->shell_area[0], &flooder.graph.nodes[0]);
+    ASSERT_EQ(flooder.graph.nodes[0].distance_from_source, 0);
+    ASSERT_EQ(flooder.graph.nodes[0].reached_from_source, &flooder.graph.nodes[0]);
+    ASSERT_EQ(
+        flooder.queue.dequeue(),
+        FloodCheckEvent(&flooder.graph.nodes[3], cyclic_time_int{50}));
+    ASSERT_TRUE(flooder.queue.empty());
+}
+
+TEST(GraphFlooder, RegionGrowingToBoundary) {
+    Mwpm mwpm{GraphFlooder(MatchingGraph(10))};
+    auto &flooder = mwpm.flooder;
+    auto &g = flooder.graph;
+    g.add_boundary_edge(0, 2, 3);
+    g.add_edge(0, 1, 10, 5);
+    g.add_edge(1, 2, 21, 0);
+    g.add_edge(2, 3, 100, 1);
+    g.add_edge(3, 4, 7, 9);
+    g.add_boundary_edge(4, 5, 2);
+    mwpm.create_detection_event(&flooder.graph.nodes[2]);
+    ASSERT_EQ(
+        flooder.run_until_next_mwpm_notification(),
+        (MwpmEvent{
+            RegionHitBoundaryEventData{
+                flooder.graph.nodes[2].region_that_arrived,
+                CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
+            },
+        }));
+
+    flooder.queue.dequeue();
+    auto t1 = flooder.queue.dequeue();
+    ASSERT_EQ(t1, FloodCheckEvent(&flooder.graph.nodes[2], cyclic_time_int{100}));
+    flooder.queue.enqueue(t1);
+    auto e2 = flooder.run_until_next_mwpm_notification();
+    MwpmEvent e2_exp = RegionHitBoundaryEventData{
+        flooder.graph.nodes[2].region_that_arrived,
+        CompressedEdge{&flooder.graph.nodes[2], nullptr, 10},
+    };
+    ASSERT_EQ(e2, e2_exp);
+    flooder.queue.dequeue();
+    ASSERT_EQ(flooder.queue.dequeue(), FloodCheckEvent(cyclic_time_int{0}));
+}
+
+TEST(GraphFlooder, RegionHitRegion) {
+    Mwpm mwpm{GraphFlooder(MatchingGraph(10))};
+    auto &flooder = mwpm.flooder;
+    auto &g = flooder.graph;
+    g.add_boundary_edge(0, 2000, 3);
+    g.add_edge(0, 1, 10, 5);
+    g.add_edge(1, 2, 24, 0);
+    g.add_edge(2, 3, 38, 1);
+    g.add_edge(3, 4, 26, 9);
+    g.add_boundary_edge(4, 1000, 2);
+    mwpm.create_detection_event(&flooder.graph.nodes[2]);
+    mwpm.create_detection_event(&flooder.graph.nodes[4]);
+    auto e1 = flooder.run_until_next_mwpm_notification();
+    ASSERT_EQ(flooder.queue.cur_time, 32);
+    MwpmEvent e1_exp = RegionHitRegionEventData{
+        flooder.graph.nodes[4].region_that_arrived,
+        flooder.graph.nodes[2].region_that_arrived,
+        CompressedEdge{&flooder.graph.nodes[4], &flooder.graph.nodes[2], 8}};
+    ASSERT_EQ(e1, e1_exp);
+}
+
+TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
+    Mwpm mwpm{GraphFlooder(MatchingGraph(10))};
+    auto &flooder = mwpm.flooder;
+    auto &g = flooder.graph;
+    g.add_boundary_edge(0, 4, 3);
+    g.add_edge(0, 1, 10, 5);
+    g.add_edge(1, 2, 22, 0);
+    g.add_edge(2, 3, 30, 1);
+    g.add_edge(3, 4, 50, 9);
+    g.add_boundary_edge(4, 100, 2);
+    mwpm.create_detection_event(&flooder.graph.nodes[2]);
+    auto e1 = flooder.run_until_next_mwpm_notification();
+    ASSERT_EQ(
+        e1,
+        MwpmEvent(RegionHitBoundaryEventData{
+            flooder.graph.nodes[2].region_that_arrived,
+            CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
+        }));
+    ASSERT_EQ(flooder.queue.cur_time, 36);
+    flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);
+    auto e2 = flooder.run_until_next_mwpm_notification();
+    ASSERT_EQ(e2.event_type, NO_EVENT);
+    ASSERT_EQ(flooder.queue.cur_time, 80);
+    ASSERT_TRUE(flooder.queue.empty());
+
+    std::vector<DetectorNode *> expected_area = {
+        &flooder.graph.nodes[2], &flooder.graph.nodes[1], &flooder.graph.nodes[3], &flooder.graph.nodes[0]};
+    ASSERT_EQ(flooder.graph.nodes[2].region_that_arrived->shell_area, expected_area);
+    flooder.set_region_shrinking(*flooder.graph.nodes[2].region_that_arrived);
+    ASSERT_EQ(
+        flooder.dequeue_valid(),
+        FloodCheckEvent(
+            flooder.graph.nodes[2].region_that_arrived,
+            cyclic_time_int{80 + 4}));
 }

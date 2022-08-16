@@ -16,7 +16,7 @@ pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector
     for (auto& detection : detection_events) {
         if (detection >= mwpm.flooder.graph.nodes.size())
             throw std::invalid_argument("Detection event index too large");
-        mwpm.flooder.create_region(&mwpm.flooder.graph.nodes[detection]);
+        mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
     }
 
     while (true) {

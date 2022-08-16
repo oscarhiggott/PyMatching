@@ -7,18 +7,11 @@
 
 using namespace pm;
 
-GraphFlooder::GraphFlooder(MatchingGraph graph) : graph(std::move(graph)), next_event_vid(0) {
+GraphFlooder::GraphFlooder(MatchingGraph graph) : graph(std::move(graph)) {
 }
 
 GraphFlooder::GraphFlooder(GraphFlooder &&flooder) noexcept
-    : graph(std::move(flooder.graph)), queue(std::move(flooder.queue)), next_event_vid(flooder.next_event_vid) {
-}
-
-void GraphFlooder::create_region(DetectorNode *node) {
-    auto region = new GraphFillRegion();
-    auto alt_tree_node = new AltTreeNode(region);
-    region->alt_tree_node = alt_tree_node;
-    do_region_created_at_empty_detector_node(*region, *node);
+    : graph(std::move(flooder.graph)), queue(std::move(flooder.queue)), region_arena(std::move(flooder.region_arena)) {
 }
 
 void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &region, DetectorNode &detector_node) {
@@ -189,7 +182,7 @@ MwpmEvent GraphFlooder::do_blossom_shattering(GraphFillRegion &region) {
 }
 
 GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained_regions) {
-    auto blossom_region = new GraphFillRegion();
+    auto blossom_region = region_arena.alloc_default_constructed();
     blossom_region->radius = Varying32::growing_varying_with_zero_distance_at_time(queue.cur_time);
     blossom_region->blossom_children = std::move(contained_regions);
     for (auto &region_edge : blossom_region->blossom_children) {

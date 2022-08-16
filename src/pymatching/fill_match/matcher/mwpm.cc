@@ -21,7 +21,10 @@ void Mwpm::shatter_descendants_into_matches_and_freeze(AltTreeNode &alt_tree_nod
         alt_tree_node.inner_region->alt_tree_node = nullptr;
         alt_tree_node.outer_region->alt_tree_node = nullptr;
     }
-    delete &alt_tree_node;
+    if (alt_tree_node.outer_region) {
+        alt_tree_node.outer_region->alt_tree_node = nullptr;
+    }
+    node_arena.del(&alt_tree_node);
 }
 
 void Mwpm::handle_tree_hitting_boundary(const RegionHitBoundaryEventData &event) {
@@ -62,12 +65,24 @@ void Mwpm::handle_tree_hitting_other_tree(const RegionHitRegionEventData &event)
     flooder.set_region_frozen(*event.region2);
 }
 
+AltTreeNode *Mwpm::make_child(AltTreeNode &parent,
+    GraphFillRegion *child_inner_region,
+    GraphFillRegion *child_outer_region,
+    const CompressedEdge &child_inner_to_outer_edge,
+    const CompressedEdge &child_compressed_edge) {
+    auto child = node_arena.alloc_unconstructed();
+    new (child) AltTreeNode(child_inner_region, child_outer_region, child_inner_to_outer_edge);
+    auto child_alt_tree_edge = AltTreeEdge(child, child_compressed_edge);
+    parent.add_child(child_alt_tree_edge);
+    return child;
+}
+
 void Mwpm::handle_tree_hitting_match(
     GraphFillRegion *unmatched_region,
     GraphFillRegion *matched_region,
     const CompressedEdge &unmatched_to_matched_edge) {
     auto alt_tree_node = unmatched_region->alt_tree_node;
-    alt_tree_node->make_child(
+    make_child(*alt_tree_node,
         matched_region, matched_region->match.region, matched_region->match.edge, unmatched_to_matched_edge);
     auto other_match = matched_region->match.region;
     other_match->match.clear();
@@ -79,8 +94,8 @@ void Mwpm::handle_tree_hitting_match(
 void Mwpm::handle_tree_hitting_self(const RegionHitRegionEventData &event, AltTreeNode *common_ancestor) {
     auto alt_node_1 = event.region1->alt_tree_node;
     auto alt_node_2 = event.region2->alt_tree_node;
-    auto prune_result_1 = alt_node_1->prune_upward_path_stopping_before(common_ancestor, true);
-    auto prune_result_2 = alt_node_2->prune_upward_path_stopping_before(common_ancestor, false);
+    auto prune_result_1 = alt_node_1->prune_upward_path_stopping_before(node_arena, common_ancestor, true);
+    auto prune_result_2 = alt_node_2->prune_upward_path_stopping_before(node_arena, common_ancestor, false);
 
     // Construct blossom region cycle
     auto blossom_cycle = std::move(prune_result_2.pruned_path_region_edges);
@@ -131,7 +146,6 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
         return x.alt_tree_node == blossom_alt_node;
     });
     auto child_edge = blossom_alt_node->parent.edge.reversed();
-    size_t k1, k2;
 
     if (gap % 2 == 0) {
         // The path starting after in_child and stopping before in_parent is even length. Regions will
@@ -142,7 +156,8 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
         // TODO: Add more tests covering this loop
         // Now insert odd-length path starting on in_parent and ending on in_child into alternating tree
         for (size_t i = parent_idx; i < parent_idx + gap; i += 2) {
-            current_alt_node = current_alt_node->make_child(
+            current_alt_node = make_child(
+                *current_alt_node,
                 blossom_cycle[i % bsize].region,
                 blossom_cycle[(i + 1) % bsize].region,
                 blossom_cycle[i % bsize].edge,
@@ -158,12 +173,11 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
         evens_end = parent_idx + gap;
 
         // Now insert odd-length path into alternating tree
-        size_t k3;
         for (size_t i = 0; i < bsize - gap; i += 2) {
-            k1 = (parent_idx + bsize - i) % bsize;
-            k2 = (parent_idx + bsize - i - 1) % bsize;
-            k3 = (parent_idx + bsize - i - 2) % bsize;
-            current_alt_node = current_alt_node->make_child(
+            size_t k1 = (parent_idx + bsize - i) % bsize;
+            size_t k2 = (parent_idx + bsize - i - 1) % bsize;
+            size_t k3 = (parent_idx + bsize - i - 2) % bsize;
+            current_alt_node = make_child(*current_alt_node,
                 blossom_cycle[k1].region, blossom_cycle[k2].region, blossom_cycle[k2].edge.reversed(), child_edge);
             child_edge = blossom_cycle[k3].edge.reversed();
             flooder.set_region_shrinking(*current_alt_node->inner_region);
@@ -172,8 +186,8 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
     }
 
     for (size_t j = evens_start; j < evens_end; j += 2) {
-        k1 = j % bsize;
-        k2 = (j + 1) % bsize;
+        size_t k1 = j % bsize;
+        size_t k2 = (j + 1) % bsize;
         blossom_cycle[k1].region->add_match(blossom_cycle[k2].region, blossom_cycle[k1].edge);
 
         // The blossom regions were previously shrinking. Now they are stopped. This can create new
@@ -191,7 +205,7 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
     blossom_cycle[child_idx].region->alt_tree_node = blossom_alt_node;
     current_alt_node->add_child(AltTreeEdge(blossom_alt_node, child_edge));
 
-    delete event.blossom_region;
+    flooder.region_arena.del(event.blossom_region);
 }
 
 void Mwpm::handle_region_hit_region(const MwpmEvent event) {
@@ -247,7 +261,7 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
     auto match_region = region->match.region;
     if (!match_region && this_blossom_trivial) {
         MatchingResult res = {region->match.edge.obs_mask, region->radius.y_intercept()};
-        delete region;
+        flooder.region_arena.del(region);
         return res;
     }
     bool match_blossom_has_children = match_region && !match_region->blossom_children.empty();
@@ -256,8 +270,8 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
     if (this_blossom_trivial && !match_blossom_has_children) {
         MatchingResult res = {
             region->match.edge.obs_mask, region->radius.y_intercept() + match_region->radius.y_intercept()};
-        delete match_region;
-        delete region;
+        flooder.region_arena.del(match_region);
+        flooder.region_arena.del(region);
         return res;
     }
     MatchingResult res{0, 0};
@@ -281,7 +295,7 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
             re1.region->add_match(re2.region, re1.edge);
             res += shatter_blossom_and_extract_matches(re1.region);
         }
-        delete region;
+        flooder.region_arena.del(region);
         region = subblossom;
     }
     if (match_blossom_has_children) {
@@ -305,10 +319,18 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
             re1.region->add_match(re2.region, re1.edge);
             res += shatter_blossom_and_extract_matches(re1.region);
         }
-        delete match_region;
+        flooder.region_arena.del(match_region);
     }
     res += shatter_blossom_and_extract_matches(region);
     return res;
+}
+
+void Mwpm::create_detection_event(DetectorNode *node) {
+    auto region = flooder.region_arena.alloc_default_constructed();
+    auto alt_tree_node = node_arena.alloc_unconstructed();
+    new (alt_tree_node) AltTreeNode(region);
+    region->alt_tree_node = alt_tree_node;
+    flooder.do_region_created_at_empty_detector_node(*region, *node);
 }
 
 MatchingResult &MatchingResult::operator+=(const MatchingResult &rhs) {

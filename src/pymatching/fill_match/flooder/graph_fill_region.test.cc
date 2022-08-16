@@ -7,20 +7,12 @@
 
 using namespace pm;
 
-void pm::delete_graph_fill_region(GraphFillRegion* region) {
-    for (auto& child : region->blossom_children)
-        delete_graph_fill_region(child.region);
-    delete region;
-}
-
 TEST(GraphFillRegion, BlossomBuilder) {
     GraphFillTestData x(4);
 
     auto t1 = x.b(-1, -1, {x.b(1, 2, {}, false), x.b(2, 3, {}, false), x.b(3, 1, {}, false)}, true);
     auto t2 = x.b(-1, -1, {x.b(1, 2, {}, false), x.b(2, 3, {}, false), x.b(3, 1, {}, false)}, true);
     ASSERT_EQ(*t1.region, *t2.region);
-    delete_graph_fill_region(t1.region);
-    delete_graph_fill_region(t2.region);
 }
 
 TEST(GraphFillRegion, TopRegion) {
@@ -35,7 +27,6 @@ TEST(GraphFillRegion, TopRegion) {
 
     ASSERT_EQ(t.region, t.region->blossom_children[2].region->blossom_children[0].region->top_region());
     ASSERT_EQ(t.region, t.region->blossom_children[1].region->top_region());
-    delete_graph_fill_region(t.region);
 }
 
 TEST(GraphFillRegion, AddMatch) {

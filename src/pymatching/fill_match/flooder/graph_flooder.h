@@ -7,11 +7,12 @@
 #include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 #include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
 #include "pymatching/fill_match/tracker/radix_heap_queue.h"
+#include "pymatching/fill_match/arena.h"
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 namespace pm {
 
-class GraphFlooder {
-   public:
+struct GraphFlooder {
     /// The graph of detector nodes that is being flooded.
     MatchingGraph graph;
     /// Tracks the next thing that will occur as flooding proceeds.
@@ -23,15 +24,10 @@ class GraphFlooder {
     /// Events are ordered by time; by when they will occur in a timeline.
     radix_heap_queue<false> queue;
 
-    /// This counter is used to give each tentative event a unique index. The index is also written
-    /// to objects affected by the event. For an event to be valid, its vid must match the marked
-    /// vids on the objects it affects. This allows you to invalidate all events affecting an
-    /// object by incrementing its vids.
-    uint64_t next_event_vid;
+    Arena<GraphFillRegion> region_arena;
 
     GraphFlooder(MatchingGraph graph);
     GraphFlooder(GraphFlooder&&) noexcept;
-    void create_region(DetectorNode* node);
     MwpmEvent run_until_next_mwpm_notification();
     void set_region_growing(pm::GraphFillRegion& region);
     void set_region_frozen(pm::GraphFillRegion& region);

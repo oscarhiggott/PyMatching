@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
+#include "pymatching/fill_match/arena.h"
 
 namespace pm {
 
@@ -92,7 +93,6 @@ class AltTreeNode {
         pm::GraphFillRegion* outer_region,
         const pm::CompressedEdge& inner_to_outer_edge);
     AltTreeNode(pm::GraphFillRegion* outer_region);
-    ~AltTreeNode();
 
     /// Two trees are equal if they have the same structure and they refer to the same underlying
     /// regions and have the same compressed edges.
@@ -117,12 +117,7 @@ class AltTreeNode {
     /// a blossom is formed, or the two trees shatter into matches).
     AltTreeNode* most_recent_common_ancestor(AltTreeNode& other);
     void add_child(const AltTreeEdge& child);
-    AltTreeNode* make_child(
-        GraphFillRegion* child_inner_region,
-        GraphFillRegion* child_outer_region,
-        const CompressedEdge& child_inner_to_outer_edge,
-        const CompressedEdge& child_compressed_edge);
-    AltTreePruneResult prune_upward_path_stopping_before(AltTreeNode* prune_parent, bool back);
+    AltTreePruneResult prune_upward_path_stopping_before(Arena<AltTreeNode> &arena, AltTreeNode *prune_parent, bool back);
     const AltTreeNode* find_root() const;
 
     /// Helper method for operator==.
