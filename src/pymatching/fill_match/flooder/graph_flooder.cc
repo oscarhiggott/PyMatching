@@ -19,6 +19,7 @@ void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &reg
     detector_node.radius_of_arrival = 0;
     detector_node.region_that_arrived = &region;
     detector_node.region_that_arrived_top = &region;
+    detector_node.wrapped_radius_cached = 0;
     region.shell_area.push_back(&detector_node);
     reschedule_events_at_detector_node(detector_node);
 }
@@ -104,6 +105,7 @@ void GraphFlooder::do_region_arriving_at_empty_detector_node(
     empty_node.radius_of_arrival = region.radius.get_distance_at_time(queue.cur_time);
     empty_node.region_that_arrived = &region;
     empty_node.region_that_arrived_top = region.blossom_parent_top;
+    empty_node.wrapped_radius_cached = empty_node.compute_wrapped_radius();
     region.shell_area.push_back(&empty_node);
     reschedule_events_at_detector_node(empty_node);
 }
@@ -118,6 +120,7 @@ MwpmEvent GraphFlooder::do_region_shrinking(GraphFillRegion &region) {
         region.shell_area.pop_back();
         leaving_node->region_that_arrived = nullptr;
         leaving_node->region_that_arrived_top = nullptr;
+        leaving_node->wrapped_radius_cached = 0;
         leaving_node->reached_from_source = nullptr;
         leaving_node->radius_of_arrival = 0;
         leaving_node->observables_crossed_from_source = 0;

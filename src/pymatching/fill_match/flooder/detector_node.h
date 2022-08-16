@@ -22,7 +22,8 @@ class DetectorNode {
           reached_from_source(nullptr),
           radius_of_arrival(0),
           region_that_arrived(nullptr),
-          region_that_arrived_top(nullptr) {
+          region_that_arrived_top(nullptr),
+          wrapped_radius_cached(0) {
     }
 
     /// == Ephemeral fields used to track algorithmic state during matching. ==
@@ -31,6 +32,7 @@ class DetectorNode {
     /// The topmost region containing this node. Must be kept up to date as
     /// the region structure changes.
     GraphFillRegion* region_that_arrived_top;
+    int32_t wrapped_radius_cached;
     /// Of the detection events within the owning region, which one is this node linked to.
     DetectorNode* reached_from_source;
     /// Which observables are crossed, travelling from this node to the source

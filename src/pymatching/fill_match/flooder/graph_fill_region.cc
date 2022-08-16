@@ -60,6 +60,7 @@ void GraphFillRegion::clear_blossom_parent() {
         descendant->blossom_parent_top = this;
         for (DetectorNode *n: descendant->shell_area) {
             n->region_that_arrived_top = this;
+            n->wrapped_radius_cached = n->compute_wrapped_radius();
         }
     });
 }
@@ -70,6 +71,7 @@ void GraphFillRegion::wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_
         descendant->blossom_parent_top = new_blossom_parent_and_top;
         for (DetectorNode *n: descendant->shell_area) {
             n->region_that_arrived_top = new_blossom_parent_and_top;
+            n->wrapped_radius_cached = n->compute_wrapped_radius();
         }
     });
 }

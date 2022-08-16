@@ -21,7 +21,7 @@ Varying32 DetectorNode::local_radius() const {
     if (region_that_arrived_top == nullptr) {
         return Varying32{0};
     }
-    return region_that_arrived_top->radius + compute_wrapped_radius();
+    return region_that_arrived_top->radius + wrapped_radius_cached;
 }
 
 bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
@@ -34,7 +34,7 @@ void DetectorNode::reset() {
     radius_of_arrival = 0;
     region_that_arrived = nullptr;
     region_that_arrived_top = nullptr;
-    accumulated_radius_cached = 0;
+    wrapped_radius_cached = 0;
     node_event_tracker.clear();
 }
 
