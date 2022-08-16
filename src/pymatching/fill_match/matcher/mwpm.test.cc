@@ -247,7 +247,7 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
     ASSERT_TRUE(regions_matched(ns, 5, 2));
     ASSERT_TRUE(regions_matched(ns, 1, 0));
     ASSERT_TRUE(regions_matched(ns, 3, 4));
-};
+}
 
 TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     size_t num_nodes = 20;
@@ -276,7 +276,7 @@ obs_int set_bits_to_obs_mask(const std::vector<int>& set_bits) {
     for (auto i : set_bits)
         obs_mask ^= (1 << i);
     return obs_mask;
-};
+}
 
 TEST(Mwpm, ShatterBlossomAndExtractMatches) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12)));

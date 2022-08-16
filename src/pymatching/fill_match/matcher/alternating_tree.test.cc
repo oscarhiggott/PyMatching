@@ -6,13 +6,12 @@
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 struct AltTreeTestData {
-    std::vector<pm::GraphFillRegion> gfrs;
+    std::vector<pm::GraphFillRegion> regions;
     std::vector<pm::DetectorNode> nodes;
     explicit AltTreeTestData(size_t num_elements) {
-        gfrs.resize(num_elements);
+        regions.resize(num_elements);
         nodes.resize(num_elements);
     };
-    AltTreeTestData(std::vector<pm::GraphFillRegion> gfrs, std::vector<pm::DetectorNode> nodes);
     pm::AltTreeEdge t(
         std::vector<pm::AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root = false);
 };
@@ -30,10 +29,10 @@ pm::AltTreeEdge AltTreeTestData::t(
     pm::AltTreeNode* node;
     pm::CompressedEdge parent_ce(nullptr, nullptr, 0);
     if (root) {
-        node = new pm::AltTreeNode(&gfrs[outer_region_id]);
+        node = new pm::AltTreeNode(&regions[outer_region_id]);
     } else {
         node = new pm::AltTreeNode(
-            &gfrs[inner_region_id], &gfrs[outer_region_id], {&nodes[inner_region_id], &nodes[outer_region_id], 0});
+            &regions[inner_region_id], &regions[outer_region_id], {&nodes[inner_region_id], &nodes[outer_region_id], 0});
     }
     auto edge = pm::AltTreeEdge(node, parent_ce);
     for (auto& child : children) {
@@ -42,10 +41,6 @@ pm::AltTreeEdge AltTreeTestData::t(
         edge.alt_tree_node->add_child(child);
     }
     return edge;
-}
-
-AltTreeTestData::AltTreeTestData(std::vector<pm::GraphFillRegion> gfrs, std::vector<pm::DetectorNode> nodes)
-    : gfrs(std::move(gfrs)), nodes(std::move(nodes)) {
 }
 
 pm::AltTreeEdge example_tree(AltTreeTestData& d) {
