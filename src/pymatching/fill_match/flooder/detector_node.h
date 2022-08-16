@@ -20,7 +20,7 @@ class DetectorNode {
     DetectorNode()
         : observables_crossed_from_source(0),
           reached_from_source(nullptr),
-          distance_from_source(0),
+          radius_of_arrival(0),
           region_that_arrived(nullptr),
           region_that_arrived_top(nullptr) {
     }
@@ -36,9 +36,8 @@ class DetectorNode {
     /// Which observables are crossed, travelling from this node to the source
     /// detection event that reached it. Must be 0 if reached_from_source == nullptr.
     obs_int observables_crossed_from_source;
-    /// How far is it from this node to the source detection event that reached it.
-    /// Must be 0 if reached_from_source == nullptr.
-    cumulative_time_int distance_from_source;
+    /// This was the radius of `region_that_arrived` when it arrived at this node. Otherwise 0.
+    cumulative_time_int radius_of_arrival;
     /// Manages the next "look at me!" event for the node.
     QueuedEventTracker node_event_tracker;
 
@@ -59,7 +58,6 @@ class DetectorNode {
     size_t index_of_neighbor(DetectorNode* neighbor) const;
 
     int32_t compute_wrapped_radius() const;
-    int32_t compute_radius_of_arrival() const;
 };
 
 }  // namespace pm

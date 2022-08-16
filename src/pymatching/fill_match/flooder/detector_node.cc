@@ -4,19 +4,6 @@
 
 namespace pm {
 
-int32_t DetectorNode::compute_radius_of_arrival() const {
-    if (reached_from_source == nullptr) {
-        return 0;
-    }
-    int32_t total = 0;
-    GraphFillRegion *r = reached_from_source->region_that_arrived;
-    while (r != region_that_arrived) {
-        total += r->radius.y_intercept();
-        r = r->blossom_parent;
-    }
-    return distance_from_source - total;
-}
-
 int32_t DetectorNode::compute_wrapped_radius() const {
     if (reached_from_source == nullptr) {
         return 0;
@@ -27,7 +14,7 @@ int32_t DetectorNode::compute_wrapped_radius() const {
         total += r->radius.y_intercept();
         r = r->blossom_parent;
     }
-    return total - compute_radius_of_arrival();
+    return total - radius_of_arrival;
 }
 
 Varying32 DetectorNode::local_radius() const {
@@ -44,7 +31,7 @@ bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
 void DetectorNode::reset() {
     observables_crossed_from_source = 0;
     reached_from_source = nullptr;
-    distance_from_source = 0;
+    radius_of_arrival = 0;
     region_that_arrived = nullptr;
     region_that_arrived_top = nullptr;
     accumulated_radius_cached = 0;
