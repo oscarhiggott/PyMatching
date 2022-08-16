@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "pymatching/fill_match/flooder/varying.h"
-#include "pymatching/fill_match/matcher/region_edge.h"
-#include "pymatching/fill_match/tracker.h"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
+#include "pymatching/fill_match/tracker/queued_event_tracker.h"
 
 namespace pm {
 

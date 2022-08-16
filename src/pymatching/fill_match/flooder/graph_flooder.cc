@@ -2,7 +2,7 @@
 
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
-#include "pymatching/fill_match/flooder/varying.h"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 #include "pymatching/fill_match/matcher/alternating_tree.h"
 
 using namespace pm;

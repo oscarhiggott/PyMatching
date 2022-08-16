@@ -1,7 +1,7 @@
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 #include "pymatching/fill_match/flooder/graph.h"
-#include "pymatching/fill_match/flooder/varying.h"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 
 pm::GraphFillRegion::GraphFillRegion()
     : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {

@@ -1,4 +1,4 @@
-#include "pymatching/fill_match/flooder/varying.h"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 
 #include <iostream>
 #include <random>

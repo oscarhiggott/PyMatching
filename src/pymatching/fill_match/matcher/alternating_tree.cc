@@ -4,7 +4,7 @@
 #include <iterator>
 #include <utility>
 
-#include "pymatching/fill_match/flooder.h"
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 pm::AltTreeEdge::AltTreeEdge() : alt_tree_node(nullptr), edge(nullptr, nullptr, 0) {
 }

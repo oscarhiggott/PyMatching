@@ -4,7 +4,7 @@
 
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/ints.h"
-#include "pymatching/fill_match/flooder/mwpm_event.h"
+#include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
 
 using namespace pm;
 

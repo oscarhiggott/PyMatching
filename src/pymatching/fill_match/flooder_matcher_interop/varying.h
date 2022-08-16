@@ -53,7 +53,7 @@ struct Varying {
 using Varying32 = Varying<int32_t>;
 using Varying64 = Varying<int64_t>;
 
-#include "pymatching/fill_match/flooder/varying.inl"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.inl"
 
 }  // namespace pm
 

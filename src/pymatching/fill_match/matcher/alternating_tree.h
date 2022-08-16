@@ -3,8 +3,7 @@
 
 #include <vector>
 
-#include "pymatching/fill_match/flooder.h"
-#include "pymatching/fill_match/matcher/region_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 
 namespace pm {
 

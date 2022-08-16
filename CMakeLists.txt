@@ -30,13 +30,13 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/driver/stim_io.cc
         src/pymatching/fill_match/driver/mwpm_decoding.cc
         src/pymatching/fill_match/flooder/graph.cc
-        src/pymatching/fill_match/flooder/compressed_edge.cc
+        src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.cc
         src/pymatching/fill_match/flooder/graph_fill_region.cc
         src/pymatching/fill_match/flooder/graph_flooder.cc
         src/pymatching/fill_match/matcher/alternating_tree.cc
         src/pymatching/fill_match/matcher/mwpm.cc
-        src/pymatching/fill_match/matcher/region_edge.cc
-        src/pymatching/fill_match/flooder/mwpm_event.cc
+        src/pymatching/fill_match/flooder_matcher_interop/region_edge.cc
+        src/pymatching/fill_match/flooder_matcher_interop/mwpm_event.cc
         src/pymatching/fill_match/tracker/flood_check_event.cc
         )
 
@@ -45,16 +45,16 @@ set(TEST_FILES
         src/pymatching/fill_match/driver/namespaced_main.test.cc
         src/pymatching/fill_match/driver/stim_io.test.cc
         src/pymatching/fill_match/driver/mwpm_decoding.test.cc
-        src/pymatching/fill_match/flooder/varying.test.cc
+        src/pymatching/fill_match/flooder_matcher_interop/varying.test.cc
         src/pymatching/fill_match/flooder/graph.test.cc
-        src/pymatching/fill_match/flooder/compressed_edge.test.cc
+        src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.test.cc
         src/pymatching/fill_match/flooder/graph_fill_region.test.cc
         src/pymatching/fill_match/flooder/graph_flooder.test.cc
         src/pymatching/fill_match/matcher/alternating_tree.test.cc
         src/pymatching/fill_match/matcher/mwpm.test.cc
         src/pymatching/fill_match/tracker/flood_check_event.test.cc
         src/pymatching/fill_match/tracker/radix_heap_queue.test.cc
-        src/pymatching/fill_match/flooder/mwpm_event.test.cc
+        src/pymatching/fill_match/flooder_matcher_interop/mwpm_event.test.cc
         src/pymatching/fill_match/tracker/queued_event_tracker.test.cc
         src/pymatching/fill_match/tracker/cyclic.test.cc
         )
@@ -63,7 +63,7 @@ set(PERF_FILES
         src/pymatching/perf/main.perf.cc
         src/pymatching/perf/util.perf.cc
         src/pymatching/fill_match/driver/mwpm_decoding.perf.cc
-        src/pymatching/fill_match/flooder/varying.perf.cc
+        src/pymatching/fill_match/flooder_matcher_interop/varying.perf.cc
         src/pymatching/fill_match/tracker/radix_heap_queue.perf.cc
         )
 

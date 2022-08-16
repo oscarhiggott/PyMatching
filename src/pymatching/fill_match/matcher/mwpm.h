@@ -1,7 +1,7 @@
 #ifndef PYMATCHING2_MWPM_H
 #define PYMATCHING2_MWPM_H
 
-#include "pymatching/fill_match/flooder.h"
+#include "pymatching/fill_match/flooder/graph_flooder.h"
 
 namespace pm {
 

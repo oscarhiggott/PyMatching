@@ -1,8 +1,8 @@
 #ifndef PYMATCHING_FILL_MATCH_MWPM_EVENT_H
 #define PYMATCHING_FILL_MATCH_MWPM_EVENT_H
 
-#include "pymatching/fill_match/flooder/compressed_edge.h"
-#include "pymatching/fill_match/flooder/varying.h"
+#include "pymatching/fill_match/flooder_matcher_interop/compressed_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 
 namespace pm {
 

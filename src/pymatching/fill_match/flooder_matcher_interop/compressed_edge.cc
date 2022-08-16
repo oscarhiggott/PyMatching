@@ -1,4 +1,4 @@
-#include "pymatching/fill_match/flooder/compressed_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/compressed_edge.h"
 
 bool pm::CompressedEdge::operator==(const pm::CompressedEdge &rhs) const {
     return loc_from == rhs.loc_from && loc_to == rhs.loc_to && obs_mask == rhs.obs_mask;

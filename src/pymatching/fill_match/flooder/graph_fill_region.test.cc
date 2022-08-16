@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 #include "pymatching/fill_match/flooder/graph_fill_region.test.h"
-#include "pymatching/fill_match/matcher/region_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 
 void pm::delete_graph_fill_region(pm::GraphFillRegion* region) {
     for (auto& child : region->blossom_children)

@@ -4,8 +4,8 @@
 #include <queue>
 
 #include "pymatching/fill_match/flooder/graph.h"
-#include "pymatching/fill_match/matcher/region_edge.h"
-#include "pymatching/fill_match/flooder/mwpm_event.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
 #include "pymatching/fill_match/tracker/radix_heap_queue.h"
 
 namespace pm {

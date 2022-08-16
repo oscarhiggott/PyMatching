@@ -3,7 +3,7 @@
 
 #include <tuple>
 
-#include "pymatching/fill_match/flooder/compressed_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/compressed_edge.h"
 
 namespace pm {
 

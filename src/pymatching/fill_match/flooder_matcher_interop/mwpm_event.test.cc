@@ -1,4 +1,4 @@
-#include "pymatching/fill_match/flooder/mwpm_event.h"
+#include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
 
 #include <gtest/gtest.h>
 
