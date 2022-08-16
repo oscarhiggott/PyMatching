@@ -45,11 +45,24 @@ namespace pm {
         ~Arena() {
             std::vector<T *> to_free = std::move(allocated);
             std::vector<T *> not_in_use = std::move(available);
-            for (T *v : not_in_use) {
-                new (v) T();
+
+            // Destruct the objects that were still in use.
+            std::sort(to_free.begin(), to_free.end());
+            std::sort(not_in_use.begin(), not_in_use.end());
+            size_t kf = 0;
+            size_t kn = 0;
+            while (kf < to_free.size()) {
+                if (kn < not_in_use.size() && not_in_use[kn] == to_free[kf]) {
+                    kf++;
+                    kn++;
+                } else {
+                    to_free[kf]->~T();
+                    kf++;
+                }
             }
+
+            // Free all allocated memory.
             for (T *v : to_free) {
-                v->~T();
                 free(v);
             }
         }
