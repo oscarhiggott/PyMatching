@@ -22,12 +22,9 @@ namespace pm {
 
         T *alloc_unconstructed() {
             if (available.empty()) {
-                size_t n = allocated.size() / 2 + 32;
-                T* group = (T*)malloc(sizeof(T) * n);
-                for (size_t k = 0; k < n; k++) {
-                    allocated.push_back(group + k);
-                    available.push_back(group + k);
-                }
+                T* p = (T*)malloc(sizeof(T));
+                allocated.push_back(p);
+                available.push_back(p);
             }
             T *result = available.back();
             available.pop_back();
