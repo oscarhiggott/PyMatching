@@ -21,10 +21,9 @@ BENCHMARK(bucket_queue_sort) {
         for (auto t : v) {
             q.enqueue(FloodCheckEvent(t));
         }
-        FloodCheckEvent out{};
         while (true) {
-            out = q.dequeue();
-            if (out.tentative_event_type == NO_TENTATIVE_EVENT) {
+            FloodCheckEvent out = q.dequeue();
+            if (out.tentative_event_type == NO_FLOOD_CHECK_EVENT) {
                 break;
             }
             if (out.time == 0) {

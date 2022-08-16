@@ -87,7 +87,7 @@ void GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector_nod
     } else {
         detector_node.node_event_tracker.set_desired_event(
             {
-                TentativeEventData_LookAtNode{&detector_node},
+                &detector_node,
                 cyclic_time_int{x.second},
             },
             queue);
@@ -103,7 +103,7 @@ void GraphFlooder::schedule_tentative_shrink_event(GraphFillRegion &region) {
     }
     region.shrink_event_tracker.set_desired_event(
         {
-            TentativeEventData_LookAtShrinkingRegion{&region},
+            &region,
             cyclic_time_int{t},
         },
         queue);
@@ -120,20 +120,20 @@ void GraphFlooder::do_region_arriving_at_empty_detector_node(
     reschedule_events_at_detector_node(empty_node);
 }
 
-MwpmEvent GraphFlooder::do_region_shrinking(const TentativeEventData_LookAtShrinkingRegion &event) {
-    if (event.region->shell_area.empty()) {
-        return do_blossom_shattering(*event.region);
-    } else if (event.region->shell_area.size() == 1 && event.region->blossom_children.empty()) {
-        return do_degenerate_implosion(*event.region);
+MwpmEvent GraphFlooder::do_region_shrinking(GraphFillRegion &region) {
+    if (region.shell_area.empty()) {
+        return do_blossom_shattering(region);
+    } else if (region.shell_area.size() == 1 && region.blossom_children.empty()) {
+        return do_degenerate_implosion(region);
     } else {
-        auto leaving_node = event.region->shell_area.back();
-        event.region->shell_area.pop_back();
+        auto leaving_node = region.shell_area.back();
+        region.shell_area.pop_back();
         leaving_node->region_that_arrived = nullptr;
         leaving_node->reached_from_source = nullptr;
         leaving_node->distance_from_source = 0;
         leaving_node->observables_crossed_from_source = 0;
         reschedule_events_at_detector_node(*leaving_node);
-        schedule_tentative_shrink_event(*event.region);
+        schedule_tentative_shrink_event(region);
         return MwpmEvent::no_event();
     }
 }
@@ -207,15 +207,15 @@ GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained
 
 bool GraphFlooder::dequeue_decision(FloodCheckEvent ev) {
     switch (ev.tentative_event_type) {
-        case TentativeType::LOOK_AT_NODE: {
-            auto &d = ev.data_look_at_node;
-            return d.detector_node->node_event_tracker.dequeue_decision(ev, queue);
+        case FloodCheckEventType::LOOK_AT_NODE: {
+            auto &node = *ev.data_look_at_node;
+            return node.node_event_tracker.dequeue_decision(ev, queue);
         }
-        case TentativeType::LOOK_AT_SHRINKING_REGION: {
-            auto &dat = ev.data_look_at_shrinking_region;
-            return dat.region->shrink_event_tracker.dequeue_decision(ev, queue);
+        case FloodCheckEventType::LOOK_AT_SHRINKING_REGION: {
+            auto &region = *ev.data_look_at_shrinking_region;
+            return region.shrink_event_tracker.dequeue_decision(ev, queue);
         }
-        case TentativeType::NO_TENTATIVE_EVENT:
+        case FloodCheckEventType::NO_FLOOD_CHECK_EVENT:
             return true;
         default:
             throw std::invalid_argument("Unrecognized event type.");
@@ -279,7 +279,7 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
         // Need to revisit this node immediately after the mwpm event is handled.
         node.node_event_tracker.set_desired_event(
             {
-                TentativeEventData_LookAtNode{&node},
+                &node,
                 cyclic_time_int{queue.cur_time},
             },
             queue);
@@ -293,7 +293,7 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
         // Need to revisit this node at a later time.
         node.node_event_tracker.set_desired_event(
             {
-                TentativeEventData_LookAtNode{&node},
+                &node,
                 cyclic_time_int{next.second},
             },
             queue);
@@ -305,10 +305,10 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
 MwpmEvent GraphFlooder::process_tentative_event_returning_mwpm_event(FloodCheckEvent tentative_event) {
     switch (tentative_event.tentative_event_type) {
         case LOOK_AT_NODE: {
-            return do_look_at_node_event(*tentative_event.data_look_at_node.detector_node);
+            return do_look_at_node_event(*tentative_event.data_look_at_node);
         }
         case LOOK_AT_SHRINKING_REGION: {
-            return do_region_shrinking(tentative_event.data_look_at_shrinking_region);
+            return do_region_shrinking(*tentative_event.data_look_at_shrinking_region);
         }
         default:
             throw std::invalid_argument("Unknown tentative event type.");
@@ -318,7 +318,7 @@ MwpmEvent GraphFlooder::process_tentative_event_returning_mwpm_event(FloodCheckE
 MwpmEvent GraphFlooder::run_until_next_mwpm_notification() {
     while (true) {
         FloodCheckEvent tentative_event = dequeue_valid();
-        if (tentative_event.tentative_event_type == NO_TENTATIVE_EVENT) {
+        if (tentative_event.tentative_event_type == NO_FLOOD_CHECK_EVENT) {
             return MwpmEvent::no_event();
         }
         MwpmEvent notification = process_tentative_event_returning_mwpm_event(tentative_event);

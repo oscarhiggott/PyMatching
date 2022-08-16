@@ -8,9 +8,9 @@ namespace pm {
 struct DetectorNode;
 struct GraphFillRegion;
 
-enum TentativeType : uint8_t {
+enum FloodCheckEventType : uint8_t {
     /// A placeholder value indicating there was no event.
-    NO_TENTATIVE_EVENT,
+    NO_FLOOD_CHECK_EVENT,
 
     /// Indicates that an event may be happening at a detector node. The event could be:
     /// - The node's region colliding with an adjacent boundary.
@@ -24,30 +24,18 @@ enum TentativeType : uint8_t {
     LOOK_AT_SHRINKING_REGION,
 };
 
-struct TentativeEventData_LookAtNode {
-    DetectorNode *detector_node;
-    bool operator==(const TentativeEventData_LookAtNode &rhs) const;
-    bool operator!=(const TentativeEventData_LookAtNode &rhs) const;
-};
-
-struct TentativeEventData_LookAtShrinkingRegion {
-    GraphFillRegion *region;
-    bool operator==(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
-    bool operator!=(const TentativeEventData_LookAtShrinkingRegion &rhs) const;
-};
-
 struct FloodCheckEvent {
     union {
-        TentativeEventData_LookAtNode data_look_at_node;
-        TentativeEventData_LookAtShrinkingRegion data_look_at_shrinking_region;
+        DetectorNode *data_look_at_node;
+        GraphFillRegion *data_look_at_shrinking_region;
     };
     cyclic_time_int time;
-    TentativeType tentative_event_type;
+    FloodCheckEventType tentative_event_type;
 
-    FloodCheckEvent(TentativeEventData_LookAtNode data, cyclic_time_int time);
-    FloodCheckEvent(TentativeEventData_LookAtShrinkingRegion data, cyclic_time_int time);
+    FloodCheckEvent(DetectorNode *data, cyclic_time_int time);
+    FloodCheckEvent(GraphFillRegion *data, cyclic_time_int time);
     explicit FloodCheckEvent(cyclic_time_int time);
-    FloodCheckEvent() = default;
+    FloodCheckEvent() = delete;
 
     bool operator==(const FloodCheckEvent &rhs) const;
     bool operator!=(const FloodCheckEvent &rhs) const;
