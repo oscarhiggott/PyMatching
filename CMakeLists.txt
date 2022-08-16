@@ -43,7 +43,6 @@ set(SOURCE_FILES_NO_MAIN
         )
 
 set(TEST_FILES
-        src/pymatching/fixed_length_vector.test.cc
         src/pymatching/fill_match/driver/namespaced_main.test.cc
         src/pymatching/fill_match/driver/stim_io.test.cc
         src/pymatching/fill_match/driver/mwpm_decoding.test.cc

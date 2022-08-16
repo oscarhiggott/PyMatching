@@ -4,7 +4,6 @@
 
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
-#include "pymatching/fixed_length_vector.h"
 
 using namespace pm;
 
