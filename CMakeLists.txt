@@ -30,6 +30,7 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/driver/stim_io.cc
         src/pymatching/fill_match/driver/mwpm_decoding.cc
         src/pymatching/fill_match/flooder/graph.cc
+        src/pymatching/fill_match/flooder/detector_node.cc
         src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.cc
         src/pymatching/fill_match/flooder/graph_fill_region.cc
         src/pymatching/fill_match/flooder/graph_flooder.cc
@@ -47,6 +48,7 @@ set(TEST_FILES
         src/pymatching/fill_match/driver/mwpm_decoding.test.cc
         src/pymatching/fill_match/flooder_matcher_interop/varying.test.cc
         src/pymatching/fill_match/flooder/graph.test.cc
+        src/pymatching/fill_match/flooder/detector_node.test.cc
         src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.test.cc
         src/pymatching/fill_match/flooder/graph_fill_region.test.cc
         src/pymatching/fill_match/flooder/graph_flooder.test.cc

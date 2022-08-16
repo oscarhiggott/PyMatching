@@ -17,7 +17,7 @@ TEST(Graph, AddEdge) {
     ASSERT_EQ(g.nodes[0].neighbor_weights[1], 10);
     ASSERT_EQ(g.nodes[1].neighbor_observables[0], 1);
     ASSERT_EQ(g.nodes[3].neighbor_observables[0], 10);
-};
+}
 
 TEST(Graph, AddBoundaryEdge) {
     pm::MatchingGraph g(6);
