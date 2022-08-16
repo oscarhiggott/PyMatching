@@ -12,9 +12,6 @@ class GraphFillRegion;
 struct RegionEdge {
     GraphFillRegion* region;
     CompressedEdge edge;
-    RegionEdge();
-    RegionEdge(GraphFillRegion* region, CompressedEdge edge);
-
     bool operator==(const RegionEdge& rhs) const;
     bool operator!=(const RegionEdge& rhs) const;
 };

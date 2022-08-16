@@ -5,31 +5,12 @@
 
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 #include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
+#include "pymatching/fill_match/flooder/match.h"
 #include "pymatching/fill_match/tracker/queued_event_tracker.h"
 
 namespace pm {
 
 class AltTreeNode;
-class GraphFillRegion;
-
-/// A Match is a partnered graph fill region.
-///
-/// When one graph fill region is matched to another, it's guaranteed that (if the matching
-/// process terminated) two of their detection events will be matched to each other. The
-/// specific detection events to match are identified by `edge.loc_from` and `edge.loc_to`.
-struct Match {
-    /// The region being matched to (or nullptr if not matched).
-    pm::GraphFillRegion* region;
-    /// A summary of the low-level path from this region to that region, including the
-    /// start/end detection events and the observables that were crossed.
-    pm::CompressedEdge edge;
-
-    Match();
-    Match(pm::GraphFillRegion* region, pm::CompressedEdge edge);
-
-    bool operator==(const Match& rhs) const;
-    bool operator!=(const Match& rhs) const;
-};
 
 class GraphFillRegion {
    public:

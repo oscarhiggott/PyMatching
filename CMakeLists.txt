@@ -33,6 +33,7 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/flooder/detector_node.cc
         src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.cc
         src/pymatching/fill_match/flooder/graph_fill_region.cc
+        src/pymatching/fill_match/flooder/match.cc
         src/pymatching/fill_match/flooder/graph_flooder.cc
         src/pymatching/fill_match/matcher/alternating_tree.cc
         src/pymatching/fill_match/matcher/mwpm.cc
@@ -51,6 +52,7 @@ set(TEST_FILES
         src/pymatching/fill_match/flooder/detector_node.test.cc
         src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.test.cc
         src/pymatching/fill_match/flooder/graph_fill_region.test.cc
+        src/pymatching/fill_match/flooder/match.test.cc
         src/pymatching/fill_match/flooder/graph_flooder.test.cc
         src/pymatching/fill_match/matcher/alternating_tree.test.cc
         src/pymatching/fill_match/matcher/mwpm.test.cc

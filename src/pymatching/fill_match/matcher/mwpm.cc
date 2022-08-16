@@ -30,7 +30,7 @@ void Mwpm::handle_tree_hitting_boundary(const RegionHitBoundaryEventData &event)
     shatter_descendants_into_matches_and_freeze(*node);
 
     // Now match the event region to the boundary and freeze
-    event.region->match = Match(nullptr, event.edge);
+    event.region->match = Match{nullptr, event.edge};
     flooder.set_region_frozen(*event.region);
 }
 
@@ -69,8 +69,8 @@ void Mwpm::handle_tree_hitting_match(
     alt_tree_node->make_child(
         matched_region, matched_region->match.region, matched_region->match.edge, unmatched_to_matched_edge);
     auto other_match = matched_region->match.region;
-    other_match->match = Match();
-    matched_region->match = Match();
+    other_match->match.clear();
+    matched_region->match.clear();
     flooder.set_region_shrinking(*matched_region);
     flooder.set_region_growing(*other_match);
 }
@@ -87,7 +87,7 @@ void Mwpm::handle_tree_hitting_self(const RegionHitRegionEventData &event, AltTr
     blossom_cycle.reserve(blossom_cycle.size() + p1s + 1);
     for (size_t i = 0; i < p1s; i++)
         blossom_cycle.push_back(prune_result_1.pruned_path_region_edges[p1s - i - 1]);
-    blossom_cycle.emplace_back(event.region1, event.edge);
+    blossom_cycle.push_back(RegionEdge{event.region1, event.edge});
     common_ancestor->outer_region->alt_tree_node = nullptr;
     auto blossom_region = flooder.create_blossom(blossom_cycle);
 

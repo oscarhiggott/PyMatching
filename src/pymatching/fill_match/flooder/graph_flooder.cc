@@ -152,11 +152,11 @@ MwpmEvent GraphFlooder::do_neighbor_interaction(
         return RegionHitRegionEventData{
             src.top_region(),
             dst.top_region(),
-            CompressedEdge(
+            CompressedEdge{
                 src.reached_from_source,
                 dst.reached_from_source,
                 src.observables_crossed_from_source ^ dst.observables_crossed_from_source ^
-                    src.neighbor_observables[src_to_dst_index]),
+                    src.neighbor_observables[src_to_dst_index]},
         };
     }
 }
@@ -164,18 +164,18 @@ MwpmEvent GraphFlooder::do_neighbor_interaction(
 MwpmEvent GraphFlooder::do_region_hit_boundary_interaction(DetectorNode &node) {
     return RegionHitBoundaryEventData{
         node.top_region(),
-        CompressedEdge(
-            node.reached_from_source, nullptr, node.observables_crossed_from_source ^ node.neighbor_observables[0])};
+        CompressedEdge{
+            node.reached_from_source, nullptr, node.observables_crossed_from_source ^ node.neighbor_observables[0]}};
 }
 
 MwpmEvent GraphFlooder::do_degenerate_implosion(const GraphFillRegion &region) {
     return RegionHitRegionEventData{
         region.alt_tree_node->parent.alt_tree_node->outer_region,
         region.alt_tree_node->outer_region,
-        CompressedEdge(
+        CompressedEdge{
             region.alt_tree_node->parent.edge.loc_to,
             region.alt_tree_node->inner_to_outer_edge.loc_to,
-            region.alt_tree_node->inner_to_outer_edge.obs_mask ^ region.alt_tree_node->parent.edge.obs_mask)};
+            region.alt_tree_node->inner_to_outer_edge.obs_mask ^ region.alt_tree_node->parent.edge.obs_mask}};
 }
 
 MwpmEvent GraphFlooder::do_blossom_shattering(GraphFillRegion &region) {

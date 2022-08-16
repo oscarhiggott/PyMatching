@@ -88,7 +88,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
         (MwpmEvent{
             RegionHitBoundaryEventData{
                 flooder.graph.nodes[2].region_that_arrived,
-                CompressedEdge(&flooder.graph.nodes[2], nullptr, 6),
+                CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
             },
         }));
 
@@ -99,7 +99,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     auto e2 = flooder.run_until_next_mwpm_notification();
     MwpmEvent e2_exp = RegionHitBoundaryEventData{
         flooder.graph.nodes[2].region_that_arrived,
-        CompressedEdge(&flooder.graph.nodes[2], nullptr, 10),
+        CompressedEdge{&flooder.graph.nodes[2], nullptr, 10},
     };
     ASSERT_EQ(e2, e2_exp);
     flooder.queue.dequeue();
@@ -122,7 +122,7 @@ TEST(GraphFlooder, RegionHitRegion) {
     MwpmEvent e1_exp = RegionHitRegionEventData{
         flooder.graph.nodes[4].region_that_arrived,
         flooder.graph.nodes[2].region_that_arrived,
-        CompressedEdge(&flooder.graph.nodes[4], &flooder.graph.nodes[2], 8)};
+        CompressedEdge{&flooder.graph.nodes[4], &flooder.graph.nodes[2], 8}};
     ASSERT_EQ(e1, e1_exp);
 }
 
@@ -141,7 +141,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
         e1,
         MwpmEvent(RegionHitBoundaryEventData{
             flooder.graph.nodes[2].region_that_arrived,
-            CompressedEdge(&flooder.graph.nodes[2], nullptr, 6),
+            CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
         }));
     ASSERT_EQ(flooder.queue.cur_time, 36);
     flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);

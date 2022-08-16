@@ -96,7 +96,7 @@ void pm::AltTreeNode::become_root() {
     });
     parent = pm::AltTreeEdge();
     add_child(pm::AltTreeEdge(old_parent, inner_to_outer_edge.reversed()));
-    inner_to_outer_edge = CompressedEdge();
+    inner_to_outer_edge = CompressedEdge{nullptr, nullptr, 0};
 }
 
 bool pm::AltTreeNode::operator==(const pm::AltTreeNode &rhs) const {

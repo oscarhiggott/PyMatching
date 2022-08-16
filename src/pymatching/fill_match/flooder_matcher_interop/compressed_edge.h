@@ -33,15 +33,15 @@ struct CompressedEdge {
     bool operator!=(const CompressedEdge& rhs) const;
 
     CompressedEdge merged_with(const CompressedEdge& other) const;
-    CompressedEdge() = default;
-    CompressedEdge(DetectorNode* loc_from, DetectorNode* loc_to, obs_int obs_mask);
 
     std::string str() const;
-};
 
-inline CompressedEdge::CompressedEdge(DetectorNode* loc_from, DetectorNode* loc_to, obs_int obs_mask)
-    : loc_from(loc_from), loc_to(loc_to), obs_mask(obs_mask) {
-}
+    inline void clear() {
+        loc_from = nullptr;
+        loc_to = nullptr;
+        obs_mask = 0;
+    }
+};
 
 inline CompressedEdge CompressedEdge::reversed() const {
     return {loc_to, loc_from, obs_mask};

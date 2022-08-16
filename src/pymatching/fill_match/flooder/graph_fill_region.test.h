@@ -6,17 +6,17 @@
 
 namespace pm {
 struct GraphFillTestData {
-    std::vector<pm::DetectorNode> detectors;
+    std::vector<DetectorNode> detectors;
     explicit GraphFillTestData(int num_elements) {
         detectors.resize(num_elements);
     };
-    pm::RegionEdge b(int loc_from, int loc_to, std::vector<pm::RegionEdge> edges, bool root = false) {
-        auto r = new pm::GraphFillRegion();
+    RegionEdge b(int loc_from, int loc_to, std::vector<RegionEdge> edges, bool root = false) {
+        auto r = new GraphFillRegion();
         r->blossom_children = std::move(edges);
         for (auto c : r->blossom_children)
             c.region->blossom_parent = r;
-        auto ce = root ? pm::CompressedEdge() : pm::CompressedEdge(&detectors[loc_from], &detectors[loc_to], 0);
-        auto region_edge = pm::RegionEdge(r, ce);
+        auto ce = root ? CompressedEdge{nullptr, nullptr, 0} : CompressedEdge{&detectors[loc_from], &detectors[loc_to], 0};
+        auto region_edge = RegionEdge{r, ce};
         return region_edge;
     }
 };

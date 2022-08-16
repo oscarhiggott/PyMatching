@@ -39,7 +39,7 @@ MwpmAltTreeTestData::MwpmAltTreeTestData(std::vector<DetectorNode>* nodes) : nod
 AltTreeEdge MwpmAltTreeTestData::t(
     std::vector<AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root) const {
     AltTreeNode* node;
-    CompressedEdge parent_ce(nullptr, nullptr, 0);
+    CompressedEdge parent_ce{nullptr, nullptr, 0};
     if (root) {
         node = new AltTreeNode((*nodes)[outer_region_id].region_that_arrived);
     } else {
@@ -145,7 +145,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     ASSERT_TRUE(regions_matched(ns, 4, 3));
     ASSERT_TRUE(regions_matched(ns, 2, 6));
     ASSERT_TRUE(regions_matched(ns, 1, 0));
-    ASSERT_EQ(ns[5].region_that_arrived->match, Match(nullptr, {&ns[5], nullptr, 8}));
+    ASSERT_EQ(ns[5].region_that_arrived->match, (Match{nullptr, {&ns[5], nullptr, 8}}));
 }
 
 TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
@@ -225,8 +225,8 @@ TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
     mwpm.process_event(MwpmEvent(RegionHitRegionEventData{blossom, ns[13].region_that_arrived, {&ns[4], &ns[13], 1}}));
     ASSERT_TRUE(regions_matched(ns, 5, 9));
     ASSERT_TRUE(regions_matched(ns, 8, 12));
-    ASSERT_EQ(blossom->match, Match(ns[13].region_that_arrived, {&ns[4], &ns[13], 1}));
-    ASSERT_EQ(ns[13].region_that_arrived->match, Match(blossom, {&ns[13], &ns[4], 1}));
+    ASSERT_EQ(blossom->match, (Match{ns[13].region_that_arrived, {&ns[4], &ns[13], 1}}));
+    ASSERT_EQ(ns[13].region_that_arrived->match, (Match{blossom, {&ns[13], &ns[4], 1}}));
 }
 
 TEST(Mwpm, BoundaryMatchHitsTree) {
@@ -383,7 +383,7 @@ TEST(Mwpm, TwoRegionsGrowingThenMatching) {
     MwpmEvent e1_expected = RegionHitRegionEventData{
         mwpm.flooder.graph.nodes[1].region_that_arrived,
         mwpm.flooder.graph.nodes[3].region_that_arrived,
-        CompressedEdge(&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[3], 4)};
+        CompressedEdge{&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[3], 4}};
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
     auto e2 = mwpm.flooder.run_until_next_mwpm_notification();
@@ -418,18 +418,18 @@ TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     auto r6 = mwpm.flooder.graph.nodes[6].region_that_arrived;
     auto e1 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e1_expected = RegionHitRegionEventData{
-        r4, r1, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13)};
+        r4, r1, CompressedEdge{&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13}};
     ASSERT_EQ(e1, e1_expected);
     mwpm.process_event(e1);
     auto e2 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e2_expected =
-        RegionHitRegionEventData{r4, r5, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[5], 2)};
+        RegionHitRegionEventData{r4, r5, CompressedEdge{&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[5], 2}};
     ASSERT_EQ(e2, e2_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 12);
     mwpm.process_event(e2);
     auto e3 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e3_expected =
-        RegionHitRegionEventData{r6, r5, CompressedEdge(&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3)};
+        RegionHitRegionEventData{r6, r5, CompressedEdge{&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3}};
     ASSERT_EQ(e3, e3_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 18);
     mwpm.process_event(e3);
@@ -447,10 +447,10 @@ TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     ASSERT_EQ(r4->shell_area, area_4);
     for (auto ri : {r1, r4, r5, r6})
         ASSERT_EQ(ri->alt_tree_node, nullptr);
-    ASSERT_EQ(r1->match, Match(r4, CompressedEdge(&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[4], 13)));
-    ASSERT_EQ(r4->match, Match(r1, CompressedEdge(&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13)));
-    ASSERT_EQ(r5->match, Match(r6, CompressedEdge(&mwpm.flooder.graph.nodes[5], &mwpm.flooder.graph.nodes[6], 3)));
-    ASSERT_EQ(r6->match, Match(r5, CompressedEdge(&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3)));
+    ASSERT_EQ(r1->match, (Match{r4, CompressedEdge{&mwpm.flooder.graph.nodes[1], &mwpm.flooder.graph.nodes[4], 13}}));
+    ASSERT_EQ(r4->match, (Match{r1, CompressedEdge{&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[1], 13}}));
+    ASSERT_EQ(r5->match, (Match{r6, CompressedEdge{&mwpm.flooder.graph.nodes[5], &mwpm.flooder.graph.nodes[6], 3}}));
+    ASSERT_EQ(r6->match, (Match{r5, CompressedEdge{&mwpm.flooder.graph.nodes[6], &mwpm.flooder.graph.nodes[5], 3}}));
 }
 
 TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
@@ -487,5 +487,5 @@ TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     obs_int obs = 0;
     for (int i = 0; i < 40; i++)
         obs ^= i;
-    ASSERT_EQ(blossom->match, Match(nullptr, {&mwpm.flooder.graph.nodes[40], nullptr, obs ^ 1}));
+    ASSERT_EQ(blossom->match, (Match{nullptr, {&mwpm.flooder.graph.nodes[40], nullptr, obs ^ 1}}));
 }

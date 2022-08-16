@@ -40,26 +40,12 @@ bool pm::GraphFillRegion::operator!=(const pm::GraphFillRegion &rhs) const {
 }
 
 void pm::GraphFillRegion::add_match(pm::GraphFillRegion *region, const pm::CompressedEdge &edge) {
-    match = Match(region, edge);
-    region->match = Match(this, edge.reversed());
+    match = Match{region, edge};
+    region->match = Match{this, edge.reversed()};
 }
 
 void pm::GraphFillRegion::cleanup_shell_area() {
     for (auto &detector_node : shell_area) {
         detector_node->reset();
     }
-}
-
-pm::Match::Match(pm::GraphFillRegion *region, pm::CompressedEdge edge) : region(region), edge(edge) {
-}
-
-pm::Match::Match() : region(nullptr), edge(CompressedEdge()) {
-}
-
-bool pm::Match::operator==(const pm::Match &rhs) const {
-    return region == rhs.region && edge == rhs.edge;
-}
-
-bool pm::Match::operator!=(const pm::Match &rhs) const {
-    return !(rhs == *this);
 }
