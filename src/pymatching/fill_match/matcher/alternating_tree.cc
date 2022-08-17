@@ -156,7 +156,7 @@ AltTreeNode *AltTreeNode::most_recent_common_ancestor(AltTreeNode &other) {
     // Clean up 'visited' flags for the common ancestor, and its ancestors
     common_ancestor->visited = false;
     this_parent = common_ancestor->parent.alt_tree_node;
-    while (this_parent) {
+    while (this_parent && this_parent->visited) {
         this_parent->visited = false;
         this_parent = this_parent->parent.alt_tree_node;
     }

@@ -3,19 +3,23 @@
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 
-pm::GraphFillRegion::GraphFillRegion()
-    : blossom_parent(nullptr), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
+using namespace pm;
+
+GraphFillRegion::GraphFillRegion()
+    : blossom_parent(nullptr), blossom_parent_top(this), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
+}
+GraphFillRegion::GraphFillRegion(GraphFillRegion &&other) :
+    blossom_parent(other.blossom_parent),
+    blossom_parent_top(other.blossom_parent_top == &other ? this : other.blossom_parent_top),
+    alt_tree_node(std::move(other.alt_tree_node)),
+    radius(std::move(other.radius)),
+    shrink_event_tracker(std::move(other.shrink_event_tracker)),
+    match(std::move(other.match)),
+    blossom_children(std::move(other.blossom_children)),
+    shell_area(std::move(other.shell_area)) {
 }
 
-pm::GraphFillRegion *pm::GraphFillRegion::top_region() const {
-    auto current = const_cast<GraphFillRegion *>(this);
-    while (current->blossom_parent) {
-        current = current->blossom_parent;
-    }
-    return current;
-}
-
-bool pm::GraphFillRegion::tree_equal(const pm::GraphFillRegion &other) const {
+bool GraphFillRegion::tree_equal(const GraphFillRegion &other) const {
     if (alt_tree_node != other.alt_tree_node || radius != other.radius ||
         blossom_children.size() != other.blossom_children.size() || shell_area != other.shell_area) {
         return false;
@@ -31,21 +35,43 @@ bool pm::GraphFillRegion::tree_equal(const pm::GraphFillRegion &other) const {
     return true;
 }
 
-bool pm::GraphFillRegion::operator==(const pm::GraphFillRegion &rhs) const {
+bool GraphFillRegion::operator==(const GraphFillRegion &rhs) const {
     return tree_equal(rhs);
 }
 
-bool pm::GraphFillRegion::operator!=(const pm::GraphFillRegion &rhs) const {
+bool GraphFillRegion::operator!=(const GraphFillRegion &rhs) const {
     return !(rhs == *this);
 }
 
-void pm::GraphFillRegion::add_match(pm::GraphFillRegion *region, const pm::CompressedEdge &edge) {
+void GraphFillRegion::add_match(GraphFillRegion *region, const CompressedEdge &edge) {
     match = Match{region, edge};
     region->match = Match{this, edge.reversed()};
 }
 
-void pm::GraphFillRegion::cleanup_shell_area() {
+void GraphFillRegion::cleanup_shell_area() {
     for (auto &detector_node : shell_area) {
         detector_node->reset();
     }
+}
+
+void GraphFillRegion::clear_blossom_parent() {
+    blossom_parent = nullptr;
+    do_op_for_each_descendant_and_self([&](GraphFillRegion *descendant) {
+        descendant->blossom_parent_top = this;
+        for (DetectorNode *n: descendant->shell_area) {
+            n->region_that_arrived_top = this;
+            n->wrapped_radius_cached = n->compute_wrapped_radius();
+        }
+    });
+}
+
+void GraphFillRegion::wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_top) {
+    blossom_parent = new_blossom_parent_and_top;
+    do_op_for_each_descendant_and_self([&](GraphFillRegion *descendant) {
+        descendant->blossom_parent_top = new_blossom_parent_and_top;
+        for (DetectorNode *n: descendant->shell_area) {
+            n->region_that_arrived_top = new_blossom_parent_and_top;
+            n->wrapped_radius_cached = n->compute_wrapped_radius();
+        }
+    });
 }

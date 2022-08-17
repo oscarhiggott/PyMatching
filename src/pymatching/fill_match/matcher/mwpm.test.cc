@@ -266,7 +266,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     ASSERT_EQ(res, MatchingResult(6 ^ 7 ^ 8 ^ 9 ^ 10 ^ 11 ^ 12, 14));
     for (auto& n : ns) {
         ASSERT_EQ(n.region_that_arrived, nullptr);
-        ASSERT_EQ(n.distance_from_source, 0);
+        ASSERT_EQ(n.radius_of_arrival, 0);
         ASSERT_EQ(n.observables_crossed_from_source, 0);
         ASSERT_EQ(n.reached_from_source, nullptr);
     }
@@ -510,7 +510,7 @@ TEST(GraphFlooder, CreateRegion) {
         flooder.queue.dequeue(),
         FloodCheckEvent(&flooder.graph.nodes[2], cyclic_time_int{11}));
     ASSERT_EQ(flooder.graph.nodes[0].region_that_arrived->shell_area[0], &flooder.graph.nodes[0]);
-    ASSERT_EQ(flooder.graph.nodes[0].distance_from_source, 0);
+    ASSERT_EQ(flooder.graph.nodes[0].radius_of_arrival, 0);
     ASSERT_EQ(flooder.graph.nodes[0].reached_from_source, &flooder.graph.nodes[0]);
     ASSERT_EQ(
         flooder.queue.dequeue(),
