@@ -52,7 +52,7 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
             }
         }
     })
-        .goal_micros(800)
+        .goal_micros(500)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -84,7 +84,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
             }
         }
     })
-        .goal_millis(30)
+        .goal_millis(18)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -116,7 +116,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(4.5)
+        .goal_millis(2.7)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -148,7 +148,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
             }
         }
     })
-        .goal_micros(180)
+        .goal_micros(120)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -180,7 +180,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
             }
         }
     })
-        .goal_micros(80)
+        .goal_micros(60)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -212,7 +212,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
             }
         }
     })
-        .goal_millis(20)
+        .goal_millis(12)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -244,7 +244,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
             }
         }
     })
-        .goal_millis(17)
+        .goal_millis(13)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -276,7 +276,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
             }
         }
     })
-        .goal_millis(3)
+        .goal_millis(1.9)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -308,7 +308,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
             }
         }
     })
-        .goal_micros(250)
+        .goal_micros(180)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
