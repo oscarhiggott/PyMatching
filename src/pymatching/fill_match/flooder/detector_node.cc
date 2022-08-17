@@ -17,17 +17,6 @@ int32_t DetectorNode::compute_wrapped_radius() const {
     return total - radius_of_arrival;
 }
 
-Varying32 DetectorNode::local_radius() const {
-    if (region_that_arrived_top == nullptr) {
-        return Varying32{0};
-    }
-    return region_that_arrived_top->radius + wrapped_radius_cached;
-}
-
-bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
-    return region_that_arrived_top == other.region_that_arrived_top;
-}
-
 void DetectorNode::reset() {
     observables_crossed_from_source = 0;
     reached_from_source = nullptr;

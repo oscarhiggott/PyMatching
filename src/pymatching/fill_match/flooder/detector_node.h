@@ -5,6 +5,7 @@
 
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 #include "pymatching/fill_match/tracker/queued_event_tracker.h"
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 namespace pm {
 
@@ -32,6 +33,8 @@ class DetectorNode {
     /// The topmost region containing this node. Must be kept up to date as
     /// the region structure changes.
     GraphFillRegion* region_that_arrived_top;
+    /// Stores the latest value of `compute_wrapped_radius` so it doesn't need to be recomputed
+    /// as much. Updated whenever region_that_arrived_top changes.
     int32_t wrapped_radius_cached;
     /// Of the detection events within the owning region, which one is this node linked to.
     DetectorNode* reached_from_source;
@@ -49,10 +52,19 @@ class DetectorNode {
     std::vector<obs_int> neighbor_observables;  /// Observables crossed by the edge to each neighbor.
 
     /// After it reached this node, how much further did the owning search region grow? Also is it currently growing?
-    Varying32 local_radius() const;
+    inline Varying32 local_radius() const {
+        if (region_that_arrived_top == nullptr) {
+            return Varying32{0};
+        }
+        return region_that_arrived_top->radius + wrapped_radius_cached;
+    }
+
     /// Check if this node is part the same top-level region as another.
     /// Note that they may have different lower level owners that still merge into the same top level owned.
-    bool has_same_owner_as(const DetectorNode& other) const;
+    inline bool has_same_owner_as(const DetectorNode &other) const {
+        return region_that_arrived_top == other.region_that_arrived_top;
+    }
+
     /// Zero all ephemeral fields.
     /// Doesn't free anything or propagate a signal to other objects. Just zeros the fields.
     void reset();
