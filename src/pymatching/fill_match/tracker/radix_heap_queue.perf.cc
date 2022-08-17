@@ -50,10 +50,10 @@ BENCHMARK(bucket_queue_stream) {
             }
         }
         for (size_t k = 0; k < n; k++) {
-            q.enqueue(FloodCheckEvent(q.dequeue().time));
+            q.enqueue(FloodCheckEvent(q.dequeue().time + cyclic_time_int{100}));
         }
     })
-        .goal_micros(150)
+        .goal_micros(200)
         .show_rate("EnqueueDequeues", (double)n);
     if (dependence) {
         std::cerr << "data dependence";

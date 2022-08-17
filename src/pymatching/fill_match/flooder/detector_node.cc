@@ -4,41 +4,26 @@
 
 namespace pm {
 
-Varying32 DetectorNode::total_radius() const {
-    Varying32 result{0};
-    if (reached_from_source != nullptr) {
-        auto r = reached_from_source->region_that_arrived;
-        while (r != nullptr) {
-            result.inplace_freeze_then_add(r->radius);
-            r = r->blossom_parent;
-        }
+int32_t DetectorNode::compute_wrapped_radius() const {
+    if (reached_from_source == nullptr) {
+        return 0;
     }
-    return result;
-}
-
-Varying32 DetectorNode::local_radius() const {
-    return total_radius() - distance_from_source;
-}
-
-bool DetectorNode::has_same_owner_as(const DetectorNode &other) const {
-    if ((region_that_arrived == nullptr) != (other.region_that_arrived == nullptr))
-        return false;
-    if (region_that_arrived == other.region_that_arrived)
-        return true;
-    return top_region() == other.top_region();
-}
-
-GraphFillRegion *DetectorNode::top_region() const {
-    if (!region_that_arrived)
-        return nullptr;
-    return region_that_arrived->top_region();
+    int32_t total = 0;
+    auto r = region_that_arrived;
+    while (r != region_that_arrived_top) {
+        total += r->radius.y_intercept();
+        r = r->blossom_parent;
+    }
+    return total - radius_of_arrival;
 }
 
 void DetectorNode::reset() {
     observables_crossed_from_source = 0;
     reached_from_source = nullptr;
-    distance_from_source = 0;
+    radius_of_arrival = 0;
     region_that_arrived = nullptr;
+    region_that_arrived_top = nullptr;
+    wrapped_radius_cached = 0;
     node_event_tracker.clear();
 }
 

@@ -276,9 +276,10 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
     }
     MatchingResult res{0, 0};
     if (!this_blossom_trivial) {
-        for (auto &r : region->blossom_children)
-            r.region->blossom_parent = nullptr;
-        auto subblossom = region->match.edge.loc_from->top_region();
+        for (auto &r : region->blossom_children) {
+            r.region->clear_blossom_parent();
+        }
+        auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
         subblossom->match = region->match;
         if (match_region)
             match_region->match.region = subblossom;
@@ -299,9 +300,10 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
         region = subblossom;
     }
     if (match_blossom_has_children) {
-        for (auto &r : match_region->blossom_children)
-            r.region->blossom_parent = nullptr;
-        auto subblossom = match_region->match.edge.loc_from->top_region();
+        for (auto &r : match_region->blossom_children) {
+            r.region->clear_blossom_parent();
+        }
+        auto subblossom = match_region->match.edge.loc_from->region_that_arrived_top;
         subblossom->match = match_region->match;
         region->match.region = subblossom;
         res.weight += match_region->radius.y_intercept();

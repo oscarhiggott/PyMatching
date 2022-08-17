@@ -52,7 +52,7 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
             }
         }
     })
-        .goal_millis(1)
+        .goal_micros(800)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
@@ -116,7 +116,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(5)
+        .goal_millis(4.5)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
