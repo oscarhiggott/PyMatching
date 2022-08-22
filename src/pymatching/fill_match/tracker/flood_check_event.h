@@ -13,6 +13,7 @@ enum FloodCheckEventType : uint8_t {
     NO_FLOOD_CHECK_EVENT,
 
     /// Indicates that an event may be happening at a detector node. The event could be:
+    /// - The node's region growing into an empty neighbor.
     /// - The node's region colliding with an adjacent boundary.
     /// - The node's region colliding with an adjacent region.
     LOOK_AT_NODE,
