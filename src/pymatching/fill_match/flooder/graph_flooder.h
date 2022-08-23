@@ -37,7 +37,7 @@ struct GraphFlooder {
     void reschedule_events_at_detector_node(DetectorNode& detector_node);
     void do_region_created_at_empty_detector_node(GraphFillRegion& region, DetectorNode& detector_node);
     void do_region_arriving_at_empty_detector_node(
-        GraphFillRegion& region, DetectorNode& empty_node, DetectorNode& from_node, size_t neighbor_index);
+        GraphFillRegion& region, DetectorNode& empty_node, const DetectorNode& from_node, size_t neighbor_index);
     MwpmEvent do_region_shrinking(GraphFillRegion &shrinking_region);
     pm::MwpmEvent do_neighbor_interaction(
         DetectorNode& src, size_t src_to_dst_index, DetectorNode& dst, size_t dst_to_src_index);
@@ -46,7 +46,7 @@ struct GraphFlooder {
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);
     bool dequeue_decision(pm::FloodCheckEvent ev);
     std::pair<size_t, pm::cumulative_time_int> find_next_event_at_node_returning_neighbor_index_and_time(
-        DetectorNode& detector_node) const;
+        const DetectorNode& detector_node) const;
     pm::MwpmEvent do_look_at_node_event(DetectorNode& node);
 
     pm::FloodCheckEvent dequeue_valid();

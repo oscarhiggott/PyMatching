@@ -25,8 +25,6 @@ struct MatchingResult {
 
 struct Mwpm {
     GraphFlooder flooder;
-    // detection_events can go, instead stored locally in decoding method
-    std::vector<DetectorNode*> detection_events;
     Arena<AltTreeNode> node_arena;
 
     explicit Mwpm(GraphFlooder flooder);
@@ -52,6 +50,8 @@ struct Mwpm {
     void handle_tree_hitting_self(const RegionHitRegionEventData& event, AltTreeNode* common_ancestor);
     void handle_tree_hitting_other_tree(const RegionHitRegionEventData& event);
     MatchingResult shatter_blossom_and_extract_matches(GraphFillRegion* region);
+
+    void verify_invariants() const;
 
     void create_detection_event(DetectorNode *node);
 };

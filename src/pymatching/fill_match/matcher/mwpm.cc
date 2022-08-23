@@ -120,6 +120,10 @@ void Mwpm::handle_tree_hitting_self(const RegionHitRegionEventData &event, AltTr
 }
 
 void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
+    for (auto &child : event.blossom_region->blossom_children) {
+        child.region->clear_blossom_parent();
+    }
+
     // First find indices of in_parent_region and in_child_region
     // in_parent_region is the blossom cycle region connected to the parent of the blossom inner node.
     // in_child_region is the blossom cycle region connected to the child of the inner node
@@ -359,4 +363,8 @@ bool MatchingResult::operator==(const MatchingResult &rhs) const {
 
 bool MatchingResult::operator!=(const MatchingResult &rhs) const {
     return !(rhs == *this);
+}
+
+void Mwpm::verify_invariants() const {
+
 }

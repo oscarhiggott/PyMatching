@@ -59,6 +59,9 @@ class DetectorNode {
         return region_that_arrived_top->radius + wrapped_radius_cached;
     }
 
+    /// Determines the region that owns this node which is a child of this node's top region.
+    GraphFillRegion* heir_region_on_shatter() const;
+
     /// Check if this node is part the same top-level region as another.
     /// Note that they may have different lower level owners that still merge into the same top level owned.
     inline bool has_same_owner_as(const DetectorNode &other) const {
@@ -72,6 +75,8 @@ class DetectorNode {
     size_t index_of_neighbor(DetectorNode* neighbor) const;
 
     int32_t compute_wrapped_radius() const;
+
+    int32_t compute_wrapped_radius_within_layer_at_time(GraphFillRegion *target_layer, cumulative_time_int t) const;
 };
 
 }  // namespace pm

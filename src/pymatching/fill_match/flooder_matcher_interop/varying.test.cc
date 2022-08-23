@@ -81,20 +81,18 @@ TEST(Varying, from_base_and_growth) {
     ASSERT_EQ(Varying32::from_base_and_growth(5, +1).str(), "5 + t");
 }
 
-TEST(Varying, inplace_freeze_then_add) {
-    auto x = Varying32::from_base_and_growth(10, 0);
+TEST(Varying, from_point_and_slope) {
+    auto x = Varying32::from_point_and_slope(5, 10, +1);
+    ASSERT_EQ(x.get_distance_at_time(5), 10);
+    ASSERT_TRUE(x.is_growing());
 
-    x.inplace_freeze_then_add(Varying32::from_base_and_growth(5, 0));
-    ASSERT_EQ(x, Varying32::from_base_and_growth(15, 0));
+    x = Varying32::from_point_and_slope(6, 11, -1);
+    ASSERT_EQ(x.get_distance_at_time(6), 11);
+    ASSERT_TRUE(x.is_shrinking());
 
-    x.inplace_freeze_then_add(Varying32::from_base_and_growth(5, -1));
-    ASSERT_EQ(x, Varying32::from_base_and_growth(20, -1));
-
-    x.inplace_freeze_then_add(Varying32::from_base_and_growth(5, +1));
-    ASSERT_EQ(x, Varying32::from_base_and_growth(25, +1));
-
-    x.inplace_freeze_then_add(Varying32::from_base_and_growth(5, 0));
-    ASSERT_EQ(x, Varying32::from_base_and_growth(30, +0));
+    x = Varying32::from_point_and_slope(7, 13, 0);
+    ASSERT_EQ(x.get_distance_at_time(7), 13);
+    ASSERT_TRUE(x.is_frozen());
 }
 
 TEST(Varying, TimeToXInterceptWhenAddedTo) {

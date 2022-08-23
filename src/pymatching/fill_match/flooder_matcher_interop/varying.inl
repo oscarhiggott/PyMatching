@@ -108,6 +108,11 @@ Varying<T> Varying<T>::from_base_and_growth(T base, int8_t growth) {
 }
 
 template<typename T>
+Varying<T> Varying<T>::from_point_and_slope(T t, T y, int8_t growth) {
+    return Varying<T>::from_base_and_growth(y - t * growth, growth);
+}
+
+template<typename T>
 inline std::ostream &operator<<(std::ostream &os, Varying<T> varying) {
     os << (varying.data >> 2);
     if (varying.data & 1){
@@ -168,10 +173,4 @@ bool Varying<T>::is_frozen() const {
 template<typename T>
 bool Varying<T>::is_growing() const {
     return data & 1;
-}
-
-template<typename T>
-void Varying<T>::inplace_freeze_then_add(Varying<T> other) {
-    data &= ~(T)3;
-    data += other.data;
 }

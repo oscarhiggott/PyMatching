@@ -38,6 +38,7 @@ struct Varying {
     std::string str() const;
     static Varying<T> growing_varying_with_zero_distance_at_time(T time);
     static Varying<T> from_base_and_growth(T base, int8_t growth);
+    static Varying<T> from_point_and_slope(T t, T y, int8_t growth);
     template <typename U>
     friend std::ostream &operator<<(std::ostream &os, Varying<U> varying);
     bool operator==(Varying<T> rhs) const;
@@ -46,8 +47,6 @@ struct Varying {
     Varying<T> operator-(T offset) const;
     Varying<T> &operator+=(T offset);
     Varying<T> &operator-=(T offset);
-
-    void inplace_freeze_then_add(Varying<T> other);
 };
 
 using Varying32 = Varying<int32_t>;

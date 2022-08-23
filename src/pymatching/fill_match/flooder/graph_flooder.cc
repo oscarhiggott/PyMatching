@@ -25,7 +25,7 @@ void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &reg
 }
 
 std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(
-    DetectorNode &detector_node) const {
+    const DetectorNode &detector_node) const {
     cumulative_time_int best_time = std::numeric_limits<cumulative_time_int>::max();
     size_t best_neighbor = SIZE_MAX;
 
@@ -98,7 +98,7 @@ void GraphFlooder::schedule_tentative_shrink_event(GraphFillRegion &region) {
 }
 
 void GraphFlooder::do_region_arriving_at_empty_detector_node(
-    GraphFillRegion &region, DetectorNode &empty_node, DetectorNode &from_node, size_t neighbor_index) {
+    GraphFillRegion &region, DetectorNode &empty_node, const DetectorNode &from_node, size_t neighbor_index) {
     empty_node.observables_crossed_from_source =
         (from_node.observables_crossed_from_source ^ from_node.neighbor_observables[neighbor_index]);
     empty_node.reached_from_source = from_node.reached_from_source;
@@ -171,14 +171,10 @@ MwpmEvent GraphFlooder::do_degenerate_implosion(const GraphFillRegion &region) {
 }
 
 MwpmEvent GraphFlooder::do_blossom_shattering(GraphFillRegion &region) {
-    for (auto &child : region.blossom_children) {
-        child.region->clear_blossom_parent();
-    }
-
     return BlossomShatterEventData{
         &region,
-        region.alt_tree_node->parent.edge.loc_from->region_that_arrived_top,
-        region.alt_tree_node->inner_to_outer_edge.loc_from->region_that_arrived_top};
+        region.alt_tree_node->parent.edge.loc_from->heir_region_on_shatter(),
+        region.alt_tree_node->inner_to_outer_edge.loc_from->heir_region_on_shatter()};
 }
 
 GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained_regions) {

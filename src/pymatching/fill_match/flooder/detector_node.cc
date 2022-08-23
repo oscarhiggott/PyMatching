@@ -17,6 +17,19 @@ int32_t DetectorNode::compute_wrapped_radius() const {
     return total - radius_of_arrival;
 }
 
+cumulative_time_int DetectorNode::compute_wrapped_radius_within_layer_at_time(GraphFillRegion *target_layer, cumulative_time_int t) const {
+    int32_t radius_past_region_that_arrived = 0;
+    auto r = region_that_arrived;
+    while (r != nullptr) {
+        radius_past_region_that_arrived += r->radius.get_distance_at_time(t);
+        if (r == target_layer) {
+            break;
+        }
+        r = r->blossom_parent;
+    }
+    return radius_past_region_that_arrived - radius_of_arrival;
+}
+
 void DetectorNode::reset() {
     observables_crossed_from_source = 0;
     reached_from_source = nullptr;
@@ -34,6 +47,17 @@ size_t DetectorNode::index_of_neighbor(DetectorNode *target) const {
         }
     }
     throw std::invalid_argument("Failed to find neighbor.");
+}
+
+GraphFillRegion *DetectorNode::heir_region_on_shatter() const {
+    GraphFillRegion *r = region_that_arrived;
+    while (true) {
+        GraphFillRegion *p = r->blossom_parent;
+        if (p == region_that_arrived_top) {
+            return r;
+        }
+        r = p;
+    }
 }
 
 }  // namespace pm
