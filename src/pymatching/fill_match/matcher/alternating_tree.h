@@ -106,8 +106,7 @@ class AltTreeNode {
     /// Finds the most recent common ancestor between this node and the other node.
     ///
     /// Would be const except it uses ephemeral state to go faster.
-    ///
-    /// Note: breadcrumbs are left (by setting `visited=true`) as the
+    /// More specifically, breadcrumbs are left (by setting `visited=true`) as the
     /// tree is traversed upward from `this` and `other`. These are
     /// reset (`visited=false`) before the method completes for the
     /// common ancestor and its ancestors, but *not* reset for nodes
