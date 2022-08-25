@@ -407,7 +407,7 @@ void pm::write_animated_decoding_svg_frames(
     pm::Mwpm &mwpm,
     const std::vector<std::pair<float, float>> &coords,
     const std::vector<std::pair<float, float>> &boundary_coords,
-    const std::vector<size_t> detection_events,
+    const std::vector<uint64_t> detection_events,
     const std::string &file_path_prefix,
     bool print_progress,
     size_t frames_per_mwpm_event,
