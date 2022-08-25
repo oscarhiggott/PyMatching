@@ -3,12 +3,12 @@
 
 #include <queue>
 
-#include "pymatching/fill_match/flooder/graph.h"
-#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
-#include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
-#include "pymatching/fill_match/tracker/radix_heap_queue.h"
 #include "pymatching/fill_match/arena.h"
+#include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
+#include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
+#include "pymatching/fill_match/tracker/radix_heap_queue.h"
 
 namespace pm {
 
@@ -38,7 +38,7 @@ struct GraphFlooder {
     void do_region_created_at_empty_detector_node(GraphFillRegion& region, DetectorNode& detector_node);
     void do_region_arriving_at_empty_detector_node(
         GraphFillRegion& region, DetectorNode& empty_node, const DetectorNode& from_node, size_t neighbor_index);
-    MwpmEvent do_region_shrinking(GraphFillRegion &shrinking_region);
+    MwpmEvent do_region_shrinking(GraphFillRegion& shrinking_region);
     pm::MwpmEvent do_neighbor_interaction(
         DetectorNode& src, size_t src_to_dst_index, DetectorNode& dst, size_t dst_to_src_index);
     pm::MwpmEvent do_region_hit_boundary_interaction(DetectorNode& node);

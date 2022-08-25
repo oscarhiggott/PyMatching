@@ -3,8 +3,8 @@
 #include "gtest/gtest.h"
 
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
-#include "pymatching/fill_match/ints.h"
 #include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
+#include "pymatching/fill_match/ints.h"
 
 using namespace pm;
 
@@ -19,10 +19,7 @@ TEST(GraphFlooder, PriorityQueue) {
     graph.add_edge(5, 0, 10, 0);
 
     auto qn = [&](int i, int t) {
-        graph.nodes[i].node_event_tracker.set_desired_event(
-            {&graph.nodes[i],
-             cyclic_time_int{t}},
-            flooder.queue);
+        graph.nodes[i].node_event_tracker.set_desired_event({&graph.nodes[i], cyclic_time_int{t}}, flooder.queue);
     };
 
     qn(0, 10);
@@ -30,8 +27,7 @@ TEST(GraphFlooder, PriorityQueue) {
     qn(2, 5);
 
     GraphFillRegion gfr;
-    gfr.shrink_event_tracker.set_desired_event(
-        {&gfr, cyclic_time_int{70}}, flooder.queue);
+    gfr.shrink_event_tracker.set_desired_event({&gfr, cyclic_time_int{70}}, flooder.queue);
 
     qn(4, 100);
     auto e = flooder.dequeue_valid();

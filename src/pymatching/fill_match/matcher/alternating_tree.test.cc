@@ -2,9 +2,9 @@
 
 #include <gtest/gtest.h>
 
+#include "pymatching/fill_match/arena.h"
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
-#include "pymatching/fill_match/arena.h"
 
 using namespace pm;
 
@@ -16,8 +16,7 @@ struct AltTreeTestData {
         regions.resize(num_elements);
         nodes.resize(num_elements);
     };
-    AltTreeEdge t(
-        std::vector<AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root = false);
+    AltTreeEdge t(std::vector<AltTreeEdge> children, size_t inner_region_id, size_t outer_region_id, bool root = false);
 };
 
 AltTreeEdge AltTreeTestData::t(
@@ -35,7 +34,9 @@ AltTreeEdge AltTreeTestData::t(
         new (node) AltTreeNode(&regions[outer_region_id]);
     } else {
         new (node) AltTreeNode(
-            &regions[inner_region_id], &regions[outer_region_id], {&nodes[inner_region_id], &nodes[outer_region_id], 0});
+            &regions[inner_region_id],
+            &regions[outer_region_id],
+            {&nodes[inner_region_id], &nodes[outer_region_id], 0});
     }
 
     auto edge = AltTreeEdge(node, {nullptr, nullptr, 0});

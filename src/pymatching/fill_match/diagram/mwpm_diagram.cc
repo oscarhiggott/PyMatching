@@ -1,11 +1,11 @@
-#include <fstream>
 #include "pymatching/fill_match/diagram/mwpm_diagram.h"
+
+#include <fstream>
 
 using namespace pm;
 
-std::pair<std::vector<std::pair<float, float>>, std::vector<std::pair<float, float>>> pm::pick_coords_for_drawing_from_dem(
-        const stim::DetectorErrorModel &dem,
-        float pixels_per_unit_length) {
+std::pair<std::vector<std::pair<float, float>>, std::vector<std::pair<float, float>>>
+pm::pick_coords_for_drawing_from_dem(const stim::DetectorErrorModel &dem, float pixels_per_unit_length) {
     size_t n = dem.count_detectors();
     if (n == 0) {
         return {{}, {}};
@@ -50,11 +50,11 @@ std::pair<std::vector<std::pair<float, float>>, std::vector<std::pair<float, flo
     for (const auto &c : coords) {
         auto dx = c.first - avg_x;
         auto dy = c.second - avg_y;
-        auto d = sqrtf(dx*dx + dy*dy);
+        auto d = sqrtf(dx * dx + dy * dy);
         if (d < 1e-5) {
             dx = 11;
             dy = 7;
-            d = sqrtf(dx*dx + dy*dy);
+            d = sqrtf(dx * dx + dy * dy);
         }
         dx /= d;
         dy /= d;
@@ -114,8 +114,7 @@ struct StateHelper {
         }
         auto c = coords[&src - &ns[0]];
         auto nc = neighbor_coords(src, src.neighbors[local_neighbor_index]);
-        return {nc.first * ratio + c.first * (1 - ratio),
-                nc.second * ratio + c.second * (1 - ratio)};
+        return {nc.first * ratio + c.first * (1 - ratio), nc.second * ratio + c.second * (1 - ratio)};
     }
 
     std::vector<std::vector<std::pair<float, float>>> approximate_region_polygons(GraphFillRegion *region) {
@@ -129,8 +128,7 @@ struct StateHelper {
 
             for (size_t nk = 0; nk < n->neighbor_weights.size(); nk++) {
                 auto w = n->neighbor_weights[nk];
-                auto r = n->compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(
-                    t, *region, nk);
+                auto r = n->compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(t, *region, nk);
                 if (!r.has_value()) {
                     continue;
                 }
@@ -156,8 +154,7 @@ struct StateHelper {
             cy /= p.size();
             auto center = coords[b.first - &ns[0]];
             std::sort(p.begin(), p.end(), [&](std::pair<float, float> a, std::pair<float, float> b) -> bool {
-                return atan2f(a.second - cy, a.first - cx)
-                     < atan2f(b.second - cy, b.first - cx);
+                return atan2f(a.second - cy, a.first - cx) < atan2f(b.second - cy, b.first - cx);
             });
             result.push_back(p);
         }
@@ -183,18 +180,12 @@ struct StateHelper {
                 if (n2_ptr != nullptr) {
                     size_t k2 = n2_ptr - &ns[0];
                     if (k2 > k) {
-                        out << " <line x1=\"" << coords[k].first
-                            << "\" x2=\"" << nc.first
-                            << "\" y1=\"" << coords[k].second
-                            << "\" y2=\"" << nc.second
-                            << "\" stroke=\"#CCC\"/>\n";
+                        out << " <line x1=\"" << coords[k].first << "\" x2=\"" << nc.first << "\" y1=\""
+                            << coords[k].second << "\" y2=\"" << nc.second << "\" stroke=\"#CCC\"/>\n";
                     }
                 } else {
-                    out << " <line x1=\"" << coords[k].first
-                        << "\" x2=\"" << nc.first
-                        << "\" y1=\"" << coords[k].second
-                        << "\" y2=\"" << nc.second
-                        << "\" stroke-dasharray=\"4 2"
+                    out << " <line x1=\"" << coords[k].first << "\" x2=\"" << nc.first << "\" y1=\"" << coords[k].second
+                        << "\" y2=\"" << nc.second << "\" stroke-dasharray=\"4 2"
                         << "\" stroke=\"#FAA\"/>\n";
                 }
             }
@@ -204,9 +195,7 @@ struct StateHelper {
         for (size_t k = 0; k < ns.size(); k++) {
             const auto &n = ns[k];
             if (n.reached_from_source != &n) {
-                out << " <circle cx=\"" << coords[k].first
-                    << "\" cy=\"" << coords[k].second
-                    << "\" r=\"" << 3
+                out << " <circle cx=\"" << coords[k].first << "\" cy=\"" << coords[k].second << "\" r=\"" << 3
                     << "\" stroke=\"none"
                     << "\" fill=\"#CCC\"/>\n";
             }
@@ -240,9 +229,7 @@ struct StateHelper {
         for (size_t k = 0; k < ns.size(); k++) {
             const auto &n = ns[k];
             if (n.reached_from_source == &n) {
-                out << " <circle cx=\"" << coords[k].first
-                    << "\" cy=\"" << coords[k].second
-                    << "\" r=\"" << 3
+                out << " <circle cx=\"" << coords[k].first << "\" cy=\"" << coords[k].second << "\" r=\"" << 3
                     << "\" stroke=\"none"
                     << "\" fill=\"red\"/>\n";
             }
@@ -266,13 +253,13 @@ struct StateHelper {
                 if (r1.get_distance_at_time(t) + r2.get_distance_at_time(t) != n.neighbor_weights[ev.first]) {
                     continue;
                 }
-                if (m != nullptr && (m->region_that_arrived_top == nullptr || m->region_that_arrived_top == n.region_that_arrived_top)) {
+                if (m != nullptr && (m->region_that_arrived_top == nullptr ||
+                                     m->region_that_arrived_top == n.region_that_arrived_top)) {
                     continue;
                 }
-                auto col = lerp_pos(n, ev.first, r1.get_distance_at_time(t) / std::max(1.0f, (float)n.neighbor_weights[ev.first]));
-                out << " <circle cx=\"" << col.first
-                    << "\" cy=\"" << col.second
-                    << "\" r=\"" << 3
+                auto col = lerp_pos(
+                    n, ev.first, r1.get_distance_at_time(t) / std::max(1.0f, (float)n.neighbor_weights[ev.first]));
+                out << " <circle cx=\"" << col.first << "\" cy=\"" << col.second << "\" r=\"" << 3
                     << "\" stroke=\"black"
                     << "\" fill=\"orange\"/>\n";
             }
@@ -284,19 +271,13 @@ struct StateHelper {
             if (r->blossom_parent_top == r && r->radius.is_frozen()) {
                 size_t k1 = r->match.edge.loc_from - &ns[0];
                 if (r->match.edge.loc_to == nullptr) {
-                    out << " <line x1=\"" << coords[k1].first
-                        << "\" x2=\"" << boundary_coords[k1].first
-                        << "\" y1=\"" << coords[k1].second
-                        << "\" y2=\"" << boundary_coords[k1].second
-                        << "\" stroke-width=\"" << 4
+                    out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << boundary_coords[k1].first << "\" y1=\""
+                        << coords[k1].second << "\" y2=\"" << boundary_coords[k1].second << "\" stroke-width=\"" << 4
                         << "\" stroke=\"#000\"/>\n";
                 } else {
                     size_t k2 = r->match.edge.loc_to - &ns[0];
-                    out << " <line x1=\"" << coords[k1].first
-                        << "\" x2=\"" << coords[k2].first
-                        << "\" y1=\"" << coords[k1].second
-                        << "\" y2=\"" << coords[k2].second
-                        << "\" stroke-width=\"" << 4
+                    out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << coords[k2].first << "\" y1=\""
+                        << coords[k1].second << "\" y2=\"" << coords[k2].second << "\" stroke-width=\"" << 4
                         << "\" stroke=\"#000\"/>\n";
                 }
             }
@@ -308,20 +289,14 @@ struct StateHelper {
             if (tn->inner_region != nullptr) {
                 size_t k1 = tn->inner_to_outer_edge.loc_from - &ns[0];
                 size_t k2 = tn->inner_to_outer_edge.loc_to - &ns[0];
-                out << " <line x1=\"" << coords[k1].first
-                    << "\" x2=\"" << coords[k2].first
-                    << "\" y1=\"" << coords[k1].second
-                    << "\" y2=\"" << coords[k2].second
-                    << "\" stroke=\"#000\"/>\n";
+                out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << coords[k2].first << "\" y1=\""
+                    << coords[k1].second << "\" y2=\"" << coords[k2].second << "\" stroke=\"#000\"/>\n";
             }
             for (size_t k = 0; k < tn->children.size(); k++) {
                 size_t k1 = tn->children[k].edge.loc_from - &ns[0];
                 size_t k2 = tn->children[k].edge.loc_to - &ns[0];
-                out << " <line x1=\"" << coords[k1].first
-                    << "\" x2=\"" << coords[k2].first
-                    << "\" y1=\"" << coords[k1].second
-                    << "\" y2=\"" << coords[k2].second
-                    << "\" stroke-dasharray=\"4 2"
+                out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << coords[k2].first << "\" y1=\""
+                    << coords[k1].second << "\" y2=\"" << coords[k2].second << "\" stroke-dasharray=\"4 2"
                     << "\" stroke=\"#000\"/>\n";
             }
         }
@@ -332,11 +307,8 @@ struct StateHelper {
             for (const auto &e : r->blossom_children) {
                 size_t k1 = e.edge.loc_from - &ns[0];
                 size_t k2 = e.edge.loc_to - &ns[0];
-                out << " <line x1=\"" << coords[k1].first
-                    << "\" x2=\"" << coords[k2].first
-                    << "\" y1=\"" << coords[k1].second
-                    << "\" y2=\"" << coords[k2].second
-                    << "\" stroke-width=\"" << 4
+                out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << coords[k2].first << "\" y1=\""
+                    << coords[k1].second << "\" y2=\"" << coords[k2].second << "\" stroke-width=\"" << 4
                     << "\" stroke=\"#22F\"/>\n";
             }
         }
@@ -358,11 +330,11 @@ struct StateHelper {
 };
 
 void pm::write_decoder_state_as_svg(
-        const std::vector<std::pair<float, float>> &coords,
-        const std::vector<std::pair<float, float>> &boundary_coords,
-        const pm::Mwpm &mwpm,
-        MwpmEvent focused_event,
-        std::ostream &out) {
+    const std::vector<std::pair<float, float>> &coords,
+    const std::vector<std::pair<float, float>> &boundary_coords,
+    const pm::Mwpm &mwpm,
+    MwpmEvent focused_event,
+    std::ostream &out) {
     StateHelper s{
         mwpm,
         mwpm.flooder.graph.nodes,
@@ -372,13 +344,14 @@ void pm::write_decoder_state_as_svg(
         out,
     };
     auto span = s.span();
-    out << "<svg width=\"" << span.first
-        << "\" height=\"" << span.second
-        << "\" version=\"" << "1.1"
-        << "\" xmlns=\"" << "http://www.w3.org/2000/svg"
+    out << "<svg width=\"" << span.first << "\" height=\"" << span.second << "\" version=\""
+        << "1.1"
+        << "\" xmlns=\""
+        << "http://www.w3.org/2000/svg"
         << "\">\n";
 
-    out << " <path d=\"M 0 0 L " << span.first << " 0 L " << span.first << " " << span.second << " L 0 " << span.second << " Z\" fill=\"white\" stroke=\"#CCC\"/>\n";
+    out << " <path d=\"M 0 0 L " << span.first << " 0 L " << span.first << " " << span.second << " L 0 " << span.second
+        << " Z\" fill=\"white\" stroke=\"#CCC\"/>\n";
 
     s.draw_detector_graph_edges();
     s.draw_unexcited_detector_nodes();
@@ -417,18 +390,10 @@ void pm::write_decoder_state_as_svg(
         auto &e = focused_event.region_hit_region_event_data.edge;
         size_t k1 = e.loc_from - &s.ns[0];
         size_t k2 = e.loc_to - &s.ns[0];
-        out << " <line x1=\"" << coords[k1].first
-            << "\" x2=\"" << coords[k2].first
-            << "\" y1=\"" << coords[k1].second
-            << "\" y2=\"" << coords[k2].second
-            << "\" stroke-width=\"" << 15
-            << "\" stroke=\"#000\"/>\n";
-        out << " <line x1=\"" << coords[k1].first
-            << "\" x2=\"" << coords[k2].first
-            << "\" y1=\"" << coords[k1].second
-            << "\" y2=\"" << coords[k2].second
-            << "\" stroke-width=\"" << 12
-            << "\" stroke=\"#F80\"/>\n";
+        out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << coords[k2].first << "\" y1=\"" << coords[k1].second
+            << "\" y2=\"" << coords[k2].second << "\" stroke-width=\"" << 15 << "\" stroke=\"#000\"/>\n";
+        out << " <line x1=\"" << coords[k1].first << "\" x2=\"" << coords[k2].first << "\" y1=\"" << coords[k1].second
+            << "\" y2=\"" << coords[k2].second << "\" stroke-width=\"" << 12 << "\" stroke=\"#F80\"/>\n";
     } else if (focused_event.event_type == REGION_HIT_BOUNDARY) {
         s.fill_region(focused_event.region_hit_boundary_event_data.region, "#80800080", "#000");
     } else if (focused_event.event_type == BLOSSOM_SHATTER) {
@@ -439,23 +404,23 @@ void pm::write_decoder_state_as_svg(
 }
 
 void pm::write_animated_decoding_svg_frames(
-        pm::Mwpm &mwpm,
-        const std::vector<std::pair<float, float>> &coords,
-        const std::vector<std::pair<float, float>> &boundary_coords,
-        const std::vector<size_t> detection_events,
-        const std::string &file_path_prefix,
-        bool print_progress,
-        size_t frames_per_mwpm_event,
-        size_t hold_frames_at_start,
-        size_t hold_frames_at_end,
-        size_t max_growth_between_frames) {
+    pm::Mwpm &mwpm,
+    const std::vector<std::pair<float, float>> &coords,
+    const std::vector<std::pair<float, float>> &boundary_coords,
+    const std::vector<size_t> detection_events,
+    const std::string &file_path_prefix,
+    bool print_progress,
+    size_t frames_per_mwpm_event,
+    size_t hold_frames_at_start,
+    size_t hold_frames_at_end,
+    size_t max_growth_between_frames) {
     // Set up the decoder.
     mwpm.flooder.queue.cur_time = 0;
-    for (auto& detection : detection_events) {
+    for (auto &detection : detection_events) {
         mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
     }
-    auto check_if_done = [&](){
-        for (auto& detection : detection_events) {
+    auto check_if_done = [&]() {
+        for (auto &detection : detection_events) {
             if (!mwpm.flooder.graph.nodes[detection].region_that_arrived_top->radius.is_frozen()) {
                 return false;
             }
@@ -465,7 +430,7 @@ void pm::write_animated_decoding_svg_frames(
 
     // Set up frame writing functionality.
     size_t frame_number = 0;
-    auto output_frame = [&](pm::MwpmEvent ev){
+    auto output_frame = [&](pm::MwpmEvent ev) {
         std::string frame_num_as_str = std::to_string(frame_number);
         while (frame_num_as_str.size() < 5) {
             frame_num_as_str.insert(frame_num_as_str.begin(), '0');
@@ -501,7 +466,8 @@ void pm::write_animated_decoding_svg_frames(
         auto flood_event = mwpm.flooder.queue.dequeue();
 
         // Show intermediate growth frames.
-        while ((just_drew_interesting_event || max_growth_between_frames != 0) && mwpm.flooder.queue.cur_time > next_draw_time) {
+        while ((just_drew_interesting_event || max_growth_between_frames != 0) &&
+               mwpm.flooder.queue.cur_time > next_draw_time) {
             auto t = mwpm.flooder.queue.cur_time;
             mwpm.flooder.queue.cur_time = next_draw_time;
             output_frame(pm::MwpmEvent::no_event());

@@ -1,7 +1,8 @@
 #include "pymatching/fill_match/flooder/detector_node.h"
 
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include <optional>
+
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 namespace pm {
 
@@ -48,7 +49,8 @@ GraphFillRegion *DetectorNode::heir_region_on_shatter() const {
     }
 }
 
-cumulative_time_int DetectorNode::compute_local_radius_at_time_bounded_by_region(cumulative_time_int time, const GraphFillRegion &bounding_region) const {
+cumulative_time_int DetectorNode::compute_local_radius_at_time_bounded_by_region(
+    cumulative_time_int time, const GraphFillRegion &bounding_region) const {
     if (region_that_arrived == nullptr) {
         // Nodes not in an region have zero local radius.
         return 0;
@@ -83,9 +85,7 @@ cumulative_time_int DetectorNode::compute_local_radius_at_time_bounded_by_region
 }
 
 std::optional<float> DetectorNode::compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(
-        cumulative_time_int time,
-        const GraphFillRegion &bounding_region,
-        size_t neighbor_index) const {
+    cumulative_time_int time, const GraphFillRegion &bounding_region, size_t neighbor_index) const {
     DetectorNode *neighbor = neighbors[neighbor_index];
     cumulative_time_int max_w = neighbor_weights[neighbor_index];
     auto r1 = compute_local_radius_at_time_bounded_by_region(time, bounding_region);

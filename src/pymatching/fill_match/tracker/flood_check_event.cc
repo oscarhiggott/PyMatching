@@ -6,8 +6,7 @@ FloodCheckEvent::FloodCheckEvent(DetectorNode *data_look_at_node, cyclic_time_in
     : data_look_at_node(data_look_at_node), time(time), tentative_event_type(LOOK_AT_NODE) {
 }
 
-FloodCheckEvent::FloodCheckEvent(
-    GraphFillRegion *data_look_at_shrinking_region, cyclic_time_int time)
+FloodCheckEvent::FloodCheckEvent(GraphFillRegion *data_look_at_shrinking_region, cyclic_time_int time)
     : data_look_at_shrinking_region(data_look_at_shrinking_region),
       time(time),
       tentative_event_type(LOOK_AT_SHRINKING_REGION) {

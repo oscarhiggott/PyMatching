@@ -6,17 +6,21 @@
 using namespace pm;
 
 GraphFillRegion::GraphFillRegion()
-    : blossom_parent(nullptr), blossom_parent_top(this), alt_tree_node(nullptr), radius((0 << 2) + 1), shrink_event_tracker() {
+    : blossom_parent(nullptr),
+      blossom_parent_top(this),
+      alt_tree_node(nullptr),
+      radius((0 << 2) + 1),
+      shrink_event_tracker() {
 }
-GraphFillRegion::GraphFillRegion(GraphFillRegion &&other) :
-    blossom_parent(other.blossom_parent),
-    blossom_parent_top(other.blossom_parent_top == &other ? this : other.blossom_parent_top),
-    alt_tree_node(std::move(other.alt_tree_node)),
-    radius(std::move(other.radius)),
-    shrink_event_tracker(std::move(other.shrink_event_tracker)),
-    match(std::move(other.match)),
-    blossom_children(std::move(other.blossom_children)),
-    shell_area(std::move(other.shell_area)) {
+GraphFillRegion::GraphFillRegion(GraphFillRegion &&other)
+    : blossom_parent(other.blossom_parent),
+      blossom_parent_top(other.blossom_parent_top == &other ? this : other.blossom_parent_top),
+      alt_tree_node(std::move(other.alt_tree_node)),
+      radius(std::move(other.radius)),
+      shrink_event_tracker(std::move(other.shrink_event_tracker)),
+      match(std::move(other.match)),
+      blossom_children(std::move(other.blossom_children)),
+      shell_area(std::move(other.shell_area)) {
 }
 
 bool GraphFillRegion::tree_equal(const GraphFillRegion &other) const {
@@ -58,7 +62,7 @@ void GraphFillRegion::clear_blossom_parent() {
     blossom_parent = nullptr;
     do_op_for_each_descendant_and_self([&](GraphFillRegion *descendant) {
         descendant->blossom_parent_top = this;
-        for (DetectorNode *n: descendant->shell_area) {
+        for (DetectorNode *n : descendant->shell_area) {
             n->region_that_arrived_top = this;
             n->wrapped_radius_cached = n->compute_wrapped_radius();
         }
@@ -69,7 +73,7 @@ void GraphFillRegion::wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_
     blossom_parent = new_blossom_parent_and_top;
     do_op_for_each_descendant_and_self([&](GraphFillRegion *descendant) {
         descendant->blossom_parent_top = new_blossom_parent_and_top;
-        for (DetectorNode *n: descendant->shell_area) {
+        for (DetectorNode *n : descendant->shell_area) {
             n->region_that_arrived_top = new_blossom_parent_and_top;
             n->wrapped_radius_cached = n->compute_wrapped_radius();
         }

@@ -1,8 +1,9 @@
+#include "pymatching/fill_match/tracker/flood_check_event.h"
+
 #include <gtest/gtest.h>
 
-#include "pymatching/fill_match/tracker/flood_check_event.h"
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/flooder/graph.h"
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 using namespace pm;
 

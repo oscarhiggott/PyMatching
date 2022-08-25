@@ -75,15 +75,15 @@ set(PERF_FILES
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
 
-target_compile_options(pymatching PRIVATE -O3)
-target_link_options(pymatching PRIVATE -pthread -O3)
+target_compile_options(pymatching PRIVATE -O3 -march=native)
+target_link_options(pymatching PRIVATE -pthread -O3 -march=native)
 target_link_libraries(pymatching libstim)
 
 enable_testing()
 
 add_executable(pymatching_tests ${SOURCE_FILES_NO_MAIN} ${TEST_FILES})
-target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer -coverage)
-target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined -coverage)
+target_compile_options(pymatching_tests PRIVATE -g -fno-omit-frame-pointer -march=native)
+target_link_options(pymatching_tests PRIVATE -pthread -march=native)
 target_link_libraries(pymatching_tests GTest::gtest_main libstim)
 
 add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})

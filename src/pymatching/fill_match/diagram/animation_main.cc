@@ -1,10 +1,12 @@
-#include "stim.h"
-#include "pymatching/fill_match/diagram/mwpm_diagram.h"
-#include "pymatching/fill_match/matcher/mwpm.h"
-#include "pymatching/fill_match/driver/stim_io.h"
-#include "pymatching/fill_match/driver/mwpm_decoding.h"
 #include "pymatching/fill_match/diagram/animation_main.h"
+
 #include <filesystem>
+
+#include "pymatching/fill_match/diagram/mwpm_diagram.h"
+#include "pymatching/fill_match/driver/mwpm_decoding.h"
+#include "pymatching/fill_match/driver/stim_io.h"
+#include "pymatching/fill_match/matcher/mwpm.h"
+#include "stim.h"
 
 int pm::main_animation(int argc, const char **argv) {
     stim::check_for_unknown_arguments(
@@ -36,7 +38,8 @@ int pm::main_animation(int argc, const char **argv) {
     size_t held_frames_per_event = stim::find_int64_argument("--held_frames_per_event", -1, 0, 1000000, argc, argv);
     size_t held_frames_at_start = stim::find_int64_argument("--held_frames_at_start", -1, 0, 1000000, argc, argv);
     size_t held_frames_at_end = stim::find_int64_argument("--held_frames_at_end", -1, 0, 1000000, argc, argv);
-    size_t max_growth_between_frames = stim::find_int64_argument("--max_growth_between_frames", -1, 0, 1000000, argc, argv);
+    size_t max_growth_between_frames =
+        stim::find_int64_argument("--max_growth_between_frames", -1, 0, 1000000, argc, argv);
     size_t max_edge_weight = stim::find_int64_argument("--max_edge_weight", -1, 4, 2048, argc, argv);
     size_t pixels_per_unit_length = stim::find_int64_argument("--pixels_per_unit_length", -1, 4, 2048, argc, argv);
     std::string out_dir = stim::require_find_argument("--out_dir", argc, argv);

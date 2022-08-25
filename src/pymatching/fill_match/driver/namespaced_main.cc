@@ -5,9 +5,9 @@
 #include <iostream>
 #include <vector>
 
+#include "pymatching/fill_match/diagram/animation_main.h"
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 #include "pymatching/fill_match/driver/stim_io.h"
-#include "pymatching/fill_match/diagram/animation_main.h"
 #include "stim.h"
 #include "stim/simulators/detection_simulator.h"
 

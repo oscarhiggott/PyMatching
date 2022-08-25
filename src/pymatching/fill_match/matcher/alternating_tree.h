@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 #include "pymatching/fill_match/arena.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 
 namespace pm {
 
@@ -117,7 +117,8 @@ class AltTreeNode {
     /// a blossom is formed, or the two trees shatter into matches).
     AltTreeNode* most_recent_common_ancestor(AltTreeNode& other);
     void add_child(const AltTreeEdge& child);
-    AltTreePruneResult prune_upward_path_stopping_before(Arena<AltTreeNode> &arena, AltTreeNode *prune_parent, bool back);
+    AltTreePruneResult prune_upward_path_stopping_before(
+        Arena<AltTreeNode>& arena, AltTreeNode* prune_parent, bool back);
     const AltTreeNode* find_root() const;
 
     /// Helper method for operator==.

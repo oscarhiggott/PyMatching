@@ -168,7 +168,8 @@ AltTreePruneResult::AltTreePruneResult(
     : orphan_edges(std::move(orphan_edges)), pruned_path_region_edges(std::move(pruned_path_region_edges)) {
 }
 
-AltTreePruneResult AltTreeNode::prune_upward_path_stopping_before(Arena<AltTreeNode> &arena, AltTreeNode *prune_parent, bool back) {
+AltTreePruneResult AltTreeNode::prune_upward_path_stopping_before(
+    Arena<AltTreeNode> &arena, AltTreeNode *prune_parent, bool back) {
     std::vector<AltTreeEdge> orphan_edges;
     std::vector<RegionEdge> pruned_path_region_edges;
     auto current_node = this;
@@ -179,18 +180,16 @@ AltTreePruneResult AltTreeNode::prune_upward_path_stopping_before(Arena<AltTreeN
         move_append(current_node->children, orphan_edges);
         if (back) {
             pruned_path_region_edges.push_back({current_node->inner_region, current_node->inner_to_outer_edge});
-            pruned_path_region_edges.push_back({
-                current_node->parent.alt_tree_node->outer_region, current_node->parent.edge.reversed()});
+            pruned_path_region_edges.push_back(
+                {current_node->parent.alt_tree_node->outer_region, current_node->parent.edge.reversed()});
         } else {
-            pruned_path_region_edges.push_back({
-                current_node->outer_region, current_node->inner_to_outer_edge.reversed()});
-            pruned_path_region_edges.push_back({
-                current_node->inner_region, current_node->parent.edge});
+            pruned_path_region_edges.push_back(
+                {current_node->outer_region, current_node->inner_to_outer_edge.reversed()});
+            pruned_path_region_edges.push_back({current_node->inner_region, current_node->parent.edge});
         }
-        unstable_erase(
-            current_node->parent.alt_tree_node->children, [&current_node](const AltTreeEdge &child_edge) {
-                return child_edge.alt_tree_node == current_node;
-            });
+        unstable_erase(current_node->parent.alt_tree_node->children, [&current_node](const AltTreeEdge &child_edge) {
+            return child_edge.alt_tree_node == current_node;
+        });
         current_node->outer_region->alt_tree_node = nullptr;
         current_node->inner_region->alt_tree_node = nullptr;
         auto to_remove = current_node;

@@ -8,9 +8,9 @@ namespace pm {
 /// These frames can then be turned into a video by a tool such as ffmpeg.
 /// Here is an example of how to create an animation, assuming stim and pymatching are installed:
 ///
-///     stim gen --rounds=10 --distance=30 --after_clifford_depolarization=0.1 --code repetition_code --task memory > test.stim
-///     stim analyze_errors --decompose_errors --fold_loops --in test.stim > test.dem
-///     stim detect --shots=1 --in test.stim --out_format r8 > test.r8
+///     stim gen --rounds=10 --distance=30 --after_clifford_depolarization=0.1 --code repetition_code --task memory >
+///     test.stim stim analyze_errors --decompose_errors --fold_loops --in test.stim > test.dem stim detect --shots=1
+///     --in test.stim --out_format r8 > test.r8
 ///
 ///     pymatching animate \
 ///         --dem_in test.dem \

@@ -1,8 +1,8 @@
 #ifndef PYMATCHING2_DIAGRAM_MWPM_DIAGRAM_H
 #define PYMATCHING2_DIAGRAM_MWPM_DIAGRAM_H
 
-#include "stim.h"
 #include "pymatching/fill_match/matcher/mwpm.h"
+#include "stim.h"
 
 namespace pm {
 
@@ -37,16 +37,16 @@ namespace pm {
 ///         to a low number creates smoother animations, but requires outputting more frames. Set to
 ///         0 to completely disable growth frames.
 void write_animated_decoding_svg_frames(
-        pm::Mwpm &mwpm,
-        const std::vector<std::pair<float, float>> &coords,
-        const std::vector<std::pair<float, float>> &boundary_coords,
-        const std::vector<size_t> detection_events,
-        const std::string &file_path_prefix,
-        bool print_progress,
-        size_t frames_per_mwpm_event,
-        size_t hold_frames_at_start,
-        size_t hold_frames_at_end,
-        size_t max_growth_between_frames);
+    pm::Mwpm &mwpm,
+    const std::vector<std::pair<float, float>> &coords,
+    const std::vector<std::pair<float, float>> &boundary_coords,
+    const std::vector<size_t> detection_events,
+    const std::string &file_path_prefix,
+    bool print_progress,
+    size_t frames_per_mwpm_event,
+    size_t hold_frames_at_start,
+    size_t hold_frames_at_end,
+    size_t max_growth_between_frames);
 
 /// Draws the current state of the decoder as an SVG image.
 ///
@@ -75,8 +75,7 @@ void write_decoder_state_as_svg(
 ///     first item of pair: The projected coordinates for each detector node.
 ///     second item of pair: The inferred boundary coordinates for each detector node.
 std::pair<std::vector<std::pair<float, float>>, std::vector<std::pair<float, float>>> pick_coords_for_drawing_from_dem(
-    const stim::DetectorErrorModel &dem,
-    float pixels_per_unit_length);
+    const stim::DetectorErrorModel &dem, float pixels_per_unit_length);
 
 int main_animated(int argc, const char **argv);
 

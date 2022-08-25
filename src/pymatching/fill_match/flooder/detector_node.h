@@ -4,9 +4,9 @@
 #include <optional>
 #include <vector>
 
+#include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 #include "pymatching/fill_match/tracker/queued_event_tracker.h"
-#include "pymatching/fill_match/flooder/graph_fill_region.h"
 
 namespace pm {
 
@@ -65,7 +65,7 @@ class DetectorNode {
 
     /// Check if this node is part the same top-level region as another.
     /// Note that they may have different lower level owners that still merge into the same top level owned.
-    inline bool has_same_owner_as(const DetectorNode &other) const {
+    inline bool has_same_owner_as(const DetectorNode& other) const {
         return region_that_arrived_top == other.region_that_arrived_top;
     }
 
@@ -87,7 +87,7 @@ class DetectorNode {
     ///
     /// This is a utility method used to help with drawing the internal state of the algorithm.
     cumulative_time_int compute_local_radius_at_time_bounded_by_region(
-        cumulative_time_int time, const GraphFillRegion &bounding_region) const;
+        cumulative_time_int time, const GraphFillRegion& bounding_region) const;
 
     /// The 'stitch radius' is the place where ownership of an edge stops.
     ///
@@ -107,9 +107,7 @@ class DetectorNode {
     ///         to the transition point. This may be equal to 0, or equal to the full length of the
     ///         edge, or somewhere in between.
     std::optional<float> compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(
-        cumulative_time_int time,
-        const GraphFillRegion &bounding_region,
-        size_t neighbor_index) const;
+        cumulative_time_int time, const GraphFillRegion& bounding_region, size_t neighbor_index) const;
 };
 
 }  // namespace pm

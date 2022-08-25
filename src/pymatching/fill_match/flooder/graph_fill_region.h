@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
-#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 #include "pymatching/fill_match/flooder/match.h"
+#include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
+#include "pymatching/fill_match/flooder_matcher_interop/varying.h"
 #include "pymatching/fill_match/tracker/queued_event_tracker.h"
 
 namespace pm {
@@ -45,8 +45,8 @@ struct GraphFillRegion {
     void cleanup_shell_area();
 
     GraphFillRegion();
-    GraphFillRegion(GraphFillRegion &&);
-    GraphFillRegion(const GraphFillRegion &) = delete;
+    GraphFillRegion(GraphFillRegion&&);
+    GraphFillRegion(const GraphFillRegion&) = delete;
     bool tree_equal(const pm::GraphFillRegion& other) const;
 
     void add_match(pm::GraphFillRegion* match, const pm::CompressedEdge& edge);
@@ -56,18 +56,18 @@ struct GraphFillRegion {
     template <typename Callable>
     void do_op_for_each_descendant_and_self(const Callable& func);
     void clear_blossom_parent();
-    void wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_top);
+    void wrap_into_blossom(GraphFillRegion* new_blossom_parent_and_top);
 
     /// Determines if rhs is an ancestor of, or the same as, lhs.
     /// Caution: The equality used here is reference equality (not tree equality like operator==).
-    bool operator<=(const GraphFillRegion &rhs) const;
+    bool operator<=(const GraphFillRegion& rhs) const;
     /// Determines if rhs is an ancestor of, but not the same as, lhs.
-    bool operator<(const GraphFillRegion &rhs) const;
+    bool operator<(const GraphFillRegion& rhs) const;
     /// Determines if rhs is a descendent of, or the same as, lhs.
     /// Caution: The equality used here is reference equality (not tree equality like operator==).
-    bool operator>=(const GraphFillRegion &rhs) const;
+    bool operator>=(const GraphFillRegion& rhs) const;
     /// Determines if rhs is a descendent of, but not the same as, lhs.
-    bool operator>(const GraphFillRegion &rhs) const;
+    bool operator>(const GraphFillRegion& rhs) const;
 
     bool operator==(const GraphFillRegion& rhs) const;
     bool operator!=(const GraphFillRegion& rhs) const;
@@ -86,7 +86,7 @@ inline void pm::GraphFillRegion::do_op_for_each_node_in_total_area(const Callabl
 template <typename Callable>
 inline void pm::GraphFillRegion::do_op_for_each_descendant_and_self(const Callable& func) {
     func(this);
-    for (RegionEdge &child : blossom_children) {
+    for (RegionEdge& child : blossom_children) {
         child.region->do_op_for_each_descendant_and_self(func);
     }
 }

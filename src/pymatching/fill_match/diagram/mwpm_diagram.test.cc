@@ -4,5 +4,5 @@
 
 #include "gtest/gtest.h"
 
-#include "stim.h"
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
+#include "stim.h"

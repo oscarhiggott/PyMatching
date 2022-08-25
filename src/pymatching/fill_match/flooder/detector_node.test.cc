@@ -1,6 +1,6 @@
-#include "pymatching/fill_match/flooder/graph.h"
-
 #include <gtest/gtest.h>
+
+#include "pymatching/fill_match/flooder/graph.h"
 
 using namespace pm;
 
@@ -67,46 +67,20 @@ TEST(DetectorNode, compute_stitch_radius_at_time_bounded_by_region_towards_neigh
     left_node.radius_of_arrival = 0;
     right_node.radius_of_arrival = 0;
 
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(11, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, left, 0),
-        5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(11, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, left, 0), 5);
 
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, parent, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, parent, 0),
-        6);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, parent, 0),
-        9);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, parent, 0),
-        10);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(11, parent, 0),
-        10);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(102, parent, 0),
-        10);
-    ASSERT_EQ(
-        right_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(102, parent, 0),
-        10);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, parent, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, parent, 0), 6);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, parent, 0), 9);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, parent, 0), 10);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(11, parent, 0), 10);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(102, parent, 0), 10);
+    ASSERT_EQ(right_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(102, parent, 0), 10);
 }
 
 TEST(DetectorNode, compute_stitch_radius_at_time_bounded_by_region_towards_neighbor_across_skewed_collision) {
@@ -132,44 +106,18 @@ TEST(DetectorNode, compute_stitch_radius_at_time_bounded_by_region_towards_neigh
     left_node.radius_of_arrival = 0;
     right_node.radius_of_arrival = 0;
 
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(11, left, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, left, 0),
-        5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(11, left, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, left, 0), 5);
 
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, parent, 0),
-        5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, parent, 0),
-        6);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(8, parent, 0),
-        8);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, parent, 0),
-        8.5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, parent, 0),
-        8.5);
-    ASSERT_EQ(
-        left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, parent, 0),
-        8.5);
-    ASSERT_EQ(
-        right_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, parent, 0),
-        11.5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(5, parent, 0), 5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(6, parent, 0), 6);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(8, parent, 0), 8);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(9, parent, 0), 8.5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(10, parent, 0), 8.5);
+    ASSERT_EQ(left_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, parent, 0), 8.5);
+    ASSERT_EQ(right_node.compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(100, parent, 0), 11.5);
 }

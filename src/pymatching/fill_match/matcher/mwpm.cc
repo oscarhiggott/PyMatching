@@ -1,8 +1,9 @@
 #include "pymatching/fill_match/matcher/mwpm.h"
 
+#include <set>
+
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/matcher/alternating_tree.h"
-#include <set>
 
 using namespace pm;
 
@@ -65,7 +66,8 @@ void Mwpm::handle_tree_hitting_other_tree(const RegionHitRegionEventData &event)
     flooder.set_region_frozen(*event.region2);
 }
 
-AltTreeNode *Mwpm::make_child(AltTreeNode &parent,
+AltTreeNode *Mwpm::make_child(
+    AltTreeNode &parent,
     GraphFillRegion *child_inner_region,
     GraphFillRegion *child_outer_region,
     const CompressedEdge &child_inner_to_outer_edge,
@@ -82,8 +84,12 @@ void Mwpm::handle_tree_hitting_match(
     GraphFillRegion *matched_region,
     const CompressedEdge &unmatched_to_matched_edge) {
     auto alt_tree_node = unmatched_region->alt_tree_node;
-    make_child(*alt_tree_node,
-        matched_region, matched_region->match.region, matched_region->match.edge, unmatched_to_matched_edge);
+    make_child(
+        *alt_tree_node,
+        matched_region,
+        matched_region->match.region,
+        matched_region->match.edge,
+        unmatched_to_matched_edge);
     auto other_match = matched_region->match.region;
     other_match->match.clear();
     matched_region->match.clear();
@@ -181,8 +187,12 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
             size_t k1 = (parent_idx + bsize - i) % bsize;
             size_t k2 = (parent_idx + bsize - i - 1) % bsize;
             size_t k3 = (parent_idx + bsize - i - 2) % bsize;
-            current_alt_node = make_child(*current_alt_node,
-                blossom_cycle[k1].region, blossom_cycle[k2].region, blossom_cycle[k2].edge.reversed(), child_edge);
+            current_alt_node = make_child(
+                *current_alt_node,
+                blossom_cycle[k1].region,
+                blossom_cycle[k2].region,
+                blossom_cycle[k2].edge.reversed(),
+                child_edge);
             child_edge = blossom_cycle[k3].edge.reversed();
             flooder.set_region_shrinking(*current_alt_node->inner_region);
             flooder.set_region_growing(*current_alt_node->outer_region);
@@ -366,5 +376,4 @@ bool MatchingResult::operator!=(const MatchingResult &rhs) const {
 }
 
 void Mwpm::verify_invariants() const {
-
 }

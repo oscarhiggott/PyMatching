@@ -5,8 +5,8 @@
 
 #include "pymatching/fill_match/flooder/detector_node.h"
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
-#include "pymatching/fill_match/tracker/queued_event_tracker.h"
 #include "pymatching/fill_match/tracker/flood_check_event.h"
+#include "pymatching/fill_match/tracker/queued_event_tracker.h"
 
 namespace pm {
 
