@@ -1,6 +1,7 @@
 #ifndef PYMATCHING_FILL_MATCH_DETECTOR_NODE_H
 #define PYMATCHING_FILL_MATCH_DETECTOR_NODE_H
 
+#include <optional>
 #include <vector>
 
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
@@ -74,9 +75,41 @@ class DetectorNode {
 
     size_t index_of_neighbor(DetectorNode* neighbor) const;
 
+    /// The 'wrapped radius' is the amount of region growth that has occurred past the point where
+    /// this node was hit, up until the last time a blossom was formed around this node. It is the
+    /// sum of the radius of (always frozen) not-top-level regions containing this node. It is a
+    /// useful intermediate value for quickly computing the local radius of the node, because it
+    /// accounts for everything except the (potentially varying) top level region.
     int32_t compute_wrapped_radius() const;
 
-    int32_t compute_wrapped_radius_within_layer_at_time(GraphFillRegion *target_layer, cumulative_time_int t) const;
+    /// It works out the local radius of the node, but bounds it to not go beyond the given bounding
+    /// region. This is useful for understanding the internal structure of the blossoms.
+    ///
+    /// This is a utility method used to help with drawing the internal state of the algorithm.
+    cumulative_time_int compute_local_radius_at_time_bounded_by_region(
+        cumulative_time_int time, const GraphFillRegion &bounding_region) const;
+
+    /// The 'stitch radius' is the place where ownership of an edge stops.
+    ///
+    /// This is a utility method used to help with drawing the internal state of the algorithm.
+    ///
+    /// Args:
+    ///     time: In case the result is varying, this specifies exactly which time to look at it.
+    ///     bounding_region: This says which graph fill region is being "focused on". In particular,
+    ///         this may be a frozen region within a blossom in which case the goal is to find the
+    ///         exact place along edges where the region froze or where two source nodes were
+    ///         bumping up against each other.
+    ///     neighbor_index: The edge of interest.
+    ///
+    /// Returns:
+    ///     Empty: This is a fully internal edge. There is no region transition along it.
+    ///     An integer: This is the distance, starting from *this node and running along the edge,
+    ///         to the transition point. This may be equal to 0, or equal to the full length of the
+    ///         edge, or somewhere in between.
+    std::optional<float> compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(
+        cumulative_time_int time,
+        const GraphFillRegion &bounding_region,
+        size_t neighbor_index) const;
 };
 
 }  // namespace pm

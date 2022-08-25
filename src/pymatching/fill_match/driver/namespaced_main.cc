@@ -7,6 +7,7 @@
 
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 #include "pymatching/fill_match/driver/stim_io.h"
+#include "pymatching/fill_match/diagram/animation_main.h"
 #include "stim.h"
 #include "stim/simulators/detection_simulator.h"
 
@@ -162,6 +163,9 @@ int pm::main(int argc, const char **argv) {
         if (strcmp(command, "count_mistakes") == 0) {
             return main_count_mistakes(argc, argv);
         }
+        if (strcmp(command, "animate") == 0) {
+            return pm::main_animation(argc, argv);
+        }
     } catch (std::invalid_argument &ex) {
         std::cerr << ex.what() << "\n";
         return EXIT_FAILURE;
@@ -169,9 +173,22 @@ int pm::main(int argc, const char **argv) {
 
     std::stringstream ss;
     ss << "Unrecognized command. Available commands are:\n";
-    ss << "    pymatching predict --dem file [--in file] [--out file] [--in_format 01|B8|...] [--out_format 01|B8|...] "
+    ss << "    pymatching predict --dem file [--in file] [--out file] [--in_format 01|b8|...] [--out_format 01|b8|...] "
           "[--in_includes_appended_observables]\n";
-    ss << "    pymatching count_mistakes --dem file [--in file] [--out file] [--in_format 01|B8|...] [--out_format "
+    ss << "    pymatching count_mistakes --dem file [--in file] [--out file] [--in_format 01|b8|...] [--out_format "
           "01|B8|...] [--in_includes_appended_observables] [--obs_in] [--obs_in_format]\n";
+    ss << "    pymatching animate "
+          "--dets_in <file> "
+          "--dets_in_format 01|b8|... "
+          "--out_dir <directory> "
+          "--dem_in <file> "
+          "--held_frames_per_event # "
+          "--held_frames_at_start # "
+          "--held_frames_at_end # "
+          "--max_growth_between_frames # "
+          "--max_edge_weight # "
+          "--pixels_per_unit_length # "
+          "[--dets_in_includes_appended_observables] "
+          "[--quiet]";
     throw std::invalid_argument(ss.str());
 }

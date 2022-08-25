@@ -75,3 +75,23 @@ void GraphFillRegion::wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_
         }
     });
 }
+
+bool GraphFillRegion::operator<=(const GraphFillRegion &rhs) const {
+    const GraphFillRegion *r = this;
+    while (r != nullptr && r != &rhs) {
+        r = r->blossom_parent;
+    }
+    return r == &rhs;
+}
+
+bool GraphFillRegion::operator<(const GraphFillRegion &rhs) const {
+    return this != &rhs && (*this <= rhs);
+}
+
+bool GraphFillRegion::operator>(const GraphFillRegion &rhs) const {
+    return rhs < *this;
+}
+
+bool GraphFillRegion::operator>=(const GraphFillRegion &rhs) const {
+    return rhs <= *this;
+}

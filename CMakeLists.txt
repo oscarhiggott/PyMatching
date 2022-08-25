@@ -40,6 +40,8 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/flooder_matcher_interop/region_edge.cc
         src/pymatching/fill_match/flooder_matcher_interop/mwpm_event.cc
         src/pymatching/fill_match/tracker/flood_check_event.cc
+        src/pymatching/fill_match/diagram/animation_main.cc
+        src/pymatching/fill_match/diagram/mwpm_diagram.cc
         )
 
 set(TEST_FILES
@@ -60,6 +62,7 @@ set(TEST_FILES
         src/pymatching/fill_match/flooder_matcher_interop/mwpm_event.test.cc
         src/pymatching/fill_match/tracker/queued_event_tracker.test.cc
         src/pymatching/fill_match/tracker/cyclic.test.cc
+        src/pymatching/fill_match/diagram/mwpm_diagram.test.cc
         )
 
 set(PERF_FILES

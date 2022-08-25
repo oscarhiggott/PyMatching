@@ -108,8 +108,18 @@ Varying<T> Varying<T>::from_base_and_growth(T base, int8_t growth) {
 }
 
 template<typename T>
-Varying<T> Varying<T>::from_point_and_slope(T t, T y, int8_t growth) {
-    return Varying<T>::from_base_and_growth(y - t * growth, growth);
+Varying<T> Varying<T>::growing_value_at_time(T y, T t) {
+    return Varying<T>::from_base_and_growth(y - t, +1);
+}
+
+template<typename T>
+Varying<T> Varying<T>::shrinking_value_at_time(T y, T t) {
+    return Varying<T>::from_base_and_growth(y + t, -1);
+}
+
+template<typename T>
+Varying<T> Varying<T>::frozen(T base) {
+    return Varying<T>::from_base_and_growth(base, 0);
 }
 
 template<typename T>

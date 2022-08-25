@@ -38,3 +38,107 @@ TEST(GraphFillRegion, AddMatch) {
     ASSERT_EQ(r1.match.edge, r2.match.edge.reversed());
     ASSERT_EQ(r1.match.edge, (CompressedEdge{&ds[0], &ds[1], 5}));
 }
+
+TEST(GraphFillRegion, descendance_ordering_le) {
+    std::array<GraphFillRegion, 6> r;
+    r[0].blossom_parent = &r[2];
+    r[1].blossom_parent = &r[2];
+    r[2].blossom_parent = &r[3];
+    r[3].blossom_parent = nullptr;
+    r[4].blossom_parent = &r[5];
+    r[5].blossom_parent = nullptr;
+
+    ASSERT_TRUE(r[0] <= r[0]);
+    ASSERT_FALSE(r[0] <= r[1]);
+    ASSERT_TRUE(r[0] <= r[2]);
+    ASSERT_TRUE(r[0] <= r[3]);
+    ASSERT_FALSE(r[0] <= r[4]);
+    ASSERT_FALSE(r[0] <= r[5]);
+
+    ASSERT_FALSE(r[1] <= r[0]);
+    ASSERT_TRUE(r[1] <= r[1]);
+    ASSERT_TRUE(r[1] <= r[2]);
+    ASSERT_TRUE(r[1] <= r[3]);
+    ASSERT_FALSE(r[1] <= r[4]);
+    ASSERT_FALSE(r[1] <= r[5]);
+
+    ASSERT_FALSE(r[2] <= r[0]);
+    ASSERT_FALSE(r[2] <= r[1]);
+    ASSERT_TRUE(r[2] <= r[2]);
+    ASSERT_TRUE(r[2] <= r[3]);
+    ASSERT_FALSE(r[2] <= r[4]);
+    ASSERT_FALSE(r[2] <= r[5]);
+
+    ASSERT_FALSE(r[3] <= r[0]);
+    ASSERT_FALSE(r[3] <= r[1]);
+    ASSERT_FALSE(r[3] <= r[2]);
+    ASSERT_TRUE(r[3] <= r[3]);
+    ASSERT_FALSE(r[3] <= r[4]);
+    ASSERT_FALSE(r[3] <= r[5]);
+
+    ASSERT_FALSE(r[4] <= r[0]);
+    ASSERT_FALSE(r[4] <= r[1]);
+    ASSERT_FALSE(r[4] <= r[2]);
+    ASSERT_FALSE(r[4] <= r[3]);
+    ASSERT_TRUE(r[4] <= r[4]);
+    ASSERT_TRUE(r[4] <= r[5]);
+
+    ASSERT_FALSE(r[5] <= r[0]);
+    ASSERT_FALSE(r[5] <= r[1]);
+    ASSERT_FALSE(r[5] <= r[2]);
+    ASSERT_FALSE(r[5] <= r[3]);
+    ASSERT_FALSE(r[5] <= r[4]);
+    ASSERT_TRUE(r[5] <= r[5]);
+}
+
+TEST(GraphFillRegion, descendance_ordering_lt) {
+    std::array<GraphFillRegion, 6> r;
+    r[0].blossom_parent = &r[2];
+    r[1].blossom_parent = &r[2];
+    r[2].blossom_parent = &r[3];
+    r[3].blossom_parent = nullptr;
+    r[4].blossom_parent = &r[5];
+    r[5].blossom_parent = nullptr;
+
+    ASSERT_FALSE(r[0] < r[0]);
+    ASSERT_FALSE(r[0] < r[1]);
+    ASSERT_TRUE(r[0] < r[2]);
+    ASSERT_TRUE(r[0] < r[3]);
+    ASSERT_FALSE(r[0] < r[4]);
+    ASSERT_FALSE(r[0] < r[5]);
+
+    ASSERT_FALSE(r[1] < r[0]);
+    ASSERT_FALSE(r[1] < r[1]);
+    ASSERT_TRUE(r[1] < r[2]);
+    ASSERT_TRUE(r[1] < r[3]);
+    ASSERT_FALSE(r[1] < r[4]);
+    ASSERT_FALSE(r[1] < r[5]);
+
+    ASSERT_FALSE(r[2] < r[0]);
+    ASSERT_FALSE(r[2] < r[1]);
+    ASSERT_FALSE(r[2] < r[2]);
+    ASSERT_TRUE(r[2] < r[3]);
+    ASSERT_FALSE(r[2] < r[4]);
+    ASSERT_FALSE(r[2] < r[5]);
+
+    ASSERT_FALSE(r[3] < r[0]);
+    ASSERT_FALSE(r[3] < r[1]);
+    ASSERT_FALSE(r[3] < r[2]);
+    ASSERT_FALSE(r[3] < r[3]);
+    ASSERT_FALSE(r[3] < r[4]);
+    ASSERT_FALSE(r[3] < r[5]);
+
+    ASSERT_FALSE(r[4] < r[0]);
+    ASSERT_FALSE(r[4] < r[1]);
+    ASSERT_FALSE(r[4] < r[2]);
+    ASSERT_FALSE(r[4] < r[3]);
+    ASSERT_FALSE(r[4] < r[4]);
+    ASSERT_TRUE(r[4] < r[5]);
+
+    ASSERT_FALSE(r[5] < r[0]);
+    ASSERT_FALSE(r[5] < r[1]);
+    ASSERT_FALSE(r[5] < r[2]);
+    ASSERT_FALSE(r[5] < r[3]);
+    ASSERT_FALSE(r[5] < r[4]);
+    ASSERT_FALSE(r[5] < r[5]);
+}

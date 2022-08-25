@@ -58,8 +58,18 @@ struct GraphFillRegion {
     void clear_blossom_parent();
     void wrap_into_blossom(GraphFillRegion *new_blossom_parent_and_top);
 
-    bool operator==(const GraphFillRegion& rhs) const;
+    /// Determines if rhs is an ancestor of, or the same as, lhs.
+    /// Caution: The equality used here is reference equality (not tree equality like operator==).
+    bool operator<=(const GraphFillRegion &rhs) const;
+    /// Determines if rhs is an ancestor of, but not the same as, lhs.
+    bool operator<(const GraphFillRegion &rhs) const;
+    /// Determines if rhs is a descendent of, or the same as, lhs.
+    /// Caution: The equality used here is reference equality (not tree equality like operator==).
+    bool operator>=(const GraphFillRegion &rhs) const;
+    /// Determines if rhs is a descendent of, but not the same as, lhs.
+    bool operator>(const GraphFillRegion &rhs) const;
 
+    bool operator==(const GraphFillRegion& rhs) const;
     bool operator!=(const GraphFillRegion& rhs) const;
 };
 
