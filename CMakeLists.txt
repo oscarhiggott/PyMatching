@@ -69,6 +69,7 @@ set(PERF_FILES
         src/pymatching/perf/main.perf.cc
         src/pymatching/perf/util.perf.cc
         src/pymatching/fill_match/driver/mwpm_decoding.perf.cc
+        src/pymatching/fill_match/driver/stim_io.perf.cc
         src/pymatching/fill_match/flooder_matcher_interop/varying.perf.cc
         src/pymatching/fill_match/tracker/radix_heap_queue.perf.cc
         )
