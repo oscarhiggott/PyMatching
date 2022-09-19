@@ -7,14 +7,8 @@ namespace pm {
 
 void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables) {
     pm::obs_int obs_mask = 0;
-    if (!has_observable_indices()) {
-        for (auto obs : observables)
-            obs_mask ^= 1 << obs;
-    } else {
-        nodes[u].neighbor_observable_indices.push_back(observables);
-        nodes[v].neighbor_observable_indices.push_back(observables);
-    }
-
+    for (auto obs : observables)
+        obs_mask ^= 1 << obs;
     add_edge(u, v, weight, obs_mask);
 }
 
@@ -31,23 +25,18 @@ void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, pm::obs_int 
     // Allow parallel edges?
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(weight);
-    nodes[u].neighbor_observables.push_back(observables);
+    nodes[u].neighbor_observables.push_back(obs_mask);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(weight);
-    nodes[v].neighbor_observables.push_back(observables);
+    nodes[v].neighbor_observables.push_back(obs_mask);
 }
 
 
 void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables) {
     pm::obs_int obs_mask = 0;
-    if (!has_observable_indices()) {
-        for (auto obs : observables)
-            obs_mask ^= 1 << obs;
-    } else {
-        nodes[u].neighbor_observable_indices.insert(nodes[u].neighbor_observable_indices.begin(), 1, observables);
-    }
-
+    for (auto obs : observables)
+        obs_mask ^= 1 << obs;
     add_boundary_edge(u, weight, obs_mask);
 }
 
@@ -65,7 +54,7 @@ void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, pm::obs_int o
     }
     n.neighbors.insert(n.neighbors.begin(), 1, nullptr);
     n.neighbor_weights.insert(n.neighbor_weights.begin(), 1, weight);
-    n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, observables);
+    n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, obs_mask);
 }
 
 MatchingGraph::MatchingGraph(size_t num_nodes) : num_nodes(num_nodes) {

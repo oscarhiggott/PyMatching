@@ -98,7 +98,7 @@ void GraphFlooder::schedule_tentative_shrink_event(GraphFillRegion &region) {
 }
 
 void GraphFlooder::do_region_arriving_at_empty_detector_node(
-    GraphFillRegion &region, DetectorNode &empty_node, DetectorNode &from_node, size_t empty_to_from_index) {
+    GraphFillRegion &region, DetectorNode &empty_node, const DetectorNode &from_node, size_t empty_to_from_index) {
     empty_node.observables_crossed_from_source =
         (from_node.observables_crossed_from_source ^ empty_node.neighbor_observables[empty_to_from_index]);
     empty_node.reached_from_source = from_node.reached_from_source;

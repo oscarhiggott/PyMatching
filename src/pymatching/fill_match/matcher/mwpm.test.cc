@@ -279,9 +279,6 @@ obs_int set_bits_to_obs_mask(const std::vector<int>& set_bits) {
     return obs_mask;
 }
 
-TEST(Mwpm, ShatterBlossomAndExtractMatches) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12)));
-
 void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm){
     auto& ns = mwpm.flooder.graph.nodes;
     cumulative_time_int w = 0;
@@ -326,7 +323,7 @@ void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm){
 
 
 TEST(Mwpm, ShatterBlossomAndExtractMatches) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12, 64)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12)));
     form_blossom_and_nested_blossom_then_match_example(mwpm);
     auto& ns = mwpm.flooder.graph.nodes;
 
@@ -338,7 +335,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
 
 
 TEST(Mwpm, ShatterBlossomAndExtractMatchEdges) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12, 64)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12)));
     form_blossom_and_nested_blossom_then_match_example(mwpm);
     auto& ns = mwpm.flooder.graph.nodes;
 
@@ -362,91 +359,6 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchEdges) {
             {&ns[0], &ns[5], 1 << 15}
     };
     ASSERT_EQ(expected_edges, match_edges);
-}
-
-
-TEST(Mwpm, ShatterBlossomAndExtractMatchPathsForNestedBlossomMatchedToBoundary) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(25, 128)));
-    auto& ns = mwpm.flooder.graph.nodes;
-    auto& g = mwpm.flooder.graph;
-
-    // Form triangle between detection events 0, 5 and 10. This will form the inside blossom.
-    for (size_t i = 0; i < 15; i++)
-        g.add_edge(i, (i+1) % 15, 2, (std::vector<size_t>){i});
-
-    // Form loop connecting detection events 5 to 10 via detection events 17 and 20. This will form the top blossom.
-    g.add_edge(5, 15, 10, (std::vector<size_t>){15});
-    for (size_t i = 15; i < 22; i++)
-        g.add_edge(i, i+1, 10, (std::vector<size_t>) {i+1});
-    g.add_edge(22, 10, 10, (std::vector<size_t>){23});
-
-    // Connect detection event 0 to the boundary. The top blossom will match to the boundary.
-    g.add_edge(0, 23, 50, (std::vector<size_t>){24});
-    g.add_edge(23, 24, 50, (std::vector<size_t>) {25});
-    g.add_boundary_edge(24, 50, (std::vector<size_t>){26});
-
-    // Create the detection events
-    for (auto i : {0, 5, 10, 17, 20})
-        mwpm.create_detection_event(&ns[i]);
-
-    // Run until no more mwpm events
-    while (true) {
-        auto event = mwpm.flooder.run_until_next_mwpm_notification();
-        if (event.event_type == pm::NO_EVENT)
-            break;
-        mwpm.process_event(event);
-    }
-
-    ASSERT_EQ(ns[0].region_that_arrived_top->match.region, nullptr);
-    ASSERT_EQ(ns[0].region_that_arrived_top, ns[17].region_that_arrived_top);
-
-    ExtendedMatchingResult res;
-    res.obs_crossed.resize(mwpm.flooder.graph.num_observables, 0);
-    mwpm.shatter_blossom_and_extract_match_paths(ns[0].region_that_arrived_top, res.obs_crossed, res.weight);
-    ASSERT_EQ(res.weight, 190);
-    std::vector<uint8_t> expected_obs_crossed;
-    expected_obs_crossed.resize(mwpm.flooder.graph.num_observables, 0);
-    for (size_t i : {25, 24, 26, 18, 20, 19, 8, 9, 6, 5, 7})
-        expected_obs_crossed[i] ^= 1;
-    ASSERT_EQ(
-            res.obs_crossed,
-            expected_obs_crossed
-            );
-    // Check that the graph has been reset
-    for (auto& n: ns){
-        ASSERT_EQ(n.region_that_arrived, nullptr);
-        ASSERT_EQ(n.region_that_arrived_top, nullptr);
-        ASSERT_EQ(n.reached_from_source, nullptr);
-        ASSERT_EQ(n.index_of_predecessor, SIZE_MAX);
-    }
-}
-
-
-TEST(Mwpm, ShatterBlossomAndExtractPathsForTrivialRegionMatchedToBoundary){
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(10, 128)));
-    auto& ns = mwpm.flooder.graph.nodes;
-    auto& g = mwpm.flooder.graph;
-    g.add_boundary_edge(0, 2, (std::vector<size_t>){0});
-    g.add_edge(0, 1, 2, (std::vector<size_t>){1});
-    g.add_edge(1, 2, 2, (std::vector<size_t>){2});
-    mwpm.create_detection_event(&ns[2]);
-    // Run until no more mwpm events
-    while (true) {
-        auto event = mwpm.flooder.run_until_next_mwpm_notification();
-        if (event.event_type == pm::NO_EVENT)
-            break;
-        mwpm.process_event(event);
-    }
-    ExtendedMatchingResult res;
-    res.obs_crossed.resize(mwpm.flooder.graph.num_observables, 0);
-    mwpm.shatter_blossom_and_extract_match_paths(ns[0].region_that_arrived_top, res.obs_crossed, res.weight);
-    ASSERT_EQ(res.weight, 6);
-    std::vector<size_t> expected_obs = {1, 2, 0};
-    std::vector<uint8_t> expected_obs_crossed;
-    expected_obs_crossed.resize(mwpm.flooder.graph.num_observables, 0);
-    for (size_t i : {1, 2, 0})
-        expected_obs_crossed[i] ^= 1;
-    ASSERT_EQ(expected_obs_crossed, res.obs_crossed);
 }
 
 
@@ -476,7 +388,7 @@ void form_nested_blossom_and_match_to_boundary(Mwpm& mwpm){
 
 
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatch) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5, 64)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5)));
     auto& ns = mwpm.flooder.graph.nodes;
     form_nested_blossom_and_match_to_boundary(mwpm);
     auto blossom2 = ns[3].region_that_arrived->blossom_parent;
@@ -487,7 +399,7 @@ TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatch) {
 
 
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatchEdges) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5, 64)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5)));
     auto& ns = mwpm.flooder.graph.nodes;
     form_nested_blossom_and_match_to_boundary(mwpm);
     auto blossom2 = ns[3].region_that_arrived->blossom_parent;

@@ -11,7 +11,7 @@ pm::MatchingGraph detector_error_model_to_matching_graph(
 struct Neighbor {
     std::vector<Neighbor> *node;
     double probability;
-    pm::obs_int obs_mask;
+    std::vector<size_t> observables;
 };
 
 class ProbabilityGraph {

@@ -69,11 +69,6 @@ struct Mwpm {
     void handle_tree_hitting_other_tree(const RegionHitRegionEventData& event);
     GraphFillRegion* pair_and_shatter_subblossoms_and_extract_matches(GraphFillRegion* region, MatchingResult &res);
     MatchingResult shatter_blossom_and_extract_matches(GraphFillRegion* region);
-    GraphFillRegion* pair_and_shatter_subblossoms_and_extract_match_paths(GraphFillRegion* region,
-                                                                          std::vector<uint8_t>& obs_bit_vector,
-                                                                          pm::cumulative_time_int& weight);
-    void shatter_blossom_and_extract_match_paths(GraphFillRegion *region, std::vector<uint8_t>& obs_bit_vector,
-                                                 pm::cumulative_time_int& weight);
 
     GraphFillRegion* pair_and_shatter_subblossoms_and_extract_match_edges(
             GraphFillRegion* region,

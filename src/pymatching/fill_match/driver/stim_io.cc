@@ -85,11 +85,11 @@ pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_dis
             w *= 2;
 
             if (!neighbor.node) {
-                matching_graph.add_boundary_edge(i, w, neighbor.obs_mask);
+                matching_graph.add_boundary_edge(i, w, neighbor.observables);
             } else {
                 auto j = neighbor.node - &nodes[0];
                 if (j > i)
-                    matching_graph.add_edge(i, j, w, neighbor.obs_mask);
+                    matching_graph.add_edge(i, j, w, neighbor.observables);
             }
         }
     }

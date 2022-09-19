@@ -23,7 +23,9 @@ class MatchingGraph {
     explicit MatchingGraph(size_t num_nodes);
     MatchingGraph(MatchingGraph&& graph) noexcept;
     void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
+    void add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables);
     void add_boundary_edge(size_t u, weight_int weight, obs_int observables);
+    void add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables);
 };
 
 }  // namespace pm
