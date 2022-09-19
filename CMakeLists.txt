@@ -42,6 +42,7 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/tracker/flood_check_event.cc
         src/pymatching/fill_match/diagram/animation_main.cc
         src/pymatching/fill_match/diagram/mwpm_diagram.cc
+        src/pymatching/fill_match/search/search_graph.cc
         )
 
 set(TEST_FILES
