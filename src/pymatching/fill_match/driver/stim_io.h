@@ -18,16 +18,18 @@ class ProbabilityGraph {
    public:
     std::vector<std::vector<Neighbor>> nodes;
     size_t num_nodes;
+    size_t num_observables;
 
-    explicit ProbabilityGraph(size_t num_nodes) : num_nodes(num_nodes) {
+    explicit ProbabilityGraph(size_t num_nodes, size_t num_observables)
+        : num_nodes(num_nodes), num_observables(num_observables) {
         nodes.resize(num_nodes);
     };
 
-    void add_or_merge_edge(size_t u, size_t v, double probability, pm::obs_int observables);
+    void add_or_merge_edge(size_t u, size_t v, double probability, const std::vector<size_t>& observables);
 
-    void add_or_merge_boundary_edge(size_t u, double probability, pm::obs_int observables);
+    void add_or_merge_boundary_edge(size_t u, double probability, const std::vector<size_t>& observables);
 
-    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, pm::obs_int obs_mask);
+    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, std::vector<size_t>& observables);
 
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
 

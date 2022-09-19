@@ -37,7 +37,7 @@ std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_ret
         if (rad1.is_growing()) {
             auto weight = detector_node.neighbor_weights[0];
             auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
-            if (collision_time >= queue.cur_time && collision_time < best_time) {
+            if (collision_time < best_time) {
                 best_time = collision_time;
                 best_neighbor = 0;
             }
@@ -98,9 +98,9 @@ void GraphFlooder::schedule_tentative_shrink_event(GraphFillRegion &region) {
 }
 
 void GraphFlooder::do_region_arriving_at_empty_detector_node(
-    GraphFillRegion &region, DetectorNode &empty_node, const DetectorNode &from_node, size_t neighbor_index) {
+    GraphFillRegion &region, DetectorNode &empty_node, DetectorNode &from_node, size_t empty_to_from_index) {
     empty_node.observables_crossed_from_source =
-        (from_node.observables_crossed_from_source ^ from_node.neighbor_observables[neighbor_index]);
+        (from_node.observables_crossed_from_source ^ empty_node.neighbor_observables[empty_to_from_index]);
     empty_node.reached_from_source = from_node.reached_from_source;
     empty_node.radius_of_arrival = region.radius.get_distance_at_time(queue.cur_time);
     empty_node.region_that_arrived = &region;
@@ -134,10 +134,10 @@ MwpmEvent GraphFlooder::do_neighbor_interaction(
     DetectorNode &src, size_t src_to_dst_index, DetectorNode &dst, size_t dst_to_src_index) {
     // First check if one region is moving into an empty location
     if (src.region_that_arrived && !dst.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(*src.region_that_arrived_top, dst, src, src_to_dst_index);
+        do_region_arriving_at_empty_detector_node(*src.region_that_arrived_top, dst, src, dst_to_src_index);
         return MwpmEvent::no_event();
     } else if (dst.region_that_arrived && !src.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(*dst.region_that_arrived_top, src, dst, dst_to_src_index);
+        do_region_arriving_at_empty_detector_node(*dst.region_that_arrived_top, src, dst, src_to_dst_index);
         return MwpmEvent::no_event();
     } else {
         // Two regions colliding

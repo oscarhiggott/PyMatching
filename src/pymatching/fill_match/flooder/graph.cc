@@ -5,14 +5,27 @@
 
 namespace pm {
 
-void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, obs_int observables) {
+void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables) {
+    pm::obs_int obs_mask = 0;
+    if (!has_observable_indices()) {
+        for (auto obs : observables)
+            obs_mask ^= 1 << obs;
+    } else {
+        nodes[u].neighbor_observable_indices.push_back(observables);
+        nodes[v].neighbor_observable_indices.push_back(observables);
+    }
+
+    add_edge(u, v, weight, obs_mask);
+}
+
+void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, pm::obs_int obs_mask) {
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
-            "Node " + std::to_string(larger_node) +
-            " exceeds number of nodes "
-            "in graph (" +
-            std::to_string(num_nodes) + ")");
+                "Node " + std::to_string(larger_node) +
+                " exceeds number of nodes "
+                "in graph (" +
+                std::to_string(num_nodes) + ")");
     }
 
     // Allow parallel edges?
@@ -25,7 +38,20 @@ void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, obs_int obse
     nodes[v].neighbor_observables.push_back(observables);
 }
 
-void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, obs_int observables) {
+
+void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables) {
+    pm::obs_int obs_mask = 0;
+    if (!has_observable_indices()) {
+        for (auto obs : observables)
+            obs_mask ^= 1 << obs;
+    } else {
+        nodes[u].neighbor_observable_indices.insert(nodes[u].neighbor_observable_indices.begin(), 1, observables);
+    }
+
+    add_boundary_edge(u, weight, obs_mask);
+}
+
+void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, pm::obs_int obs_mask) {
     if (u >= nodes.size()) {
         throw std::invalid_argument(
             "Node " + std::to_string(u) +

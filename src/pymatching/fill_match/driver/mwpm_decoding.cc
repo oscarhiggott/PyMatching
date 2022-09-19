@@ -6,7 +6,8 @@ pm::Mwpm pm::detector_error_model_to_mwpm(
         pm::GraphFlooder(pm::detector_error_model_to_matching_graph(detector_error_model, num_distinct_weights)));
 }
 
-pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+
+void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
     if (!mwpm.flooder.queue.empty()) {
         throw std::invalid_argument("!mwpm.flooder.queue.empty()");
     }
@@ -25,6 +26,11 @@ pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector
             break;
         mwpm.process_event(event);
     }
+}
+
+
+pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+    process_timeline_until_completion(mwpm, detection_events);
     pm::MatchingResult res;
     for (auto& i : detection_events) {
         if (mwpm.flooder.graph.nodes[i].region_that_arrived)

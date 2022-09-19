@@ -163,7 +163,6 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
         evens_start = child_idx + 1;
         evens_end = child_idx + bsize - gap;
 
-        // TODO: Add more tests covering this loop
         // Now insert odd-length path starting on in_parent and ending on in_child into alternating tree
         for (size_t i = parent_idx; i < parent_idx + gap; i += 2) {
             current_alt_node = make_child(
@@ -268,77 +267,197 @@ void Mwpm::process_event(const MwpmEvent &event) {
     }
 }
 
+
+GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_matches(GraphFillRegion* region, MatchingResult &res){
+    for (auto &r : region->blossom_children) {
+        r.region->clear_blossom_parent_ignoring_wrapped_radius();
+    }
+    auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
+    subblossom->match = region->match;
+    if (subblossom->match.region)
+        subblossom->match.region->match.region = subblossom;
+    res.weight += region->radius.y_intercept();
+    auto iter = std::find_if(
+            region->blossom_children.begin(),
+            region->blossom_children.end(),
+            [&subblossom](const RegionEdge &e) {
+                return e.region == subblossom;
+            });
+    size_t index = std::distance(region->blossom_children.begin(), iter);
+    size_t num_children = region->blossom_children.size();
+    for (size_t i = 0; i < num_children - 1; i += 2) {
+        auto &re1 = region->blossom_children[(index + i + 1) % num_children];
+        auto &re2 = region->blossom_children[(index + i + 2) % num_children];
+        re1.region->add_match(re2.region, re1.edge);
+        res += shatter_blossom_and_extract_matches(re1.region);
+    }
+    flooder.region_arena.del(region);
+    return subblossom;
+}
+
+
 MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region) {
-    bool this_blossom_trivial = region->blossom_children.empty();
     region->cleanup_shell_area();
-    auto match_region = region->match.region;
-    if (!match_region && this_blossom_trivial) {
+
+    // First handle base cases (no subblossoms)
+    if (region->match.region) {
+        region->match.region->cleanup_shell_area();
+        if (region->blossom_children.empty() && region->match.region->blossom_children.empty()) {
+            // Neither region nor matched region have blossom children
+            // No shattering required, so just return MatchingResult from this match.
+            MatchingResult res = {
+                    region->match.edge.obs_mask,
+                    region->radius.y_intercept() + region->match.region->radius.y_intercept()};
+            flooder.region_arena.del(region->match.region);
+            flooder.region_arena.del(region);
+            return res;
+        }
+    } else if (region->blossom_children.empty()) {
+        // Region with no blossom children matched to boundary
+        // No shattering required, so just return MatchingResult from this match.
         MatchingResult res = {region->match.edge.obs_mask, region->radius.y_intercept()};
         flooder.region_arena.del(region);
         return res;
     }
-    bool match_blossom_has_children = match_region && !match_region->blossom_children.empty();
-    if (match_region)
-        match_region->cleanup_shell_area();
-    if (this_blossom_trivial && !match_blossom_has_children) {
-        MatchingResult res = {
-            region->match.edge.obs_mask, region->radius.y_intercept() + match_region->radius.y_intercept()};
-        flooder.region_arena.del(match_region);
-        flooder.region_arena.del(region);
-        return res;
-    }
+
+    // Pair up and shatter subblossoms into matches
     MatchingResult res{0, 0};
-    if (!this_blossom_trivial) {
-        for (auto &r : region->blossom_children) {
-            r.region->clear_blossom_parent();
-        }
-        auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
-        subblossom->match = region->match;
-        if (match_region)
-            match_region->match.region = subblossom;
-        res.weight += region->radius.y_intercept();
-        auto iter = std::find_if(
-            region->blossom_children.begin(), region->blossom_children.end(), [&subblossom](const RegionEdge &e) {
-                return e.region == subblossom;
-            });
-        size_t index = std::distance(region->blossom_children.begin(), iter);
-        size_t num_children = region->blossom_children.size();
-        for (size_t i = 0; i < num_children - 1; i += 2) {
-            auto &re1 = region->blossom_children[(index + i + 1) % num_children];
-            auto &re2 = region->blossom_children[(index + i + 2) % num_children];
-            re1.region->add_match(re2.region, re1.edge);
-            res += shatter_blossom_and_extract_matches(re1.region);
-        }
-        flooder.region_arena.del(region);
-        region = subblossom;
-    }
-    if (match_blossom_has_children) {
-        for (auto &r : match_region->blossom_children) {
-            r.region->clear_blossom_parent();
-        }
-        auto subblossom = match_region->match.edge.loc_from->region_that_arrived_top;
-        subblossom->match = match_region->match;
-        region->match.region = subblossom;
-        res.weight += match_region->radius.y_intercept();
-        auto iter = std::find_if(
-            match_region->blossom_children.begin(),
-            match_region->blossom_children.end(),
-            [&subblossom](const RegionEdge &e) {
-                return e.region == subblossom;
-            });
-        size_t index = std::distance(match_region->blossom_children.begin(), iter);
-        size_t num_children = match_region->blossom_children.size();
-        for (size_t i = 0; i < num_children - 1; i += 2) {
-            auto &re1 = match_region->blossom_children[(index + i + 1) % num_children];
-            auto &re2 = match_region->blossom_children[(index + i + 2) % num_children];
-            re1.region->add_match(re2.region, re1.edge);
-            res += shatter_blossom_and_extract_matches(re1.region);
-        }
-        flooder.region_arena.del(match_region);
-    }
+    if (!region->blossom_children.empty())
+        region = pair_and_shatter_subblossoms_and_extract_matches(region, res);
+    if (region->match.region && !region->match.region->blossom_children.empty())
+        pair_and_shatter_subblossoms_and_extract_matches(region->match.region, res);
     res += shatter_blossom_and_extract_matches(region);
     return res;
 }
+
+
+GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_match_paths(GraphFillRegion* region,
+                                                                            std::vector<uint8_t>& obs_bit_vector,
+                                                                            pm::cumulative_time_int& weight){
+    for (auto &r : region->blossom_children) {
+        r.region->clear_blossom_parent_ignoring_wrapped_radius();
+    }
+    auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
+    subblossom->match = region->match;
+    if (subblossom->match.region)
+        subblossom->match.region->match.region = subblossom;
+    weight += region->radius.y_intercept();
+    auto iter = std::find_if(
+            region->blossom_children.begin(),
+            region->blossom_children.end(),
+            [&subblossom](const RegionEdge &e) {
+                return e.region == subblossom;
+            });
+    size_t index = std::distance(region->blossom_children.begin(), iter);
+    size_t num_children = region->blossom_children.size();
+    for (size_t i = 0; i < num_children - 1; i += 2) {
+        auto &re1 = region->blossom_children[(index + i + 1) % num_children];
+        auto &re2 = region->blossom_children[(index + i + 2) % num_children];
+        re1.region->add_match(re2.region, re1.edge);
+        shatter_blossom_and_extract_match_paths(re1.region, obs_bit_vector, weight);
+    }
+    flooder.region_arena.del(region);
+    return subblossom;
+}
+
+
+void Mwpm::shatter_blossom_and_extract_match_paths(GraphFillRegion *region,
+                                                   std::vector<uint8_t>& obs_bit_vector,
+                                                   pm::cumulative_time_int& weight) {
+    region->cleanup_shell_area();
+
+    // First handle base cases (no subblossoms)
+    if (region->match.region) {
+        region->match.region->cleanup_shell_area();
+        if (region->blossom_children.empty() && region->match.region->blossom_children.empty()) {
+            // Neither region nor matched region have blossom children
+            // No shattering required, so just return MatchingResult from this match.
+            for (auto& b : region->match.edge.obs_indices)
+                obs_bit_vector[b] ^= 1;
+            weight += region->radius.y_intercept();
+            weight += region->match.region->radius.y_intercept();
+            flooder.region_arena.del(region->match.region);
+            flooder.region_arena.del(region);
+            return;
+        }
+    } else if (region->blossom_children.empty()) {
+        // Region with no blossom children matched to boundary
+        // No shattering required, so just return MatchingResult from this match.
+        for (auto& b : region->match.edge.obs_indices)
+            obs_bit_vector[b] ^= 1;
+        weight += region->radius.y_intercept();
+        flooder.region_arena.del(region);
+        return;
+    }
+
+    // Pair up and shatter subblossoms into matches
+    if (!region->blossom_children.empty())
+        region = pair_and_shatter_subblossoms_and_extract_match_paths(region, obs_bit_vector, weight);
+    if (region->match.region && !region->match.region->blossom_children.empty())
+        pair_and_shatter_subblossoms_and_extract_match_paths(region->match.region, obs_bit_vector, weight);
+    shatter_blossom_and_extract_match_paths(region, obs_bit_vector, weight);
+}
+
+
+GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_match_edges(GraphFillRegion *region,
+                                                                std::vector<CompressedEdge> &match_edges) {
+    for (auto &r : region->blossom_children) {
+        r.region->clear_blossom_parent_ignoring_wrapped_radius();
+    }
+    auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
+    subblossom->match = region->match;
+    if (subblossom->match.region)
+        subblossom->match.region->match.region = subblossom;
+    auto iter = std::find_if(
+            region->blossom_children.begin(),
+            region->blossom_children.end(),
+            [&subblossom](const RegionEdge &e) {
+                return e.region == subblossom;
+            });
+    size_t index = std::distance(region->blossom_children.begin(), iter);
+    size_t num_children = region->blossom_children.size();
+    for (size_t i = 0; i < num_children - 1; i += 2) {
+        auto &re1 = region->blossom_children[(index + i + 1) % num_children];
+        auto &re2 = region->blossom_children[(index + i + 2) % num_children];
+        re1.region->add_match(re2.region, re1.edge);
+        shatter_blossom_and_extract_match_edges(re1.region, match_edges);
+    }
+    flooder.region_arena.del(region);
+    return subblossom;
+}
+
+
+void Mwpm::shatter_blossom_and_extract_match_edges(GraphFillRegion *region, std::vector<CompressedEdge> &match_edges) {
+    region->cleanup_shell_area();
+
+    // First handle base cases (no subblossoms)
+    if (region->match.region) {
+        region->match.region->cleanup_shell_area();
+        if (region->blossom_children.empty() && region->match.region->blossom_children.empty()) {
+            // Neither region nor matched region have blossom children
+            // No shattering required, so just return MatchingResult from this match.
+            match_edges.push_back(region->match.edge);
+            flooder.region_arena.del(region->match.region);
+            flooder.region_arena.del(region);
+            return;
+        }
+    } else if (region->blossom_children.empty()) {
+        // Region with no blossom children matched to boundary
+        // No shattering required, so just return MatchingResult from this match.
+        match_edges.push_back(region->match.edge);
+        flooder.region_arena.del(region);
+        return;
+    }
+
+    // Pair up and shatter subblossoms into matches
+    if (!region->blossom_children.empty())
+        region = pair_and_shatter_subblossoms_and_extract_match_edges(region, match_edges);
+    if (region->match.region && !region->match.region->blossom_children.empty())
+        pair_and_shatter_subblossoms_and_extract_match_edges(region->match.region, match_edges);
+    shatter_blossom_and_extract_match_edges(region, match_edges);
+    return;
+}
+
 
 void Mwpm::create_detection_event(DetectorNode *node) {
     auto region = flooder.region_arena.alloc_default_constructed();
@@ -375,4 +494,34 @@ bool MatchingResult::operator!=(const MatchingResult &rhs) const {
 }
 
 void Mwpm::verify_invariants() const {
+}
+
+ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
+
+}
+
+bool ExtendedMatchingResult::operator==(const ExtendedMatchingResult &rhs) const {
+    return (obs_crossed == rhs.obs_crossed) && (weight == rhs.weight);
+}
+
+bool ExtendedMatchingResult::operator!=(const ExtendedMatchingResult &rhs) const {
+    return !(rhs == *this);
+}
+
+ExtendedMatchingResult::ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, cumulative_time_int weight)
+    : obs_crossed(obs_crossed), weight(weight) {}
+
+ExtendedMatchingResult &ExtendedMatchingResult::operator+=(const ExtendedMatchingResult &rhs) {
+    assert(obs_crossed.size() == rhs.obs_crossed.size());
+    for (size_t i=0; i < obs_crossed.size(); i++) {
+        obs_crossed[i] ^= rhs.obs_crossed[i];
+    }
+    weight += rhs.weight;
+    return *this;
+}
+
+ExtendedMatchingResult ExtendedMatchingResult::operator+(const ExtendedMatchingResult &rhs) const {
+    ExtendedMatchingResult copy = *this;
+    copy += rhs;
+    return copy;
 }

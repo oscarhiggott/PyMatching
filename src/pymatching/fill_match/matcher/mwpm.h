@@ -23,6 +23,23 @@ struct MatchingResult {
     MatchingResult operator+(const MatchingResult& rhs) const;
 };
 
+
+struct ExtendedMatchingResult {
+    std::vector<uint8_t> obs_crossed;
+    cumulative_time_int weight;
+    ExtendedMatchingResult();
+
+    bool operator==(const ExtendedMatchingResult& rhs) const;
+
+    bool operator!=(const ExtendedMatchingResult& rhs) const;
+
+    ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, cumulative_time_int weight);
+
+    ExtendedMatchingResult& operator+=(const ExtendedMatchingResult& rhs);
+    ExtendedMatchingResult operator+(const ExtendedMatchingResult& rhs) const;
+};
+
+
 struct Mwpm {
     GraphFlooder flooder;
     Arena<AltTreeNode> node_arena;
@@ -50,7 +67,19 @@ struct Mwpm {
         const CompressedEdge& unmatched_to_matched_edge);
     void handle_tree_hitting_self(const RegionHitRegionEventData& event, AltTreeNode* common_ancestor);
     void handle_tree_hitting_other_tree(const RegionHitRegionEventData& event);
+    GraphFillRegion* pair_and_shatter_subblossoms_and_extract_matches(GraphFillRegion* region, MatchingResult &res);
     MatchingResult shatter_blossom_and_extract_matches(GraphFillRegion* region);
+    GraphFillRegion* pair_and_shatter_subblossoms_and_extract_match_paths(GraphFillRegion* region,
+                                                                          std::vector<uint8_t>& obs_bit_vector,
+                                                                          pm::cumulative_time_int& weight);
+    void shatter_blossom_and_extract_match_paths(GraphFillRegion *region, std::vector<uint8_t>& obs_bit_vector,
+                                                 pm::cumulative_time_int& weight);
+
+    GraphFillRegion* pair_and_shatter_subblossoms_and_extract_match_edges(
+            GraphFillRegion* region,
+            std::vector<CompressedEdge>& match_edges
+            );
+    void shatter_blossom_and_extract_match_edges(GraphFillRegion* region, std::vector<CompressedEdge>& match_edges);
 
     void verify_invariants() const;
 

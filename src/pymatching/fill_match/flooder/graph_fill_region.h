@@ -56,6 +56,7 @@ struct GraphFillRegion {
     template <typename Callable>
     void do_op_for_each_descendant_and_self(const Callable& func);
     void clear_blossom_parent();
+    void clear_blossom_parent_ignoring_wrapped_radius();
     void wrap_into_blossom(GraphFillRegion* new_blossom_parent_and_top);
 
     /// Determines if rhs is an ancestor of, or the same as, lhs.
