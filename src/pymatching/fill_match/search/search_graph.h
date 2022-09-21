@@ -5,8 +5,20 @@
 
 namespace pm {
 
-
     class SearchDetectorNode {
+    public:
+        SearchDetectorNode()
+            : reached_from_source(nullptr),
+              index_of_predecessor(SIZE_MAX) {
+        }
+
+        /// The SearchDetectorNode that this node was reached from in the Dijkstra search
+        SearchDetectorNode* reached_from_source;
+
+        /// `index_of_predecessor` is the index in `neighbors` of the neighboring detector node that this node was
+        /// reached from in the Dijkstra search.
+        size_t index_of_predecessor;
+
         /// Manages the next "look at me" event for the node
         QueuedEventTracker node_event_tracker;
 
