@@ -72,7 +72,7 @@ double pm::ProbabilityGraph::min_nonzero_probability() {
 pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     double min_prob = min_nonzero_probability();
     double max_weight = std::log((1 - min_prob) / min_prob);
-    pm::MatchingGraph matching_graph(nodes.size());
+    pm::MatchingGraph matching_graph(nodes.size(), num_observables);
     pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
     for (auto& node : nodes) {
         for (auto& neighbor : node) {
@@ -96,31 +96,64 @@ pm::MatchingGraph pm::ProbabilityGraph::to_matching_graph(pm::weight_int num_dis
     return matching_graph;
 }
 
-pm::MatchingGraph pm::detector_error_model_to_matching_graph(
-    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
-    pm::ProbabilityGraph probability_graph(detector_error_model.count_detectors(),
-                                           detector_error_model.count_observables());
-    detector_error_model.iter_flatten_error_instructions([&probability_graph](const stim::DemInstruction& instruction) {
-        std::vector<size_t> dets;
-        std::vector<size_t> observables;
-        double p = instruction.arg_data[0];
-        for (auto& target : instruction.target_data) {
-            if (target.is_relative_detector_id()) {
-                dets.push_back(target.val());
-            } else if (target.is_observable_id()) {
-                observables.push_back(target.val());
-            } else if (target.is_separator()) {
-                if (p > 0) {
-                    probability_graph.handle_dem_instruction(p, dets, observables);
-                    observables.clear();
-                    dets.clear();
-                }
+pm::SearchGraph pm::ProbabilityGraph::to_search_graph(pm::weight_int num_distinct_weights) {
+    /// Identical to pm::ProbabilityGraph::to_matching_graph but for constructing a pm::SearchGraph
+    double min_prob = min_nonzero_probability();
+    double max_weight = std::log((1 - min_prob) / min_prob);
+    pm::SearchGraph search_graph(nodes.size());
+    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
+    for (auto& node : nodes) {
+        for (auto& neighbor : node) {
+            auto i = &node - &nodes[0];
+            double normed_weight = std::log((1 - neighbor.probability) / neighbor.probability) / max_weight;
+            pm::weight_int w = std::min(max_half_edge_weight, (pm::weight_int)(max_half_edge_weight * normed_weight));
+
+            // Extremely important!
+            // If all edge weights are even integers, then all collision events occur at integer times.
+            w *= 2;
+
+            if (!neighbor.node) {
+                search_graph.add_boundary_edge(i, w, neighbor.observables);
+            } else {
+                auto j = neighbor.node - &nodes[0];
+                if (j > i)
+                    search_graph.add_edge(i, j, w, neighbor.observables);
             }
         }
-        if (p > 0) {
-            probability_graph.handle_dem_instruction(p, dets, observables);
-        }
-    });
+    }
+    return search_graph;
+}
 
+pm::ProbabilityGraph pm::detector_error_model_to_probability_graph(
+        const stim::DetectorErrorModel &detector_error_model) {
+        pm::ProbabilityGraph probability_graph(detector_error_model.count_detectors(),
+                                               detector_error_model.count_observables());
+        detector_error_model.iter_flatten_error_instructions([&probability_graph](const stim::DemInstruction& instruction) {
+            std::vector<size_t> dets;
+            std::vector<size_t> observables;
+            double p = instruction.arg_data[0];
+            for (auto& target : instruction.target_data) {
+                if (target.is_relative_detector_id()) {
+                    dets.push_back(target.val());
+                } else if (target.is_observable_id()) {
+                    observables.push_back(target.val());
+                } else if (target.is_separator()) {
+                    if (p > 0) {
+                        probability_graph.handle_dem_instruction(p, dets, observables);
+                        observables.clear();
+                        dets.clear();
+                    }
+                }
+            }
+            if (p > 0) {
+                probability_graph.handle_dem_instruction(p, dets, observables);
+            }
+        });
+        return probability_graph;
+}
+
+pm::MatchingGraph pm::detector_error_model_to_matching_graph(
+    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
+    auto probability_graph = pm::detector_error_model_to_probability_graph(detector_error_model);
     return probability_graph.to_matching_graph(num_distinct_weights);
 }

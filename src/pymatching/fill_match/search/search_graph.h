@@ -6,18 +6,17 @@
 
 namespace pm {
 
+class SearchGraph {
+public:
+    std::vector<SearchDetectorNode> nodes;
+    size_t num_nodes;
 
-    class SearchGraph {
-    public:
-        std::vector<SearchDetectorNode> nodes;
-        size_t num_nodes;
-
-        SearchGraph();
-        explicit SearchGraph(size_t num_nodes);
-        SearchGraph(SearchGraph&& graph) noexcept;
-        void add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables);
-        void add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables);
-    };
+    SearchGraph();
+    explicit SearchGraph(size_t num_nodes);
+    SearchGraph(SearchGraph&& graph) noexcept;
+    void add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables);
+    void add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables);
+};
 }
 
 

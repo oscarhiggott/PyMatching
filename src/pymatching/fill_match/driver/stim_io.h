@@ -2,11 +2,10 @@
 #define PYMATCHING2_STIM_IO_H
 
 #include "pymatching/fill_match/flooder/graph.h"
+#include "pymatching/fill_match/search/search_graph.h"
 #include "stim.h"
 
 namespace pm {
-pm::MatchingGraph detector_error_model_to_matching_graph(
-    const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
 
 struct Neighbor {
     std::vector<Neighbor> *node;
@@ -33,8 +32,16 @@ class ProbabilityGraph {
 
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
 
+    pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
+
     double min_nonzero_probability();
 };
+
+ProbabilityGraph detector_error_model_to_probability_graph(
+        const stim::DetectorErrorModel &detector_error_model);
+
+MatchingGraph detector_error_model_to_matching_graph(
+        const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
 
 }  // namespace pm
 

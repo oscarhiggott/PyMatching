@@ -1,5 +1,7 @@
 #include "search_flooder.h"
 
+pm::SearchFlooder::SearchFlooder() {}
+
 pm::SearchFlooder::SearchFlooder(pm::SearchGraph graph) : graph(std::move(graph)) {}
 
 std::pair<size_t, pm::cumulative_time_int> pm::SearchFlooder::find_next_event_at_node_returning_neighbor_index_and_time(
@@ -158,4 +160,15 @@ void pm::SearchFlooder::trace_back_path_from_collision_edge(pm::CollisionEdge co
     for (auto i : obs)
         observables[i] ^= 1;
     weight += collision_edge.collision_node->neighbor_weights[collision_edge.neighbor_index];
+}
+
+void pm::SearchFlooder::reset_graph() {
+    for (auto& detector_node : reached_nodes)
+        detector_node->reset();
+    reached_nodes.clear();
+}
+
+void pm::SearchFlooder::reset() {
+    reset_graph();
+    queue.reset();
 }

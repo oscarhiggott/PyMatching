@@ -31,6 +31,8 @@ public:
     std::vector <std::vector<size_t>> neighbor_observable_indices;  /// Indices of observables crossed by the edge to each neighbor.
 
     size_t index_of_neighbor(SearchDetectorNode *target) const;
+
+    void reset();
 };
 
 }

@@ -5,7 +5,7 @@
 #include "pymatching/fill_match/flooder/graph_fill_region.test.h"
 
 TEST(Graph, AddEdge) {
-    pm::MatchingGraph g(4);
+    pm::MatchingGraph g(4, 64);
     g.add_edge(0, 1, 2, 1);
     g.add_edge(1, 2, 3, 5);
     g.add_edge(0, 3, 10, 10);
@@ -20,7 +20,7 @@ TEST(Graph, AddEdge) {
 }
 
 TEST(Graph, AddBoundaryEdge) {
-    pm::MatchingGraph g(6);
+    pm::MatchingGraph g(6, 64);
     g.add_edge(0, 1, 2, 3);
     g.add_boundary_edge(0, 7, 4);
     g.add_boundary_edge(5, 10, 11);

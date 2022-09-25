@@ -167,8 +167,11 @@ struct radix_heap_queue {
 
     std::string str() const;
 
-    /// Clear all remaining events and reset the queue
+    /// Clear all remaining events from the queue
     void clear();
+
+    /// Clear the queue and set cur_time = 0
+    void reset();
 };
 
 template <bool use_validation>
@@ -208,6 +211,12 @@ void radix_heap_queue<use_validation>::clear() {
         bit_buckets[b].clear();
         b++;
     }
+}
+
+template <bool use_validation>
+void radix_heap_queue<use_validation>::reset() {
+    clear();
+    cur_time = 0;
 }
 
 }  // namespace pm

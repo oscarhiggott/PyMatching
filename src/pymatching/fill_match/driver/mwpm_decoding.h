@@ -12,6 +12,10 @@ Mwpm detector_error_model_to_mwpm(
 
 pm::MatchingResult decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
 
+pm::ExtendedMatchingResult decode_detection_events_with_no_limit_on_num_observables(
+        pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events
+        );
+
 }  // namespace pm
 
 #endif  // PYMATCHING2_MWPM_DECODING_H

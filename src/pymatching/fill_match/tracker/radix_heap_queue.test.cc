@@ -116,4 +116,7 @@ TEST(radix_heap_queue, clear) {
 
     for (size_t i = 0; i < q.bit_buckets.size() - 1; i++)
         ASSERT_EQ(q.bit_buckets[i].size(), 0);
+
+    q.reset();
+    ASSERT_EQ(q.cur_time, 0);
 }

@@ -9,7 +9,7 @@
 using namespace pm;
 
 TEST(GraphFlooder, PriorityQueue) {
-    GraphFlooder flooder(MatchingGraph(10));
+    GraphFlooder flooder(MatchingGraph(10, 64));
     auto &graph = flooder.graph;
     graph.add_edge(0, 1, 10, 0);
     graph.add_edge(1, 2, 10, 0);

@@ -17,6 +17,7 @@ struct CollisionEdge {
 
 class SearchFlooder {
 public:
+    SearchFlooder();
     SearchFlooder(SearchGraph graph);
     SearchGraph graph;
     pm::radix_heap_queue<false> queue;
@@ -36,6 +37,8 @@ public:
     void trace_back_path_from_collision_edge(CollisionEdge collision_edge,
                                              std::vector<uint8_t>& observables,
                                              pm::cumulative_time_int& weight);
+    void reset_graph();
+    void reset();
 };
 
 }

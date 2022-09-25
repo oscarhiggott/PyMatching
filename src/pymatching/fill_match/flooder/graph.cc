@@ -56,15 +56,16 @@ void MatchingGraph::add_boundary_edge(size_t u, weight_int weight, pm::obs_int o
     n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, obs_mask);
 }
 
-MatchingGraph::MatchingGraph(size_t num_nodes) : num_nodes(num_nodes) {
+MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables)
+    : num_nodes(num_nodes), num_observables(num_observables) {
     nodes.resize(num_nodes);
 }
 
 MatchingGraph::MatchingGraph(MatchingGraph &&graph) noexcept
-    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {
+    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes), num_observables(graph.num_observables) {
 }
 
-MatchingGraph::MatchingGraph() : num_nodes(0) {
+MatchingGraph::MatchingGraph() : num_nodes(0), num_observables(0) {
 }
 
 }  // namespace pm

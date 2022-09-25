@@ -55,7 +55,7 @@ MwpmEvent rhr(std::vector<DetectorNode>& ns, size_t i, size_t j, obs_int obs_mas
 }
 
 TEST(Mwpm, BlossomCreatedThenShattered) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(10)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
     g.add_edge(0, 1, 10, 1);
     g.add_edge(1, 4, 20, 2);
@@ -147,7 +147,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
 
 TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
     size_t n = 10;
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n + 3)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n + 3, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n + 3; i++) {
         mwpm.create_detection_event(&ns[i]);
@@ -181,7 +181,7 @@ TEST(Mwpm, BlossomShatterDrivenWithoutFlooder) {
 
 TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
     size_t n = 14;
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n; i++) {
         mwpm.create_detection_event(&ns[i]);
@@ -232,7 +232,7 @@ TEST(Mwpm, BranchingTreeFormsBlossomThenHitsBoundaryMatch) {
 
 TEST(Mwpm, BoundaryMatchHitsTree) {
     size_t n = 6;
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(n, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
     for (size_t i = 0; i < n; i++)
         mwpm.create_detection_event(&ns[i]);
@@ -252,7 +252,7 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
 
 TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     size_t num_nodes = 20;
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(num_nodes)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(num_nodes, 64)));
     auto& g = mwpm.flooder.graph;
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, i);
@@ -323,7 +323,7 @@ void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm){
 
 
 TEST(Mwpm, ShatterBlossomAndExtractMatches) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12, 64)));
     form_blossom_and_nested_blossom_then_match_example(mwpm);
     auto& ns = mwpm.flooder.graph.nodes;
 
@@ -335,7 +335,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
 
 
 TEST(Mwpm, ShatterBlossomAndExtractMatchEdges) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12, 64)));
     form_blossom_and_nested_blossom_then_match_example(mwpm);
     auto& ns = mwpm.flooder.graph.nodes;
 
@@ -388,7 +388,7 @@ void form_nested_blossom_and_match_to_boundary(Mwpm& mwpm){
 
 
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatch) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
     form_nested_blossom_and_match_to_boundary(mwpm);
     auto blossom2 = ns[3].region_that_arrived->blossom_parent;
@@ -399,7 +399,7 @@ TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatch) {
 
 
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatchEdges) {
-    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5)));
+    auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
     form_nested_blossom_and_match_to_boundary(mwpm);
     auto blossom2 = ns[3].region_that_arrived->blossom_parent;
@@ -435,7 +435,7 @@ TEST(Mwpm, MatchingResult) {
 }
 
 TEST(Mwpm, TwoRegionsGrowingThenMatching) {
-    Mwpm mwpm(GraphFlooder(MatchingGraph(10)));
+    Mwpm mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
     g.add_boundary_edge(0, 4, 3);
     g.add_edge(0, 1, 100, 5);
@@ -464,7 +464,7 @@ TEST(Mwpm, TwoRegionsGrowingThenMatching) {
 }
 
 TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
-    Mwpm mwpm(GraphFlooder(MatchingGraph(10)));
+    Mwpm mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
     g.add_boundary_edge(0, 1000, 3);
     g.add_edge(0, 1, 8, 5);
@@ -521,7 +521,7 @@ TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
 
 TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     size_t num_nodes = 100;
-    Mwpm mwpm{GraphFlooder(MatchingGraph(num_nodes))};
+    Mwpm mwpm{GraphFlooder(MatchingGraph(num_nodes, 64))};
     auto& g = mwpm.flooder.graph;
     g.add_boundary_edge(0, 2, 1);
     for (size_t i = 0; i < num_nodes - 1; i++)
@@ -557,7 +557,7 @@ TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
 }
 
 TEST(GraphFlooder, CreateRegion) {
-    Mwpm mwpm{GraphFlooder(MatchingGraph(5))};
+    Mwpm mwpm{GraphFlooder(MatchingGraph(5, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
     g.add_boundary_edge(0, 3, 0);
@@ -578,7 +578,7 @@ TEST(GraphFlooder, CreateRegion) {
 }
 
 TEST(GraphFlooder, RegionGrowingToBoundary) {
-    Mwpm mwpm{GraphFlooder(MatchingGraph(10))};
+    Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
     g.add_boundary_edge(0, 2, 3);
@@ -612,7 +612,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
 }
 
 TEST(GraphFlooder, RegionHitRegion) {
-    Mwpm mwpm{GraphFlooder(MatchingGraph(10))};
+    Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
     g.add_boundary_edge(0, 2000, 3);
@@ -633,7 +633,7 @@ TEST(GraphFlooder, RegionHitRegion) {
 }
 
 TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
-    Mwpm mwpm{GraphFlooder(MatchingGraph(10))};
+    Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
     g.add_boundary_edge(0, 4, 3);

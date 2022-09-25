@@ -3,6 +3,7 @@
 
 #include "pymatching/fill_match/flooder/graph_flooder.h"
 #include "pymatching/fill_match/matcher/alternating_tree.h"
+#include "pymatching/fill_match/search/search_flooder.h"
 
 namespace pm {
 
@@ -28,6 +29,7 @@ struct ExtendedMatchingResult {
     std::vector<uint8_t> obs_crossed;
     cumulative_time_int weight;
     ExtendedMatchingResult();
+    explicit ExtendedMatchingResult(size_t num_observables);
 
     bool operator==(const ExtendedMatchingResult& rhs) const;
 
@@ -43,8 +45,10 @@ struct ExtendedMatchingResult {
 struct Mwpm {
     GraphFlooder flooder;
     Arena<AltTreeNode> node_arena;
+    SearchFlooder search_flooder;
 
     explicit Mwpm(GraphFlooder flooder);
+    Mwpm(GraphFlooder flooder, SearchFlooder search_flooder);
 
     AltTreeNode* make_child(
         AltTreeNode& parent,
@@ -75,6 +79,11 @@ struct Mwpm {
             std::vector<CompressedEdge>& match_edges
             );
     void shatter_blossom_and_extract_match_edges(GraphFillRegion* region, std::vector<CompressedEdge>& match_edges);
+    void extract_paths_from_match_edges(
+            const std::vector<CompressedEdge>& match_edges,
+            std::vector<uint8_t>& observables,
+            pm::cumulative_time_int& weight
+            );
 
     void verify_invariants() const;
 

@@ -26,6 +26,8 @@ struct GraphFlooder {
 
     Arena<GraphFillRegion> region_arena;
 
+    std::vector<CompressedEdge> match_edges;
+
     GraphFlooder(MatchingGraph graph);
     GraphFlooder(GraphFlooder&&) noexcept;
     MwpmEvent run_until_next_mwpm_notification();

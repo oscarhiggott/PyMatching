@@ -22,6 +22,12 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
         expected_obs[i+1] ^= 1;
     ASSERT_EQ(observables, expected_obs);
     ASSERT_EQ(weight,38);
+    flooder.reset_graph();
+    for (auto& n : g.nodes) {
+        ASSERT_EQ(n.index_of_predecessor, SIZE_MAX);
+        ASSERT_EQ(n.reached_from_source, nullptr);
+    }
+    ASSERT_EQ(flooder.reached_nodes.size(), 0);
 }
 
 TEST(SearchFlooder, RepCodeBoundarySearch) {

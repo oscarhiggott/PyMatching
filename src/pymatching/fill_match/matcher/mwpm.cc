@@ -10,6 +10,10 @@ using namespace pm;
 Mwpm::Mwpm(GraphFlooder flooder) : flooder(std::move(flooder)) {
 }
 
+Mwpm::Mwpm(GraphFlooder flooder, SearchFlooder search_flooder)
+    : flooder(std::move(flooder)), search_flooder(std::move(search_flooder)) {}
+
+
 void Mwpm::shatter_descendants_into_matches_and_freeze(AltTreeNode &alt_tree_node) {
     for (auto &child_edge : alt_tree_node.children) {
         shatter_descendants_into_matches_and_freeze(*child_edge.alt_tree_node);
@@ -428,6 +432,23 @@ bool MatchingResult::operator!=(const MatchingResult &rhs) const {
 void Mwpm::verify_invariants() const {
 }
 
+void
+Mwpm::extract_paths_from_match_edges(const std::vector<CompressedEdge> &match_edges, std::vector<uint8_t> &observables,
+                                     cumulative_time_int &weight) {
+    for (auto& edge : match_edges) {
+        auto loc_from_ptr = &search_flooder.graph.nodes[edge.loc_from - &flooder.graph.nodes[0]];
+        SearchDetectorNode* loc_to_ptr;
+        if (edge.loc_to) {
+            loc_to_ptr = &search_flooder.graph.nodes[edge.loc_to - &flooder.graph.nodes[0]];
+        } else {
+            loc_to_ptr = nullptr;
+        }
+        auto collision_edge = search_flooder.run_until_collision(loc_from_ptr, loc_to_ptr);
+        search_flooder.trace_back_path_from_collision_edge(collision_edge, observables, weight);
+        search_flooder.reset();
+    }
+}
+
 ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
 
 }
@@ -440,8 +461,11 @@ bool ExtendedMatchingResult::operator!=(const ExtendedMatchingResult &rhs) const
     return !(rhs == *this);
 }
 
+ExtendedMatchingResult::ExtendedMatchingResult(size_t num_observables)
+    : obs_crossed(num_observables, 0), weight(0) {}
+
 ExtendedMatchingResult::ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, cumulative_time_int weight)
-    : obs_crossed(obs_crossed), weight(weight) {}
+    : obs_crossed(std::move(obs_crossed)), weight(weight) {}
 
 ExtendedMatchingResult &ExtendedMatchingResult::operator+=(const ExtendedMatchingResult &rhs) {
     assert(obs_crossed.size() == rhs.obs_crossed.size());

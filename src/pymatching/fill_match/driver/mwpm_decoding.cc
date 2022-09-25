@@ -2,8 +2,17 @@
 
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
-    return pm::Mwpm(
-        pm::GraphFlooder(pm::detector_error_model_to_matching_graph(detector_error_model, num_distinct_weights)));
+    auto probability_graph = pm::detector_error_model_to_probability_graph(detector_error_model);
+    if (probability_graph.num_observables > sizeof(pm::obs_int) * 8) {
+        return pm::Mwpm(
+                pm::GraphFlooder(probability_graph.to_matching_graph(num_distinct_weights)),
+                pm::SearchFlooder(probability_graph.to_search_graph(num_distinct_weights))
+                        );
+    } else {
+        return pm::Mwpm(pm::GraphFlooder(
+                probability_graph.to_matching_graph(num_distinct_weights)
+        ));
+    }
 }
 
 
@@ -29,12 +38,44 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
 }
 
 
-pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
-    process_timeline_until_completion(mwpm, detection_events);
+pm::MatchingResult shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
+        pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
     pm::MatchingResult res;
     for (auto& i : detection_events) {
         if (mwpm.flooder.graph.nodes[i].region_that_arrived)
             res += mwpm.shatter_blossom_and_extract_matches(mwpm.flooder.graph.nodes[i].region_that_arrived_top);
+    }
+    return res;
+}
+
+
+pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+    process_timeline_until_completion(mwpm, detection_events);
+    return shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
+}
+
+pm::ExtendedMatchingResult pm::decode_detection_events_with_no_limit_on_num_observables(
+        pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+    size_t num_observables = mwpm.flooder.graph.num_observables;
+    process_timeline_until_completion(mwpm, detection_events);
+    pm::ExtendedMatchingResult res(num_observables);
+    if (num_observables > sizeof(pm::obs_int) * 8) {
+        mwpm.flooder.match_edges.clear();
+        for (auto& i : detection_events) {
+            if (mwpm.flooder.graph.nodes[i].region_that_arrived)
+                mwpm.shatter_blossom_and_extract_match_edges(
+                        mwpm.flooder.graph.nodes[i].region_that_arrived_top,
+                        mwpm.flooder.match_edges
+                        );
+        }
+        mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, res.obs_crossed, res.weight);
+    } else {
+        pm::MatchingResult bit_packed_res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
+                mwpm, detection_events
+                );
+        for (size_t i = 0; i < num_observables; i++)
+            res.obs_crossed[i] ^= bit_packed_res.obs_mask & (1 << i);
+        res.weight = bit_packed_res.weight;
     }
     return res;
 }

@@ -18,9 +18,10 @@ class MatchingGraph {
    public:
     std::vector<DetectorNode> nodes;
     size_t num_nodes;
+    size_t num_observables;
 
     MatchingGraph();
-    explicit MatchingGraph(size_t num_nodes);
+    explicit MatchingGraph(size_t num_nodes, size_t num_observables);
     MatchingGraph(MatchingGraph&& graph) noexcept;
     void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
     void add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables);
