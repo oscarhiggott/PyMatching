@@ -166,6 +166,9 @@ struct radix_heap_queue {
     }
 
     std::string str() const;
+
+    /// Clear all remaining events and reset the queue
+    void clear();
 };
 
 template <bool use_validation>
@@ -194,6 +197,17 @@ std::string radix_heap_queue<use_validation>::str() const {
     std::stringstream ss;
     ss << *this;
     return ss.str();
+}
+
+
+template <bool use_validation>
+void radix_heap_queue<use_validation>::clear() {
+    size_t b = 0;
+    while (!empty()) {
+        _num_enqueued -= bit_buckets[b].size();
+        bit_buckets[b].clear();
+        b++;
+    }
 }
 
 }  // namespace pm

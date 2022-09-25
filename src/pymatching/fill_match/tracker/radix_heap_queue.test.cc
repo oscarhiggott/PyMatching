@@ -94,3 +94,26 @@ TEST(radix_heap_queue, wraparound_all_the_way_around) {
         }
     }
 }
+
+TEST(radix_heap_queue, clear) {
+    radix_heap_queue<true> q;
+    ASSERT_EQ(q.size(), 0);
+    ASSERT_EQ(q.cur_time, 0);
+
+    q.enqueue(FloodCheckEvent(cyclic_time_int{9}));
+    q.enqueue(FloodCheckEvent(cyclic_time_int{3}));
+    q.enqueue(FloodCheckEvent(cyclic_time_int{1000}));
+    ASSERT_EQ(q.size(), 3);
+    ASSERT_EQ(q.cur_time, 0);
+
+    ASSERT_EQ(q.dequeue(), FloodCheckEvent(cyclic_time_int{3}));
+    ASSERT_EQ(q.size(), 2);
+    ASSERT_EQ(q.cur_time, 3);
+
+    q.clear();
+    ASSERT_EQ(q.size(), 0);
+    ASSERT_EQ(q.cur_time, 3);
+
+    for (size_t i = 0; i < q.bit_buckets.size() - 1; i++)
+        ASSERT_EQ(q.bit_buckets[i].size(), 0);
+}
