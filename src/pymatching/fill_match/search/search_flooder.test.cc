@@ -26,6 +26,10 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
     for (auto& n : g.nodes) {
         ASSERT_EQ(n.index_of_predecessor, SIZE_MAX);
         ASSERT_EQ(n.reached_from_source, nullptr);
+        ASSERT_EQ(n.node_event_tracker.desired_time, pm::cyclic_time_int{0});
+        ASSERT_EQ(n.node_event_tracker.queued_time, pm::cyclic_time_int{0});
+        ASSERT_EQ(n.node_event_tracker.has_desired_time, false);
+        ASSERT_EQ(n.node_event_tracker.has_queued_time, false);
     }
     ASSERT_EQ(flooder.reached_nodes.size(), 0);
 }

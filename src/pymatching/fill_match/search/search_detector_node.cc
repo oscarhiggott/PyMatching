@@ -13,5 +13,6 @@ size_t pm::SearchDetectorNode::index_of_neighbor(SearchDetectorNode *target) con
 void pm::SearchDetectorNode::reset() {
     reached_from_source = nullptr;
     index_of_predecessor = SIZE_MAX;
+    node_event_tracker.clear();
 }
 

@@ -221,6 +221,41 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
     }
 }
 
+
+BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.01, 8);
+    auto &dem = data.first;
+    // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    const auto &shots = data.second;
+
+    size_t num_buckets = 1024;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    size_t num_mistakes = 0;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            if (shot.obs_mask != res.obs_crossed[0]) {
+                num_mistakes++;
+            }
+        }
+    })
+            .goal_millis(12)
+            .show_rate("dets", (double)num_dets)
+            .show_rate("layers", (double)rounds * shots.size())
+            .show_rate("shots", (double)shots.size());
+    if (num_mistakes == 0) {
+        std::cerr << "data dependence";
+    }
+}
+
 BENCHMARK(Decode_surface_r21_d21_p1000) {
     size_t rounds = 21;
     auto data = generate_data(21, rounds, 0.001, 256);
@@ -248,6 +283,40 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
+    if (num_mistakes == shots.size()) {
+        std::cerr << "data dependence";
+    }
+}
+
+BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.001, 256);
+    auto &dem = data.first;
+    // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    const auto &shots = data.second;
+
+    size_t num_buckets = 1024;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    size_t num_mistakes = 0;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            if (shot.obs_mask != res.obs_crossed[0]) {
+                num_mistakes++;
+            }
+        }
+    })
+            .goal_millis(13)
+            .show_rate("dets", (double)num_dets)
+            .show_rate("layers", (double)rounds * shots.size())
+            .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -285,6 +354,40 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
     }
 }
 
+BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.0001, 512);
+    auto &dem = data.first;
+    // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    const auto &shots = data.second;
+
+    size_t num_buckets = 1024;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    size_t num_mistakes = 0;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            if (shot.obs_mask != res.obs_crossed[0]) {
+                num_mistakes++;
+            }
+        }
+    })
+            .goal_millis(1.9)
+            .show_rate("dets", (double)num_dets)
+            .show_rate("layers", (double)rounds * shots.size())
+            .show_rate("shots", (double)shots.size());
+    if (num_mistakes == shots.size()) {
+        std::cerr << "data dependence";
+    }
+}
+
 BENCHMARK(Decode_surface_r21_d21_p100000) {
     size_t rounds = 21;
     auto data = generate_data(21, rounds, 0.00001, 512);
@@ -312,6 +415,41 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
+    if (num_mistakes == shots.size()) {
+        std::cerr << "data dependence";
+    }
+}
+
+
+BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.00001, 512);
+    auto &dem = data.first;
+    // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    const auto &shots = data.second;
+
+    size_t num_buckets = 1024;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    size_t num_mistakes = 0;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            if (shot.obs_mask != res.obs_crossed[0]) {
+                num_mistakes++;
+            }
+        }
+    })
+            .goal_micros(180)
+            .show_rate("dets", (double)num_dets)
+            .show_rate("layers", (double)rounds * shots.size())
+            .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
