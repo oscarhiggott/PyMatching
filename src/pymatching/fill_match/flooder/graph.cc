@@ -22,7 +22,6 @@ void MatchingGraph::add_edge(size_t u, size_t v, weight_int weight, pm::obs_int 
                 std::to_string(num_nodes) + ")");
     }
 
-    // Allow parallel edges?
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(weight);
     nodes[u].neighbor_observables.push_back(obs_mask);

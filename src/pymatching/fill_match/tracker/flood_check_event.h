@@ -7,6 +7,7 @@ namespace pm {
 
 struct DetectorNode;
 struct GraphFillRegion;
+struct SearchDetectorNode;
 
 enum FloodCheckEventType : uint8_t {
     /// A placeholder value indicating there was no event.
@@ -23,18 +24,27 @@ enum FloodCheckEventType : uint8_t {
     /// - The region being a blossom and shrinking to the point where it must shatter.
     /// - The region shrinking to point and causing a degenerate collision between its neighbors.
     LOOK_AT_SHRINKING_REGION,
+
+    /// Indicates that an event may be happening at a SearchDetectorNode during a Dijkstra search.
+    /// The event could be:
+    /// - The node's exploratory region growing into an empty neighbor.
+    /// - The node's exploratory region colliding with an adjacent boundary.
+    /// - The node's exploratory region colliding with an adjacent exploratory region.
+    LOOK_AT_SEARCH_NODE,
 };
 
 struct FloodCheckEvent {
     union {
         DetectorNode *data_look_at_node;
         GraphFillRegion *data_look_at_shrinking_region;
+        SearchDetectorNode *data_look_at_search_node;
     };
     cyclic_time_int time;
     FloodCheckEventType tentative_event_type;
 
     FloodCheckEvent(DetectorNode *data, cyclic_time_int time);
     FloodCheckEvent(GraphFillRegion *data, cyclic_time_int time);
+    FloodCheckEvent(SearchDetectorNode *data, cyclic_time_int time);
     explicit FloodCheckEvent(cyclic_time_int time);
     FloodCheckEvent() = delete;
 

@@ -43,6 +43,8 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/diagram/animation_main.cc
         src/pymatching/fill_match/diagram/mwpm_diagram.cc
         src/pymatching/fill_match/search/search_graph.cc
+        src/pymatching/fill_match/search/search_detector_node.cc
+        src/pymatching/fill_match/search/search_flooder.cc
         )
 
 set(TEST_FILES
@@ -64,6 +66,8 @@ set(TEST_FILES
         src/pymatching/fill_match/tracker/queued_event_tracker.test.cc
         src/pymatching/fill_match/tracker/cyclic.test.cc
         src/pymatching/fill_match/diagram/mwpm_diagram.test.cc
+        src/pymatching/fill_match/search/search_graph.test.cc
+        src/pymatching/fill_match/search/search_flooder.test.cc
         )
 
 set(PERF_FILES

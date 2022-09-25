@@ -11,6 +11,11 @@ FloodCheckEvent::FloodCheckEvent(GraphFillRegion *data_look_at_shrinking_region,
       time(time),
       tentative_event_type(LOOK_AT_SHRINKING_REGION) {
 }
+
+FloodCheckEvent::FloodCheckEvent(SearchDetectorNode *data_look_at_search_node, cyclic_time_int time)
+        : data_look_at_search_node(data_look_at_search_node), time(time), tentative_event_type(LOOK_AT_SEARCH_NODE) {
+}
+
 FloodCheckEvent::FloodCheckEvent(cyclic_time_int time) : time(time), tentative_event_type(NO_FLOOD_CHECK_EVENT) {
 }
 
@@ -22,6 +27,8 @@ bool FloodCheckEvent::operator==(const FloodCheckEvent &rhs) const {
             return data_look_at_node == rhs.data_look_at_node;
         case LOOK_AT_SHRINKING_REGION:
             return data_look_at_shrinking_region == rhs.data_look_at_shrinking_region;
+        case LOOK_AT_SEARCH_NODE:
+            return data_look_at_search_node == rhs.data_look_at_search_node;
         case NO_FLOOD_CHECK_EVENT:
             return true;
         default:
@@ -39,6 +46,9 @@ std::ostream &pm::operator<<(std::ostream &out, const FloodCheckEvent &ev) {
             break;
         case LOOK_AT_NODE:
             out << "LOOK_AT_NODE, .node=" << ev.data_look_at_node;
+            break;
+        case LOOK_AT_SEARCH_NODE:
+            out << "LOOK_AT_SEARCH_NODE, .node=" << ev.data_look_at_search_node;
             break;
         case NO_FLOOD_CHECK_EVENT:
             out << "NO_TENTATIVE_EVENT";

@@ -2,30 +2,21 @@
 #define PYMATCHING2_SEARCH_GRAPH_H
 
 #include "pymatching/fill_match/tracker/queued_event_tracker.h"
+#include "pymatching/fill_match/search/search_detector_node.h"
 
 namespace pm {
 
-    class SearchDetectorNode {
+
+    class SearchGraph {
     public:
-        SearchDetectorNode()
-            : reached_from_source(nullptr),
-              index_of_predecessor(SIZE_MAX) {
-        }
+        std::vector<SearchDetectorNode> nodes;
+        size_t num_nodes;
 
-        /// The SearchDetectorNode that this node was reached from in the Dijkstra search
-        SearchDetectorNode* reached_from_source;
-
-        /// `index_of_predecessor` is the index in `neighbors` of the neighboring detector node that this node was
-        /// reached from in the Dijkstra search.
-        size_t index_of_predecessor;
-
-        /// Manages the next "look at me" event for the node
-        QueuedEventTracker node_event_tracker;
-
-        /// == Permanent fields used to define the structure of the graph. ==
-        std::vector<DetectorNode*> neighbors;       /// The node's neighbors.
-        std::vector<weight_int> neighbor_weights;   /// Distance crossed by the edge to each neighbor.
-        std::vector<std::vector<size_t>> neighbor_observable_indices;  /// Indices of observables crossed by the edge to each neighbor.
+        SearchGraph();
+        explicit SearchGraph(size_t num_nodes);
+        SearchGraph(SearchGraph&& graph) noexcept;
+        void add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables);
+        void add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables);
     };
 }
 
