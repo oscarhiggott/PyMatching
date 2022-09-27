@@ -37,6 +37,8 @@ struct ExtendedMatchingResult {
 
     ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, cumulative_time_int weight);
 
+    void reset();
+
     ExtendedMatchingResult& operator+=(const ExtendedMatchingResult& rhs);
     ExtendedMatchingResult operator+(const ExtendedMatchingResult& rhs) const;
 };

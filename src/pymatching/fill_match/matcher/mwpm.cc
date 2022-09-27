@@ -482,3 +482,8 @@ ExtendedMatchingResult ExtendedMatchingResult::operator+(const ExtendedMatchingR
     copy += rhs;
     return copy;
 }
+
+void ExtendedMatchingResult::reset() {
+    std::fill(obs_crossed.begin(), obs_crossed.end(), 0);
+    weight = 0;
+}

@@ -237,14 +237,15 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     for (const auto &shot : shots) {
         num_dets += shot.hits.size();
     }
-
     size_t num_mistakes = 0;
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
+            res.reset();
         }
     })
             .goal_millis(12)
@@ -305,12 +306,14 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
     }
 
     size_t num_mistakes = 0;
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
+            res.reset();
         }
     })
             .goal_millis(13)
@@ -371,12 +374,14 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     }
 
     size_t num_mistakes = 0;
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
+            res.reset();
         }
     })
             .goal_millis(1.9)
@@ -438,12 +443,14 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     }
 
     size_t num_mistakes = 0;
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
+            res.reset();
         }
     })
             .goal_micros(180)
