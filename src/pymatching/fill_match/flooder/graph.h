@@ -2,6 +2,7 @@
 #define PYMATCHING2_GRAPH_H
 
 #include <vector>
+#include <set>
 
 #include "pymatching/fill_match/flooder/detector_node.h"
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
@@ -17,16 +18,20 @@ class GraphFillRegion;
 class MatchingGraph {
    public:
     std::vector<DetectorNode> nodes;
+    /// These are the detection events that would occur if an error occurred on every edge with a negative weight
+    std::set<size_t> negative_weight_detection_events;
+    /// These are the observables that would be flipped if an error occurred on every edge with a negative weight
+    std::set<size_t> negative_weight_observables;
     size_t num_nodes;
     size_t num_observables;
 
     MatchingGraph();
     explicit MatchingGraph(size_t num_nodes, size_t num_observables);
     MatchingGraph(MatchingGraph&& graph) noexcept;
-    void add_edge(size_t u, size_t v, weight_int weight, obs_int observables);
-    void add_edge(size_t u, size_t v, weight_int weight, const std::vector<size_t>& observables);
-    void add_boundary_edge(size_t u, weight_int weight, obs_int observables);
-    void add_boundary_edge(size_t u, weight_int weight, const std::vector<size_t>& observables);
+    void add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t>& observables);
+    void add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t>& observables);
+    void update_negative_weight_observables(const std::vector<size_t>& observables);
+    void update_negative_weight_detection_events(size_t node_id);
 };
 
 }  // namespace pm

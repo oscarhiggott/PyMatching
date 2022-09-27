@@ -11,7 +11,7 @@ pm::SearchGraph::SearchGraph(pm::SearchGraph &&graph) noexcept
     : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {
 }
 
-void pm::SearchGraph::add_edge(size_t u, size_t v, pm::weight_int weight, const std::vector<size_t> &observables) {
+void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t> &observables) {
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
@@ -22,15 +22,15 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, pm::weight_int weight, const 
     }
 
     nodes[u].neighbors.push_back(&(nodes[v]));
-    nodes[u].neighbor_weights.push_back(weight);
+    nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observable_indices.push_back(observables);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
-    nodes[v].neighbor_weights.push_back(weight);
+    nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observable_indices.push_back(observables);
 }
 
-void pm::SearchGraph::add_boundary_edge(size_t u, pm::weight_int weight, const std::vector<size_t> &observables) {
+void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t> &observables) {
     if (u >= nodes.size()) {
         throw std::invalid_argument(
                 "Node " + std::to_string(u) +

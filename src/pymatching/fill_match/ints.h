@@ -14,6 +14,13 @@ typedef uint64_t obs_int;
 /// This type is used to store the weight of an edge.
 typedef uint16_t weight_int;
 
+/// This type is used to store the potentially-negative weight of an edge.
+/// It is used when loading graphs in order to support negative edge weights.
+/// However, negative edge weights are handled in pre- and post-processing, rather
+/// than in the blossom algorithm itself, so the `weight_int' type is used instead for data
+/// structures used within the blossom algorithm.
+typedef int16_t signed_weight_int;
+
 /// This type is used to represent absolute times, accumulated times, and accumulated distances.
 /// It is important that it be signed because, for example, it's possible to compute potential
 /// collision times that are in the past while considering whether a collision will occur in the

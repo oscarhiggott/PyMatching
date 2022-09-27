@@ -6,9 +6,9 @@
 
 TEST(Graph, AddEdge) {
     pm::MatchingGraph g(4, 64);
-    g.add_edge(0, 1, 2, 1);
-    g.add_edge(1, 2, 3, 5);
-    g.add_edge(0, 3, 10, 10);
+    g.add_edge(0, 1, 2, {0});
+    g.add_edge(1, 2, 3, {0, 2});
+    g.add_edge(0, 3, 10, {1, 3});
     ASSERT_EQ(g.nodes[0].neighbors[0], &g.nodes[1]);
     ASSERT_EQ(g.nodes[1].neighbors[0], &g.nodes[0]);
     ASSERT_EQ(g.nodes[3].neighbors[0], &g.nodes[0]);
@@ -21,9 +21,9 @@ TEST(Graph, AddEdge) {
 
 TEST(Graph, AddBoundaryEdge) {
     pm::MatchingGraph g(6, 64);
-    g.add_edge(0, 1, 2, 3);
-    g.add_boundary_edge(0, 7, 4);
-    g.add_boundary_edge(5, 10, 11);
+    g.add_edge(0, 1, 2, {0, 1});
+    g.add_boundary_edge(0, 7, {2});
+    g.add_boundary_edge(5, 10, {0, 1, 3});
     ASSERT_EQ(g.nodes[0].neighbors[0], nullptr);
     ASSERT_EQ(g.nodes[0].neighbors[1], &g.nodes[1]);
     ASSERT_EQ(g.nodes[5].neighbors[0], nullptr);

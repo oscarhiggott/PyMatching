@@ -57,14 +57,14 @@ MwpmEvent rhr(std::vector<DetectorNode>& ns, size_t i, size_t j, obs_int obs_mas
 TEST(Mwpm, BlossomCreatedThenShattered) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
-    g.add_edge(0, 1, 10, 1);
-    g.add_edge(1, 4, 20, 2);
-    g.add_edge(4, 3, 20, 3);
-    g.add_edge(3, 2, 12, 4);
-    g.add_edge(0, 2, 16, 5);
-    g.add_edge(4, 5, 50, 6);
-    g.add_edge(2, 6, 100, 7);
-    g.add_boundary_edge(5, 36, 8);
+    g.add_edge(0, 1, 10, {0});
+    g.add_edge(1, 4, 20, {1});
+    g.add_edge(4, 3, 20, {0, 1});
+    g.add_edge(3, 2, 12, {2});
+    g.add_edge(0, 2, 16, {0, 2});
+    g.add_edge(4, 5, 50, {1,2});
+    g.add_edge(2, 6, 100, {0,1,2});
+    g.add_boundary_edge(5, 36, {3});
     for (size_t i = 0; i < 7; i++) {
         mwpm.create_detection_event(&mwpm.flooder.graph.nodes[i]);
     }
@@ -250,12 +250,21 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
     ASSERT_TRUE(regions_matched(ns, 3, 4));
 }
 
+std::vector<size_t> obs_mask_to_set_bits(pm::obs_int obs_mask) {
+    std::vector<size_t> out;
+    for (size_t i = 0; i < sizeof(pm::obs_int) * 8; i++) {
+        if (obs_mask & ((pm::obs_int) 1 << i))
+            out.push_back(i);
+    }
+    return out;
+}
+
 TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     size_t num_nodes = 20;
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(num_nodes, 64)));
     auto& g = mwpm.flooder.graph;
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i + 1, 2, i);
+        g.add_edge(i, i + 1, 2, obs_mask_to_set_bits(i));
     auto& ns = mwpm.flooder.graph.nodes;
     mwpm.create_detection_event(&ns[6]);
     mwpm.create_detection_event(&ns[13]);
@@ -272,11 +281,20 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     }
 }
 
-obs_int set_bits_to_obs_mask(const std::vector<int>& set_bits) {
+obs_int set_bits_to_obs_mask(const std::vector<size_t>& set_bits) {
     obs_int obs_mask = 0;
     for (auto i : set_bits)
         obs_mask ^= (1 << i);
     return obs_mask;
+}
+
+
+TEST(Mwpm, ObsMaskToSetBits) {
+    for (size_t i = 0; i < 64; i++) {
+        auto x = obs_mask_to_set_bits(i);
+        auto y = set_bits_to_obs_mask(x);
+        ASSERT_EQ(y, i);
+    }
 }
 
 void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm){
@@ -437,12 +455,12 @@ TEST(Mwpm, MatchingResult) {
 TEST(Mwpm, TwoRegionsGrowingThenMatching) {
     Mwpm mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
-    g.add_boundary_edge(0, 4, 3);
-    g.add_edge(0, 1, 100, 5);
-    g.add_edge(1, 2, 22, 5);
-    g.add_edge(2, 3, 30, 1);
-    g.add_edge(3, 4, 10, 9);
-    g.add_boundary_edge(4, 1000, 2);
+    g.add_boundary_edge(0, 4, {0, 1});
+    g.add_edge(0, 1, 100, {0, 2});
+    g.add_edge(1, 2, 22, {0, 2});
+    g.add_edge(2, 3, 30, {0});
+    g.add_edge(3, 4, 10, {0, 3});
+    g.add_boundary_edge(4, 1000, {1});
     mwpm.create_detection_event(&mwpm.flooder.graph.nodes[1]);
     mwpm.create_detection_event(&mwpm.flooder.graph.nodes[3]);
     auto e1 = mwpm.flooder.run_until_next_mwpm_notification();
@@ -466,14 +484,14 @@ TEST(Mwpm, TwoRegionsGrowingThenMatching) {
 TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     Mwpm mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
-    g.add_boundary_edge(0, 1000, 3);
-    g.add_edge(0, 1, 8, 5);
-    g.add_edge(1, 2, 10, 5);
-    g.add_edge(2, 3, 2, 1);
-    g.add_edge(3, 4, 4, 9);
-    g.add_edge(4, 5, 20, 2);
-    g.add_edge(5, 6, 36, 3);
-    g.add_boundary_edge(6, 1000, 2);
+    g.add_boundary_edge(0, 1000, {0, 1});
+    g.add_edge(0, 1, 8, {0, 2});
+    g.add_edge(1, 2, 10, {0, 2});
+    g.add_edge(2, 3, 2, {0});
+    g.add_edge(3, 4, 4, {0, 3});
+    g.add_edge(4, 5, 20, {1});
+    g.add_edge(5, 6, 36, {0, 1});
+    g.add_boundary_edge(6, 1000, {1});
     mwpm.create_detection_event(&mwpm.flooder.graph.nodes[1]);
     auto r1 = mwpm.flooder.graph.nodes[1].region_that_arrived;
     mwpm.create_detection_event(&mwpm.flooder.graph.nodes[4]);
@@ -523,10 +541,10 @@ TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     size_t num_nodes = 100;
     Mwpm mwpm{GraphFlooder(MatchingGraph(num_nodes, 64))};
     auto& g = mwpm.flooder.graph;
-    g.add_boundary_edge(0, 2, 1);
+    g.add_boundary_edge(0, 2, {0});
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i + 1, 2, i);
-    g.add_boundary_edge(num_nodes - 1, 2, 2);
+        g.add_edge(i, i + 1, 2, obs_mask_to_set_bits(i));
+    g.add_boundary_edge(num_nodes - 1, 2, {1});
     mwpm.create_detection_event(&mwpm.flooder.graph.nodes[40]);
     auto r40 = mwpm.flooder.graph.nodes[40].region_that_arrived;
     mwpm.create_detection_event(&mwpm.flooder.graph.nodes[42]);
@@ -560,11 +578,11 @@ TEST(GraphFlooder, CreateRegion) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(5, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 3, 0);
-    g.add_edge(0, 1, 5, 0);
-    g.add_edge(1, 2, 11, 0);
-    g.add_edge(2, 3, 100, 0);
-    g.add_boundary_edge(3, 1000, 0);
+    g.add_boundary_edge(0, 3, {});
+    g.add_edge(0, 1, 5, {});
+    g.add_edge(1, 2, 11, {});
+    g.add_edge(2, 3, 100, {});
+    g.add_boundary_edge(3, 1000, {});
     mwpm.create_detection_event(&flooder.graph.nodes[0]);
     mwpm.create_detection_event(&flooder.graph.nodes[2]);
     mwpm.create_detection_event(&flooder.graph.nodes[3]);
@@ -581,12 +599,12 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 2, 3);
-    g.add_edge(0, 1, 10, 5);
-    g.add_edge(1, 2, 21, 0);
-    g.add_edge(2, 3, 100, 1);
-    g.add_edge(3, 4, 7, 9);
-    g.add_boundary_edge(4, 5, 2);
+    g.add_boundary_edge(0, 2, {0, 1});
+    g.add_edge(0, 1, 10, {0, 2});
+    g.add_edge(1, 2, 21, {});
+    g.add_edge(2, 3, 100, {0});
+    g.add_edge(3, 4, 7, {0, 3});
+    g.add_boundary_edge(4, 5, {1});
     mwpm.create_detection_event(&flooder.graph.nodes[2]);
     ASSERT_EQ(
         flooder.run_until_next_mwpm_notification(),
@@ -615,12 +633,12 @@ TEST(GraphFlooder, RegionHitRegion) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 2000, 3);
-    g.add_edge(0, 1, 10, 5);
-    g.add_edge(1, 2, 24, 0);
-    g.add_edge(2, 3, 38, 1);
-    g.add_edge(3, 4, 26, 9);
-    g.add_boundary_edge(4, 1000, 2);
+    g.add_boundary_edge(0, 2000, {0, 1});
+    g.add_edge(0, 1, 10, {0, 2});
+    g.add_edge(1, 2, 24, {});
+    g.add_edge(2, 3, 38, {0});
+    g.add_edge(3, 4, 26, {0, 3});
+    g.add_boundary_edge(4, 1000, {1});
     mwpm.create_detection_event(&flooder.graph.nodes[2]);
     mwpm.create_detection_event(&flooder.graph.nodes[4]);
     auto e1 = flooder.run_until_next_mwpm_notification();
@@ -636,12 +654,12 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 4, 3);
-    g.add_edge(0, 1, 10, 5);
-    g.add_edge(1, 2, 22, 0);
-    g.add_edge(2, 3, 30, 1);
-    g.add_edge(3, 4, 50, 9);
-    g.add_boundary_edge(4, 100, 2);
+    g.add_boundary_edge(0, 4, {0, 1});
+    g.add_edge(0, 1, 10, {0, 2});
+    g.add_edge(1, 2, 22, {});
+    g.add_edge(2, 3, 30, {0});
+    g.add_edge(3, 4, 50, {0, 3});
+    g.add_boundary_edge(4, 100, {1});
     mwpm.create_detection_event(&flooder.graph.nodes[2]);
     auto e1 = flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(
