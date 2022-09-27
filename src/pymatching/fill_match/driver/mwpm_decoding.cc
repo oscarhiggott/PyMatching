@@ -1,5 +1,27 @@
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 
+
+std::vector<uint8_t> pm::obs_mask_to_bit_vector(pm::obs_int obs_mask, size_t num_observables){
+    auto max_obs = sizeof(pm::obs_int) * 8;
+    if (num_observables > max_obs)
+        throw std::invalid_argument("Too many observables");
+    std::vector<uint8_t> bit_vector(num_observables, 0);
+    for (size_t i = 0; i < num_observables; i++)
+        bit_vector[i] ^= (obs_mask & (1 << i)) >> i;
+    return bit_vector;
+}
+
+pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector){
+    auto num_observables = bit_vector.size();
+    auto max_obs = sizeof(pm::obs_int) * 8;
+    if (num_observables > max_obs)
+        throw std::invalid_argument("Too many observables");
+    pm::obs_int obs_mask = 0;
+    for (size_t i = 0; i < num_observables; i++)
+        obs_mask ^= bit_vector[i] << i;
+    return obs_mask;
+}
+
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
     auto probability_graph = pm::detector_error_model_to_probability_graph(detector_error_model);
@@ -73,8 +95,7 @@ pm::ExtendedMatchingResult pm::decode_detection_events_with_no_limit_on_num_obse
         pm::MatchingResult bit_packed_res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
                 mwpm, detection_events
                 );
-        for (size_t i = 0; i < num_observables; i++)
-            res.obs_crossed[i] ^= bit_packed_res.obs_mask & (1 << i);
+        res.obs_crossed = obs_mask_to_bit_vector(bit_packed_res.obs_mask, num_observables);
         res.weight = bit_packed_res.weight;
     }
     return res;

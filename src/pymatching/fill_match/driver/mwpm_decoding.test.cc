@@ -87,17 +87,6 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
 }
 
 
-
-pm::obs_int bit_vector_to_int_mask(std::vector<uint8_t> observables) {
-    pm::obs_int obs = 0;
-    for (size_t i = 0; i < observables.size(); i++){
-        if (observables[i])
-            obs ^= 1 << i;
-    }
-    return obs;
-}
-
-
 TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
     for (size_t i : {0, 1}) {
         auto test_case = load_surface_code_d13_p100_test_case();
@@ -114,15 +103,24 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
             if (num_shots > max_shots)
                 break;
             auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, sparse_shot.hits);
-            if (sparse_shot.obs_mask != bit_vector_to_int_mask(res.obs_crossed)) {
+            if (sparse_shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
             EXPECT_EQ(res.weight, test_case.expected_weights[num_shots]);
             // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
-            ASSERT_EQ(bit_vector_to_int_mask(res.obs_crossed), test_case.expected_obs_masks[num_shots]);
+            ASSERT_EQ(res.obs_crossed[0], test_case.expected_obs_masks[num_shots]);
             sparse_shot.clear();
             num_shots++;
         }
     }
 }
 
+
+TEST(MwpmDecoding, ObsMaskToBitVector) {
+    std::vector<uint8_t> bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
+    ASSERT_EQ(pm::obs_mask_to_bit_vector(648, 10), bit_vector);
+}
+
+TEST(MwpmDecoding, BitVectorToObsMask) {
+    ASSERT_EQ(pm::bit_vector_to_obs_mask({0, 1, 0, 0, 0, 0, 1, 1, 0, 0}), 194);
+}
