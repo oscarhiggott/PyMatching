@@ -50,7 +50,7 @@ int main_predict(int argc, const char **argv) {
     stim::SparseShot sparse_shot;
     sparse_shot.clear();
     while (reader->start_and_read_entire_record(sparse_shot)) {
-        auto res = pm::decode_detection_events(mwpm, sparse_shot.hits);
+        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
         for (size_t k = 0; k < num_obs; k++) {
             writer->write_bit((res.obs_mask >> k) & 1);
         }
@@ -125,7 +125,7 @@ int main_count_mistakes(int argc, const char **argv) {
                 throw std::invalid_argument("Obs data ended before shot data ended.");
             }
         }
-        auto res = pm::decode_detection_events(mwpm, sparse_shot.hits);
+        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
         if (obs_shot.obs_mask != res.obs_mask) {
             num_mistakes++;
         }

@@ -46,7 +46,7 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -78,7 +78,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -110,7 +110,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -142,7 +142,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -174,7 +174,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -206,7 +206,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -241,7 +241,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            auto res = pm::decode_detection_events(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -273,7 +273,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -307,7 +307,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            auto res = pm::decode_detection_events(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -339,7 +339,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -373,7 +373,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            auto res = pm::decode_detection_events(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -405,7 +405,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events(mwpm, shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
@@ -440,7 +440,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, shot.hits);
+            auto res = pm::decode_detection_events(mwpm, shot.hits);
             if (shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }

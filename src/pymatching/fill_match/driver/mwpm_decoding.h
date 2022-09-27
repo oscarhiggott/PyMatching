@@ -13,11 +13,15 @@ obs_int bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector);
 Mwpm detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights);
 
-MatchingResult decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
+MatchingResult decode_detection_events_for_up_to_64_observables(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
 
-void decode_detection_events_with_no_limit_on_num_observables(
-        pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events,
-        uint8_t *obs_begin_ptr, pm::cumulative_time_int& weight);
+/// Used to decode detection events for an existing Mwpm object `mwpm', and a vector of
+/// detection event indices `detection_events'. The predicted observables are XOR-ed into an
+/// existing uint8_t array with at least `mwpm.flooder.graph.num_observables' elements,
+/// the pointer to the first element of which is passed as the `obs_begin_ptr' argument.
+/// The weight of the MWPM solution is added to the `weight' argument.
+void decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, uint8_t *obs_begin_ptr,
+        pm::cumulative_time_int& weight);
 
 }  // namespace pm
 

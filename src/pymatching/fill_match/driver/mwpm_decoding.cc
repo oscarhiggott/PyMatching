@@ -72,12 +72,12 @@ pm::MatchingResult shatter_blossoms_for_all_detection_events_and_extract_obs_mas
 }
 
 
-pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
     process_timeline_until_completion(mwpm, detection_events);
     return shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
 }
 
-void pm::decode_detection_events_with_no_limit_on_num_observables(
+void pm::decode_detection_events(
         pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events,
         uint8_t *obs_begin_ptr,
         pm::cumulative_time_int& weight) {

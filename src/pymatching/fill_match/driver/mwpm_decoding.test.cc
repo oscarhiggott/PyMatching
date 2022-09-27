@@ -74,7 +74,7 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
     while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
         if (num_shots > max_shots)
             break;
-        auto res = pm::decode_detection_events(mwpm, sparse_shot.hits);
+        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
         if (sparse_shot.obs_mask != res.obs_mask) {
             num_mistakes++;
         }
@@ -103,9 +103,9 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
         while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
             if (num_shots > max_shots)
                 break;
-            pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, sparse_shot.hits,
-                                                                         res.obs_crossed.data(),
-                                                                         res.weight);
+            pm::decode_detection_events(mwpm, sparse_shot.hits,
+                                        res.obs_crossed.data(),
+                                        res.weight);
             if (sparse_shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
