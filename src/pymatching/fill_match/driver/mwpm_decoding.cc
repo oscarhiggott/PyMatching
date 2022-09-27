@@ -1,14 +1,16 @@
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 
-
-std::vector<uint8_t> pm::obs_mask_to_bit_vector(pm::obs_int obs_mask, size_t num_observables){
+void pm::fill_bit_vector_from_obs_mask(
+        pm::obs_int obs_mask,
+        std::vector<uint8_t>::iterator obs_it_begin,
+        std::vector<uint8_t>::iterator obs_it_end
+        ){
     auto max_obs = sizeof(pm::obs_int) * 8;
+    auto num_observables = obs_it_end - obs_it_begin;
     if (num_observables > max_obs)
         throw std::invalid_argument("Too many observables");
-    std::vector<uint8_t> bit_vector(num_observables, 0);
     for (size_t i = 0; i < num_observables; i++)
-        bit_vector[i] ^= (obs_mask & (1 << i)) >> i;
-    return bit_vector;
+        *(obs_it_begin + i) ^= (obs_mask & (1 << i)) >> i;
 }
 
 pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector){
@@ -76,11 +78,12 @@ pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector
     return shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
 }
 
-pm::ExtendedMatchingResult pm::decode_detection_events_with_no_limit_on_num_observables(
-        pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+void pm::decode_detection_events_with_no_limit_on_num_observables(
+        pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events,
+        std::vector<uint8_t>::iterator obs_it_begin,
+        pm::cumulative_time_int& weight) {
     size_t num_observables = mwpm.flooder.graph.num_observables;
     process_timeline_until_completion(mwpm, detection_events);
-    pm::ExtendedMatchingResult res(num_observables);
     if (num_observables > sizeof(pm::obs_int) * 8) {
         mwpm.flooder.match_edges.clear();
         for (auto& i : detection_events) {
@@ -90,13 +93,13 @@ pm::ExtendedMatchingResult pm::decode_detection_events_with_no_limit_on_num_obse
                         mwpm.flooder.match_edges
                         );
         }
-        mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, res.obs_crossed, res.weight);
+        mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, obs_it_begin,weight);
     } else {
         pm::MatchingResult bit_packed_res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
                 mwpm, detection_events
                 );
-        res.obs_crossed = obs_mask_to_bit_vector(bit_packed_res.obs_mask, num_observables);
-        res.weight = bit_packed_res.weight;
+        fill_bit_vector_from_obs_mask(bit_packed_res.obs_mask, obs_it_begin,
+                                      obs_it_begin + num_observables);
+        weight = bit_packed_res.weight;
     }
-    return res;
 }

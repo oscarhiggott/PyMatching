@@ -136,13 +136,14 @@ pm::CollisionEdge pm::SearchFlooder::run_until_collision(pm::SearchDetectorNode 
 }
 
 void pm::SearchFlooder::trace_back_path_from_node(pm::SearchDetectorNode *detector_node,
-                                                  std::vector<uint8_t> &observables, pm::cumulative_time_int& weight) {
+                                                  std::vector<uint8_t>::iterator obs_it_begin,
+                                                  pm::cumulative_time_int& weight) {
     auto current_node = detector_node;
     while (current_node->index_of_predecessor != SIZE_MAX) {
         auto pred_idx = current_node->index_of_predecessor;
         auto& obs = current_node->neighbor_observable_indices[pred_idx];
         for (auto i : obs)
-            observables[i] ^= 1;
+            *(obs_it_begin + i) ^= 1;
         weight += current_node->neighbor_weights[pred_idx];
         current_node = current_node->neighbors[pred_idx];
     }
@@ -150,15 +151,15 @@ void pm::SearchFlooder::trace_back_path_from_node(pm::SearchDetectorNode *detect
 
 
 void pm::SearchFlooder::trace_back_path_from_collision_edge(pm::CollisionEdge collision_edge,
-                                                            std::vector<uint8_t> &observables,
+                                                            std::vector<uint8_t>::iterator obs_it_begin,
                                                             pm::cumulative_time_int& weight) {
-    trace_back_path_from_node(collision_edge.collision_node, observables, weight);
+    trace_back_path_from_node(collision_edge.collision_node, obs_it_begin, weight);
     auto other_node = collision_edge.collision_node->neighbors[collision_edge.neighbor_index];
     if (other_node)
-        trace_back_path_from_node(other_node, observables, weight);
+        trace_back_path_from_node(other_node, obs_it_begin, weight);
     auto& obs = collision_edge.collision_node->neighbor_observable_indices[collision_edge.neighbor_index];
     for (auto i : obs)
-        observables[i] ^= 1;
+        *(obs_it_begin + i) ^= 1;
     weight += collision_edge.collision_node->neighbor_weights[collision_edge.neighbor_index];
 }
 

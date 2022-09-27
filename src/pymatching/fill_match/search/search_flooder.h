@@ -32,10 +32,11 @@ public:
     void do_search_exploring_empty_detector_node(SearchDetectorNode &empty_node, size_t empty_to_from_index);
     CollisionEdge do_look_at_node_event(SearchDetectorNode &node);
     CollisionEdge run_until_collision(SearchDetectorNode* src, SearchDetectorNode* dst);
-    void trace_back_path_from_node(SearchDetectorNode* detector_node, std::vector<uint8_t>& observables,
+    void trace_back_path_from_node(SearchDetectorNode* detector_node,
+                                   std::vector<uint8_t>::iterator obs_it_begin,
                                    pm::cumulative_time_int& weight);
     void trace_back_path_from_collision_edge(CollisionEdge collision_edge,
-                                             std::vector<uint8_t>& observables,
+                                             std::vector<uint8_t>::iterator obs_it_begin,
                                              pm::cumulative_time_int& weight);
     void reset_graph();
     void reset();

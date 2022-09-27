@@ -99,10 +99,13 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
         size_t num_mistakes = 0;
         size_t num_shots = 0;
         size_t max_shots = 100;
+        pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
         while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
             if (num_shots > max_shots)
                 break;
-            auto res = pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, sparse_shot.hits);
+            pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, sparse_shot.hits,
+                                                                         res.obs_crossed.begin(),
+                                                                         res.weight);
             if (sparse_shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -111,14 +114,18 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
             ASSERT_EQ(res.obs_crossed[0], test_case.expected_obs_masks[num_shots]);
             sparse_shot.clear();
             num_shots++;
+            std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
+            res.weight = 0;
         }
     }
 }
 
 
 TEST(MwpmDecoding, ObsMaskToBitVector) {
-    std::vector<uint8_t> bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
-    ASSERT_EQ(pm::obs_mask_to_bit_vector(648, 10), bit_vector);
+    std::vector<uint8_t> expected_bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
+    std::vector<uint8_t> bit_vector(10);
+    pm::fill_bit_vector_from_obs_mask(648, bit_vector.begin(), bit_vector.end());
+    ASSERT_EQ(bit_vector, expected_bit_vector);
 }
 
 TEST(MwpmDecoding, BitVectorToObsMask) {
