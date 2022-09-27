@@ -33,10 +33,10 @@ public:
     CollisionEdge do_look_at_node_event(SearchDetectorNode &node);
     CollisionEdge run_until_collision(SearchDetectorNode* src, SearchDetectorNode* dst);
     void trace_back_path_from_node(SearchDetectorNode* detector_node,
-                                   std::vector<uint8_t>::iterator obs_it_begin,
+                                   uint8_t *obs_begin_ptr,
                                    pm::cumulative_time_int& weight);
     void trace_back_path_from_collision_edge(CollisionEdge collision_edge,
-                                             std::vector<uint8_t>::iterator obs_it_begin,
+                                             uint8_t *obs_begin_ptr,
                                              pm::cumulative_time_int& weight);
     void reset_graph();
     void reset();

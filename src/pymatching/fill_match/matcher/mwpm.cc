@@ -434,7 +434,7 @@ void Mwpm::verify_invariants() const {
 
 void
 Mwpm::extract_paths_from_match_edges(const std::vector<CompressedEdge> &match_edges,
-                                     std::vector<uint8_t>::iterator obs_it_begin,
+                                     uint8_t *obs_begin_ptr,
                                      cumulative_time_int &weight) {
     for (auto& edge : match_edges) {
         auto loc_from_ptr = &search_flooder.graph.nodes[edge.loc_from - &flooder.graph.nodes[0]];
@@ -445,7 +445,7 @@ Mwpm::extract_paths_from_match_edges(const std::vector<CompressedEdge> &match_ed
             loc_to_ptr = nullptr;
         }
         auto collision_edge = search_flooder.run_until_collision(loc_from_ptr, loc_to_ptr);
-        search_flooder.trace_back_path_from_collision_edge(collision_edge, obs_it_begin, weight);
+        search_flooder.trace_back_path_from_collision_edge(collision_edge, obs_begin_ptr, weight);
         search_flooder.reset();
     }
 }

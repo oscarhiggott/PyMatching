@@ -81,7 +81,7 @@ struct Mwpm {
     void shatter_blossom_and_extract_match_edges(GraphFillRegion* region, std::vector<CompressedEdge>& match_edges);
     void extract_paths_from_match_edges(
             const std::vector<CompressedEdge>& match_edges,
-            std::vector<uint8_t>::iterator obs_it_begin,
+            uint8_t *obs_begin_ptr,
             pm::cumulative_time_int& weight
             );
 

@@ -7,8 +7,7 @@
 
 namespace pm {
 
-void fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, std::vector<uint8_t>::iterator obs_it_begin,
-        std::vector<uint8_t>::iterator obs_it_end);
+void fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, uint8_t *obs_begin_ptr, size_t num_observables);
 obs_int bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector);
 
 Mwpm detector_error_model_to_mwpm(
@@ -18,7 +17,7 @@ MatchingResult decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_
 
 void decode_detection_events_with_no_limit_on_num_observables(
         pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events,
-        std::vector<uint8_t>::iterator obs_it_begin, pm::cumulative_time_int& weight);
+        uint8_t *obs_begin_ptr, pm::cumulative_time_int& weight);
 
 }  // namespace pm
 

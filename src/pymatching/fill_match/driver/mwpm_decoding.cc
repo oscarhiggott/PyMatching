@@ -2,15 +2,14 @@
 
 void pm::fill_bit_vector_from_obs_mask(
         pm::obs_int obs_mask,
-        std::vector<uint8_t>::iterator obs_it_begin,
-        std::vector<uint8_t>::iterator obs_it_end
+        uint8_t *obs_begin_ptr,
+        size_t num_observables
         ){
     auto max_obs = sizeof(pm::obs_int) * 8;
-    auto num_observables = obs_it_end - obs_it_begin;
     if (num_observables > max_obs)
         throw std::invalid_argument("Too many observables");
     for (size_t i = 0; i < num_observables; i++)
-        *(obs_it_begin + i) ^= (obs_mask & (1 << i)) >> i;
+        *(obs_begin_ptr + i) ^= (obs_mask & (1 << i)) >> i;
 }
 
 pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector){
@@ -80,7 +79,7 @@ pm::MatchingResult pm::decode_detection_events(pm::Mwpm& mwpm, const std::vector
 
 void pm::decode_detection_events_with_no_limit_on_num_observables(
         pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events,
-        std::vector<uint8_t>::iterator obs_it_begin,
+        uint8_t *obs_begin_ptr,
         pm::cumulative_time_int& weight) {
     size_t num_observables = mwpm.flooder.graph.num_observables;
     process_timeline_until_completion(mwpm, detection_events);
@@ -93,13 +92,13 @@ void pm::decode_detection_events_with_no_limit_on_num_observables(
                         mwpm.flooder.match_edges
                         );
         }
-        mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, obs_it_begin,weight);
+        mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, obs_begin_ptr,weight);
     } else {
         pm::MatchingResult bit_packed_res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
                 mwpm, detection_events
                 );
-        fill_bit_vector_from_obs_mask(bit_packed_res.obs_mask, obs_it_begin,
-                                      obs_it_begin + num_observables);
+        fill_bit_vector_from_obs_mask(bit_packed_res.obs_mask, obs_begin_ptr,
+                                      num_observables);
         weight = bit_packed_res.weight;
     }
 }

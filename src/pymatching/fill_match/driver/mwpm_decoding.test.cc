@@ -104,7 +104,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
             if (num_shots > max_shots)
                 break;
             pm::decode_detection_events_with_no_limit_on_num_observables(mwpm, sparse_shot.hits,
-                                                                         res.obs_crossed.begin(),
+                                                                         res.obs_crossed.data(),
                                                                          res.weight);
             if (sparse_shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
@@ -124,7 +124,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
 TEST(MwpmDecoding, ObsMaskToBitVector) {
     std::vector<uint8_t> expected_bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
     std::vector<uint8_t> bit_vector(10);
-    pm::fill_bit_vector_from_obs_mask(648, bit_vector.begin(), bit_vector.end());
+    pm::fill_bit_vector_from_obs_mask(648, bit_vector.data(), 10);
     ASSERT_EQ(bit_vector, expected_bit_vector);
 }
 
