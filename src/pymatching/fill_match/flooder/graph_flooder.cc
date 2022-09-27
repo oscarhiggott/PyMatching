@@ -98,9 +98,9 @@ void GraphFlooder::schedule_tentative_shrink_event(GraphFillRegion &region) {
 }
 
 void GraphFlooder::do_region_arriving_at_empty_detector_node(
-    GraphFillRegion &region, DetectorNode &empty_node, const DetectorNode &from_node, size_t empty_to_from_index) {
+    GraphFillRegion &region, DetectorNode &empty_node, const DetectorNode &from_node, size_t from_to_empty_index) {
     empty_node.observables_crossed_from_source =
-        (from_node.observables_crossed_from_source ^ empty_node.neighbor_observables[empty_to_from_index]);
+        (from_node.observables_crossed_from_source ^ from_node.neighbor_observables[from_to_empty_index]);
     empty_node.reached_from_source = from_node.reached_from_source;
     empty_node.radius_of_arrival = region.radius.get_distance_at_time(queue.cur_time);
     empty_node.region_that_arrived = &region;
@@ -131,13 +131,13 @@ MwpmEvent GraphFlooder::do_region_shrinking(GraphFillRegion &region) {
 }
 
 MwpmEvent GraphFlooder::do_neighbor_interaction(
-    DetectorNode &src, size_t src_to_dst_index, DetectorNode &dst, size_t dst_to_src_index) {
+    DetectorNode &src, size_t src_to_dst_index, DetectorNode &dst) {
     // First check if one region is moving into an empty location
     if (src.region_that_arrived && !dst.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(*src.region_that_arrived_top, dst, src, dst_to_src_index);
+        do_region_arriving_at_empty_detector_node(*src.region_that_arrived_top, dst, src, src_to_dst_index);
         return MwpmEvent::no_event();
     } else if (dst.region_that_arrived && !src.region_that_arrived) {
-        do_region_arriving_at_empty_detector_node(*dst.region_that_arrived_top, src, dst, src_to_dst_index);
+        do_region_arriving_at_empty_detector_node(*dst.region_that_arrived_top, src, dst, dst.index_of_neighbor(&src));
         return MwpmEvent::no_event();
     } else {
         // Two regions colliding
@@ -277,7 +277,7 @@ MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
             return do_region_hit_boundary_interaction(node);
         }
         auto &neighbor = *node.neighbors[next.first];
-        return do_neighbor_interaction(node, next.first, neighbor, neighbor.index_of_neighbor(&node));
+        return do_neighbor_interaction(node, next.first, neighbor);
     } else if (next.first != SIZE_MAX) {
         // Need to revisit this node at a later time.
         node.node_event_tracker.set_desired_event(
