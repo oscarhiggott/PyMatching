@@ -28,6 +28,18 @@ struct GraphFlooder {
 
     std::vector<CompressedEdge> match_edges;
 
+    /// These are the detection events that would occur if an error occurred on every edge that has a negative weight.
+    /// Stored as a sorted vector of indices of detection events.
+    std::vector<size_t> negative_weight_detection_events;
+    /// These are the observables that would be flipped if an error occurred on every edge that has a negative weight.
+    /// Stored as a sorted vector of indices of observables.
+    std::vector<size_t> negative_weight_observables;
+    /// Observable mask corresponding to the observables that would be flipped if an error occurred on every edge that
+    /// has a negative weight. Only used for fewer than 64 (=sizeof(pm::obs_int)*8) observables.
+    pm::obs_int negative_weight_obs_mask;
+    /// The sum of the edge weights of all edges with negative edge weights.
+    pm::total_weight_int negative_weight_sum;
+
     GraphFlooder(MatchingGraph graph);
     GraphFlooder(GraphFlooder&&) noexcept;
     MwpmEvent run_until_next_mwpm_notification();
@@ -53,6 +65,8 @@ struct GraphFlooder {
 
     pm::FloodCheckEvent dequeue_valid();
     pm::MwpmEvent process_tentative_event_returning_mwpm_event(FloodCheckEvent tentative_event);
+
+    void sync_negative_weight_observables_and_detection_events();
 };
 
 }  // namespace pm

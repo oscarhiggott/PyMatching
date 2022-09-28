@@ -1,4 +1,5 @@
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
+#include "pymatching/fill_match/flooder/graph.h"
 
 #include <fstream>
 
@@ -121,7 +122,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
 }
 
 
-TEST(MwpmDecoding, ObsMaskToBitVector) {
+TEST(MwpmDecoding, FillBitVectorFromObsMask) {
     std::vector<uint8_t> expected_bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
     std::vector<uint8_t> bit_vector(10);
     pm::fill_bit_vector_from_obs_mask(648, bit_vector.data(), 10);
@@ -130,4 +131,35 @@ TEST(MwpmDecoding, ObsMaskToBitVector) {
 
 TEST(MwpmDecoding, BitVectorToObsMask) {
     ASSERT_EQ(pm::bit_vector_to_obs_mask({0, 1, 0, 0, 0, 0, 1, 1, 0, 0}), 194);
+}
+
+TEST(MwpmDecoding, HandleNegativeWeights) {
+    for (size_t num_nodes : {50, 80}){
+        auto mwpm = pm::Mwpm(
+                pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)),
+                pm::SearchFlooder(pm::SearchGraph(num_nodes))
+                        );
+        auto& g = mwpm.flooder.graph;
+        for (size_t i = 0; i < num_nodes; i++)
+            g.add_edge(i, (i + 1) % num_nodes, -2, {i});
+
+        if (num_nodes > sizeof(pm::obs_int) * 8){
+            for (size_t i = 0; i < num_nodes; i++)
+                mwpm.search_flooder.graph.add_edge(i, (i + 1) % num_nodes, -2, {i});
+        }
+
+        mwpm.flooder.sync_negative_weight_observables_and_detection_events();
+
+        pm::ExtendedMatchingResult res(num_nodes);
+        pm::decode_detection_events(mwpm, {10, 20}, res.obs_crossed.data(), res.weight);
+
+        pm::ExtendedMatchingResult res_expected(num_nodes);
+        for (size_t i = 0; i < num_nodes; i++){
+            if (i < 10 || i >= 20)
+                res_expected.obs_crossed[i] ^= 1;
+        }
+
+        ASSERT_EQ(res.obs_crossed, res_expected.obs_crossed);
+        ASSERT_EQ(res.weight, (num_nodes - 10) * -2);
+    }
 }

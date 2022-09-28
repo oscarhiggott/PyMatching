@@ -27,6 +27,12 @@ typedef int16_t signed_weight_int;
 /// future or not.
 typedef int32_t cumulative_time_int;
 
+/// This type is used to represent the total weight of the MWPM solution. It is important that it
+/// is 64-bit since in general we expect the total solution weight to grow linearly with the number of
+/// edges in the graph. It is also important that it is signed, since negative weight edges are permitted
+/// as input to the decoder (albeit not within the blossom algorithm itself).
+typedef int64_t total_weight_int;
+
 /// This type is used to represent timestamps that are near the current time. To widen a cyclic
 /// time to an absolute time, find the absolute time which is closest to the current time and
 /// equal to the cyclic time when truncated..

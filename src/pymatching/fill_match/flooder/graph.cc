@@ -25,6 +25,7 @@ void MatchingGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const
         update_negative_weight_observables(observables);
         update_negative_weight_detection_events(u);
         update_negative_weight_detection_events(v);
+        negative_weight_sum += weight;
     }
 
     nodes[u].neighbors.push_back(&(nodes[v]));
@@ -54,6 +55,7 @@ void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const 
     if (weight < 0) {
         update_negative_weight_observables(observables);
         update_negative_weight_detection_events(u);
+        negative_weight_sum += weight;
     }
 
     auto &n = nodes[u];
@@ -66,34 +68,35 @@ void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const 
 }
 
 MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables)
-    : num_nodes(num_nodes), num_observables(num_observables) {
+    : num_nodes(num_nodes), num_observables(num_observables), negative_weight_sum(0) {
     nodes.resize(num_nodes);
 }
 
 MatchingGraph::MatchingGraph(MatchingGraph &&graph) noexcept
-    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes), num_observables(graph.num_observables) {
+    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes), num_observables(graph.num_observables),
+    negative_weight_sum(0){
 }
 
-MatchingGraph::MatchingGraph() : num_nodes(0), num_observables(0) {
+MatchingGraph::MatchingGraph() : num_nodes(0), num_observables(0), negative_weight_sum(0) {
 }
 
 void MatchingGraph::update_negative_weight_observables(const std::vector<size_t> &observables) {
     for (auto& obs : observables) {
-        auto it = negative_weight_observables.find(obs);
-        if (it == negative_weight_observables.end()) {
-            negative_weight_observables.insert(obs);
+        auto it = negative_weight_observables_set.find(obs);
+        if (it == negative_weight_observables_set.end()) {
+            negative_weight_observables_set.insert(obs);
         } else {
-            negative_weight_observables.erase(it);
+            negative_weight_observables_set.erase(it);
         }
     }
 }
 
 void MatchingGraph::update_negative_weight_detection_events(size_t node_id) {
-    auto it = negative_weight_detection_events.find(node_id);
-    if (it == negative_weight_detection_events.end()) {
-        negative_weight_detection_events.insert(node_id);
+    auto it = negative_weight_detection_events_set.find(node_id);
+    if (it == negative_weight_detection_events_set.end()) {
+        negative_weight_detection_events_set.insert(node_id);
     } else {
-        negative_weight_detection_events.erase(it);
+        negative_weight_detection_events_set.erase(it);
     }
 }
 

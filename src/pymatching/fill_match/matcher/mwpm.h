@@ -11,14 +11,14 @@ struct AltTreeNode;
 
 struct MatchingResult {
     pm::obs_int obs_mask;
-    cumulative_time_int weight;
+    total_weight_int weight;
     MatchingResult();
 
     bool operator==(const MatchingResult& rhs) const;
 
     bool operator!=(const MatchingResult& rhs) const;
 
-    MatchingResult(obs_int obs_mask, cumulative_time_int weight);
+    MatchingResult(obs_int obs_mask, total_weight_int weight);
 
     MatchingResult& operator+=(const MatchingResult& rhs);
     MatchingResult operator+(const MatchingResult& rhs) const;
@@ -27,7 +27,7 @@ struct MatchingResult {
 
 struct ExtendedMatchingResult {
     std::vector<uint8_t> obs_crossed;
-    cumulative_time_int weight;
+    total_weight_int weight;
     ExtendedMatchingResult();
     explicit ExtendedMatchingResult(size_t num_observables);
 
@@ -35,7 +35,7 @@ struct ExtendedMatchingResult {
 
     bool operator!=(const ExtendedMatchingResult& rhs) const;
 
-    ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, cumulative_time_int weight);
+    ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, total_weight_int weight);
 
     void reset();
 
@@ -84,7 +84,7 @@ struct Mwpm {
     void extract_paths_from_match_edges(
             const std::vector<CompressedEdge>& match_edges,
             uint8_t *obs_begin_ptr,
-            pm::cumulative_time_int& weight
+            pm::total_weight_int & weight
             );
 
     void verify_invariants() const;

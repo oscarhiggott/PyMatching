@@ -15,7 +15,7 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
     ASSERT_EQ(collision_edge.neighbor_index, 1);
     ASSERT_EQ(flooder.target_type, pm::DETECTOR_NODE);
     std::vector<uint8_t> observables(num_nodes, 0);
-    pm::cumulative_time_int weight = 0;
+    pm::total_weight_int weight = 0;
     flooder.trace_back_path_from_collision_edge(collision_edge, observables.data(), weight);
     std::vector<uint8_t> expected_obs(num_nodes, 0);
     for (size_t i = 1; i < 20; i++)
@@ -47,7 +47,7 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
     ASSERT_EQ(collision_edge.neighbor_index, 0);
     ASSERT_EQ(flooder.target_type, pm::BOUNDARY);
     std::vector<uint8_t> observables(num_nodes, 0);
-    pm::cumulative_time_int weight = 0;
+    pm::total_weight_int weight = 0;
     flooder.trace_back_path_from_collision_edge(collision_edge, observables.data(), weight);
     std::vector<uint8_t> expected_obs(num_nodes, 0);
     for (size_t i = 0; i < 7; i++)

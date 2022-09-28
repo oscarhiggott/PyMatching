@@ -418,7 +418,7 @@ MatchingResult MatchingResult::operator+(const MatchingResult &rhs) const {
 MatchingResult::MatchingResult() : obs_mask(0), weight(0) {
 }
 
-MatchingResult::MatchingResult(obs_int obs_mask, cumulative_time_int weight) : obs_mask(obs_mask), weight(weight) {
+MatchingResult::MatchingResult(obs_int obs_mask, total_weight_int weight) : obs_mask(obs_mask), weight(weight) {
 }
 
 bool MatchingResult::operator==(const MatchingResult &rhs) const {
@@ -435,7 +435,7 @@ void Mwpm::verify_invariants() const {
 void
 Mwpm::extract_paths_from_match_edges(const std::vector<CompressedEdge> &match_edges,
                                      uint8_t *obs_begin_ptr,
-                                     cumulative_time_int &weight) {
+                                     total_weight_int &weight) {
     for (auto& edge : match_edges) {
         auto loc_from_ptr = &search_flooder.graph.nodes[edge.loc_from - &flooder.graph.nodes[0]];
         SearchDetectorNode* loc_to_ptr;
@@ -465,7 +465,7 @@ bool ExtendedMatchingResult::operator!=(const ExtendedMatchingResult &rhs) const
 ExtendedMatchingResult::ExtendedMatchingResult(size_t num_observables)
     : obs_crossed(num_observables, 0), weight(0) {}
 
-ExtendedMatchingResult::ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, cumulative_time_int weight)
+ExtendedMatchingResult::ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, total_weight_int weight)
     : obs_crossed(std::move(obs_crossed)), weight(weight) {}
 
 ExtendedMatchingResult &ExtendedMatchingResult::operator+=(const ExtendedMatchingResult &rhs) {

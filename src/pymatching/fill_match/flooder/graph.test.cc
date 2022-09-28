@@ -18,9 +18,9 @@ TEST(Graph, AddEdge) {
     ASSERT_EQ(g.nodes[1].neighbor_observables[0], 1);
     ASSERT_EQ(g.nodes[3].neighbor_observables[0], 10);
     std::set<size_t> expected_obs = {2};
-    ASSERT_EQ(g.negative_weight_observables, expected_obs);
+    ASSERT_EQ(g.negative_weight_observables_set, expected_obs);
     std::set<size_t> expected_detection_events = {0, 2};
-    ASSERT_EQ(g.negative_weight_detection_events, expected_detection_events);
+    ASSERT_EQ(g.negative_weight_detection_events_set, expected_detection_events);
 }
 
 TEST(Graph, AddBoundaryEdge) {
@@ -33,7 +33,7 @@ TEST(Graph, AddBoundaryEdge) {
     ASSERT_EQ(g.nodes[0].neighbors[1], &g.nodes[1]);
     ASSERT_EQ(g.nodes[5].neighbors[0], nullptr);
     std::set<size_t> expected_obs = {2};
-    ASSERT_EQ(g.negative_weight_observables, expected_obs);
+    ASSERT_EQ(g.negative_weight_observables_set, expected_obs);
     std::set<size_t> expected_detection_events = {0};
-    ASSERT_EQ(g.negative_weight_detection_events, expected_detection_events);
+    ASSERT_EQ(g.negative_weight_detection_events_set, expected_detection_events);
 }

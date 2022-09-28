@@ -21,7 +21,7 @@ MatchingResult decode_detection_events_for_up_to_64_observables(pm::Mwpm& mwpm, 
 /// the pointer to the first element of which is passed as the `obs_begin_ptr' argument.
 /// The weight of the MWPM solution is added to the `weight' argument.
 void decode_detection_events(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, uint8_t *obs_begin_ptr,
-        pm::cumulative_time_int& weight);
+        pm::total_weight_int & weight);
 
 }  // namespace pm
 

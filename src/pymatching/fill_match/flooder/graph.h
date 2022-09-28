@@ -19,9 +19,11 @@ class MatchingGraph {
    public:
     std::vector<DetectorNode> nodes;
     /// These are the detection events that would occur if an error occurred on every edge with a negative weight
-    std::set<size_t> negative_weight_detection_events;
+    std::set<size_t> negative_weight_detection_events_set;
     /// These are the observables that would be flipped if an error occurred on every edge with a negative weight
-    std::set<size_t> negative_weight_observables;
+    std::set<size_t> negative_weight_observables_set;
+    /// The sum of the negative edge weights. This number is negative, rather than the absolute value.
+    pm::total_weight_int negative_weight_sum;
     size_t num_nodes;
     size_t num_observables;
 
