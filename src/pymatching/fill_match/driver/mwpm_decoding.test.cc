@@ -189,7 +189,7 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
             g.add_edge(i, i + 1, 2, {i + 1});
         for (size_t i = 1; i < 7; i += 2)
             g.add_edge(i, i + 1, -4, {i + 1});
-        g.add_boundary_edge(7, 2, {0});
+        g.add_boundary_edge(7, 2, {num_nodes});
 
         if (max_obs > sizeof(pm::obs_int) * 8){
             auto& h = mwpm.search_flooder.graph;
@@ -198,24 +198,25 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
                 h.add_edge(i, i + 1, 2, {i + 1});
             for (size_t i = 1; i < 7; i += 2)
                 h.add_edge(i, i + 1, -4, {i + 1});
-            h.add_boundary_edge(7, 2, {0});
+            h.add_boundary_edge(7, 2, {num_nodes});
         }
 
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
 
         pm::ExtendedMatchingResult res(max_obs + 1);
-        pm::decode_detection_events(mwpm, {0, 1, 2, 5, 6}, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(mwpm, {0, 1, 2, 5, 6, 7}, res.obs_crossed.data(), res.weight);
 
         pm::ExtendedMatchingResult res_expected(max_obs + 1);
         res_expected.obs_crossed[max_obs] ^= 1;
         res_expected.obs_crossed[2] ^= 1;
         res_expected.obs_crossed[6] ^= 1;
-        res_expected.weight = -12;
+        res_expected.obs_crossed[num_nodes] ^= 1;
+        res_expected.weight = -10;
 
         ASSERT_EQ(res, res_expected);
 
         if (max_obs + 1 <= sizeof(pm::obs_int) * 8){
-            auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {0, 1, 2, 5, 6});
+            auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {0, 1, 2, 5, 6, 7});
             ASSERT_EQ(res2.weight, res_expected.weight);
             pm::obs_int expected_obs_mask = 0;
             for (size_t i = 0; i < res_expected.obs_crossed.size(); i++){
