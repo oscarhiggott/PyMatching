@@ -62,8 +62,8 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     g.add_edge(4, 3, 20, {0, 1});
     g.add_edge(3, 2, 12, {2});
     g.add_edge(0, 2, 16, {0, 2});
-    g.add_edge(4, 5, 50, {1,2});
-    g.add_edge(2, 6, 100, {0,1,2});
+    g.add_edge(4, 5, 50, {1, 2});
+    g.add_edge(2, 6, 100, {0, 1, 2});
     g.add_boundary_edge(5, 36, {3});
     for (size_t i = 0; i < 7; i++) {
         mwpm.create_detection_event(&mwpm.flooder.graph.nodes[i]);
@@ -253,7 +253,7 @@ TEST(Mwpm, BoundaryMatchHitsTree) {
 std::vector<size_t> obs_mask_to_set_bits(pm::obs_int obs_mask) {
     std::vector<size_t> out;
     for (size_t i = 0; i < sizeof(pm::obs_int) * 8; i++) {
-        if (obs_mask & ((pm::obs_int) 1 << i))
+        if (obs_mask & ((pm::obs_int)1 << i))
             out.push_back(i);
     }
     return out;
@@ -288,7 +288,6 @@ obs_int set_bits_to_obs_mask(const std::vector<size_t>& set_bits) {
     return obs_mask;
 }
 
-
 TEST(Mwpm, ObsMaskToSetBits) {
     for (size_t i = 0; i < 64; i++) {
         auto x = obs_mask_to_set_bits(i);
@@ -297,7 +296,7 @@ TEST(Mwpm, ObsMaskToSetBits) {
     }
 }
 
-void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm){
+void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm) {
     auto& ns = mwpm.flooder.graph.nodes;
     cumulative_time_int w = 0;
     for (auto& n : ns) {
@@ -339,7 +338,6 @@ void form_blossom_and_nested_blossom_then_match_example(Mwpm& mwpm){
     mwpm.process_event(RegionHitRegionEventData{blossom1, blossom4, {&ns[0], &ns[5], 1 << 15}});
 }
 
-
 TEST(Mwpm, ShatterBlossomAndExtractMatches) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12, 64)));
     form_blossom_and_nested_blossom_then_match_example(mwpm);
@@ -351,7 +349,6 @@ TEST(Mwpm, ShatterBlossomAndExtractMatches) {
     ASSERT_EQ(res.weight, 2 + 3 + 4 + 5 + 1 + 2 + 6 + 3 + 11 + 7 + 8 + 9 + 10 + 5 + 11 + 12);
 }
 
-
 TEST(Mwpm, ShatterBlossomAndExtractMatchEdges) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(12, 64)));
     form_blossom_and_nested_blossom_then_match_example(mwpm);
@@ -361,7 +358,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchEdges) {
     mwpm.shatter_blossom_and_extract_match_edges(ns[0].region_that_arrived->blossom_parent, match_edges);
 
     pm::obs_int obs_mask = 0;
-    for (auto& e : match_edges){
+    for (auto& e : match_edges) {
         obs_mask ^= e.obs_mask;
     }
 
@@ -369,18 +366,16 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchEdges) {
     ASSERT_EQ(match_edges.size(), 6);
 
     std::vector<CompressedEdge> expected_edges = {
-            {&ns[4], &ns[3], 1 << 3},
-            {&ns[2], &ns[1], 1 << 4},
-            {&ns[11], &ns[10], 1 << 9},
-            {&ns[9], &ns[8], 1 << 14},
-            {&ns[7], &ns[6], 1 << 6},
-            {&ns[0], &ns[5], 1 << 15}
-    };
+        {&ns[4], &ns[3], 1 << 3},
+        {&ns[2], &ns[1], 1 << 4},
+        {&ns[11], &ns[10], 1 << 9},
+        {&ns[9], &ns[8], 1 << 14},
+        {&ns[7], &ns[6], 1 << 6},
+        {&ns[0], &ns[5], 1 << 15}};
     ASSERT_EQ(expected_edges, match_edges);
 }
 
-
-void form_nested_blossom_and_match_to_boundary(Mwpm& mwpm){
+void form_nested_blossom_and_match_to_boundary(Mwpm& mwpm) {
     auto& ns = mwpm.flooder.graph.nodes;
     cumulative_time_int w = 0;
     for (auto& n : ns) {
@@ -404,7 +399,6 @@ void form_nested_blossom_and_match_to_boundary(Mwpm& mwpm){
     mwpm.process_event(RegionHitBoundaryEventData{blossom2, {&ns[0], nullptr, 1 << 30}});
 }
 
-
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatch) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
@@ -415,7 +409,6 @@ TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatch) {
     ASSERT_EQ(res, res_expected);
 }
 
-
 TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatchEdges) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(5, 64)));
     auto& ns = mwpm.flooder.graph.nodes;
@@ -425,18 +418,14 @@ TEST(Mwpm, ShatterAndMatchBlossomMatchedToBoundaryMatchEdges) {
     mwpm.shatter_blossom_and_extract_match_edges(blossom2, match_edges);
     auto obs_expected = set_bits_to_obs_mask({4, 1, 30});
     pm::obs_int obs_mask = 0;
-    for (auto& e : match_edges){
+    for (auto& e : match_edges) {
         obs_mask ^= e.obs_mask;
     }
     ASSERT_EQ(obs_mask, obs_expected);
     std::vector<CompressedEdge> expected_match_edges = {
-            {&ns[4], &ns[3], 1 << 4},
-            {&ns[2], &ns[1], 1 << 1},
-            {&ns[0], nullptr, 1 << 30}
-    };
+        {&ns[4], &ns[3], 1 << 4}, {&ns[2], &ns[1], 1 << 1}, {&ns[0], nullptr, 1 << 30}};
     ASSERT_EQ(match_edges, expected_match_edges);
 }
-
 
 TEST(Mwpm, MatchingResult) {
     MatchingResult mr;

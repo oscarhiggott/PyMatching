@@ -9,16 +9,16 @@ void MatchingGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
-                "Node " + std::to_string(larger_node) +
-                " exceeds number of nodes "
-                "in graph (" +
-                std::to_string(num_nodes) + ")");
+            "Node " + std::to_string(larger_node) +
+            " exceeds number of nodes "
+            "in graph (" +
+            std::to_string(num_nodes) + ")");
     }
 
     pm::obs_int obs_mask = 0;
-    if (num_observables <= sizeof(pm::obs_int) * 8){
+    if (num_observables <= sizeof(pm::obs_int) * 8) {
         for (auto obs : observables)
-            obs_mask ^= (pm::obs_int) 1 << obs;
+            obs_mask ^= (pm::obs_int)1 << obs;
     }
 
     if (weight < 0) {
@@ -40,16 +40,16 @@ void MatchingGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const
 void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t>& observables) {
     if (u >= nodes.size()) {
         throw std::invalid_argument(
-                "Node " + std::to_string(u) +
-                " exceeds number of nodes "
-                "in graph (" +
-                std::to_string(num_nodes) + ")");
+            "Node " + std::to_string(u) +
+            " exceeds number of nodes "
+            "in graph (" +
+            std::to_string(num_nodes) + ")");
     }
 
     pm::obs_int obs_mask = 0;
     if (num_observables <= sizeof(pm::obs_int) * 8) {
         for (auto obs : observables)
-            obs_mask ^= (pm::obs_int) 1 << obs;
+            obs_mask ^= (pm::obs_int)1 << obs;
     }
 
     if (weight < 0) {
@@ -58,7 +58,7 @@ void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const 
         negative_weight_sum += weight;
     }
 
-    auto &n = nodes[u];
+    auto& n = nodes[u];
     if (!n.neighbors.empty() && n.neighbors[0] == nullptr) {
         throw std::invalid_argument("Max one boundary edge.");
     }
@@ -72,15 +72,17 @@ MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables)
     nodes.resize(num_nodes);
 }
 
-MatchingGraph::MatchingGraph(MatchingGraph &&graph) noexcept
-    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes), num_observables(graph.num_observables),
-    negative_weight_sum(0){
+MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
+    : nodes(std::move(graph.nodes)),
+      num_nodes(graph.num_nodes),
+      num_observables(graph.num_observables),
+      negative_weight_sum(0) {
 }
 
 MatchingGraph::MatchingGraph() : num_nodes(0), num_observables(0), negative_weight_sum(0) {
 }
 
-void MatchingGraph::update_negative_weight_observables(const std::vector<size_t> &observables) {
+void MatchingGraph::update_negative_weight_observables(const std::vector<size_t>& observables) {
     for (auto& obs : observables) {
         auto it = negative_weight_observables_set.find(obs);
         if (it == negative_weight_observables_set.end()) {

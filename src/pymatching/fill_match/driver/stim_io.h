@@ -24,11 +24,11 @@ class ProbabilityGraph {
         nodes.resize(num_nodes);
     };
 
-    void add_or_merge_edge(size_t u, size_t v, double probability, const std::vector<size_t>& observables);
+    void add_or_merge_edge(size_t u, size_t v, double probability, const std::vector<size_t> &observables);
 
-    void add_or_merge_boundary_edge(size_t u, double probability, const std::vector<size_t>& observables);
+    void add_or_merge_boundary_edge(size_t u, double probability, const std::vector<size_t> &observables);
 
-    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, std::vector<size_t>& observables);
+    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, std::vector<size_t> &observables);
 
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
 
@@ -37,11 +37,10 @@ class ProbabilityGraph {
     double min_nonzero_probability();
 };
 
-ProbabilityGraph detector_error_model_to_probability_graph(
-        const stim::DetectorErrorModel &detector_error_model);
+ProbabilityGraph detector_error_model_to_probability_graph(const stim::DetectorErrorModel &detector_error_model);
 
 MatchingGraph detector_error_model_to_matching_graph(
-        const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
+    const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
 
 }  // namespace pm
 

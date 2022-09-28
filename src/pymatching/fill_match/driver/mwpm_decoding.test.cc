@@ -1,21 +1,21 @@
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
-#include "pymatching/fill_match/flooder/graph.h"
 
 #include <fstream>
 
 #include "gtest/gtest.h"
 
+#include "pymatching/fill_match/flooder/graph.h"
 #include "stim.h"
 
-std::string find_test_data_file(const char *name) {
+std::string find_test_data_file(const char* name) {
     std::vector<std::string> directories_to_check = {
         "data/",
         "../data/",
         "../../data/",
     };
-    for (const auto &d : directories_to_check) {
+    for (const auto& d : directories_to_check) {
         std::string path = d + name;
-        FILE *f = fopen((d + name).c_str(), "r");
+        FILE* f = fopen((d + name).c_str(), "r");
         if (f != nullptr) {
             fclose(f);
             return path;
@@ -24,15 +24,14 @@ std::string find_test_data_file(const char *name) {
     throw std::invalid_argument("Failed to find test data file " + std::string(name));
 }
 
-
-struct DecodingTestCase{
+struct DecodingTestCase {
     std::vector<int> expected_weights;
     std::vector<int> expected_obs_masks;
     stim::DetectorErrorModel detector_error_model;
     std::unique_ptr<stim::MeasureRecordReader> reader;
 };
 
-DecodingTestCase load_surface_code_d13_p100_test_case(){
+DecodingTestCase load_surface_code_d13_p100_test_case() {
     auto shots_in = std::fopen(find_test_data_file("surface_code_rotated_memory_x_13_0.01_1000_shots.b8").c_str(), "r");
     auto dem_file = std::fopen(find_test_data_file("surface_code_rotated_memory_x_13_0.01.dem").c_str(), "r");
 
@@ -42,25 +41,23 @@ DecodingTestCase load_surface_code_d13_p100_test_case(){
     fclose(dem_file);
 
     auto reader = stim::MeasureRecordReader::make(
-            shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
-
+        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     std::ifstream is(
-            find_test_data_file(
-                    "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_solution_weights_pymatchingv0.7_exact.txt")
-                    .c_str());
+        find_test_data_file(
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_solution_weights_pymatchingv0.7_exact.txt")
+            .c_str());
     std::istream_iterator<int> start(is), end;
     std::vector<int> expected_weights(start, end);
 
     std::ifstream is2(
-            find_test_data_file(
-                    "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_predictions_pymatchingv0.7_exact.txt")
-                    .c_str());
+        find_test_data_file(
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_predictions_pymatchingv0.7_exact.txt")
+            .c_str());
     std::istream_iterator<int> start2(is2), end2;
     std::vector<int> expected_obs_masks(start2, end2);
     return {expected_weights, expected_obs_masks, dem, std::move(reader)};
 }
-
 
 TEST(MwpmDecoding, CompareSolutionWeights) {
     auto test_case = load_surface_code_d13_p100_test_case();
@@ -87,7 +84,6 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
     }
 }
 
-
 TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
     for (size_t i : {0, 1}) {
         auto test_case = load_surface_code_d13_p100_test_case();
@@ -104,9 +100,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
         while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
             if (num_shots > max_shots)
                 break;
-            pm::decode_detection_events(mwpm, sparse_shot.hits,
-                                        res.obs_crossed.data(),
-                                        res.weight);
+            pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
             if (sparse_shot.obs_mask != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -121,7 +115,6 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
     }
 }
 
-
 TEST(MwpmDecoding, FillBitVectorFromObsMask) {
     std::vector<uint8_t> expected_bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
     std::vector<uint8_t> bit_vector(10);
@@ -134,16 +127,14 @@ TEST(MwpmDecoding, BitVectorToObsMask) {
 }
 
 TEST(MwpmDecoding, HandleAllNegativeWeights) {
-    for (size_t num_nodes : {50, 80}){
+    for (size_t num_nodes : {50, 80}) {
         auto mwpm = pm::Mwpm(
-                pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)),
-                pm::SearchFlooder(pm::SearchGraph(num_nodes))
-                        );
+            pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
         auto& g = mwpm.flooder.graph;
         for (size_t i = 0; i < num_nodes; i++)
             g.add_edge(i, (i + 1) % num_nodes, -2, {i});
 
-        if (num_nodes > sizeof(pm::obs_int) * 8){
+        if (num_nodes > sizeof(pm::obs_int) * 8) {
             for (size_t i = 0; i < num_nodes; i++)
                 mwpm.search_flooder.graph.add_edge(i, (i + 1) % num_nodes, -2, {i});
         }
@@ -154,21 +145,21 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
         pm::decode_detection_events(mwpm, {10, 20}, res.obs_crossed.data(), res.weight);
 
         pm::ExtendedMatchingResult res_expected(num_nodes);
-        for (size_t i = 0; i < num_nodes; i++){
+        for (size_t i = 0; i < num_nodes; i++) {
             if (i < 10 || i >= 20)
                 res_expected.obs_crossed[i] ^= 1;
         }
-        res_expected.weight = ((pm::signed_weight_int) num_nodes - 10) * -2;
+        res_expected.weight = ((pm::signed_weight_int)num_nodes - 10) * -2;
 
         ASSERT_EQ(res, res_expected);
 
-        if (num_nodes <= sizeof(pm::obs_int) * 8){
+        if (num_nodes <= sizeof(pm::obs_int) * 8) {
             auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {10, 20});
             ASSERT_EQ(res2.weight, res_expected.weight);
             pm::obs_int expected_obs_mask = 0;
-            for (size_t i = 0; i < res_expected.obs_crossed.size(); i++){
+            for (size_t i = 0; i < res_expected.obs_crossed.size(); i++) {
                 if (res_expected.obs_crossed[i])
-                    expected_obs_mask ^= (pm::obs_int) 1 << i;
+                    expected_obs_mask ^= (pm::obs_int)1 << i;
             }
             ASSERT_EQ(res2.obs_mask, expected_obs_mask);
         }
@@ -177,11 +168,9 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
 
 TEST(MwpmDecoding, HandleSomeNegativeWeights) {
     size_t num_nodes = 8;
-    for (size_t max_obs : {40, 100}){
+    for (size_t max_obs : {40, 100}) {
         auto mwpm = pm::Mwpm(
-                pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)),
-                pm::SearchFlooder(pm::SearchGraph(num_nodes))
-        );
+            pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
 
         auto& g = mwpm.flooder.graph;
         g.add_boundary_edge(0, -4, {max_obs});
@@ -191,7 +180,7 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
             g.add_edge(i, i + 1, -4, {i + 1});
         g.add_boundary_edge(7, 2, {num_nodes});
 
-        if (max_obs > sizeof(pm::obs_int) * 8){
+        if (max_obs > sizeof(pm::obs_int) * 8) {
             auto& h = mwpm.search_flooder.graph;
             h.add_boundary_edge(0, -4, {max_obs});
             for (size_t i = 0; i < 7; i += 2)
@@ -215,16 +204,15 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
 
         ASSERT_EQ(res, res_expected);
 
-        if (max_obs + 1 <= sizeof(pm::obs_int) * 8){
+        if (max_obs + 1 <= sizeof(pm::obs_int) * 8) {
             auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {0, 1, 2, 5, 6, 7});
             ASSERT_EQ(res2.weight, res_expected.weight);
             pm::obs_int expected_obs_mask = 0;
-            for (size_t i = 0; i < res_expected.obs_crossed.size(); i++){
+            for (size_t i = 0; i < res_expected.obs_crossed.size(); i++) {
                 if (res_expected.obs_crossed[i])
-                    expected_obs_mask ^= (pm::obs_int) 1 << i;
+                    expected_obs_mask ^= (pm::obs_int)1 << i;
             }
             ASSERT_EQ(res2.obs_mask, expected_obs_mask);
         }
     }
 }
-

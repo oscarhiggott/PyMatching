@@ -1,7 +1,7 @@
-#include <gtest/gtest.h>
-
-#include <vector>
 #include "pymatching/fill_match/search/search_graph.h"
+
+#include <gtest/gtest.h>
+#include <vector>
 
 TEST(SearchGraph, AddEdge) {
     pm::SearchGraph g(4);

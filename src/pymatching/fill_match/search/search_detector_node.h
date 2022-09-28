@@ -6,10 +6,8 @@
 namespace pm {
 
 class SearchDetectorNode {
-public:
-    SearchDetectorNode()
-            : reached_from_source(nullptr),
-              index_of_predecessor(SIZE_MAX) {
+   public:
+    SearchDetectorNode() : reached_from_source(nullptr), index_of_predecessor(SIZE_MAX), distance_from_source(0) {
     }
 
     /// The SearchDetectorNode that this node was reached from in the Dijkstra search
@@ -26,15 +24,16 @@ public:
     QueuedEventTracker node_event_tracker;
 
     /// == Permanent fields used to define the structure of the graph. ==
-    std::vector<SearchDetectorNode *> neighbors;       /// The node's neighbors.
-    std::vector <weight_int> neighbor_weights;   /// Distance crossed by the edge to each neighbor.
-    std::vector <std::vector<size_t>> neighbor_observable_indices;  /// Indices of observables crossed by the edge to each neighbor.
+    std::vector<SearchDetectorNode *> neighbors;  /// The node's neighbors.
+    std::vector<weight_int> neighbor_weights;     /// Distance crossed by the edge to each neighbor.
+    std::vector<std::vector<size_t>>
+        neighbor_observable_indices;  /// Indices of observables crossed by the edge to each neighbor.
 
     size_t index_of_neighbor(SearchDetectorNode *target) const;
 
     void reset();
 };
 
-}
+}  // namespace pm
 
-#endif //PYMATCHING2_SEARCH_DETECTOR_NODE_H
+#endif  // PYMATCHING2_SEARCH_DETECTOR_NODE_H

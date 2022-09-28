@@ -221,7 +221,6 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
     }
 }
 
-
 BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     size_t rounds = 21;
     auto data = generate_data(21, rounds, 0.01, 8);
@@ -248,10 +247,10 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
             res.reset();
         }
     })
-            .goal_millis(12)
-            .show_rate("dets", (double)num_dets)
-            .show_rate("layers", (double)rounds * shots.size())
-            .show_rate("shots", (double)shots.size());
+        .goal_millis(12)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == 0) {
         std::cerr << "data dependence";
     }
@@ -316,10 +315,10 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
             res.reset();
         }
     })
-            .goal_millis(13)
-            .show_rate("dets", (double)num_dets)
-            .show_rate("layers", (double)rounds * shots.size())
-            .show_rate("shots", (double)shots.size());
+        .goal_millis(13)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -384,10 +383,10 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
             res.reset();
         }
     })
-            .goal_millis(1.9)
-            .show_rate("dets", (double)num_dets)
-            .show_rate("layers", (double)rounds * shots.size())
-            .show_rate("shots", (double)shots.size());
+        .goal_millis(1.9)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
@@ -425,7 +424,6 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
     }
 }
 
-
 BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     size_t rounds = 21;
     auto data = generate_data(21, rounds, 0.00001, 512);
@@ -453,10 +451,10 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
             res.reset();
         }
     })
-            .goal_micros(180)
-            .show_rate("dets", (double)num_dets)
-            .show_rate("layers", (double)rounds * shots.size())
-            .show_rate("shots", (double)shots.size());
+        .goal_micros(180)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }

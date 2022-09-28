@@ -1,7 +1,6 @@
 #include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
 
 #include <gtest/gtest.h>
-#include <gmock/gmock-matchers.h>
 
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"

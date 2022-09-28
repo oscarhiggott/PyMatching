@@ -1,7 +1,7 @@
 #include "search_graph.h"
 
-
-pm::SearchGraph::SearchGraph() : num_nodes(0) {}
+pm::SearchGraph::SearchGraph() : num_nodes(0) {
+}
 
 pm::SearchGraph::SearchGraph(size_t num_nodes) : num_nodes(num_nodes) {
     nodes.resize(num_nodes);
@@ -15,10 +15,10 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, con
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
-                "Node " + std::to_string(larger_node) +
-                " exceeds number of nodes "
-                "in graph (" +
-                std::to_string(num_nodes) + ")");
+            "Node " + std::to_string(larger_node) +
+            " exceeds number of nodes "
+            "in graph (" +
+            std::to_string(num_nodes) + ")");
     }
 
     nodes[u].neighbors.push_back(&(nodes[v]));
@@ -33,10 +33,10 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, con
 void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t> &observables) {
     if (u >= nodes.size()) {
         throw std::invalid_argument(
-                "Node " + std::to_string(u) +
-                " exceeds number of nodes "
-                "in graph (" +
-                std::to_string(num_nodes) + ")");
+            "Node " + std::to_string(u) +
+            " exceeds number of nodes "
+            "in graph (" +
+            std::to_string(num_nodes) + ")");
     }
 
     nodes[u].neighbors.insert(nodes[u].neighbors.begin(), 1, nullptr);

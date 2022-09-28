@@ -11,8 +11,8 @@ Mwpm::Mwpm(GraphFlooder flooder) : flooder(std::move(flooder)) {
 }
 
 Mwpm::Mwpm(GraphFlooder flooder, SearchFlooder search_flooder)
-    : flooder(std::move(flooder)), search_flooder(std::move(search_flooder)) {}
-
+    : flooder(std::move(flooder)), search_flooder(std::move(search_flooder)) {
+}
 
 void Mwpm::shatter_descendants_into_matches_and_freeze(AltTreeNode &alt_tree_node) {
     for (auto &child_edge : alt_tree_node.children) {
@@ -271,8 +271,7 @@ void Mwpm::process_event(const MwpmEvent &event) {
     }
 }
 
-
-GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_matches(GraphFillRegion* region, MatchingResult &res){
+GraphFillRegion *Mwpm::pair_and_shatter_subblossoms_and_extract_matches(GraphFillRegion *region, MatchingResult &res) {
     for (auto &r : region->blossom_children) {
         r.region->clear_blossom_parent_ignoring_wrapped_radius();
     }
@@ -282,11 +281,9 @@ GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_matches(GraphFil
         subblossom->match.region->match.region = subblossom;
     res.weight += region->radius.y_intercept();
     auto iter = std::find_if(
-            region->blossom_children.begin(),
-            region->blossom_children.end(),
-            [&subblossom](const RegionEdge &e) {
-                return e.region == subblossom;
-            });
+        region->blossom_children.begin(), region->blossom_children.end(), [&subblossom](const RegionEdge &e) {
+            return e.region == subblossom;
+        });
     size_t index = std::distance(region->blossom_children.begin(), iter);
     size_t num_children = region->blossom_children.size();
     for (size_t i = 0; i < num_children - 1; i += 2) {
@@ -299,7 +296,6 @@ GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_matches(GraphFil
     return subblossom;
 }
 
-
 MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region) {
     region->cleanup_shell_area();
 
@@ -310,8 +306,7 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
             // Neither region nor matched region have blossom children
             // No shattering required, so just return MatchingResult from this match.
             MatchingResult res = {
-                    region->match.edge.obs_mask,
-                    region->radius.y_intercept() + region->match.region->radius.y_intercept()};
+                region->match.edge.obs_mask, region->radius.y_intercept() + region->match.region->radius.y_intercept()};
             flooder.region_arena.del(region->match.region);
             flooder.region_arena.del(region);
             return res;
@@ -334,9 +329,8 @@ MatchingResult Mwpm::shatter_blossom_and_extract_matches(GraphFillRegion *region
     return res;
 }
 
-
-GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_match_edges(GraphFillRegion *region,
-                                                                std::vector<CompressedEdge> &match_edges) {
+GraphFillRegion *Mwpm::pair_and_shatter_subblossoms_and_extract_match_edges(
+    GraphFillRegion *region, std::vector<CompressedEdge> &match_edges) {
     for (auto &r : region->blossom_children) {
         r.region->clear_blossom_parent_ignoring_wrapped_radius();
     }
@@ -345,11 +339,9 @@ GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_match_edges(Grap
     if (subblossom->match.region)
         subblossom->match.region->match.region = subblossom;
     auto iter = std::find_if(
-            region->blossom_children.begin(),
-            region->blossom_children.end(),
-            [&subblossom](const RegionEdge &e) {
-                return e.region == subblossom;
-            });
+        region->blossom_children.begin(), region->blossom_children.end(), [&subblossom](const RegionEdge &e) {
+            return e.region == subblossom;
+        });
     size_t index = std::distance(region->blossom_children.begin(), iter);
     size_t num_children = region->blossom_children.size();
     for (size_t i = 0; i < num_children - 1; i += 2) {
@@ -361,7 +353,6 @@ GraphFillRegion* Mwpm::pair_and_shatter_subblossoms_and_extract_match_edges(Grap
     flooder.region_arena.del(region);
     return subblossom;
 }
-
 
 void Mwpm::shatter_blossom_and_extract_match_edges(GraphFillRegion *region, std::vector<CompressedEdge> &match_edges) {
     region->cleanup_shell_area();
@@ -393,7 +384,6 @@ void Mwpm::shatter_blossom_and_extract_match_edges(GraphFillRegion *region, std:
     shatter_blossom_and_extract_match_edges(region, match_edges);
     return;
 }
-
 
 void Mwpm::create_detection_event(DetectorNode *node) {
     auto region = flooder.region_arena.alloc_default_constructed();
@@ -432,13 +422,11 @@ bool MatchingResult::operator!=(const MatchingResult &rhs) const {
 void Mwpm::verify_invariants() const {
 }
 
-void
-Mwpm::extract_paths_from_match_edges(const std::vector<CompressedEdge> &match_edges,
-                                     uint8_t *obs_begin_ptr,
-                                     total_weight_int &weight) {
-    for (auto& edge : match_edges) {
+void Mwpm::extract_paths_from_match_edges(
+    const std::vector<CompressedEdge> &match_edges, uint8_t *obs_begin_ptr, total_weight_int &weight) {
+    for (auto &edge : match_edges) {
         auto loc_from_ptr = &search_flooder.graph.nodes[edge.loc_from - &flooder.graph.nodes[0]];
-        SearchDetectorNode* loc_to_ptr;
+        SearchDetectorNode *loc_to_ptr;
         if (edge.loc_to) {
             loc_to_ptr = &search_flooder.graph.nodes[edge.loc_to - &flooder.graph.nodes[0]];
         } else {
@@ -451,7 +439,6 @@ Mwpm::extract_paths_from_match_edges(const std::vector<CompressedEdge> &match_ed
 }
 
 ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
-
 }
 
 bool ExtendedMatchingResult::operator==(const ExtendedMatchingResult &rhs) const {
@@ -462,15 +449,16 @@ bool ExtendedMatchingResult::operator!=(const ExtendedMatchingResult &rhs) const
     return !(rhs == *this);
 }
 
-ExtendedMatchingResult::ExtendedMatchingResult(size_t num_observables)
-    : obs_crossed(num_observables, 0), weight(0) {}
+ExtendedMatchingResult::ExtendedMatchingResult(size_t num_observables) : obs_crossed(num_observables, 0), weight(0) {
+}
 
 ExtendedMatchingResult::ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, total_weight_int weight)
-    : obs_crossed(std::move(obs_crossed)), weight(weight) {}
+    : obs_crossed(std::move(obs_crossed)), weight(weight) {
+}
 
 ExtendedMatchingResult &ExtendedMatchingResult::operator+=(const ExtendedMatchingResult &rhs) {
     assert(obs_crossed.size() == rhs.obs_crossed.size());
-    for (size_t i=0; i < obs_crossed.size(); i++) {
+    for (size_t i = 0; i < obs_crossed.size(); i++) {
         obs_crossed[i] ^= rhs.obs_crossed[i];
     }
     weight += rhs.weight;

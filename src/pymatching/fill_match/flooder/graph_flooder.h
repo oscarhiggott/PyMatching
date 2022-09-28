@@ -53,8 +53,7 @@ struct GraphFlooder {
     void do_region_arriving_at_empty_detector_node(
         GraphFillRegion& region, DetectorNode& empty_node, const DetectorNode& from_node, size_t from_to_empty_index);
     MwpmEvent do_region_shrinking(GraphFillRegion& shrinking_region);
-    pm::MwpmEvent do_neighbor_interaction(
-        DetectorNode& src, size_t src_to_dst_index, DetectorNode& dst);
+    pm::MwpmEvent do_neighbor_interaction(DetectorNode& src, size_t src_to_dst_index, DetectorNode& dst);
     pm::MwpmEvent do_region_hit_boundary_interaction(DetectorNode& node);
     static MwpmEvent do_degenerate_implosion(const GraphFillRegion& region);
     static MwpmEvent do_blossom_shattering(GraphFillRegion& region);

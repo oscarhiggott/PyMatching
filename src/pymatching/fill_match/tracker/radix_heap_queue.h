@@ -202,7 +202,6 @@ std::string radix_heap_queue<use_validation>::str() const {
     return ss.str();
 }
 
-
 template <bool use_validation>
 void radix_heap_queue<use_validation>::clear() {
     size_t b = 0;

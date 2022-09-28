@@ -15,4 +15,3 @@ void pm::SearchDetectorNode::reset() {
     index_of_predecessor = SIZE_MAX;
     node_event_tracker.clear();
 }
-

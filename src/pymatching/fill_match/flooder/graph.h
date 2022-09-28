@@ -1,8 +1,8 @@
 #ifndef PYMATCHING2_GRAPH_H
 #define PYMATCHING2_GRAPH_H
 
-#include <vector>
 #include <set>
+#include <vector>
 
 #include "pymatching/fill_match/flooder/detector_node.h"
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"

@@ -5,7 +5,8 @@
 
 #include "pymatching/fill_match/flooder/graph.h"
 
-void pm::ProbabilityGraph::add_or_merge_edge(size_t u, size_t v, double probability, const std::vector<size_t>& observables){
+void pm::ProbabilityGraph::add_or_merge_edge(
+    size_t u, size_t v, double probability, const std::vector<size_t>& observables) {
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
@@ -31,7 +32,8 @@ void pm::ProbabilityGraph::add_or_merge_edge(size_t u, size_t v, double probabil
     }
 }
 
-void pm::ProbabilityGraph::add_or_merge_boundary_edge(size_t u, double probability, const std::vector<size_t>& observables) {
+void pm::ProbabilityGraph::add_or_merge_boundary_edge(
+    size_t u, double probability, const std::vector<size_t>& observables) {
     if (u > nodes.size() - 1) {
         throw std::invalid_argument(
             "Node " + std::to_string(u) +
@@ -125,31 +127,31 @@ pm::SearchGraph pm::ProbabilityGraph::to_search_graph(pm::weight_int num_distinc
 }
 
 pm::ProbabilityGraph pm::detector_error_model_to_probability_graph(
-        const stim::DetectorErrorModel &detector_error_model) {
-        pm::ProbabilityGraph probability_graph(detector_error_model.count_detectors(),
-                                               detector_error_model.count_observables());
-        detector_error_model.iter_flatten_error_instructions([&probability_graph](const stim::DemInstruction& instruction) {
-            std::vector<size_t> dets;
-            std::vector<size_t> observables;
-            double p = instruction.arg_data[0];
-            for (auto& target : instruction.target_data) {
-                if (target.is_relative_detector_id()) {
-                    dets.push_back(target.val());
-                } else if (target.is_observable_id()) {
-                    observables.push_back(target.val());
-                } else if (target.is_separator()) {
-                    if (p > 0) {
-                        probability_graph.handle_dem_instruction(p, dets, observables);
-                        observables.clear();
-                        dets.clear();
-                    }
+    const stim::DetectorErrorModel& detector_error_model) {
+    pm::ProbabilityGraph probability_graph(
+        detector_error_model.count_detectors(), detector_error_model.count_observables());
+    detector_error_model.iter_flatten_error_instructions([&probability_graph](const stim::DemInstruction& instruction) {
+        std::vector<size_t> dets;
+        std::vector<size_t> observables;
+        double p = instruction.arg_data[0];
+        for (auto& target : instruction.target_data) {
+            if (target.is_relative_detector_id()) {
+                dets.push_back(target.val());
+            } else if (target.is_observable_id()) {
+                observables.push_back(target.val());
+            } else if (target.is_separator()) {
+                if (p > 0) {
+                    probability_graph.handle_dem_instruction(p, dets, observables);
+                    observables.clear();
+                    dets.clear();
                 }
             }
-            if (p > 0) {
-                probability_graph.handle_dem_instruction(p, dets, observables);
-            }
-        });
-        return probability_graph;
+        }
+        if (p > 0) {
+            probability_graph.handle_dem_instruction(p, dets, observables);
+        }
+    });
+    return probability_graph;
 }
 
 pm::MatchingGraph pm::detector_error_model_to_matching_graph(

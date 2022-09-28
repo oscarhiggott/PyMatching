@@ -1,6 +1,6 @@
-#include "gtest/gtest.h"
-
 #include "pymatching/fill_match/search/search_flooder.h"
+
+#include "gtest/gtest.h"
 
 TEST(SearchFlooder, RepCodeDetectorSearch) {
     size_t num_nodes = 40;
@@ -8,7 +8,7 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
     auto& g = flooder.graph;
     g.add_boundary_edge(0, 2, {0});
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i+1, 2, {i+1});
+        g.add_edge(i, i + 1, 2, {i + 1});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[1], &g.nodes[20]);
     ASSERT_EQ(collision_edge.collision_node, &g.nodes[10]);
@@ -19,9 +19,9 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
     flooder.trace_back_path_from_collision_edge(collision_edge, observables.data(), weight);
     std::vector<uint8_t> expected_obs(num_nodes, 0);
     for (size_t i = 1; i < 20; i++)
-        expected_obs[i+1] ^= 1;
+        expected_obs[i + 1] ^= 1;
     ASSERT_EQ(observables, expected_obs);
-    ASSERT_EQ(weight,38);
+    ASSERT_EQ(weight, 38);
     flooder.reset_graph();
     for (auto& n : g.nodes) {
         ASSERT_EQ(n.index_of_predecessor, SIZE_MAX);
@@ -40,7 +40,7 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
     auto& g = flooder.graph;
     g.add_boundary_edge(0, 2, {0});
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i+1, 2, {i+1});
+        g.add_edge(i, i + 1, 2, {i + 1});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[6], nullptr);
     ASSERT_EQ(collision_edge.collision_node, &g.nodes[0]);
