@@ -133,7 +133,7 @@ TEST(MwpmDecoding, BitVectorToObsMask) {
     ASSERT_EQ(pm::bit_vector_to_obs_mask({0, 1, 0, 0, 0, 0, 1, 1, 0, 0}), 194);
 }
 
-TEST(MwpmDecoding, HandleNegativeWeights) {
+TEST(MwpmDecoding, HandleAllNegativeWeights) {
     for (size_t num_nodes : {50, 80}){
         auto mwpm = pm::Mwpm(
                 pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)),
@@ -158,8 +158,72 @@ TEST(MwpmDecoding, HandleNegativeWeights) {
             if (i < 10 || i >= 20)
                 res_expected.obs_crossed[i] ^= 1;
         }
+        res_expected.weight = ((pm::signed_weight_int) num_nodes - 10) * -2;
 
-        ASSERT_EQ(res.obs_crossed, res_expected.obs_crossed);
-        ASSERT_EQ(res.weight, (num_nodes - 10) * -2);
+        ASSERT_EQ(res, res_expected);
+
+        if (num_nodes <= sizeof(pm::obs_int) * 8){
+            auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {10, 20});
+            ASSERT_EQ(res2.weight, res_expected.weight);
+            pm::obs_int expected_obs_mask = 0;
+            for (size_t i = 0; i < res_expected.obs_crossed.size(); i++){
+                if (res_expected.obs_crossed[i])
+                    expected_obs_mask ^= (pm::obs_int) 1 << i;
+            }
+            ASSERT_EQ(res2.obs_mask, expected_obs_mask);
+        }
     }
 }
+
+TEST(MwpmDecoding, HandleSomeNegativeWeights) {
+    size_t num_nodes = 8;
+    for (size_t max_obs : {40, 100}){
+        auto mwpm = pm::Mwpm(
+                pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)),
+                pm::SearchFlooder(pm::SearchGraph(num_nodes))
+        );
+
+        auto& g = mwpm.flooder.graph;
+        g.add_boundary_edge(0, -4, {max_obs});
+        for (size_t i = 0; i < 7; i += 2)
+            g.add_edge(i, i + 1, 2, {i + 1});
+        for (size_t i = 1; i < 7; i += 2)
+            g.add_edge(i, i + 1, -4, {i + 1});
+        g.add_boundary_edge(7, 2, {0});
+
+        if (max_obs > sizeof(pm::obs_int) * 8){
+            auto& h = mwpm.search_flooder.graph;
+            h.add_boundary_edge(0, -4, {max_obs});
+            for (size_t i = 0; i < 7; i += 2)
+                h.add_edge(i, i + 1, 2, {i + 1});
+            for (size_t i = 1; i < 7; i += 2)
+                h.add_edge(i, i + 1, -4, {i + 1});
+            h.add_boundary_edge(7, 2, {0});
+        }
+
+        mwpm.flooder.sync_negative_weight_observables_and_detection_events();
+
+        pm::ExtendedMatchingResult res(max_obs + 1);
+        pm::decode_detection_events(mwpm, {0, 1, 2, 5, 6}, res.obs_crossed.data(), res.weight);
+
+        pm::ExtendedMatchingResult res_expected(max_obs + 1);
+        res_expected.obs_crossed[max_obs] ^= 1;
+        res_expected.obs_crossed[2] ^= 1;
+        res_expected.obs_crossed[6] ^= 1;
+        res_expected.weight = -12;
+
+        ASSERT_EQ(res, res_expected);
+
+        if (max_obs + 1 <= sizeof(pm::obs_int) * 8){
+            auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {0, 1, 2, 5, 6});
+            ASSERT_EQ(res2.weight, res_expected.weight);
+            pm::obs_int expected_obs_mask = 0;
+            for (size_t i = 0; i < res_expected.obs_crossed.size(); i++){
+                if (res_expected.obs_crossed[i])
+                    expected_obs_mask ^= (pm::obs_int) 1 << i;
+            }
+            ASSERT_EQ(res2.obs_mask, expected_obs_mask);
+        }
+    }
+}
+

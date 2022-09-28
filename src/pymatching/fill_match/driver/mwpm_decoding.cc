@@ -111,6 +111,7 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(pm::Mwpm
     process_timeline_until_completion(mwpm, detection_events);
     auto res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
+    res.weight += mwpm.flooder.negative_weight_sum;
     return res;
 }
 
