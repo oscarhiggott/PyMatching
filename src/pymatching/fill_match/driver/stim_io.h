@@ -49,7 +49,7 @@ class IntermediateWeightedGraph {
     void handle_dem_instruction(double p, const std::vector<size_t> &detectors, std::vector<size_t> &observables);
 
     template <typename EdgeCallable, typename BoundaryEdgeCallable>
-    void iter_discretized_edges(
+    double iter_discretized_edges(
         pm::weight_int num_distinct_weights,
         const EdgeCallable &edge_func,
         const BoundaryEdgeCallable &boundary_edge_func);
@@ -62,18 +62,18 @@ class IntermediateWeightedGraph {
 };
 
 template <typename EdgeCallable, typename BoundaryEdgeCallable>
-inline void IntermediateWeightedGraph::iter_discretized_edges(
+inline double IntermediateWeightedGraph::iter_discretized_edges(
     pm::weight_int num_distinct_weights,
     const EdgeCallable &edge_func,
     const BoundaryEdgeCallable &boundary_edge_func) {
     double max_weight = max_abs_weight();
     pm::MatchingGraph matching_graph(nodes.size(), num_observables);
     pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
+    double normalising_constant = (double) max_half_edge_weight / max_weight;
     for (auto &node : nodes) {
         for (auto &neighbor : node) {
             auto i = &node - &nodes[0];
-            double normed_weight = std::min(1.0, neighbor.weight / max_weight);
-            pm::signed_weight_int w = (pm::signed_weight_int)(max_half_edge_weight * normed_weight);
+            pm::signed_weight_int w = (pm::signed_weight_int) (neighbor.weight * normalising_constant);
 
             // Extremely important!
             // If all edge weights are even integers, then all collision events occur at integer times.
@@ -88,6 +88,7 @@ inline void IntermediateWeightedGraph::iter_discretized_edges(
             }
         }
     }
+    return normalising_constant * 2;
 }
 
 IntermediateWeightedGraph detector_error_model_to_weighted_graph(const stim::DetectorErrorModel &detector_error_model);
