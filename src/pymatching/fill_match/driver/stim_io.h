@@ -7,37 +7,90 @@
 
 namespace pm {
 
+/// Computes the weight of an edge resulting from merging edges with weight `a' and weight `b', assuming each edge
+/// weight is a log-likelihood ratio log((1-p)/p) associated with the probability p of an error occurring on the
+/// edge, and that the error mechanisms associated with the two edges being merged are independent.
+///
+/// A mathematically equivalent implementation of this method would be:
+///
+///  double merge_weights(double a, double b){
+///     double p_a = 1/(1 + std::exp(a));
+///     double p_b = 1/(1 + std::exp(b));
+///     double p_both = p_a * (1 - p_b) + p_b * (1 - p_a);
+///     return std::log((1-p_both)/p_both);
+///  }
+///
+/// however this would suffer from numerical overflow issues for abs(a) >> 30 or abs(b) >> 30 which is avoided by the
+/// the implementation used here instead. See Equation (6) of https://ieeexplore.ieee.org/document/1495850 for more
+/// details.
+double merge_weights(double a, double b);
+
 struct Neighbor {
     std::vector<Neighbor> *node;
-    double probability;
+    double weight;
     std::vector<size_t> observables;
 };
 
-class ProbabilityGraph {
+class IntermediateWeightedGraph {
    public:
     std::vector<std::vector<Neighbor>> nodes;
     size_t num_nodes;
     size_t num_observables;
 
-    explicit ProbabilityGraph(size_t num_nodes, size_t num_observables)
+    explicit IntermediateWeightedGraph(size_t num_nodes, size_t num_observables)
         : num_nodes(num_nodes), num_observables(num_observables) {
         nodes.resize(num_nodes);
     };
 
-    void add_or_merge_edge(size_t u, size_t v, double probability, const std::vector<size_t> &observables);
+    void add_or_merge_edge(size_t u, size_t v, double weight, const std::vector<size_t> &observables);
 
-    void add_or_merge_boundary_edge(size_t u, double probability, const std::vector<size_t> &observables);
+    void add_or_merge_boundary_edge(size_t u, double weight, const std::vector<size_t> &observables);
 
     void handle_dem_instruction(double p, const std::vector<size_t> &detectors, std::vector<size_t> &observables);
+
+    template <typename EdgeCallable, typename BoundaryEdgeCallable>
+    void iter_discretized_edges(
+        pm::weight_int num_distinct_weights,
+        const EdgeCallable &edge_func,
+        const BoundaryEdgeCallable &boundary_edge_func);
 
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
 
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
 
-    double min_nonzero_probability();
+    double max_abs_weight();
 };
 
-ProbabilityGraph detector_error_model_to_probability_graph(const stim::DetectorErrorModel &detector_error_model);
+template <typename EdgeCallable, typename BoundaryEdgeCallable>
+inline void IntermediateWeightedGraph::iter_discretized_edges(
+    pm::weight_int num_distinct_weights,
+    const EdgeCallable &edge_func,
+    const BoundaryEdgeCallable &boundary_edge_func) {
+    double max_weight = max_abs_weight();
+    pm::MatchingGraph matching_graph(nodes.size(), num_observables);
+    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
+    for (auto &node : nodes) {
+        for (auto &neighbor : node) {
+            auto i = &node - &nodes[0];
+            double normed_weight = std::min(1.0, neighbor.weight / max_weight);
+            pm::signed_weight_int w = (pm::signed_weight_int)(max_half_edge_weight * normed_weight);
+
+            // Extremely important!
+            // If all edge weights are even integers, then all collision events occur at integer times.
+            w *= 2;
+
+            if (!neighbor.node) {
+                boundary_edge_func(i, w, neighbor.observables);
+            } else {
+                auto j = neighbor.node - &nodes[0];
+                if (j > i)
+                    edge_func(i, j, w, neighbor.observables);
+            }
+        }
+    }
+}
+
+IntermediateWeightedGraph detector_error_model_to_weighted_graph(const stim::DetectorErrorModel &detector_error_model);
 
 MatchingGraph detector_error_model_to_matching_graph(
     const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
