@@ -3,6 +3,7 @@
 
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/search/search_graph.h"
+#include "pymatching/fill_match/matcher/mwpm.h"
 #include "stim.h"
 
 namespace pm {
@@ -57,6 +58,8 @@ class IntermediateWeightedGraph {
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
 
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
+
+    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights);
 
     double max_abs_weight();
 };

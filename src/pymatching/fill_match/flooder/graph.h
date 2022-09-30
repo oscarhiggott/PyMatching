@@ -26,9 +26,13 @@ class MatchingGraph {
     pm::total_weight_int negative_weight_sum;
     size_t num_nodes;
     size_t num_observables;
+    /// This is the normalising constant that the edge weights were multiplied by when converting from floats to
+    /// 16-bit ints.
+    double normalising_constant;
 
     MatchingGraph();
-    explicit MatchingGraph(size_t num_nodes, size_t num_observables);
+    MatchingGraph(size_t num_nodes, size_t num_observables);
+    MatchingGraph(size_t num_nodes, size_t num_observables, double normalising_constant);
     MatchingGraph(MatchingGraph&& graph) noexcept;
     void add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t>& observables);
     void add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t>& observables);

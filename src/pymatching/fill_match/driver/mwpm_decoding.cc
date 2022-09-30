@@ -22,17 +22,7 @@ pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector) {
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
     auto weighted_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
-    if (weighted_graph.num_observables > sizeof(pm::obs_int) * 8) {
-        auto mwpm = pm::Mwpm(
-            pm::GraphFlooder(weighted_graph.to_matching_graph(num_distinct_weights)),
-            pm::SearchFlooder(weighted_graph.to_search_graph(num_distinct_weights)));
-        mwpm.flooder.sync_negative_weight_observables_and_detection_events();
-        return mwpm;
-    } else {
-        auto mwpm = pm::Mwpm(pm::GraphFlooder(weighted_graph.to_matching_graph(num_distinct_weights)));
-        mwpm.flooder.sync_negative_weight_observables_and_detection_events();
-        return mwpm;
-    }
+    return weighted_graph.to_mwpm(num_distinct_weights);
 }
 
 void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {

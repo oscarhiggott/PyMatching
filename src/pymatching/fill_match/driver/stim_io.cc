@@ -79,7 +79,7 @@ double pm::IntermediateWeightedGraph::max_abs_weight() {
 
 pm::MatchingGraph pm::IntermediateWeightedGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     pm::MatchingGraph matching_graph(nodes.size(), num_observables);
-    iter_discretized_edges(
+    double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
         [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
             matching_graph.add_edge(u, v, weight, observables);
@@ -87,6 +87,7 @@ pm::MatchingGraph pm::IntermediateWeightedGraph::to_matching_graph(pm::weight_in
         [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
             matching_graph.add_boundary_edge(u, weight, observables);
         });
+    matching_graph.normalising_constant = normalising_constant;
     return matching_graph;
 }
 
@@ -103,12 +104,25 @@ pm::SearchGraph pm::IntermediateWeightedGraph::to_search_graph(pm::weight_int nu
         });
     return search_graph;
 }
+pm::Mwpm pm::IntermediateWeightedGraph::to_mwpm(pm::weight_int num_distinct_weights) {
+    if (num_observables > sizeof(pm::obs_int) * 8) {
+        auto mwpm = pm::Mwpm(
+            pm::GraphFlooder(to_matching_graph(num_distinct_weights)),
+            pm::SearchFlooder(to_search_graph(num_distinct_weights)));
+        mwpm.flooder.sync_negative_weight_observables_and_detection_events();
+        return mwpm;
+    } else {
+        auto mwpm = pm::Mwpm(pm::GraphFlooder(to_matching_graph(num_distinct_weights)));
+        mwpm.flooder.sync_negative_weight_observables_and_detection_events();
+        return mwpm;
+    }
+}
 
 pm::IntermediateWeightedGraph pm::detector_error_model_to_weighted_graph(
     const stim::DetectorErrorModel& detector_error_model) {
-    pm::IntermediateWeightedGraph probability_graph(
+    pm::IntermediateWeightedGraph weighted_graph(
         detector_error_model.count_detectors(), detector_error_model.count_observables());
-    detector_error_model.iter_flatten_error_instructions([&probability_graph](const stim::DemInstruction& instruction) {
+    detector_error_model.iter_flatten_error_instructions([&weighted_graph](const stim::DemInstruction& instruction) {
         std::vector<size_t> dets;
         std::vector<size_t> observables;
         double p = instruction.arg_data[0];
@@ -119,21 +133,21 @@ pm::IntermediateWeightedGraph pm::detector_error_model_to_weighted_graph(
                 observables.push_back(target.val());
             } else if (target.is_separator()) {
                 if (p > 0) {
-                    probability_graph.handle_dem_instruction(p, dets, observables);
+                    weighted_graph.handle_dem_instruction(p, dets, observables);
                     observables.clear();
                     dets.clear();
                 }
             }
         }
         if (p > 0) {
-            probability_graph.handle_dem_instruction(p, dets, observables);
+            weighted_graph.handle_dem_instruction(p, dets, observables);
         }
     });
-    return probability_graph;
+    return weighted_graph;
 }
 
 pm::MatchingGraph pm::detector_error_model_to_matching_graph(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
-    auto probability_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
-    return probability_graph.to_matching_graph(num_distinct_weights);
+    auto weighted_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
+    return weighted_graph.to_matching_graph(num_distinct_weights);
 }
