@@ -1,6 +1,6 @@
+#include "pymatching/fill_match/driver/io.h"
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 #include "pymatching/fill_match/driver/namespaced_main.h"
-#include "pymatching/fill_match/driver/stim_io.h"
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/flooder/graph_fill_region.h"
 #include "pymatching/fill_match/flooder/graph_flooder.h"

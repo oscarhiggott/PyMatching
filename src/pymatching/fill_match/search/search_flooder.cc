@@ -168,3 +168,10 @@ void pm::SearchFlooder::reset() {
     reset_graph();
     queue.reset();
 }
+
+pm::SearchFlooder::SearchFlooder(pm::SearchFlooder &&other) noexcept
+    : graph(std::move(other.graph)),
+      queue(std::move(other.queue)),
+      reached_nodes(std::move(other.reached_nodes)),
+      target_type(other.target_type) {
+}

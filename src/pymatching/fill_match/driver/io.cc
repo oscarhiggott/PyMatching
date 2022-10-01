@@ -1,4 +1,4 @@
-#include "pymatching/fill_match/driver/stim_io.h"
+#include "pymatching/fill_match/driver/io.h"
 
 #include <algorithm>
 #include <utility>
@@ -150,4 +150,10 @@ pm::MatchingGraph pm::detector_error_model_to_matching_graph(
     const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
     auto weighted_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
     return weighted_graph.to_matching_graph(num_distinct_weights);
+}
+bool pm::Neighbor::operator==(const pm::Neighbor& rhs) const {
+    return node == rhs.node && weight == rhs.weight && observables == rhs.observables;
+}
+bool pm::Neighbor::operator!=(const pm::Neighbor& rhs) const {
+    return !(rhs == *this);
 }

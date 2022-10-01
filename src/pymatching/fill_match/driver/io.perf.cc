@@ -1,5 +1,4 @@
-#include "stim_io.h"
-
+#include "io.h"
 #include "mwpm_decoding.h"
 #include "pymatching/perf/util.perf.h"
 

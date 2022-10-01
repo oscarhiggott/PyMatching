@@ -8,7 +8,7 @@ void pm::UserGraph::add_edge(
     if (u == v)
         throw std::invalid_argument("Must have u != v. Self loops not permitted.");
     auto max_id = std::max(u, v);
-    if (max_id > nodes.size()) {
+    if (max_id + 1 > nodes.size()) {
         nodes.reserve(2 * (max_id + 1));  // Ensure we don't allocate too often
         nodes.resize(max_id + 1);
     }
@@ -19,11 +19,12 @@ void pm::UserGraph::add_edge(
         if (obs + 1 > _num_observables)
             _num_observables = obs + 1;
     }
+    _mwpm_needs_updating = true;
 }
 
 void pm::UserGraph::add_boundary_edge(
     size_t u, const std::vector<size_t>& observables, double weight, double error_probability) {
-    if (u > nodes.size()) {
+    if (u + 1 > nodes.size()) {
         nodes.reserve(2 * (u + 1));  // Ensure we don't allocate too often
         nodes.resize(u + 1);
     }
@@ -33,21 +34,24 @@ void pm::UserGraph::add_boundary_edge(
         if (obs + 1 > _num_observables)
             _num_observables = obs + 1;
     }
+    _mwpm_needs_updating = true;
 }
 
-pm::UserGraph::UserGraph() : _num_observables(0) {
+pm::UserGraph::UserGraph() : _num_observables(0), _mwpm_needs_updating(true) {
 }
 
-pm::UserGraph::UserGraph(size_t num_nodes) : _num_observables(0) {
+pm::UserGraph::UserGraph(size_t num_nodes) : _num_observables(0), _mwpm_needs_updating(true) {
     nodes.resize(num_nodes);
 }
 
-pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables) : _num_observables(num_observables) {
+pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables)
+    : _num_observables(num_observables), _mwpm_needs_updating(true) {
     nodes.resize(num_nodes);
 }
 
-void pm::UserGraph::set_boundary(std::set<size_t>& boundary) {
+void pm::UserGraph::set_boundary(const std::set<size_t>& boundary) {
     boundary_nodes = boundary;
+    _mwpm_needs_updating = true;
 }
 
 std::set<size_t> pm::UserGraph::get_boundary() {
@@ -81,10 +85,25 @@ size_t pm::UserGraph::get_num_observables() {
     return _num_observables;
 }
 
+size_t pm::UserGraph::get_num_nodes() {
+    return nodes.size();
+}
+
+size_t pm::UserGraph::get_num_detectors() {
+    return 0;
+}
+
 bool pm::UserGraph::is_boundary_node(size_t node_id) {
     return (node_id == SIZE_MAX) || (boundary_nodes.find(node_id) != boundary_nodes.end());
 }
-pm::Mwpm pm::UserGraph::to_mwpm() {
+
+void pm::UserGraph::update_mwpm() {
     auto graph = to_intermediate_weighted_graph();
-    return graph.to_mwpm(1 << 14);
+    _mwpm = std::move(graph.to_mwpm(1 << 14));
+    _mwpm_needs_updating = false;
+}
+pm::Mwpm& pm::UserGraph::get_mwpm() {
+    if (_mwpm_needs_updating)
+        update_mwpm();
+    return _mwpm;
 }

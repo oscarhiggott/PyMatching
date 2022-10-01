@@ -339,3 +339,6 @@ void GraphFlooder::sync_negative_weight_observables_and_detection_events() {
     }
     negative_weight_sum = graph.negative_weight_sum;
 }
+
+GraphFlooder::GraphFlooder() {
+}

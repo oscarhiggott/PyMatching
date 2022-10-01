@@ -14,6 +14,20 @@ Mwpm::Mwpm(GraphFlooder flooder, SearchFlooder search_flooder)
     : flooder(std::move(flooder)), search_flooder(std::move(search_flooder)) {
 }
 
+Mwpm &Mwpm::operator=(Mwpm &&other) noexcept {
+    if (this != &other) {
+        this->~Mwpm();
+        new (this) Mwpm(std::move(other));
+    }
+    return *this;
+}
+
+Mwpm::Mwpm(Mwpm &&other) noexcept
+    : flooder(std::move(other.flooder)),
+      node_arena(std::move(other.node_arena)),
+      search_flooder(std::move(other.search_flooder)) {
+}
+
 void Mwpm::shatter_descendants_into_matches_and_freeze(AltTreeNode &alt_tree_node) {
     for (auto &child_edge : alt_tree_node.children) {
         shatter_descendants_into_matches_and_freeze(*child_edge.alt_tree_node);
@@ -436,6 +450,8 @@ void Mwpm::extract_paths_from_match_edges(
         search_flooder.trace_back_path_from_collision_edge(collision_edge, obs_begin_ptr, weight);
         search_flooder.reset();
     }
+}
+Mwpm::Mwpm() {
 }
 
 ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {

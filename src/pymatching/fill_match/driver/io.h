@@ -1,5 +1,5 @@
-#ifndef PYMATCHING2_STIM_IO_H
-#define PYMATCHING2_STIM_IO_H
+#ifndef PYMATCHING2_IO_H
+#define PYMATCHING2_IO_H
 
 #include "pymatching/fill_match/flooder/graph.h"
 #include "pymatching/fill_match/search/search_graph.h"
@@ -28,6 +28,8 @@ double merge_weights(double a, double b);
 
 struct Neighbor {
     std::vector<Neighbor> *node;
+    bool operator==(const Neighbor &rhs) const;
+    bool operator!=(const Neighbor &rhs) const;
     double weight;
     std::vector<size_t> observables;
 };
@@ -101,4 +103,4 @@ MatchingGraph detector_error_model_to_matching_graph(
 
 }  // namespace pm
 
-#endif  // PYMATCHING2_STIM_IO_H
+#endif  // PYMATCHING2_IO_H

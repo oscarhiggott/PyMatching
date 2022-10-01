@@ -47,8 +47,11 @@ struct Mwpm {
     Arena<AltTreeNode> node_arena;
     SearchFlooder search_flooder;
 
+    Mwpm();
     explicit Mwpm(GraphFlooder flooder);
     Mwpm(GraphFlooder flooder, SearchFlooder search_flooder);
+    Mwpm(Mwpm&& other) noexcept;
+    Mwpm &operator=(Mwpm&& other) noexcept;
 
     AltTreeNode* make_child(
         AltTreeNode& parent,

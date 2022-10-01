@@ -3,8 +3,8 @@
 #include <filesystem>
 
 #include "pymatching/fill_match/diagram/mwpm_diagram.h"
+#include "pymatching/fill_match/driver/io.h"
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
-#include "pymatching/fill_match/driver/stim_io.h"
 #include "pymatching/fill_match/matcher/mwpm.h"
 #include "stim.h"
 

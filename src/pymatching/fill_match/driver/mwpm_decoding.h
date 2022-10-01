@@ -1,7 +1,7 @@
 #ifndef PYMATCHING2_MWPM_DECODING_H
 #define PYMATCHING2_MWPM_DECODING_H
 
-#include "pymatching/fill_match/driver/stim_io.h"
+#include "pymatching/fill_match/driver/io.h"
 #include "pymatching/fill_match/matcher/mwpm.h"
 #include "stim.h"
 

@@ -40,7 +40,8 @@ struct GraphFlooder {
     /// The sum of the edge weights of all edges with negative edge weights.
     pm::total_weight_int negative_weight_sum;
 
-    GraphFlooder(MatchingGraph graph);
+    GraphFlooder();
+    explicit GraphFlooder(MatchingGraph graph);
     GraphFlooder(GraphFlooder&&) noexcept;
     MwpmEvent run_until_next_mwpm_notification();
     void set_region_growing(pm::GraphFillRegion& region);

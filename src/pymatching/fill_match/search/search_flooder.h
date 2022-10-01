@@ -17,7 +17,8 @@ struct CollisionEdge {
 class SearchFlooder {
    public:
     SearchFlooder();
-    SearchFlooder(SearchGraph graph);
+    explicit SearchFlooder(SearchGraph graph);
+    SearchFlooder(SearchFlooder&& other) noexcept;
     SearchGraph graph;
     pm::radix_heap_queue<false> queue;
     /// The reached_nodes are the nodes that need to be reset after each search completes

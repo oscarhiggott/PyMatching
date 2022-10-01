@@ -1,6 +1,6 @@
-#include "pymatching/fill_match/driver/stim_io.h"
-
 #include "gtest/gtest.h"
+
+#include "pymatching/fill_match/driver/io.h"
 
 TEST(StimIO, IntermediateWeightedGraph) {
     pm::IntermediateWeightedGraph g(10, 64);
