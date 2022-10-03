@@ -20,6 +20,9 @@ void pm::UserGraph::add_edge(
             _num_observables = obs + 1;
     }
     _mwpm_needs_updating = true;
+
+    if (error_probability < 0 || error_probability > 1)
+        _all_edges_have_error_probabilities = false;
 }
 
 void pm::UserGraph::add_boundary_edge(
@@ -35,17 +38,22 @@ void pm::UserGraph::add_boundary_edge(
             _num_observables = obs + 1;
     }
     _mwpm_needs_updating = true;
+
+    if (error_probability < 0 || error_probability > 1)
+        _all_edges_have_error_probabilities = false;
 }
 
-pm::UserGraph::UserGraph() : _num_observables(0), _mwpm_needs_updating(true) {
+pm::UserGraph::UserGraph()
+    : _num_observables(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
 }
 
-pm::UserGraph::UserGraph(size_t num_nodes) : _num_observables(0), _mwpm_needs_updating(true) {
+pm::UserGraph::UserGraph(size_t num_nodes)
+    : _num_observables(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
     nodes.resize(num_nodes);
 }
 
 pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables)
-    : _num_observables(num_observables), _mwpm_needs_updating(true) {
+    : _num_observables(num_observables), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
     nodes.resize(num_nodes);
 }
 
@@ -102,8 +110,36 @@ void pm::UserGraph::update_mwpm() {
     _mwpm = std::move(graph.to_mwpm(1 << 14));
     _mwpm_needs_updating = false;
 }
+
 pm::Mwpm& pm::UserGraph::get_mwpm() {
     if (_mwpm_needs_updating)
         update_mwpm();
     return _mwpm;
+}
+
+void pm::UserGraph::add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const {
+    if (!_all_edges_have_error_probabilities)
+        return;
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+        for (size_t j = 0; j < nodes[i].neighbors.size(); j++) {
+            size_t k = nodes[i].neighbors[j].node;
+            if (i < k) {
+                auto p = nodes[i].neighbors[j].error_probability;
+                if (rand_float(0.0, 1.0) < p) {
+                    // Flip the observables
+                    for (auto& obs : nodes[i].neighbors[j].observable_indices) {
+                        *(error_arr + obs) ^= 1;
+                    }
+                    // Flip the syndrome bits
+                    *(syndrome_arr + i) ^= 1;
+                    if (k != SIZE_MAX)
+                        *(syndrome_arr + k) ^= 1;
+                }
+            }
+        }
+    }
+
+    for (auto& b : boundary_nodes)
+        *(syndrome_arr + b) = 0;
 }

@@ -29,3 +29,20 @@ TEST(PythonAPIGraph, ConstructGraph) {
     ASSERT_EQ(g2.nodes[2][0].node, &g2.nodes[1]);
     ASSERT_EQ(g2.nodes[3].size(), 0);
 }
+
+TEST(PythonApiGraph, AddNoise) {
+    pm::UserGraph graph;
+    graph.add_boundary_edge(0, {0}, 1, 1);
+    graph.add_edge(0, 1, {1}, 1, 0);
+    graph.add_edge(1, 2, {2}, 1, 0);
+    graph.add_edge(2, 3, {3}, 1, 1);
+    graph.add_edge(3, 4, {4}, 1, 0);
+    graph.add_edge(4, 5, {5}, 1, 0);
+    graph.add_edge(5, 6, {6}, 1, 1);
+    graph.add_boundary_edge(6, {7}, 1, 1);
+    std::vector<uint8_t> observables(graph.get_num_observables());
+    std::vector<uint8_t> syndrome(graph.get_num_nodes());
+    graph.add_noise(observables.data(), syndrome.data());
+    std::vector<uint8_t> expected_observables = {1, 0, 0, 1, 0, 0, 1, 1};
+    ASSERT_EQ(observables, expected_observables);
+}

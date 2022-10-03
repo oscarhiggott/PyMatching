@@ -4,9 +4,11 @@
 #include <cmath>
 #include <set>
 #include <vector>
+#include "pymatching/rand/rand_gen.h"
 
 #include "pymatching/fill_match/driver/io.h"
 #include "pymatching/fill_match/ints.h"
+
 
 namespace pm {
 
@@ -42,10 +44,12 @@ class UserGraph {
     pm::IntermediateWeightedGraph to_intermediate_weighted_graph();
     void update_mwpm();
     Mwpm& get_mwpm();
+    void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;
     bool _mwpm_needs_updating;
+    bool _all_edges_have_error_probabilities;
 };
 
 }  // namespace pm
