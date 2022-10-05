@@ -216,3 +216,13 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
         }
     }
 }
+
+TEST(MwpmDecoding, NoValidSolution) {
+    size_t num_nodes = 5;
+    auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)));
+    auto& g = mwpm.flooder.graph;
+    for (size_t i = 0; i < num_nodes; i++)
+        g.add_edge(i, (i + 1) % num_nodes, 2, {i});
+    pm::ExtendedMatchingResult res(num_nodes);
+    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::runtime_error);
+}

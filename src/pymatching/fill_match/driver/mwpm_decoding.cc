@@ -111,6 +111,11 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
             break;
         mwpm.process_event(event);
     }
+
+    // If some alternating tree nodes remain, a perfect matching cannot be found
+    if (mwpm.node_arena.allocated.size() != mwpm.node_arena.available.size())
+        throw std::runtime_error("No perfect matching could be found. This likely means that the syndrome has odd "
+            "parity in the support of a connected component without a boundary.");
 }
 
 pm::MatchingResult shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
