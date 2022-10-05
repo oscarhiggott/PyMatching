@@ -459,6 +459,7 @@ void Mwpm::reset() {
         n.reset();
     for (auto& m : search_flooder.graph.nodes)
         m.reset();
+    flooder.queue.clear();
     node_arena.~Arena();
     flooder.region_arena.~Arena();
 }
