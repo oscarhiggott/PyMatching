@@ -7,6 +7,24 @@
 
 namespace pm {
 
+struct ExtendedMatchingResult {
+    std::vector<uint8_t> obs_crossed;
+    total_weight_int weight;
+    ExtendedMatchingResult();
+    explicit ExtendedMatchingResult(size_t num_observables);
+
+    bool operator==(const ExtendedMatchingResult& rhs) const;
+
+    bool operator!=(const ExtendedMatchingResult& rhs) const;
+
+    ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, total_weight_int weight);
+
+    void reset();
+
+    ExtendedMatchingResult& operator+=(const ExtendedMatchingResult& rhs);
+    ExtendedMatchingResult operator+(const ExtendedMatchingResult& rhs) const;
+};
+
 void fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, uint8_t* obs_begin_ptr, size_t num_observables);
 obs_int bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector);
 

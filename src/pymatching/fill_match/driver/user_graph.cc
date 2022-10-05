@@ -1,19 +1,19 @@
-#include "pymatching/fill_match/driver/python_api_graph.h"
+#include "pymatching/fill_match/driver/user_graph.h"
 
 pm::UserNode::UserNode() {
 }
 
 void pm::UserGraph::add_edge(
-    size_t u, size_t v, const std::vector<size_t>& observables, double weight, double error_probability) {
-    if (u == v)
-        throw std::invalid_argument("Must have u != v. Self loops not permitted.");
-    auto max_id = std::max(u, v);
+    size_t node1, size_t node2, const std::vector<size_t>& observables, double weight, double error_probability) {
+    if (node1 == node2)
+        throw std::invalid_argument("Must have node1 != node2. Self loops not permitted.");
+    auto max_id = std::max(node1, node2);
     if (max_id + 1 > nodes.size()) {
         nodes.reserve(2 * (max_id + 1));  // Ensure we don't allocate too often
         nodes.resize(max_id + 1);
     }
-    nodes[u].neighbors.push_back({v, observables, weight, error_probability});
-    nodes[v].neighbors.push_back({u, observables, weight, error_probability});
+    nodes[node1].neighbors.push_back({node2, observables, weight, error_probability});
+    nodes[node2].neighbors.push_back({node1, observables, weight, error_probability});
 
     for (auto& obs : observables) {
         if (obs + 1 > _num_observables)
@@ -26,12 +26,12 @@ void pm::UserGraph::add_edge(
 }
 
 void pm::UserGraph::add_boundary_edge(
-    size_t u, const std::vector<size_t>& observables, double weight, double error_probability) {
-    if (u + 1 > nodes.size()) {
-        nodes.reserve(2 * (u + 1));  // Ensure we don't allocate too often
-        nodes.resize(u + 1);
+    size_t node, const std::vector<size_t>& observables, double weight, double error_probability) {
+    if (node + 1 > nodes.size()) {
+        nodes.reserve(2 * (node + 1));  // Ensure we don't allocate too often
+        nodes.resize(node + 1);
     }
-    nodes[u].neighbors.push_back({SIZE_MAX, observables, weight, error_probability});
+    nodes[node].neighbors.push_back({SIZE_MAX, observables, weight, error_probability});
 
     for (auto& obs : observables) {
         if (obs + 1 > _num_observables)

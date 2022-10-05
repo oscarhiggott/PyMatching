@@ -1,5 +1,5 @@
-#ifndef PYMATCHING2_PYTHON_API_GRAPH_H
-#define PYMATCHING2_PYTHON_API_GRAPH_H
+#ifndef PYMATCHING2_USER_GRAPH_H
+#define PYMATCHING2_USER_GRAPH_H
 
 #include <cmath>
 #include <set>
@@ -33,8 +33,8 @@ class UserGraph {
     UserGraph();
     explicit UserGraph(size_t num_nodes);
     UserGraph(size_t num_nodes, size_t num_observables);
-    void add_edge(size_t u, size_t v, const std::vector<size_t>& observables, double weight, double error_probability);
-    void add_boundary_edge(size_t u, const std::vector<size_t>& observables, double weight, double error_probability);
+    void add_edge(size_t node1, size_t node2, const std::vector<size_t>& observables, double weight, double error_probability);
+    void add_boundary_edge(size_t node, const std::vector<size_t>& observables, double weight, double error_probability);
     void set_boundary(const std::set<size_t>& boundary);
     std::set<size_t> get_boundary();
     size_t get_num_observables();
@@ -54,4 +54,4 @@ class UserGraph {
 
 }  // namespace pm
 
-#endif  // PYMATCHING2_PYTHON_API_GRAPH_H
+#endif  // PYMATCHING2_USER_GRAPH_H

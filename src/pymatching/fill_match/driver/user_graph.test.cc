@@ -1,7 +1,7 @@
-#include "pymatching/fill_match/driver/python_api_graph.h"
-
 #include <cmath>
 #include <gtest/gtest.h>
+
+#include "pymatching/fill_match/driver/user_graph.h"
 
 TEST(PythonAPIGraph, ConstructGraph) {
     pm::UserGraph graph;
@@ -39,10 +39,13 @@ TEST(PythonApiGraph, AddNoise) {
     graph.add_edge(3, 4, {4}, 1, 0);
     graph.add_edge(4, 5, {5}, 1, 0);
     graph.add_edge(5, 6, {6}, 1, 1);
-    graph.add_boundary_edge(6, {7}, 1, 1);
+    graph.add_edge(6, 7, {7}, 1, 1);
+    graph.set_boundary({7});
     std::vector<uint8_t> observables(graph.get_num_observables());
     std::vector<uint8_t> syndrome(graph.get_num_nodes());
     graph.add_noise(observables.data(), syndrome.data());
     std::vector<uint8_t> expected_observables = {1, 0, 0, 1, 0, 0, 1, 1};
     ASSERT_EQ(observables, expected_observables);
+    std::vector<uint8_t> expected_syndrome = {1, 0, 1, 1, 0, 1, 0, 0};
+    ASSERT_EQ(syndrome, expected_syndrome);
 }

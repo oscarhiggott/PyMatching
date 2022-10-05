@@ -13,3 +13,6 @@ lib/
 out/
 perf.data
 perf.data.old
+*.egg-info/
+__pycache__
+_skbuild

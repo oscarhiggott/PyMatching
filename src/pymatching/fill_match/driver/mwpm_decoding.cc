@@ -1,5 +1,44 @@
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 
+pm::ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
+}
+
+bool pm::ExtendedMatchingResult::operator==(const ExtendedMatchingResult& rhs) const {
+    return (obs_crossed == rhs.obs_crossed) && (weight == rhs.weight);
+}
+
+bool pm::ExtendedMatchingResult::operator!=(const ExtendedMatchingResult& rhs) const {
+    return !(rhs == *this);
+}
+
+pm::ExtendedMatchingResult::ExtendedMatchingResult(size_t num_observables)
+    : obs_crossed(num_observables, 0), weight(0) {
+}
+
+pm::ExtendedMatchingResult::ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, total_weight_int weight)
+    : obs_crossed(std::move(obs_crossed)), weight(weight) {
+}
+
+pm::ExtendedMatchingResult& pm::ExtendedMatchingResult::operator+=(const ExtendedMatchingResult& rhs) {
+    assert(obs_crossed.size() == rhs.obs_crossed.size());
+    for (size_t i = 0; i < obs_crossed.size(); i++) {
+        obs_crossed[i] ^= rhs.obs_crossed[i];
+    }
+    weight += rhs.weight;
+    return *this;
+}
+
+pm::ExtendedMatchingResult pm::ExtendedMatchingResult::operator+(const ExtendedMatchingResult& rhs) const {
+    ExtendedMatchingResult copy = *this;
+    copy += rhs;
+    return copy;
+}
+
+void pm::ExtendedMatchingResult::reset() {
+    std::fill(obs_crossed.begin(), obs_crossed.end(), 0);
+    weight = 0;
+}
+
 void pm::fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, uint8_t* obs_begin_ptr, size_t num_observables) {
     auto max_obs = sizeof(pm::obs_int) * 8;
     if (num_observables > max_obs)

@@ -24,24 +24,6 @@ struct MatchingResult {
     MatchingResult operator+(const MatchingResult& rhs) const;
 };
 
-struct ExtendedMatchingResult {
-    std::vector<uint8_t> obs_crossed;
-    total_weight_int weight;
-    ExtendedMatchingResult();
-    explicit ExtendedMatchingResult(size_t num_observables);
-
-    bool operator==(const ExtendedMatchingResult& rhs) const;
-
-    bool operator!=(const ExtendedMatchingResult& rhs) const;
-
-    ExtendedMatchingResult(std::vector<uint8_t> obs_crossed, total_weight_int weight);
-
-    void reset();
-
-    ExtendedMatchingResult& operator+=(const ExtendedMatchingResult& rhs);
-    ExtendedMatchingResult operator+(const ExtendedMatchingResult& rhs) const;
-};
-
 struct Mwpm {
     GraphFlooder flooder;
     Arena<AltTreeNode> node_arena;
@@ -51,7 +33,7 @@ struct Mwpm {
     explicit Mwpm(GraphFlooder flooder);
     Mwpm(GraphFlooder flooder, SearchFlooder search_flooder);
     Mwpm(Mwpm&& other) noexcept;
-    Mwpm &operator=(Mwpm&& other) noexcept;
+    Mwpm& operator=(Mwpm&& other) noexcept;
 
     AltTreeNode* make_child(
         AltTreeNode& parent,
