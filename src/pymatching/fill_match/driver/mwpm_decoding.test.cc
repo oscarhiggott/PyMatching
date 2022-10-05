@@ -217,7 +217,7 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
     }
 }
 
-TEST(MwpmDecoding, NoValidSolution) {
+TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     size_t num_nodes = 5;
     auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)));
     auto& g = mwpm.flooder.graph;
@@ -225,4 +225,40 @@ TEST(MwpmDecoding, NoValidSolution) {
         g.add_edge(i, (i + 1) % num_nodes, 2, {i});
     pm::ExtendedMatchingResult res(num_nodes);
     EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::runtime_error);
+}
+
+TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
+    auto shots_in = std::fopen(find_test_data_file("toric_code_unrotated_memory_x_5_0.005_1000.b8").c_str(), "r");
+    auto dem_file = std::fopen(find_test_data_file("toric_code_unrotated_memory_x_5_0.005.dem").c_str(), "r");
+
+    assert(shots_in);
+    assert(dem_file);
+    stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
+    fclose(dem_file);
+    size_t num_distinct_weights = 1000;
+
+    auto reader = stim::MeasureRecordReader::make(
+        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+
+    stim::SparseShot sparse_shot;
+    size_t num_shots = 0;
+    size_t max_shots = 3;
+    while (reader->start_and_read_entire_record(sparse_shot)) {
+        if (num_shots > max_shots)
+            break;
+        auto& detection_events = sparse_shot.hits;
+        // Flip detector 0. detection_events should already be sorted.
+        if (detection_events.empty() || detection_events[0] != 0) {
+            detection_events.push_back(0);
+        } else if (!detection_events.empty() && detection_events[0] == 0) {
+            detection_events.erase(detection_events.begin());
+        }
+        auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
+        EXPECT_THROW(
+            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);,
+            std::runtime_error
+            );
+        sparse_shot.clear();
+        num_shots++;
+    }
 }
