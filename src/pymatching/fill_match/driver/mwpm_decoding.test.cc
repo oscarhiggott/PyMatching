@@ -236,13 +236,13 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
     size_t num_distinct_weights = 1000;
-
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
     auto reader = stim::MeasureRecordReader::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;
     size_t num_shots = 0;
-    size_t max_shots = 3;
+    size_t max_shots = 10;
     while (reader->start_and_read_entire_record(sparse_shot)) {
         if (num_shots > max_shots)
             break;
@@ -253,7 +253,6 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
         } else if (!detection_events.empty() && detection_events[0] == 0) {
             detection_events.erase(detection_events.begin());
         }
-        auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
         EXPECT_THROW(
             pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);,
             std::runtime_error

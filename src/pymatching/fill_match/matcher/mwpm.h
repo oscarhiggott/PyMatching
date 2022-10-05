@@ -68,6 +68,7 @@ struct Mwpm {
     void verify_invariants() const;
 
     void create_detection_event(DetectorNode* node);
+    void reset();
 };
 }  // namespace pm
 

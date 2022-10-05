@@ -453,3 +453,12 @@ void Mwpm::extract_paths_from_match_edges(
 }
 Mwpm::Mwpm() {
 }
+
+void Mwpm::reset() {
+    for (auto& n : flooder.graph.nodes)
+        n.reset();
+    for (auto& m : search_flooder.graph.nodes)
+        m.reset();
+    node_arena.~Arena();
+    flooder.region_arena.~Arena();
+}
