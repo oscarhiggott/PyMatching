@@ -643,4 +643,8 @@ def test_load_from_dem():
     assert m.num_detectors == dem.num_detectors
     assert m.num_fault_ids == dem.num_observables
     assert m.num_edges == 502
+    m2 = Matching(dem)
+    assert m2.num_detectors == dem.num_detectors
+    assert m2.num_fault_ids == dem.num_observables
+    assert m2.num_edges == 502
 
