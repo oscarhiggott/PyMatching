@@ -25,6 +25,8 @@ class UserNode {
     std::vector<UserNodeNeighbor> neighbors;  /// The node's neighbors.
 };
 
+typedef std::tuple<size_t,size_t,std::vector<size_t>,double, double> edge_data;
+
 class UserGraph {
    public:
     std::vector<UserNode> nodes;
@@ -40,14 +42,18 @@ class UserGraph {
     size_t get_num_observables();
     size_t get_num_nodes();
     size_t get_num_detectors();
+    size_t get_num_edges();
     bool is_boundary_node(size_t node_id);
     pm::IntermediateWeightedGraph to_intermediate_weighted_graph();
     void update_mwpm();
     Mwpm& get_mwpm();
     void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
+    bool all_edges_have_error_probabilities();
+    std::vector<edge_data> get_edges();
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;
+    size_t _num_edges;
     bool _mwpm_needs_updating;
     bool _all_edges_have_error_probabilities;
 };

@@ -19,6 +19,8 @@ void pm::UserGraph::add_edge(
         if (obs + 1 > _num_observables)
             _num_observables = obs + 1;
     }
+
+    _num_edges++;
     _mwpm_needs_updating = true;
 
     if (error_probability < 0 || error_probability > 1)
@@ -37,6 +39,8 @@ void pm::UserGraph::add_boundary_edge(
         if (obs + 1 > _num_observables)
             _num_observables = obs + 1;
     }
+
+    _num_edges++;
     _mwpm_needs_updating = true;
 
     if (error_probability < 0 || error_probability > 1)
@@ -44,11 +48,11 @@ void pm::UserGraph::add_boundary_edge(
 }
 
 pm::UserGraph::UserGraph()
-    : _num_observables(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
+    : _num_observables(0), _num_edges(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
 }
 
 pm::UserGraph::UserGraph(size_t num_nodes)
-    : _num_observables(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
+    : _num_observables(0), _num_edges(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
     nodes.resize(num_nodes);
 }
 
@@ -142,4 +146,31 @@ void pm::UserGraph::add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const {
 
     for (auto& b : boundary_nodes)
         *(syndrome_arr + b) = 0;
+}
+
+size_t pm::UserGraph::get_num_edges() {
+    return _num_edges;
+}
+
+bool pm::UserGraph::all_edges_have_error_probabilities() {
+    return _all_edges_have_error_probabilities;
+}
+std::vector<pm::edge_data> pm::UserGraph::get_edges() {
+    std::vector<pm::edge_data> edges;
+    for (size_t i = 0; i < nodes.size(); i++) {
+        for (size_t j = 0; j < nodes[i].neighbors.size(); j++) {
+            auto n = nodes[i].neighbors[j];
+            size_t v = n.node;
+            if (i < v) {
+                double p;
+                if (n.error_probability < 0 || n.error_probability > 1) {
+                    p = -1.0;
+                } else {
+                    p = n.error_probability;
+                }
+                edges.push_back({i, v, n.observable_indices, n.weight, p});
+            }
+        }
+    }
+    return edges;
 }

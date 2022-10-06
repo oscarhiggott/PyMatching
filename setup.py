@@ -24,4 +24,5 @@ setup(
     include_package_data=True,
     extras_require={"test": ["pytest"]},
     python_requires=">=3.6",
+    install_requires=["networkx", "retworkx", "stim"]
 )

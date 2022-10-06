@@ -104,6 +104,7 @@ pm::SearchGraph pm::IntermediateWeightedGraph::to_search_graph(pm::weight_int nu
         });
     return search_graph;
 }
+
 pm::Mwpm pm::IntermediateWeightedGraph::to_mwpm(pm::weight_int num_distinct_weights) {
     if (num_observables > sizeof(pm::obs_int) * 8) {
         auto mwpm = pm::Mwpm(
