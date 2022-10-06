@@ -75,6 +75,7 @@ void pm::UserGraph::add_or_merge_boundary_edge(
                 _num_observables = obs + 1;
         }
         _num_edges++;
+        _has_pseudo_boundary_node = true;
     } else {
         auto& neighbor = nodes[node].neighbors[idx];
         double new_weight = pm::merge_weights(neighbor.weight, weight);
@@ -95,11 +96,19 @@ void pm::UserGraph::add_or_merge_boundary_edge(
 }
 
 pm::UserGraph::UserGraph()
-    : _num_observables(0), _num_edges(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
+    : _num_observables(0),
+      _num_edges(0),
+      _mwpm_needs_updating(true),
+      _all_edges_have_error_probabilities(true),
+      _has_pseudo_boundary_node(false) {
 }
 
 pm::UserGraph::UserGraph(size_t num_nodes)
-    : _num_observables(0), _num_edges(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
+    : _num_observables(0),
+      _num_edges(0),
+      _mwpm_needs_updating(true),
+      _all_edges_have_error_probabilities(true),
+      _has_pseudo_boundary_node(false) {
     nodes.resize(num_nodes);
 }
 
@@ -107,7 +116,8 @@ pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables)
     : _num_observables(num_observables),
       _num_edges(0),
       _mwpm_needs_updating(true),
-      _all_edges_have_error_probabilities(true) {
+      _all_edges_have_error_probabilities(true),
+      _has_pseudo_boundary_node(false) {
     nodes.resize(num_nodes);
 }
 
@@ -117,7 +127,10 @@ void pm::UserGraph::set_boundary(const std::set<size_t>& boundary) {
 }
 
 std::set<size_t> pm::UserGraph::get_boundary() {
-    return boundary_nodes;
+    std::set<size_t> b = boundary_nodes;
+    if (_has_pseudo_boundary_node)
+        b.insert(nodes.size());
+    return b;
 }
 
 pm::IntermediateWeightedGraph pm::UserGraph::to_intermediate_weighted_graph() {
@@ -217,6 +230,8 @@ std::vector<pm::edge_data> pm::UserGraph::get_edges() {
                 } else {
                     p = n.error_probability;
                 }
+                if (v == SIZE_MAX)
+                    v = nodes.size();  // Virtual boundary node has an index one larger than the largest current index
                 edges.push_back({i, v, n.observable_indices, n.weight, p});
             }
         }

@@ -66,6 +66,7 @@ class UserGraph {
     size_t _num_edges;
     bool _mwpm_needs_updating;
     bool _all_edges_have_error_probabilities;
+    bool _has_pseudo_boundary_node;
 };
 
 template <typename EdgeCallable, typename BoundaryEdgeCallable>

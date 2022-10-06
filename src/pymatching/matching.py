@@ -146,7 +146,7 @@ class Matching:
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
             """
-        self.matching_graph = MatchingGraph()
+        self._matching_graph = MatchingGraph()
         if H is None:
             return
         if not isinstance(H, (nx.Graph, rx.PyGraph)):
@@ -163,7 +163,7 @@ class Matching:
         else:
             self.load_from_retworkx(H)
         if precompute_shortest_paths:
-            self.matching_graph.compute_all_pairs_shortest_paths()
+            self._matching_graph.compute_all_pairs_shortest_paths()
 
     def add_edge(
             self,
@@ -228,8 +228,8 @@ class Matching:
         fault_ids = set() if fault_ids is None else fault_ids
         has_error_probability = error_probability is not None
         error_probability = error_probability if has_error_probability else -1
-        self.matching_graph.add_edge(node1, node2, list(fault_ids), weight,
-                                     error_probability, has_error_probability)
+        self._matching_graph.add_edge(node1, node2, list(fault_ids), weight,
+                                      error_probability)
 
     def load_from_networkx(self, graph: nx.Graph) -> None:
         r"""
@@ -272,7 +272,8 @@ class Matching:
         boundary = _find_boundary_nodes(graph)
         num_nodes = graph.number_of_nodes()
         all_fault_ids = set()
-        g = MatchingGraph(self.num_detectors, boundary)
+        g = MatchingGraph(num_nodes)
+        g.set_boundary(boundary)
         for (u, v, attr) in graph.edges(data=True):
             u, v = int(u), int(v)
             if "fault_ids" in attr and "qubit_id" in attr:
@@ -295,10 +296,10 @@ class Matching:
                         "fault_ids property must be an int or a set of int" \
                         " (or convertible to a set), not {}".format(fault_ids))
             all_fault_ids = all_fault_ids | fault_ids
-            weight = attr.get("weight", 1) # Default weight is 1 if not provided
+            weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
-        self.matching_graph = g
+            g.add_edge(u, v, list(fault_ids), weight, e_prob)
+        self._matching_graph = g
 
     def load_from_retworkx(self, graph: rx.PyGraph) -> None:
         r"""
@@ -339,7 +340,8 @@ class Matching:
             raise TypeError("G must be a retworkx graph")
         boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
         num_nodes = len(graph)
-        g = MatchingGraph(self.num_detectors, boundary)
+        g = MatchingGraph(num_nodes)
+        g.set_boundary(boundary)
         for (u, v, attr) in graph.weighted_edge_list():
             u, v = int(u), int(v)
             if "fault_ids" in attr and "qubit_id" in attr:
@@ -363,8 +365,8 @@ class Matching:
                         " (or convertible to a set), not {}".format(fault_ids))
             weight = attr.get("weight", 1) # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, fault_ids, weight, e_prob, 0 <= e_prob <= 1)
-        self.matching_graph = g
+            g.add_edge(u, v, list(fault_ids), weight, e_prob)
+        self._matching_graph = g
 
     def load_from_check_matrix(self,
                                H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
@@ -495,19 +497,19 @@ class Matching:
             raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
 
         boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
-        self.matching_graph = MatchingGraph(H.shape[0] * repetitions)
-        self.matching_graph.set_boundary(boundary=boundary)
+        self._matching_graph = MatchingGraph(H.shape[0] * repetitions)
+        self._matching_graph.set_boundary(boundary=boundary)
         for t in range(repetitions):
             for i in range(len(H.indptr) - 1):
                 s, e = H.indptr[i:i + 2]
                 v1 = H.indices[s] + H.shape[0] * t
                 v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else next(iter(boundary))
-                self.matching_graph.add_edge(v1, v2, [i], weights[i],
-                                             error_probabilities[i])
+                self._matching_graph.add_edge(v1, v2, [i], weights[i],
+                                              error_probabilities[i])
         for t in range(repetitions - 1):
             for i in range(H.shape[0]):
-                self.matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
-                                             [], timelike_weights[i], p_meas[i])
+                self._matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
+                                              [], timelike_weights[i], p_meas[i])
 
     def set_boundary_nodes(self, nodes: Set[int]) -> None:
         """
@@ -529,7 +531,7 @@ class Matching:
         >>> m
         <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
         """
-        self.matching_graph.set_boundary(nodes)
+        self._matching_graph.set_boundary(nodes)
 
     @property
     def num_fault_ids(self) -> int:
@@ -540,7 +542,7 @@ class Matching:
         int
             Number of fault IDs
         """
-        return self.matching_graph.get_num_observables()
+        return self._matching_graph.get_num_observables()
 
     @property
     def boundary(self) -> Set[int]:
@@ -554,7 +556,7 @@ class Matching:
         set of int
             The indices of the boundary nodes
         """
-        return self.matching_graph.get_boundary()
+        return self._matching_graph.get_boundary()
 
     @property
     def num_nodes(self) -> int:
@@ -565,7 +567,7 @@ class Matching:
         int
             The number of nodes
         """
-        return self.matching_graph.get_num_nodes()
+        return self._matching_graph.get_num_nodes()
 
     @property
     def num_edges(self) -> int:
@@ -576,7 +578,7 @@ class Matching:
         int
             The number of edges
         """
-        return self.matching_graph.get_num_edges()
+        return self._matching_graph.get_num_edges()
 
     @property
     def num_detectors(self) -> int:
@@ -715,7 +717,7 @@ class Matching:
             defects = times*z.shape[0] + checks
         else:
             raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
-        correction, weight = self.matching_graph.decode(defects)
+        correction, weight = self._matching_graph.decode(defects)
         if return_weight:
             return correction, weight
         else:
@@ -736,9 +738,9 @@ class Matching:
             self.num_detectors if there is no boundary, or self.num_detectors+len(self.boundary)
             if there are boundary nodes)
         """
-        if not self.matching_graph.all_edges_have_error_probabilities():
+        if not self._matching_graph.all_edges_have_error_probabilities():
             return None
-        return self.matching_graph.add_noise()
+        return self._matching_graph.add_noise()
 
     def edges(self) -> List[Tuple[int, int, Dict]]:
         """Edges of the matching graph
@@ -754,7 +756,7 @@ class Matching:
         List of (int, int, dict) tuples
             A list of edges of the matching graph
         """
-        edata = self.matching_graph.get_edges()
+        edata = self._matching_graph.get_edges()
         return [
             (
                 e[0],
@@ -841,7 +843,7 @@ class Matching:
     def __repr__(self) -> str:
         M = self.num_detectors
         B = len(self.boundary)
-        E = self.matching_graph.get_num_edges()
+        E = self._matching_graph.get_num_edges()
         return "<pymatching.Matching object with " \
                "{} detector{}, " \
                "{} boundary node{}, " \

@@ -32,7 +32,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     g.def("get_num_nodes", &pm::UserGraph::get_num_nodes);
     g.def("get_num_edges", &pm::UserGraph::get_num_edges);
     g.def("get_num_detectors", &pm::UserGraph::get_num_detectors);
-    g.def("all_edges_have_error_probabilites", &pm::UserGraph::all_edges_have_error_probabilities);
+    g.def("all_edges_have_error_probabilities", &pm::UserGraph::all_edges_have_error_probabilities);
     g.def("add_noise", [](pm::UserGraph &self) {
         auto error_vec = new std::vector<uint8_t>(self.get_num_observables(), 0);
         auto syndrome_vec = new std::vector<uint8_t>(self.get_num_nodes(), 0);
