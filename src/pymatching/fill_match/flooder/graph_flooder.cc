@@ -7,7 +7,8 @@
 
 using namespace pm;
 
-GraphFlooder::GraphFlooder(MatchingGraph graph) : graph(std::move(graph)) {
+GraphFlooder::GraphFlooder(MatchingGraph graph)
+    : graph(std::move(graph)), negative_weight_obs_mask(0), negative_weight_sum(0) {
 }
 
 GraphFlooder::GraphFlooder(GraphFlooder &&flooder) noexcept
@@ -17,7 +18,8 @@ GraphFlooder::GraphFlooder(GraphFlooder &&flooder) noexcept
       match_edges(std::move(flooder.match_edges)),
       negative_weight_detection_events(std::move(flooder.negative_weight_detection_events)),
       negative_weight_observables(std::move(flooder.negative_weight_observables)),
-      negative_weight_obs_mask(flooder.negative_weight_obs_mask) {
+      negative_weight_obs_mask(flooder.negative_weight_obs_mask),
+      negative_weight_sum(flooder.negative_weight_sum) {
 }
 
 void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &region, DetectorNode &detector_node) {
@@ -340,5 +342,5 @@ void GraphFlooder::sync_negative_weight_observables_and_detection_events() {
     negative_weight_sum = graph.negative_weight_sum;
 }
 
-GraphFlooder::GraphFlooder() {
+GraphFlooder::GraphFlooder() : negative_weight_obs_mask(0), negative_weight_sum(0) {
 }

@@ -604,3 +604,27 @@ def test_set_boundary_nodes():
     m = Matching([[1, 1, 0], [0, 1, 1]])
     m.set_boundary_nodes({1, 2, 4})
     assert m.boundary == {1, 2, 4}
+
+
+def repetition_code(n):
+    row_ind, col_ind = zip(*((i, j) for i in range(n) for j in (i, (i + 1) % n)))
+    data = np.ones(2 * n, dtype=np.uint8)
+    return csr_matrix((data, (row_ind, col_ind)))
+
+
+weight_fixtures = [
+    10, 15, 20, 100
+]
+
+
+@pytest.mark.parametrize("n", weight_fixtures)
+def test_matching_weight(n):
+    p = 0.4
+    H = repetition_code(n)
+    noise = np.random.rand(n) < p
+    weights = np.random.rand(n)
+    s = H @ noise % 2
+    m = Matching(H, spacelike_weights=weights)
+    corr, weight = m.decode(s, return_weight=True)
+    expected_weight = np.sum(weights[corr == 1])
+    assert expected_weight == pytest.approx(weight, rel=0.001)

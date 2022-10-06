@@ -19,13 +19,13 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     g.def(
         "add_edge",
         &pm::UserGraph::add_or_merge_edge, "node1"_a, "node2"_a, "observables"_a, "weight"_a, "error_probability"_a);
-//    g.def(
-//        "add_boundary_edge",
-//        &pm::UserGraph::add_boundary_edge,
-//        "node"_a,
-//        "observables"_a,
-//        "weight"_a,
-//        "error_probability"_a);
+    g.def(
+        "add_boundary_edge",
+        &pm::UserGraph::add_or_merge_boundary_edge,
+        "node"_a,
+        "observables"_a,
+        "weight"_a,
+        "error_probability"_a);
     g.def("set_boundary", &pm::UserGraph::set_boundary, "boundary"_a);
     g.def("get_boundary", &pm::UserGraph::get_boundary);
     g.def("get_num_observables", &pm::UserGraph::get_num_observables);
@@ -56,7 +56,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             detection_events.data(), detection_events.data() + detection_events.size());
         auto &mwpm = self.get_mwpm();
         auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
-        pm::total_weight_int weight;
+        pm::total_weight_int weight = 0;
         pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight);
         double rescaled_weight = (double)weight / mwpm.flooder.graph.normalising_constant;
 
