@@ -84,7 +84,8 @@ MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
     : nodes(std::move(graph.nodes)),
       num_nodes(graph.num_nodes),
       num_observables(graph.num_observables),
-      negative_weight_sum(graph.negative_weight_sum) {
+      negative_weight_sum(graph.negative_weight_sum),
+      normalising_constant(graph.normalising_constant) {
 }
 
 MatchingGraph::MatchingGraph() : num_nodes(0), num_observables(0), negative_weight_sum(0), normalising_constant(0) {

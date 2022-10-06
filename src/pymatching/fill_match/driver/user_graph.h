@@ -22,6 +22,7 @@ struct UserNodeNeighbor {
 class UserNode {
    public:
     UserNode();
+    size_t index_of_neighbor(size_t node);
     std::vector<UserNodeNeighbor> neighbors;  /// The node's neighbors.
 };
 
@@ -35,8 +36,8 @@ class UserGraph {
     UserGraph();
     explicit UserGraph(size_t num_nodes);
     UserGraph(size_t num_nodes, size_t num_observables);
-    void add_edge(size_t node1, size_t node2, const std::vector<size_t>& observables, double weight, double error_probability);
-    void add_boundary_edge(size_t node, const std::vector<size_t>& observables, double weight, double error_probability);
+    void add_or_merge_edge(size_t node1, size_t node2, const std::vector<size_t>& observables, double weight, double error_probability);
+    void add_or_merge_boundary_edge(size_t node, const std::vector<size_t>& observables, double weight, double error_probability);
     void set_boundary(const std::set<size_t>& boundary);
     std::set<size_t> get_boundary();
     size_t get_num_observables();
@@ -50,6 +51,15 @@ class UserGraph {
     void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
     bool all_edges_have_error_probabilities();
     std::vector<edge_data> get_edges();
+    double max_abs_weight();
+    template <typename EdgeCallable, typename BoundaryEdgeCallable>
+    double iter_discretized_edges(
+        pm::weight_int num_distinct_weights,
+        const EdgeCallable &edge_func,
+        const BoundaryEdgeCallable &boundary_edge_func);
+    pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
+    pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
+    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights);
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;
@@ -57,6 +67,39 @@ class UserGraph {
     bool _mwpm_needs_updating;
     bool _all_edges_have_error_probabilities;
 };
+
+template <typename EdgeCallable, typename BoundaryEdgeCallable>
+inline double UserGraph::iter_discretized_edges(
+    pm::weight_int num_distinct_weights,
+    const EdgeCallable &edge_func,
+    const BoundaryEdgeCallable &boundary_edge_func) {
+    double max_weight = max_abs_weight();
+    pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
+    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
+    double normalising_constant = (double) max_half_edge_weight / max_weight;
+    for (auto &node : nodes) {
+        for (auto &neighbor : node.neighbors) {
+            auto i = &node - &nodes[0];
+            pm::signed_weight_int w = (pm::signed_weight_int) (neighbor.weight * normalising_constant);
+
+            // Extremely important!
+            // If all edge weights are even integers, then all collision events occur at integer times.
+            w *= 2;
+            if (neighbor.node > i) {
+                bool i_boundary = is_boundary_node(i);
+                bool neighbor_boundary = is_boundary_node(neighbor.node);
+                if (neighbor_boundary && !i_boundary) {
+                    boundary_edge_func(i, w, neighbor.observable_indices);
+                } else if (i_boundary && !neighbor_boundary) {
+                    boundary_edge_func(neighbor.node, w, neighbor.observable_indices);
+                } else if (!i_boundary) {
+                    edge_func(i, neighbor.node, w, neighbor.observable_indices);
+                }
+            }
+        }
+    }
+    return normalising_constant * 2;
+}
 
 }  // namespace pm
 

@@ -17,7 +17,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     g.def(py::init<>());
     g.def(py::init<size_t>(), "num_nodes"_a);
     g.def(
-        "add_edge", &pm::UserGraph::add_edge, "node1"_a, "node2"_a, "observables"_a, "weight"_a, "error_probability"_a);
+        "add_edge",
+        &pm::UserGraph::add_or_merge_edge, "node1"_a, "node2"_a, "observables"_a, "weight"_a, "error_probability"_a);
 //    g.def(
 //        "add_boundary_edge",
 //        &pm::UserGraph::add_boundary_edge,
