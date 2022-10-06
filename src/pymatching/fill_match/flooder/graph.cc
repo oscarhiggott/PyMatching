@@ -82,6 +82,8 @@ MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables, double no
 
 MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
     : nodes(std::move(graph.nodes)),
+      negative_weight_observables_set(std::move(graph.negative_weight_observables_set)),
+      negative_weight_detection_events_set(std::move(graph.negative_weight_detection_events_set)),
       num_nodes(graph.num_nodes),
       num_observables(graph.num_observables),
       negative_weight_sum(graph.negative_weight_sum),

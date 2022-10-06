@@ -326,10 +326,12 @@ MwpmEvent GraphFlooder::run_until_next_mwpm_notification() {
 
 void GraphFlooder::sync_negative_weight_observables_and_detection_events() {
     /// Move set of negative weight detection events into a sorted vector, for faster processing during decoding
+    negative_weight_detection_events.clear();
     negative_weight_detection_events.reserve(graph.negative_weight_detection_events_set.size());
     for (auto &det : graph.negative_weight_detection_events_set)
         negative_weight_detection_events.push_back(det);
     /// Move set of negative weight observable indices into a sorted vector, for faster processing during decoding
+    negative_weight_observables.clear();
     negative_weight_observables.reserve(graph.negative_weight_observables_set.size());
     for (auto &obs : graph.negative_weight_observables_set)
         negative_weight_observables.push_back(obs);
