@@ -19,6 +19,7 @@ import pytest
 import networkx as nx
 import retworkx as rx
 import matplotlib.pyplot as plt
+import stim
 
 from pymatching._cpp_pymatching import MatchingGraph
 from pymatching import Matching
@@ -628,3 +629,18 @@ def test_matching_weight(n):
     corr, weight = m.decode(s, return_weight=True)
     expected_weight = np.sum(weights[corr == 1])
     assert expected_weight == pytest.approx(weight, rel=0.001)
+
+
+def test_load_from_dem():
+    c = stim.Circuit.generated("surface_code:rotated_memory_x", distance=5, rounds=5,
+                               after_clifford_depolarization=0.01,
+                               before_measure_flip_probability=0.01,
+                               after_reset_flip_probability=0.01,
+                               before_round_data_depolarization=0.01)
+    dem = c.detector_error_model(decompose_errors=True)
+    m = Matching()
+    m.load_from_detector_error_model(dem)
+    assert m.num_detectors == dem.num_detectors
+    assert m.num_fault_ids == dem.num_observables
+    assert m.num_edges == 502
+

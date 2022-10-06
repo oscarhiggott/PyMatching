@@ -20,9 +20,10 @@ import numpy as np
 import networkx as nx
 import retworkx as rx
 import scipy
+import stim
 from scipy.sparse import csc_matrix
 
-from pymatching._cpp_pymatching import MatchingGraph
+from pymatching._cpp_pymatching import MatchingGraph, detector_error_model_to_matching_graph
 
 
 def _find_boundary_nodes(graph: nx.Graph):
@@ -62,7 +63,6 @@ class Matching:
                  repetitions: int = None,
                  timelike_weights: Union[float, np.ndarray, List[float]] = None,
                  measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                 precompute_shortest_paths: bool = False,
                  **kwargs
                  ):
         r"""Constructor for the Matching class
@@ -121,12 +121,6 @@ class Matching:
             errors are set to the same value. If a numpy array of size `(H.shape[0],)` is given,
             the error probability for each vertical timelike edge associated with the `i`th check
             (row) of `H` is set to `measurement_error_probabilities[i]`. By default None
-        precompute_shortest_paths : bool, optional
-            It is almost always recommended to leave this as False. If
-            the exact matching is used for decoding (setting
-            `num_neighbours=None` in `decode`), then setting this option
-            to True will precompute the all-pairs shortest paths.
-            By default False
         Examples
         --------
         >>> import pymatching
@@ -150,7 +144,7 @@ class Matching:
         self._matching_graph = MatchingGraph()
         if H is None:
             return
-        if not isinstance(H, (nx.Graph, rx.PyGraph)):
+        if not isinstance(H, (nx.Graph, rx.PyGraph, stim.DetectorErrorModel)):
             try:
                 H = csc_matrix(H)
             except TypeError:
@@ -161,10 +155,10 @@ class Matching:
                                         **kwargs)
         elif isinstance(H, nx.Graph):
             self.load_from_networkx(H)
-        else:
+        elif isinstance(H, rx.PyGraph):
             self.load_from_retworkx(H)
-        if precompute_shortest_paths:
-            self._matching_graph.compute_all_pairs_shortest_paths()
+        elif isinstance(H, stim.DetectorErrorModel):
+            self.load_from_detector_error_model(H)
 
     def add_edge(
             self,
@@ -513,6 +507,9 @@ class Matching:
                 self._matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
                                               [], timelike_weights[i], p_meas[i])
 
+    def load_from_detector_error_model(self, model: stim.DetectorErrorModel) -> None:
+        self._matching_graph = detector_error_model_to_matching_graph(str(model))
+
     def set_boundary_nodes(self, nodes: Set[int]) -> None:
         """
         Set boundary nodes in the matching graph. This defines the
@@ -593,7 +590,7 @@ class Matching:
         int
             The number of detectors
         """
-        return self.num_nodes - len(self.boundary)
+        return self._matching_graph.get_num_detectors()
 
     def decode(self,
                z: Union[np.ndarray, List[int]],

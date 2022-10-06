@@ -76,7 +76,7 @@ class IntermediateWeightedGraph {
 
     void add_or_merge_boundary_edge(size_t u, double weight, const std::vector<size_t> &observables);
 
-    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, std::vector<size_t> &observables);
+    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, const std::vector<size_t> &observables);
 
     template <typename EdgeCallable, typename BoundaryEdgeCallable>
     double iter_discretized_edges(

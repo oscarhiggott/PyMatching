@@ -2,8 +2,8 @@
 #include "pymatching/fill_match/driver/user_graph.pybind.h"
 
 #include <pybind11/numpy.h>
-
 #include "pybind11/pybind11.h"
+#include "stim.h"
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 
 using namespace py::literals;
@@ -69,4 +69,9 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         return res;
     });
     g.def("get_edges", &pm::UserGraph::get_edges);
+
+    m.def("detector_error_model_to_matching_graph", [](const char *dem_string) {
+        auto dem = stim::DetectorErrorModel(dem_string);
+        return pm::detector_error_model_to_user_graph(dem);
+    });
 }

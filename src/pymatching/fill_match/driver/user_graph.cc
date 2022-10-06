@@ -165,7 +165,7 @@ size_t pm::UserGraph::get_num_nodes() {
 }
 
 size_t pm::UserGraph::get_num_detectors() {
-    return 0;
+    return get_num_nodes() - boundary_nodes.size();
 }
 
 bool pm::UserGraph::is_boundary_node(size_t node_id) {
@@ -298,4 +298,25 @@ pm::Mwpm pm::UserGraph::to_mwpm(pm::weight_int num_distinct_weights) {
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
         return mwpm;
     }
+}
+
+void pm::UserGraph::handle_dem_instruction(
+    double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables) {
+    if (detectors.size() == 2) {
+        add_or_merge_edge(detectors[0], detectors[1], observables, std::log((1 - p) / p), p);
+    } else if (detectors.size() == 1) {
+        add_or_merge_boundary_edge(detectors[0], observables, std::log((1 - p) / p), p);
+    }
+}
+
+pm::UserGraph pm::detector_error_model_to_user_graph(
+    const stim::DetectorErrorModel& detector_error_model) {
+    pm::UserGraph user_graph(
+        detector_error_model.count_detectors(), detector_error_model.count_observables());
+    pm::iter_detector_error_model_edges(
+        detector_error_model,
+        [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
+            user_graph.handle_dem_instruction(p, detectors, observables);
+        });
+    return user_graph;
 }

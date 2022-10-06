@@ -58,7 +58,7 @@ void pm::IntermediateWeightedGraph::add_or_merge_boundary_edge(
 }
 
 void pm::IntermediateWeightedGraph::handle_dem_instruction(
-    double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
+    double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables) {
     if (detectors.size() == 2) {
         add_or_merge_edge(detectors[0], detectors[1], std::log((1 - p) / p), observables);
     } else if (detectors.size() == 1) {

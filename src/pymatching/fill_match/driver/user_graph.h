@@ -60,6 +60,7 @@ class UserGraph {
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
     pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights);
+    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, const std::vector<size_t> &observables);
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;
@@ -101,6 +102,9 @@ inline double UserGraph::iter_discretized_edges(
     }
     return normalising_constant * 2;
 }
+
+UserGraph detector_error_model_to_user_graph(
+    const stim::DetectorErrorModel& detector_error_model);
 
 }  // namespace pm
 
