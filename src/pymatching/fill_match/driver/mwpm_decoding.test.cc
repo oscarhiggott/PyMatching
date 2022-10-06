@@ -224,7 +224,7 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     for (size_t i = 0; i < num_nodes; i++)
         g.add_edge(i, (i + 1) % num_nodes, 2, {i});
     pm::ExtendedMatchingResult res(num_nodes);
-    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::runtime_error);
+    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::invalid_argument);
 }
 
 TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
@@ -255,7 +255,7 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
         }
         EXPECT_THROW(
             pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);,
-            std::runtime_error
+            std::invalid_argument
             );
         sparse_shot.clear();
         num_shots++;

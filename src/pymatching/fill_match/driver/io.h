@@ -26,6 +26,33 @@ namespace pm {
 /// details.
 double merge_weights(double a, double b);
 
+template <typename Handler>
+void iter_detector_error_model_edges(
+    const stim::DetectorErrorModel& detector_error_model,
+    const Handler &handle_dem_error) {
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction& instruction) {
+        std::vector<size_t> dets;
+        std::vector<size_t> observables;
+        double p = instruction.arg_data[0];
+        for (auto& target : instruction.target_data) {
+            if (target.is_relative_detector_id()) {
+                dets.push_back(target.val());
+            } else if (target.is_observable_id()) {
+                observables.push_back(target.val());
+            } else if (target.is_separator()) {
+                if (p > 0) {
+                    handle_dem_error(p, dets, observables);
+                    observables.clear();
+                    dets.clear();
+                }
+            }
+        }
+        if (p > 0) {
+            handle_dem_error(p, dets, observables);
+        }
+    });
+}
+
 struct Neighbor {
     std::vector<Neighbor> *node;
     bool operator==(const Neighbor &rhs) const;

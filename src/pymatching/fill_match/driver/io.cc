@@ -123,27 +123,11 @@ pm::IntermediateWeightedGraph pm::detector_error_model_to_weighted_graph(
     const stim::DetectorErrorModel& detector_error_model) {
     pm::IntermediateWeightedGraph weighted_graph(
         detector_error_model.count_detectors(), detector_error_model.count_observables());
-    detector_error_model.iter_flatten_error_instructions([&weighted_graph](const stim::DemInstruction& instruction) {
-        std::vector<size_t> dets;
-        std::vector<size_t> observables;
-        double p = instruction.arg_data[0];
-        for (auto& target : instruction.target_data) {
-            if (target.is_relative_detector_id()) {
-                dets.push_back(target.val());
-            } else if (target.is_observable_id()) {
-                observables.push_back(target.val());
-            } else if (target.is_separator()) {
-                if (p > 0) {
-                    weighted_graph.handle_dem_instruction(p, dets, observables);
-                    observables.clear();
-                    dets.clear();
-                }
-            }
-        }
-        if (p > 0) {
-            weighted_graph.handle_dem_instruction(p, dets, observables);
-        }
-    });
+    pm::iter_detector_error_model_edges(
+        detector_error_model,
+        [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
+            weighted_graph.handle_dem_instruction(p, detectors, observables);
+        });
     return weighted_graph;
 }
 
