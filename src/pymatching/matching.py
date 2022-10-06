@@ -139,6 +139,7 @@ class Matching:
         >>> m.set_boundary_nodes({3})
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
+
         Matching objects can also be created from a check matrix (provided as a scipy.sparse matrix,
         dense numpy array, or list of lists):
         >>> import pymatching
@@ -424,6 +425,7 @@ class Matching:
         >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
+
         Matching objects can also be initialised from a sparse scipy matrix:
         >>> import pymatching
         >>> from scipy.sparse import csc_matrix
@@ -656,13 +658,15 @@ class Matching:
         --------
         >>> import pymatching
         >>> import numpy as np
-        >>> H = np.array([[1, 1, 0, 0],
-        ...               [0, 1, 1, 0],
-        ...               [0, 0, 1, 1]])
+        >>> H = np.array([[1, 1, 0, 0, 0],
+        ...               [0, 1, 1, 0, 0],
+        ...               [0, 0, 1, 1, 0],
+        ...               [0, 0, 0, 1, 1]])
         >>> m = pymatching.Matching(H)
-        >>> z = np.array([0, 1, 0])
+        >>> z = np.array([0, 1, 0, 0])
         >>> m.decode(z)
-        array([1, 1, 0, 0], dtype=uint8)
+        array([1, 1, 0, 0, 0], dtype=uint8)
+
         Each bit in the correction provided by Matching.decode corresponds to a
         fault_ids. The index of a bit in a correction corresponds to its fault_ids.
         For example, here an error on edge (0, 1) flips fault_ids 2 and 3, as
@@ -674,6 +678,7 @@ class Matching:
         >>> m.add_edge(2, 0, fault_ids=0)
         >>> m.decode([1, 1, 0])
         array([0, 0, 1, 1], dtype=uint8)
+
         To decode with a phenomenological noise model (qubits and measurements both suffering
         bit-flip errors), you can provide a check matrix and number of syndrome repetitions to
         construct a matching graph with a time dimension (where nodes in consecutive time steps
