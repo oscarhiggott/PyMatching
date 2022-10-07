@@ -173,7 +173,7 @@ bool pm::UserGraph::is_boundary_node(size_t node_id) {
 }
 
 void pm::UserGraph::update_mwpm() {
-    _mwpm = std::move(to_mwpm(1 << 14));
+    _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH, false);
     _mwpm_needs_updating = false;
 }
 
@@ -286,8 +286,8 @@ pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weigh
     return search_graph;
 }
 
-pm::Mwpm pm::UserGraph::to_mwpm(pm::weight_int num_distinct_weights) {
-    if (_num_observables > sizeof(pm::obs_int) * 8) {
+pm::Mwpm pm::UserGraph::to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_graph_included) {
+    if (_num_observables > sizeof(pm::obs_int) * 8 || ensure_search_graph_included) {
         auto mwpm = pm::Mwpm(
             pm::GraphFlooder(to_matching_graph(num_distinct_weights)),
             pm::SearchFlooder(to_search_graph(num_distinct_weights)));
@@ -297,6 +297,16 @@ pm::Mwpm pm::UserGraph::to_mwpm(pm::weight_int num_distinct_weights) {
         auto mwpm = pm::Mwpm(pm::GraphFlooder(to_matching_graph(num_distinct_weights)));
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
         return mwpm;
+    }
+}
+
+pm::Mwpm& pm::UserGraph::get_mwpm_with_search_graph() {
+    if (!_mwpm_needs_updating && _mwpm.flooder.graph.nodes.size() == _mwpm.search_flooder.graph.nodes.size()) {
+        return _mwpm;
+    } else {
+        _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH, true);
+        _mwpm_needs_updating = false;
+        return _mwpm;
     }
 }
 

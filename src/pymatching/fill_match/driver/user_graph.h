@@ -28,6 +28,8 @@ class UserNode {
 
 typedef std::tuple<size_t,size_t,std::vector<size_t>,double, double> edge_data;
 
+const pm::weight_int NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH = 1 << 14;
+
 class UserGraph {
    public:
     std::vector<UserNode> nodes;
@@ -46,8 +48,6 @@ class UserGraph {
     size_t get_num_edges();
     bool is_boundary_node(size_t node_id);
     pm::IntermediateWeightedGraph to_intermediate_weighted_graph();
-    void update_mwpm();
-    Mwpm& get_mwpm();
     void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
     bool all_edges_have_error_probabilities();
     std::vector<edge_data> get_edges();
@@ -59,7 +59,10 @@ class UserGraph {
         const BoundaryEdgeCallable &boundary_edge_func);
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
-    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights);
+    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_graph_included);
+    void update_mwpm();
+    Mwpm& get_mwpm();
+    Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t> &detectors, const std::vector<size_t> &observables);
    private:
     pm::Mwpm _mwpm;

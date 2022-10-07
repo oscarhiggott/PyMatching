@@ -79,7 +79,7 @@ void pm::SearchFlooder::do_search_exploring_empty_detector_node(
     reschedule_events_at_search_detector_node(empty_node);
 }
 
-pm::CollisionEdge pm::SearchFlooder::do_look_at_node_event(pm::SearchDetectorNode &node) {
+pm::SearchGraphEdge pm::SearchFlooder::do_look_at_node_event(pm::SearchDetectorNode &node) {
     auto next = find_next_event_at_node_returning_neighbor_index_and_time(node);
     if (next.second == queue.cur_time) {
         auto dst = node.neighbors[next.first];
@@ -112,7 +112,7 @@ pm::CollisionEdge pm::SearchFlooder::do_look_at_node_event(pm::SearchDetectorNod
     return {nullptr, SIZE_MAX};
 }
 
-pm::CollisionEdge pm::SearchFlooder::run_until_collision(pm::SearchDetectorNode *src, pm::SearchDetectorNode *dst) {
+pm::SearchGraphEdge pm::SearchFlooder::run_until_collision(pm::SearchDetectorNode *src, pm::SearchDetectorNode *dst) {
     do_search_starting_at_empty_search_detector_node(src);
     if (!dst) {
         target_type = BOUNDARY;
@@ -125,37 +125,12 @@ pm::CollisionEdge pm::SearchFlooder::run_until_collision(pm::SearchDetectorNode 
         FloodCheckEvent ev = queue.dequeue();
         if (ev.data_look_at_search_node->node_event_tracker.dequeue_decision(ev, queue)) {
             auto collision_edge = do_look_at_node_event(*ev.data_look_at_search_node);
-            if (collision_edge.collision_node) {
+            if (collision_edge.detector_node) {
                 return collision_edge;
             }
         }
     }
     return {nullptr, SIZE_MAX};
-}
-
-void pm::SearchFlooder::trace_back_path_from_node(
-    pm::SearchDetectorNode *detector_node, uint8_t *obs_begin_ptr, pm::total_weight_int &weight) {
-    auto current_node = detector_node;
-    while (current_node->index_of_predecessor != SIZE_MAX) {
-        auto pred_idx = current_node->index_of_predecessor;
-        auto &obs = current_node->neighbor_observable_indices[pred_idx];
-        for (auto i : obs)
-            *(obs_begin_ptr + i) ^= 1;
-        weight += current_node->neighbor_weights[pred_idx];
-        current_node = current_node->neighbors[pred_idx];
-    }
-}
-
-void pm::SearchFlooder::trace_back_path_from_collision_edge(
-    pm::CollisionEdge collision_edge, uint8_t *obs_begin_ptr, pm::total_weight_int &weight) {
-    trace_back_path_from_node(collision_edge.collision_node, obs_begin_ptr, weight);
-    auto other_node = collision_edge.collision_node->neighbors[collision_edge.neighbor_index];
-    if (other_node)
-        trace_back_path_from_node(other_node, obs_begin_ptr, weight);
-    auto &obs = collision_edge.collision_node->neighbor_observable_indices[collision_edge.neighbor_index];
-    for (auto i : obs)
-        *(obs_begin_ptr + i) ^= 1;
-    weight += collision_edge.collision_node->neighbor_weights[collision_edge.neighbor_index];
 }
 
 void pm::SearchFlooder::reset_graph() {

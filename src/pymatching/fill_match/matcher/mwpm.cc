@@ -439,18 +439,17 @@ void Mwpm::verify_invariants() const {
 void Mwpm::extract_paths_from_match_edges(
     const std::vector<CompressedEdge> &match_edges, uint8_t *obs_begin_ptr, total_weight_int &weight) {
     for (auto &edge : match_edges) {
-        auto loc_from_ptr = &search_flooder.graph.nodes[edge.loc_from - &flooder.graph.nodes[0]];
-        SearchDetectorNode *loc_to_ptr;
-        if (edge.loc_to) {
-            loc_to_ptr = &search_flooder.graph.nodes[edge.loc_to - &flooder.graph.nodes[0]];
-        } else {
-            loc_to_ptr = nullptr;
-        }
-        auto collision_edge = search_flooder.run_until_collision(loc_from_ptr, loc_to_ptr);
-        search_flooder.trace_back_path_from_collision_edge(collision_edge, obs_begin_ptr, weight);
-        search_flooder.reset();
+        size_t loc_to_idx = edge.loc_to ? edge.loc_to - &flooder.graph.nodes[0] : SIZE_MAX;
+        search_flooder.iter_edges_on_shortest_path_from_middle(edge.loc_from - &flooder.graph.nodes[0], loc_to_idx,
+                                                               [&](const pm::SearchGraphEdge& e){
+           auto &obs = e.detector_node->neighbor_observable_indices[e.neighbor_index];
+           for (auto i : obs)
+               *(obs_begin_ptr + i) ^= 1;
+           weight += e.detector_node->neighbor_weights[e.neighbor_index];
+        });
     }
 }
+
 Mwpm::Mwpm() {
 }
 

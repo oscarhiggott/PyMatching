@@ -11,12 +11,17 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
         g.add_edge(i, i + 1, 2, {i + 1});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[1], &g.nodes[20]);
-    ASSERT_EQ(collision_edge.collision_node, &g.nodes[10]);
+    ASSERT_EQ(collision_edge.detector_node, &g.nodes[10]);
     ASSERT_EQ(collision_edge.neighbor_index, 1);
     ASSERT_EQ(flooder.target_type, pm::DETECTOR_NODE);
     std::vector<uint8_t> observables(num_nodes, 0);
     pm::total_weight_int weight = 0;
-    flooder.trace_back_path_from_collision_edge(collision_edge, observables.data(), weight);
+    flooder.iter_edges_tracing_back_from_collision_edge(collision_edge, [&](const pm::SearchGraphEdge& e) {
+        auto& obs = e.detector_node->neighbor_observable_indices[e.neighbor_index];
+        for (auto i : obs)
+            *(observables.data() + i) ^= 1;
+        weight += e.detector_node->neighbor_weights[e.neighbor_index];
+    });
     std::vector<uint8_t> expected_obs(num_nodes, 0);
     for (size_t i = 1; i < 20; i++)
         expected_obs[i + 1] ^= 1;
@@ -32,6 +37,7 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
         ASSERT_EQ(n.node_event_tracker.has_queued_time, false);
     }
     ASSERT_EQ(flooder.reached_nodes.size(), 0);
+    flooder.reset();
 }
 
 TEST(SearchFlooder, RepCodeBoundarySearch) {
@@ -43,15 +49,21 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
         g.add_edge(i, i + 1, 2, {i + 1});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[6], nullptr);
-    ASSERT_EQ(collision_edge.collision_node, &g.nodes[0]);
+    ASSERT_EQ(collision_edge.detector_node, &g.nodes[0]);
     ASSERT_EQ(collision_edge.neighbor_index, 0);
     ASSERT_EQ(flooder.target_type, pm::BOUNDARY);
     std::vector<uint8_t> observables(num_nodes, 0);
     pm::total_weight_int weight = 0;
-    flooder.trace_back_path_from_collision_edge(collision_edge, observables.data(), weight);
+    flooder.iter_edges_tracing_back_from_collision_edge(collision_edge, [&](const pm::SearchGraphEdge& e) {
+        auto& obs = e.detector_node->neighbor_observable_indices[e.neighbor_index];
+        for (auto i : obs)
+            *(observables.data() + i) ^= 1;
+        weight += e.detector_node->neighbor_weights[e.neighbor_index];
+    });
     std::vector<uint8_t> expected_obs(num_nodes, 0);
     for (size_t i = 0; i < 7; i++)
         expected_obs[i] ^= 1;
     ASSERT_EQ(observables, expected_obs);
     ASSERT_EQ(weight, 14);
+    flooder.reset();
 }

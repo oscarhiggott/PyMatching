@@ -9,8 +9,8 @@ namespace pm {
 enum TargetType : uint8_t { DETECTOR_NODE, BOUNDARY, NO_TARGET };
 
 /// The edge on which two search regions collided
-struct CollisionEdge {
-    SearchDetectorNode* collision_node;
+struct SearchGraphEdge {
+    SearchDetectorNode* detector_node;
     size_t neighbor_index;
 };
 
@@ -30,15 +30,96 @@ class SearchFlooder {
         const SearchDetectorNode& detector_node) const;
     void do_search_starting_at_empty_search_detector_node(SearchDetectorNode* src);
     void do_search_exploring_empty_detector_node(SearchDetectorNode& empty_node, size_t empty_to_from_index);
-    CollisionEdge do_look_at_node_event(SearchDetectorNode& node);
-    CollisionEdge run_until_collision(SearchDetectorNode* src, SearchDetectorNode* dst);
-    void trace_back_path_from_node(
-        SearchDetectorNode* detector_node, uint8_t* obs_begin_ptr, pm::total_weight_int& weight);
-    void trace_back_path_from_collision_edge(
-        CollisionEdge collision_edge, uint8_t* obs_begin_ptr, pm::total_weight_int& weight);
+    SearchGraphEdge do_look_at_node_event(SearchDetectorNode& node);
+    SearchGraphEdge run_until_collision(SearchDetectorNode* src, SearchDetectorNode* dst);
+    template <typename Callable>
+    void iter_edges_on_path_traced_back_from_node(SearchDetectorNode* detector_node, Callable handle_edge);
+    template <typename Callable>
+    void iter_edges_tracing_back_from_collision_edge(const SearchGraphEdge& collision_edge, Callable handle_edge);
+    template <typename Callable>
+    void iter_edges_on_shortest_path_from_middle(size_t src, size_t dst, Callable handle_edge);
+    template <typename Callable>
+    void reverse_path_and_handle_edges(const std::vector<SearchGraphEdge>& edges, Callable handle_edge);
+    template <typename Callable>
+    void iter_edges_on_shortest_path_from_source(size_t src, size_t dst, Callable handle_edge);
     void reset_graph();
     void reset();
 };
+
+template <typename Callable>
+void SearchFlooder::iter_edges_on_path_traced_back_from_node(SearchDetectorNode* detector_node, Callable handle_edge) {
+    auto current_node = detector_node;
+    while (current_node->index_of_predecessor != SIZE_MAX) {
+        auto pred_idx = current_node->index_of_predecessor;
+        SearchGraphEdge edge = {current_node, pred_idx};
+        handle_edge(edge);
+        current_node = current_node->neighbors[pred_idx];
+    }
+}
+
+template <typename Callable>
+void SearchFlooder::iter_edges_tracing_back_from_collision_edge(const SearchGraphEdge& collision_edge, Callable handle_edge){
+    iter_edges_on_path_traced_back_from_node(collision_edge.detector_node, handle_edge);
+    auto other_node = collision_edge.detector_node->neighbors[collision_edge.neighbor_index];
+    if (other_node)
+        iter_edges_on_path_traced_back_from_node(other_node, handle_edge);
+    handle_edge(collision_edge);
+}
+
+template <typename Callable>
+void SearchFlooder::iter_edges_on_shortest_path_from_middle(size_t src, size_t dst, Callable handle_edge) {
+    SearchDetectorNode* loc_to_ptr = dst == SIZE_MAX ? nullptr : &graph.nodes[dst];
+    auto collision_edge = run_until_collision(&graph.nodes[src], loc_to_ptr);
+    iter_edges_tracing_back_from_collision_edge(collision_edge, handle_edge);
+    reset();
+}
+
+template <typename Callable>
+void SearchFlooder::reverse_path_and_handle_edges(const std::vector<SearchGraphEdge>& edges, Callable handle_edge) {
+    size_t n = edges.size();
+    for (size_t i = 0; i < n; i++) {
+        auto e = edges[n - 1 - i];
+        SearchDetectorNode* n_from = e.detector_node->neighbors[e.neighbor_index];
+        SearchGraphEdge e_rev = {n_from, n_from->index_of_neighbor(e.detector_node)};
+        handle_edge(e_rev);
+    }
+}
+
+template <typename Callable>
+void SearchFlooder::iter_edges_on_shortest_path_from_source(size_t src, size_t dst, Callable handle_edge) {
+    SearchDetectorNode* loc_from_ptr = &graph.nodes[src];
+    SearchDetectorNode* loc_to_ptr = dst == SIZE_MAX ? nullptr : &graph.nodes[dst];
+    auto collision_edge = run_until_collision(loc_from_ptr, loc_to_ptr);
+
+    std::vector<SearchGraphEdge> path_edges_1;
+    iter_edges_on_path_traced_back_from_node(collision_edge.detector_node, [&path_edges_1](const SearchGraphEdge& edge) {
+            path_edges_1.push_back(edge);
+    });
+
+    std::vector<SearchGraphEdge> path_edges_2 = {collision_edge};
+    auto other_node = collision_edge.detector_node->neighbors[collision_edge.neighbor_index];
+    if (other_node)
+        iter_edges_on_path_traced_back_from_node(other_node, [&path_edges_2](const SearchGraphEdge& edge) {
+            path_edges_2.push_back(edge);
+        });
+
+    auto last_node_on_2 = path_edges_2.back().detector_node->neighbors[path_edges_2.back().neighbor_index];
+    if (last_node_on_2 == loc_from_ptr) {
+        // Reverse path 2
+        reverse_path_and_handle_edges(path_edges_2, handle_edge);
+        // Handle path 1 in the original order
+        for (auto& x : path_edges_1)
+            handle_edge(x);
+    } else {
+        // Reverse path 1
+        reverse_path_and_handle_edges(path_edges_1, handle_edge);
+        // Handle path 2 in the original order
+        for (auto& x : path_edges_2)
+            handle_edge(x);
+    }
+
+    reset();
+}
 
 }  // namespace pm
 
