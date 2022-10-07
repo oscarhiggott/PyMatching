@@ -26,24 +26,6 @@ from scipy.sparse import csc_matrix
 from pymatching._cpp_pymatching import MatchingGraph, detector_error_model_to_matching_graph
 
 
-def _find_boundary_nodes(graph: nx.Graph):
-    """Find all boundary nodes in G
-    Find the boundary nodes in G, each of which have the attribute
-    `is_boundary' set to `True'. Return the indices of the
-    boundary nodes.
-    Parameters
-    ----------
-    graph : NetworkX graph
-        The matching graph.
-    Returns
-    -------
-    set of int
-        The indices of the boundary nodes in G.
-    """
-    return {i for i, attr in graph.nodes(data=True)
-            if attr.get("is_boundary", False)}
-
-
 class Matching:
     """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder.
     The matching graph can be constructed using the `Matching.add_edge` and `Matching.add_boundary_edge`
@@ -264,7 +246,8 @@ class Matching:
 
         if not isinstance(graph, nx.Graph):
             raise TypeError("G must be a NetworkX graph")
-        boundary = _find_boundary_nodes(graph)
+        boundary = {i for i, attr in graph.nodes(data=True)
+                    if attr.get("is_boundary", False)}
         num_nodes = graph.number_of_nodes()
         all_fault_ids = set()
         g = MatchingGraph(num_nodes)
