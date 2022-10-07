@@ -15,4 +15,4 @@
 from pymatching._cpp_pymatching import (randomize, set_seed, rand_float)
 from pymatching.matching import *
 
-randomize() # Set random seed using std::random_device
+randomize()  # Set random seed using std::random_device

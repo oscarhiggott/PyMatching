@@ -45,20 +45,17 @@ def _find_boundary_nodes(graph: nx.Graph):
 
 
 class Matching:
-    """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder
-    The Matching class provides most of the core functionality of PyMatching.
-    A PyMatching object can be constructed from a check matrix with one or two non-zero
-    elements in each column (e.g. the :math:`Z` or
-    :math:`X` check matrix of some classes of CSS quantum code), given as a `scipy.sparse`
-    matrix or `numpy.ndarray`, along with additional argument specifying the
-    edge weights, error probabilities and number of repetitions.
-    Alternatively, a Matching object can be constructed from a NetworkX
-    graph, with node and edge attributes used to specify edge weights,
-    fault ids, boundaries and error probabilities.
+    """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder.
+    The matching graph can be constructed using the `Matching.add_edge` and `Matching.add_boundary_edge`
+    methods. Alternatively, it can be loaded from a parity check matrix (a `scipy.sparse` matrix or `numpy.ndarray`
+    with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
+    a `stim.DetectorErrorModel`.
     """
+
     def __init__(self,
-                 H: Union[scipy.sparse.spmatrix, np.ndarray, rx.PyGraph, nx.Graph, List[List[int]]] = None,
-                 spacelike_weights: Union[float, np.ndarray, List[float]] = None,
+                 graph: Union[scipy.sparse.spmatrix, np.ndarray, rx.PyGraph, nx.Graph, List[
+                     List[int]], stim.DetectorErrorModel] = None,
+                 weights: Union[float, np.ndarray, List[float]] = None,
                  error_probabilities: Union[float, np.ndarray, List[float]] = None,
                  repetitions: int = None,
                  timelike_weights: Union[float, np.ndarray, List[float]] = None,
@@ -68,11 +65,11 @@ class Matching:
         r"""Constructor for the Matching class
         Parameters
         ----------
-        H : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` object, optional
-            The quantum code to be decoded with minimum-weight perfect
-            matching, given either as a binary check matrix (scipy sparse
-            matrix or numpy.ndarray), or as a matching graph (NetworkX graph).
-            Each edge in the NetworkX graph can have optional
+        graph : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` or `stim.DetectorErrorModel`, optional
+            The matching graph to be decoded with minimum-weight perfect
+            matching, given either as a binary parity check matrix (scipy sparse
+            matrix or numpy.ndarray), a NetworkX or retworkx graph, or a Stim DetectorErrorModel.
+            Each edge in the NetworkX or retworkx graph can have optional
             attributes ``fault_ids``, ``weight`` and ``error_probability``.
             ``fault_ids`` should be an int or a set of ints.
             Each fault id corresponds to a self-inverse fault that is flipped when the
@@ -87,19 +84,19 @@ class Matching:
             every edge is assigned an error_probability between zero and one,
             then the ``add_noise`` method can be used to simulate noise and
             flip edges independently in the graph. By default, None
-        spacelike_weights : float or numpy.ndarray, optional
-            If `H` is given as a scipy or numpy array, `spacelike_weights` gives the weights
-            of edges in the matching graph corresponding to columns of `H`.
-            If spacelike_weights is a numpy.ndarray, it should be a 1D array with length
-            equal to `H.shape[1]`. If spacelike_weights is a float, it is used as the weight for all
-            edges corresponding to columns of `H`. By default None, in which case
+        weights : float or numpy.ndarray, optional
+            If `graph` is given as a scipy or numpy array, `weights` gives the weights
+            of edges in the matching graph corresponding to columns of `graph`.
+            If weights is a numpy.ndarray, it should be a 1D array with length
+            equal to `graph.shape[1]`. If weights is a float, it is used as the weight for all
+            edges corresponding to columns of `graph`. By default None, in which case
             all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each edge corresponding
             to a column of the check matrix. If a
             single float is given, the same error probability is used for each
             edge. If a numpy.ndarray of floats is given, it must have a
-            length equal to the number of columns in the check matrix H. This parameter is only
+            length equal to the number of columns in the check matrix. This parameter is only
             needed for the Matching.add_noise method, and not for decoding.
             By default None
         repetitions : int, optional
@@ -142,23 +139,24 @@ class Matching:
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
             """
         self._matching_graph = MatchingGraph()
-        if H is None:
+        if graph is None:
             return
-        if not isinstance(H, (nx.Graph, rx.PyGraph, stim.DetectorErrorModel)):
+        if isinstance(graph, nx.Graph):
+            self.load_from_networkx(graph)
+        elif isinstance(graph, rx.PyGraph):
+            self.load_from_retworkx(graph)
+        elif isinstance(graph, stim.DetectorErrorModel):
+            self.load_from_detector_error_model(graph)
+        else:
             try:
-                H = csc_matrix(H)
+                graph = csc_matrix(graph)
             except TypeError:
-                raise TypeError("H must be a NetworkX graph or convertible "
-                                "to a scipy.csc_matrix")
-            self.load_from_check_matrix(H, spacelike_weights, error_probabilities,
+                raise TypeError("The type of the input graph is not recognised. `graph` must be "
+                                "a scipy.sparse or numpy matrix, networkx or retworkx graph, or "
+                                "stim.DetectorErrorModel.")
+            self.load_from_check_matrix(graph, weights, error_probabilities,
                                         repetitions, timelike_weights, measurement_error_probabilities,
                                         **kwargs)
-        elif isinstance(H, nx.Graph):
-            self.load_from_networkx(H)
-        elif isinstance(H, rx.PyGraph):
-            self.load_from_retworkx(H)
-        elif isinstance(H, stim.DetectorErrorModel):
-            self.load_from_detector_error_model(H)
 
     def add_edge(
             self,
@@ -358,14 +356,14 @@ class Matching:
                     raise ValueError(
                         "fault_ids property must be an int or a set of int" \
                         " (or convertible to a set), not {}".format(fault_ids))
-            weight = attr.get("weight", 1) # Default weight is 1 if not provided
+            weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
             g.add_edge(u, v, list(fault_ids), weight, e_prob)
         self._matching_graph = g
 
     def load_from_check_matrix(self,
                                H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
-                               spacelike_weights: Union[float, np.ndarray, List[float]] = None,
+                               weights: Union[float, np.ndarray, List[float]] = None,
                                error_probabilities: Union[float, np.ndarray, List[float]] = None,
                                repetitions: int = None,
                                timelike_weights: Union[float, np.ndarray, List[float]] = None,
@@ -380,11 +378,11 @@ class Matching:
             The quantum code to be decoded with minimum-weight perfect
             matching, given as a binary check matrix (scipy sparse
             matrix or numpy.ndarray)
-        spacelike_weights : float or numpy.ndarray, optional
-            If `H` is given as a scipy or numpy array, `spacelike_weights` gives the weights
+        weights : float or numpy.ndarray, optional
+            If `H` is given as a scipy or numpy array, `weights` gives the weights
             of edges in the matching graph corresponding to columns of `H`.
-            If spacelike_weights is a numpy.ndarray, it should be a 1D array with length
-            equal to `H.shape[1]`. If spacelike_weights is a float, it is used as the weight for all
+            If `weights` is a numpy.ndarray, it should be a 1D array with length
+            equal to `H.shape[1]`. If weights is a float, it is used as the weight for all
             edges corresponding to columns of `H`. By default None, in which case
             all weights are set to 1.0
         error_probabilities : float or numpy.ndarray, optional
@@ -438,9 +436,18 @@ class Matching:
                              " must be 1, not {}.".format(unique_elements))
         H = H.astype(np.uint8)
         num_edges = H.shape[1]
-        weights = 1.0 if spacelike_weights is None else spacelike_weights
+
+        slw = kwargs.get("spacelike_weights")
+        if weights is None and slw is not None:
+            weights = slw
+        elif weights is not None and slw is not None:
+            raise ValueError("Both `weights` and `spacelike_weights` were provided as arguments, but these "
+                             "two arguments are equivalent. Please provide only `weights` as an argument, as "
+                             "the `spacelike_weights` argument has been deprecated.")
+
+        weights = 1.0 if weights is None else weights
         if isinstance(weights, (int, float, np.integer, np.floating)):
-            weights = np.ones(num_edges, dtype=float)*weights
+            weights = np.ones(num_edges, dtype=float) * weights
         weights = np.asarray(weights)
 
         if error_probabilities is None:
@@ -594,19 +601,12 @@ class Matching:
 
     def decode(self,
                z: Union[np.ndarray, List[int]],
-               num_neighbours: Union[int, None] = 30,
-               return_weight: bool = False
+               *,
+               return_weight: bool = False,
+               **kwargs
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """Decode the syndrome `z` using minimum-weight perfect matching
-        If the parity of the weight of `z` is odd and the matching graph has one connected component,
-        then an arbitrarily chosen boundary node in
-        ``self.boundary`` is flipped, and all other stabiliser and
-        boundary nodes are left unchanged. If the matching graph has multiple connected
-        components, then the parity of the syndrome weight within each connected component is
-        checked separately, and if a connected component has odd parity then an arbitrarily
-        chosen boundary node in the same connected component is highlighted. If the parity of the
-        syndrome weight in a connected component is odd, and the same connected component does not
-        have a boundary node, then a `ValueError` is raised.
+
         Parameters
         ----------
         z : numpy.ndarray
@@ -617,20 +617,6 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
-        num_neighbours : int, optional
-            Number of closest neighbours (with non-trivial syndrome) of each matching
-            graph node to consider when decoding. If `num_neighbours` is set
-            (as it is by default), then the local matching decoder in
-            https://arxiv.org/abs/2105.13082 is used, and `num_neighbours`
-            corresponds to the parameter `m` in the paper. It is recommended
-            to leave `num_neighbours` set to at least 20.
-            If `num_neighbours is None`, then instead full matching is
-            performed, with the all-pairs shortest paths precomputed and
-            cached the first time it is used. Since full matching is more
-            memory intensive, it is not recommended to be used for matching graphs
-            with more than around 10,000 nodes, and is only faster than
-            local matching for matching graphs with less than around 1,000
-            nodes. By default 30
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
@@ -651,6 +637,11 @@ class Matching:
             Present only if `return_weight==True`.
             The sum of the weights of the edges in the minimum-weight perfect
             matching.
+        Raises
+        ------
+        ValueError
+            If there is no error consistent with the provided syndrome. Occurs if the syndrome has odd parity in the
+            support of a connected component without a boundary.
         Examples
         --------
         >>> import pymatching
@@ -714,9 +705,9 @@ class Matching:
         if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
                                   <= self.num_detectors + len(self.boundary)):
             defects = z.nonzero()[0]
-        elif len(z.shape) == 2 and z.shape[0]*z.shape[1] == self.num_detectors:
+        elif len(z.shape) == 2 and z.shape[0] * z.shape[1] == self.num_detectors:
             times, checks = z.T.nonzero()
-            defects = times*z.shape[0] + checks
+            defects = times * z.shape[0] + checks
         else:
             raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
         correction, weight = self._matching_graph.decode(defects)
@@ -820,16 +811,16 @@ class Matching:
         this function.
         """
         # Ignore matplotlib deprecation warnings from networkx.draw_networkx
-        warnings.filterwarnings("ignore",category=matplotlib.cbook.mplDeprecation)
+        warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         G = self.to_networkx()
-        pos=nx.spectral_layout(G, weight=None)
+        pos = nx.spectral_layout(G, weight=None)
         c = "#bfbfbf"
         ncolors = ['w' if n[1]['is_boundary'] else c for n in G.nodes(data=True)]
         nx.draw_networkx_nodes(G, pos=pos, node_color=ncolors, edgecolors=c)
         nx.draw_networkx_labels(G, pos=pos)
-        weights=np.array([e[2]['weight'] for e in G.edges(data=True)])
-        normalised_weights = 0.2+2*weights/np.max(weights)
+        weights = np.array([e[2]['weight'] for e in G.edges(data=True)])
+        normalised_weights = 0.2 + 2 * weights / np.max(weights)
         nx.draw_networkx_edges(G, pos=pos, width=normalised_weights)
 
         def qid_to_str(qid):
@@ -839,16 +830,17 @@ class Matching:
                 return str(qid.pop())
             else:
                 return str(qid)
-        edge_labels = {(s, t): qid_to_str(d['fault_ids']) for (s,t,d) in G.edges(data=True)}
+
+        edge_labels = {(s, t): qid_to_str(d['fault_ids']) for (s, t, d) in G.edges(data=True)}
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     def __repr__(self) -> str:
-        M = self.num_detectors
-        B = len(self.boundary)
-        E = self._matching_graph.get_num_edges()
+        m = self.num_detectors
+        b = len(self.boundary)
+        e = self._matching_graph.get_num_edges()
         return "<pymatching.Matching object with " \
                "{} detector{}, " \
                "{} boundary node{}, " \
                "and {} edge{}>".format(
-            M, 's' if M != 1 else '', B, 's' if B != 1 else '',
-            E, 's' if E != 1 else '')
+            m, 's' if m != 1 else '', b, 's' if b != 1 else '',
+            e, 's' if e != 1 else '')
