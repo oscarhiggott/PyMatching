@@ -67,3 +67,42 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
     ASSERT_EQ(weight, 14);
     flooder.reset();
 }
+
+
+TEST(SearchFlooder, RepCodeSourceToDestPath) {
+    size_t num_nodes = 20;
+    auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
+    auto& g = flooder.graph;
+    g.add_boundary_edge(0, 2, {0});
+    for (size_t i = 0; i < num_nodes - 1; i++)
+        g.add_edge(i, i + 1, 2, {i + 1});
+    size_t i_start = 10;
+    for (size_t i_end = 14; i_end < 18; i_end++) {
+        std::vector<pm::SearchGraphEdge> edges;
+        flooder.iter_edges_on_shortest_path_from_source(i_start, i_end, [&](const pm::SearchGraphEdge &edge) {
+            edges.push_back(edge);
+        });
+
+        std::vector<size_t> node_indices;
+        for (size_t i = 0; i < edges.size(); i++) {
+            node_indices.push_back(edges[i].detector_node - &flooder.graph.nodes[0]);
+            if (i + 1 < edges.size())
+                ASSERT_EQ(edges[i].detector_node->neighbors[edges[i].neighbor_index], edges[i+1].detector_node);
+        }
+        std::vector<size_t> expected_node_indices;
+        for (size_t i = i_start; i < i_end; i++)
+            expected_node_indices.push_back(i);
+        ASSERT_EQ(node_indices, expected_node_indices);
+    }
+
+    std::vector<pm::SearchGraphEdge> edges;
+    flooder.iter_edges_on_shortest_path_from_source(4, SIZE_MAX, [&](const pm::SearchGraphEdge &edge) {
+        edges.push_back(edge);
+    });
+    std::vector<size_t> node_indices;
+    for (size_t i = 0; i < edges.size(); i++)
+        node_indices.push_back(edges[i].detector_node - &flooder.graph.nodes[0]);
+
+    std::vector<size_t> expected_node_indices = {4, 3, 2, 1, 0};
+    ASSERT_EQ(node_indices, expected_node_indices);
+}
