@@ -36,10 +36,16 @@ class SearchFlooder {
     void iter_edges_on_path_traced_back_from_node(SearchDetectorNode* detector_node, Callable handle_edge);
     template <typename Callable>
     void iter_edges_tracing_back_from_collision_edge(const SearchGraphEdge& collision_edge, Callable handle_edge);
+    // Visits the edges on the shortest path between src to dst, calling handle_edge on each SearchGraphEdge.
+    // This method is not guaranteed to visit nodes in order from src to dst. It traces back paths from
+    // the collision point of the two search regions to src and dst.
     template <typename Callable>
     void iter_edges_on_shortest_path_from_middle(size_t src, size_t dst, Callable handle_edge);
     template <typename Callable>
     void reverse_path_and_handle_edges(const std::vector<SearchGraphEdge>& edges, Callable handle_edge);
+    // Visits the edges on the shortest path from src to dst, calling handle_edge on each SearchGraphEdge.
+    // This method is slightly slower than iter_edges_on_shortest_path_from_middle (since it uses a stack), but
+    // guarantees that edges are visited in order from src to dst.
     template <typename Callable>
     void iter_edges_on_shortest_path_from_source(size_t src, size_t dst, Callable handle_edge);
     void reset_graph();
