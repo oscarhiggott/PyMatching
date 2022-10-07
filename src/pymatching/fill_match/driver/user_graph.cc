@@ -300,6 +300,10 @@ void pm::UserGraph::get_nodes_on_shortest_path_from_source(size_t src, size_t ds
     auto& mwpm = get_mwpm_with_search_graph();
     bool src_is_boundary = is_boundary_node(src);
     bool dst_is_boundary = is_boundary_node(dst);
+    if (src != SIZE_MAX && src >= nodes.size())
+        throw std::invalid_argument("node " + std::to_string(src) + " is not in the graph");
+    if (dst != SIZE_MAX && dst >= nodes.size())
+        throw std::invalid_argument("node " + std::to_string(dst) + " is not in the graph");
     if (!src_is_boundary) {
         size_t dst_tmp = dst_is_boundary ? SIZE_MAX : dst;
         mwpm.search_flooder.iter_edges_on_shortest_path_from_source(src, dst_tmp, [&](const pm::SearchGraphEdge edge) {
