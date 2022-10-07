@@ -47,7 +47,6 @@ class UserGraph {
     size_t get_num_detectors();
     size_t get_num_edges();
     bool is_boundary_node(size_t node_id);
-    pm::IntermediateWeightedGraph to_intermediate_weighted_graph();
     void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
     bool all_edges_have_error_probabilities();
     std::vector<edge_data> get_edges();
@@ -64,6 +63,7 @@ class UserGraph {
     Mwpm& get_mwpm();
     Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t> &detectors, const std::vector<size_t> &observables);
+    void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;

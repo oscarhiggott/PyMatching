@@ -81,3 +81,42 @@ TEST(PythonApiGraph, AddNoise) {
     std::vector<uint8_t> expected_syndrome = {1, 0, 1, 1, 0, 1, 0, 0};
     ASSERT_EQ(syndrome, expected_syndrome);
 }
+
+TEST(PythonAPIGraph, NodesAlongShortestPath) {
+    pm::UserGraph graph;
+    graph.add_or_merge_boundary_edge(0, {0}, 1, -1);
+    graph.add_or_merge_edge(0, 1, {1}, 1, -1);
+    graph.add_or_merge_edge(1, 2, {2}, 1, -1);
+    graph.add_or_merge_edge(2, 3, {3}, 1, -1);
+    graph.add_or_merge_edge(3, 4, {4}, 1, -1);
+    graph.add_or_merge_edge(4, 5, {5}, 1, -1);
+    graph.set_boundary({5});
+
+    {
+        std::vector<size_t> nodes;
+        graph.get_nodes_on_shortest_path_from_source(4, 0, nodes);
+        std::vector<size_t> nodes_expected = {4, 3, 2, 1, 0};
+        ASSERT_EQ(nodes, nodes_expected);
+    }
+
+    {
+        std::vector<size_t> nodes;
+        graph.get_nodes_on_shortest_path_from_source(1, SIZE_MAX, nodes);
+        std::vector<size_t> nodes_expected = {1, 0};
+        ASSERT_EQ(nodes, nodes_expected);
+    }
+
+    {
+        std::vector<size_t> nodes;
+        graph.get_nodes_on_shortest_path_from_source(SIZE_MAX, 3, nodes);
+        std::vector<size_t> nodes_expected = {4, 3};
+        ASSERT_EQ(nodes, nodes_expected);
+    }
+
+    {
+        std::vector<size_t> nodes;
+        graph.get_nodes_on_shortest_path_from_source(5, 3, nodes);
+        std::vector<size_t> nodes_expected = {4, 3};
+        ASSERT_EQ(nodes, nodes_expected);
+    }
+}

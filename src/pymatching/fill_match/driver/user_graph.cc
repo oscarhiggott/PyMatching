@@ -133,29 +133,6 @@ std::set<size_t> pm::UserGraph::get_boundary() {
     return b;
 }
 
-pm::IntermediateWeightedGraph pm::UserGraph::to_intermediate_weighted_graph() {
-    pm::IntermediateWeightedGraph graph(nodes.size(), get_num_observables());
-    for (size_t i = 0; i < nodes.size(); i++) {
-        for (size_t j = 0; j < nodes[i].neighbors.size(); j++) {
-            auto n = nodes[i].neighbors[j];
-            size_t v = n.node;
-            if (i < v) {
-                bool i_is_boundary = is_boundary_node(i);
-                bool v_is_boundary = is_boundary_node(v);
-                if (i_is_boundary && !v_is_boundary) {
-                    graph.add_or_merge_boundary_edge(v, n.weight, n.observable_indices);
-                } else if (v_is_boundary && !i_is_boundary) {
-                    graph.add_or_merge_boundary_edge(i, n.weight, n.observable_indices);
-                } else if (!v_is_boundary) {
-                    // Neither i nor v are boundary nodes
-                    graph.add_or_merge_edge(i, v, n.weight, n.observable_indices);
-                }
-            }
-        }
-    }
-    return graph;
-}
-
 size_t pm::UserGraph::get_num_observables() {
     return _num_observables;
 }
@@ -316,6 +293,28 @@ void pm::UserGraph::handle_dem_instruction(
         add_or_merge_edge(detectors[0], detectors[1], observables, std::log((1 - p) / p), p);
     } else if (detectors.size() == 1) {
         add_or_merge_boundary_edge(detectors[0], observables, std::log((1 - p) / p), p);
+    }
+}
+
+void pm::UserGraph::get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes) {
+    auto& mwpm = get_mwpm_with_search_graph();
+    bool src_is_boundary = is_boundary_node(src);
+    bool dst_is_boundary = is_boundary_node(dst);
+    if (!src_is_boundary) {
+        size_t dst_tmp = dst_is_boundary ? SIZE_MAX : dst;
+        mwpm.search_flooder.iter_edges_on_shortest_path_from_source(src, dst_tmp, [&](const pm::SearchGraphEdge edge) {
+            out_nodes.push_back(edge.detector_node - &mwpm.search_flooder.graph.nodes[0]);
+        });
+        if (!dst_is_boundary)
+            out_nodes.push_back(dst);
+    } else if (!dst_is_boundary) {
+        std::vector<size_t> temp_out_nodes;
+        get_nodes_on_shortest_path_from_source(dst, src, temp_out_nodes);
+        for (size_t i = 0; i < temp_out_nodes.size(); i++) {
+            out_nodes.push_back(temp_out_nodes[temp_out_nodes.size() - 1 - i]);
+        }
+    } else {
+        throw std::invalid_argument("Both the source and destination vertices provided are boundary nodes");
     }
 }
 
