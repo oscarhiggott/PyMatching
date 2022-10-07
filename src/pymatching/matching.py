@@ -91,6 +91,8 @@ class Matching:
             equal to `graph.shape[1]`. If weights is a float, it is used as the weight for all
             edges corresponding to columns of `graph`. By default None, in which case
             all weights are set to 1.0
+            This argument was renamed from `spacelike_weights` in PyMatching v2.0, but
+            `spacelike_weights` is still accepted in place of `weights` for backward compatibility.
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each edge corresponding
             to a column of the check matrix. If a
@@ -385,6 +387,8 @@ class Matching:
             equal to `H.shape[1]`. If weights is a float, it is used as the weight for all
             edges corresponding to columns of `H`. By default None, in which case
             all weights are set to 1.0
+            This argument was renamed from `spacelike_weights` in PyMatching v2.0, but
+            `spacelike_weights` is still accepted in place of `weights` for backward compatibility.
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each edge associated with a
             column of H. If a
