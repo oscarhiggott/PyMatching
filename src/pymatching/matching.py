@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import warnings
-from typing import Union, List, Set, Tuple, Dict
+from typing import Union, List, Set, Tuple, Dict, Optional
 
 import matplotlib.cbook
 import numpy as np
@@ -124,7 +124,10 @@ class Matching:
             """
         self._matching_graph = MatchingGraph()
         if graph is None:
-            return
+            graph = kwargs.get("H")
+            if graph is None:
+                return
+            del kwargs["H"]
         if isinstance(graph, nx.Graph):
             self.load_from_networkx(graph)
         elif isinstance(graph, rx.PyGraph):
@@ -149,6 +152,8 @@ class Matching:
             fault_ids: Union[int, Set[int]] = None,
             weight: float = 1.0,
             error_probability: float = None,
+            *,
+            merge_strategy: str = "disallow",
             **kwargs
     ) -> None:
         """
@@ -175,6 +180,20 @@ class Matching:
             The probability that the edge is flipped. This is used by the `add_noise()` method
             to sample from the distribution defined by the matching graph (in which each edge
             is flipped independently with the corresponding `error_probability`). By default None
+        merge_strategy: str, optional
+            Which strategy to use if the edge (`node1`, `node2`) is already in the graph. The available options
+            are "disallow", "independent", "smallest-weight", "first-only" and "last-only". "disallow" raises a
+            `ValueError` if the edge (`node1`, `node2`) is already present. The "independent" strategy assumes that
+            the existing edge (`node1`, `node2`) and the edge being added represent independent error mechanisms, and
+            they are merged into a new edge with updated weights and error_probabilities accordingly (it is assumed
+            that each weight represents the log-likelihood ratio log((1-p)/p) where p is the `error_probability` and
+            where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
+            where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
+            the code has distance 2 if parallel edges have different fault_ids anyway). The "smallest-weight" strategy
+            keeps only the new edge if it has a smaller weight than the existing edge, otherwise the graph is left
+            unchanged. The "first-only" strategy keeps only the existing edge, and ignores the edge being added.
+            The "last-only" strategy always keeps the edge being added, replacing the existing edge.
+            By default, "disallow"
         Examples
         --------
         >>> import pymatching
@@ -205,8 +224,8 @@ class Matching:
         fault_ids = set() if fault_ids is None else fault_ids
         has_error_probability = error_probability is not None
         error_probability = error_probability if has_error_probability else -1
-        self._matching_graph.add_edge(node1, node2, list(fault_ids), weight,
-                                      error_probability)
+        self._matching_graph.add_edge(node1, node2, fault_ids, weight,
+                                      error_probability, merge_strategy)
 
     def load_from_networkx(self, graph: nx.Graph) -> None:
         r"""
@@ -276,7 +295,8 @@ class Matching:
             all_fault_ids = all_fault_ids | fault_ids
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, list(fault_ids), weight, e_prob)
+            # Note: NetworkX graphs do not support parallel edges (merge strategy is redundant)
+            g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
         self._matching_graph = g
 
     def load_from_retworkx(self, graph: rx.PyGraph) -> None:
@@ -343,7 +363,8 @@ class Matching:
                         " (or convertible to a set), not {}".format(fault_ids))
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
-            g.add_edge(u, v, list(fault_ids), weight, e_prob)
+            # Note: retworkx graphs do not support parallel edges (merge strategy is redundant)
+            g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
         self._matching_graph = g
 
     def load_from_check_matrix(self,
@@ -353,6 +374,8 @@ class Matching:
                                repetitions: int = None,
                                timelike_weights: Union[float, np.ndarray, List[float]] = None,
                                measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                               *,
+                               merge_strategy: str = "smallest-weight",
                                **kwargs
                                ) -> None:
         """
@@ -398,6 +421,19 @@ class Matching:
             (row) of `H` is set to `measurement_error_probabilities[i]`. This argument can also be
             given using the keyword argument `measurement_error_probability` to maintain backward
             compatibility with previous versions of Pymatching. By default None
+        merge_strategy: str, optional
+            Which strategy to use when adding an edge (`node1`, `node2`) that is already in the graph. The available
+            options are "disallow", "independent", "smallest-weight", "first-only" and "last-only". "disallow" raises a
+            `ValueError` if the edge (`node1`, `node2`) is already present. The "independent" strategy assumes that
+            the existing edge (`node1`, `node2`) and the edge being added represent independent error mechanisms, and
+            they are merged into a new edge with updated weights and error_probabilities accordingly (it is assumed
+            that each weight represents the log-likelihood ratio log((1-p)/p) where p is the `error_probability` and
+            where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
+            the code has distance 2 if parallel edges have different fault_ids anyway). The "smallest-weight" strategy
+            keeps only the new edge if it has a smaller weight than the existing edge, otherwise the graph is left
+            unchanged. The "first-only" strategy keeps only the existing edge, and ignores the edge being added.
+            The "last-only" strategy always keeps the edge being added, replacing the existing edge.
+            By default, "smallest-weight"
         Examples
         --------
         >>> import pymatching
@@ -487,19 +523,19 @@ class Matching:
             raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
 
         boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
-        self._matching_graph = MatchingGraph(H.shape[0] * repetitions)
+        self._matching_graph = MatchingGraph(H.shape[0] * repetitions + len(boundary))
         self._matching_graph.set_boundary(boundary=boundary)
         for t in range(repetitions):
             for i in range(len(H.indptr) - 1):
                 s, e = H.indptr[i:i + 2]
                 v1 = H.indices[s] + H.shape[0] * t
                 v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else next(iter(boundary))
-                self._matching_graph.add_edge(v1, v2, [i], weights[i],
-                                              error_probabilities[i])
+                self._matching_graph.add_edge(v1, v2, {i}, weights[i],
+                                              error_probabilities[i], merge_strategy=merge_strategy)
         for t in range(repetitions - 1):
             for i in range(H.shape[0]):
                 self._matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
-                                              [], timelike_weights[i], p_meas[i])
+                                              set(), timelike_weights[i], p_meas[i], merge_strategy=merge_strategy)
 
     def load_from_detector_error_model(self, model: stim.DetectorErrorModel) -> None:
         """
@@ -751,7 +787,7 @@ class Matching:
             return None
         return self._matching_graph.add_noise()
 
-    def edges(self) -> List[Tuple[int, int, Dict]]:
+    def edges(self) -> List[Tuple[int, Optional[int], Dict]]:
         """Edges of the matching graph
         Returns a list of edges of the matching graph. Each edge is a
         tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the
@@ -765,19 +801,7 @@ class Matching:
         List of (int, int, dict) tuples
             A list of edges of the matching graph
         """
-        edata = self._matching_graph.get_edges()
-        return [
-            (
-                e[0],
-                e[1],
-                {
-                    'fault_ids': set(e[2]),
-                    'weight': e[3],
-                    'error_probability': -1.0 if not 0 <= e[4] <= 1 else e[4]
-                }
-            )
-            for e in edata
-        ]
+        return self._matching_graph.get_edges()
 
     def to_networkx(self) -> nx.Graph:
         """Convert to NetworkX graph

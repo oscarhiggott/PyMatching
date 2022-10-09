@@ -39,7 +39,7 @@ def test_bad_fault_ids_raises_value_error():
 def test_boundary_from_check_matrix():
     H = csr_matrix(np.array([[1, 1, 0, 0, 0], [0, 1, 1, 0, 0],
                              [0, 0, 1, 1, 0], [0, 0, 0, 1, 1]]))
-    m = Matching(H)
+    m = Matching(H=H)   # Checks `H` still accepted as keyword argument despite being deprecated
     assert m.boundary == {4}
     assert np.array_equal(m.decode(np.array([1, 0, 0, 0])), np.array([1, 0, 0, 0, 0]))
     assert np.array_equal(m.decode(np.array([0, 1, 0, 0])), np.array([1, 1, 0, 0, 0]))

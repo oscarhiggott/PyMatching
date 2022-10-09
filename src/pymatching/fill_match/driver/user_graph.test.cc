@@ -3,12 +3,12 @@
 
 #include "pymatching/fill_match/driver/user_graph.h"
 
-TEST(PythonAPIGraph, ConstructGraph) {
+TEST(UserGraph, ConstructGraph) {
     pm::UserGraph graph;
     graph.add_or_merge_boundary_edge(0, {2}, 4.1, 0.1);
-    graph.add_or_merge_boundary_edge(0, {3}, 1.0, 0.46);
+    graph.add_or_merge_boundary_edge(0, {3}, 1.0, 0.46, pm::INDEPENDENT);
     graph.add_or_merge_edge(0, 1, {0}, 2.5, 0.4);
-    graph.add_or_merge_edge(0, 1, {0}, 2.1, 0.45);
+    graph.add_or_merge_edge(0, 1, {0}, 2.1, 0.45, pm::INDEPENDENT);
     graph.add_or_merge_edge(1, 2, {1}, -3.5, 0.8);
     graph.add_or_merge_edge(2, 3, {3}, 1.8, 0.3);
     graph.add_or_merge_edge(2, 4, {4}, 2.0, 0.25);
@@ -62,7 +62,7 @@ TEST(PythonAPIGraph, ConstructGraph) {
     ASSERT_EQ(mwpm.flooder.negative_weight_observables, obs_exp_vec);
 }
 
-TEST(PythonApiGraph, AddNoise) {
+TEST(UserGraph, AddNoise) {
     pm::UserGraph graph;
     graph.add_or_merge_boundary_edge(0, {0}, 1, 1);
     graph.add_or_merge_edge(0, 1, {1}, 1, 0);
@@ -82,7 +82,7 @@ TEST(PythonApiGraph, AddNoise) {
     ASSERT_EQ(syndrome, expected_syndrome);
 }
 
-TEST(PythonAPIGraph, NodesAlongShortestPath) {
+TEST(UserGraph, NodesAlongShortestPath) {
     pm::UserGraph graph;
     graph.add_or_merge_boundary_edge(0, {0}, 1, -1);
     graph.add_or_merge_edge(0, 1, {1}, 1, -1);
