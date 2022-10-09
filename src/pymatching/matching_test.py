@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-import pytest
 from scipy.sparse import csc_matrix, csr_matrix
 import pytest
 import networkx as nx
