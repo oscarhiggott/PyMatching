@@ -13,6 +13,6 @@
 # limitations under the License.
 
 from pymatching._cpp_pymatching import (randomize, set_seed, rand_float)
-from pymatching.matching import *
+from pymatching.matching import Matching
 
 randomize()  # Set random seed using std::random_device
