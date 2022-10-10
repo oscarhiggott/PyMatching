@@ -17,12 +17,13 @@ from scipy.sparse import csr_matrix, csc_matrix
 import pytest
 
 from pymatching import Matching
+from pymatching._cpp_pymatching import sparse_column_check_matrix_to_matching_graph
 
 
 def test_boundary_from_check_matrix():
     H = csr_matrix(np.array([[1, 1, 0, 0, 0], [0, 1, 1, 0, 0],
                              [0, 0, 1, 1, 0], [0, 0, 0, 1, 1]]))
-    m = Matching(H=H)   # Checks `H` still accepted as keyword argument despite being deprecated
+    m = Matching(H=H)  # Checks `H` still accepted as keyword argument despite being deprecated
     assert m.boundary == {4}
     assert np.array_equal(m.decode(np.array([1, 0, 0, 0])), np.array([1, 0, 0, 0, 0]))
     assert np.array_equal(m.decode(np.array([0, 1, 0, 0])), np.array([1, 1, 0, 0, 0]))
@@ -180,3 +181,30 @@ def test_measurement_error_probabilities_and_probability_raises_value_error():
         m.load_from_check_matrix(H, spacelike_weights=np.array([0.3, 0.7, 0.9]),
                                  measurement_error_probabilities=[0.1, 0.1], repetitions=3,
                                  measurement_error_probability=[0.1, 0.1])
+
+
+def test_cpp_csc_matrix_to_matching_graph():
+    H = csc_matrix(np.array([[1, 1, 0, 0, 0, 0],
+                             [0, 1, 1, 0, 0, 1],
+                             [0, 0, 1, 1, 0, 1],
+                             [0, 0, 0, 1, 1, 0]]))
+    weights = np.array([1.0, 2.0, 3.0, 2.0, 1.5, 5.0])
+    error_probabilities = np.array([0.4, 0.3, 0.4, 0.2, 0.1, 0.01])
+    g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
+                                                     use_virtual_boundary=False)
+    assert g.get_edges() == [
+        (0, 4, {"fault_ids": {0}, "weight": 1.0, "error_probability": 0.4}),
+        (0, 1, {"fault_ids": {1}, "weight": 2.0, "error_probability": 0.3}),
+        (1, 2, {"fault_ids": {2}, "weight": 3.0, "error_probability": 0.4}),
+        (2, 3, {"fault_ids": {3}, "weight": 2.0, "error_probability": 0.2}),
+        (3, 4, {"fault_ids": {4}, "weight": 1.5, "error_probability": 0.1}),
+    ]
+    g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="last-only",
+                                                     use_virtual_boundary=True)
+    assert g.get_edges() == [
+        (0, None, {"fault_ids": {0}, "weight": 1.0, "error_probability": 0.4}),
+        (0, 1, {"fault_ids": {1}, "weight": 2.0, "error_probability": 0.3}),
+        (1, 2, {"fault_ids": {5}, "weight": 5.0, "error_probability": 0.01}),
+        (2, 3, {"fault_ids": {3}, "weight": 2.0, "error_probability": 0.2}),
+        (3, None, {"fault_ids": {4}, "weight": 1.5, "error_probability": 0.1}),
+    ]

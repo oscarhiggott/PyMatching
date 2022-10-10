@@ -150,4 +150,122 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         auto dem = stim::DetectorErrorModel(dem_string);
         return pm::detector_error_model_to_user_graph(dem);
     });
+
+    m.def(
+        "sparse_column_check_matrix_to_matching_graph",
+        [](const py::object &check_matrix,
+           const py::array_t<double> &weights,
+           const py::array_t<double> &error_probabilities,
+           const std::string &merge_strategy,
+           bool use_virtual_boundary) {
+            py::object csc_matrix = py::module_::import("scipy.sparse").attr("csc_matrix");
+            if (!py::isinstance(check_matrix, csc_matrix))
+                throw std::invalid_argument("Check matrix must be a `scipy.sparse.csc_matrix`.");
+            // Extract key attributes from scipy.sparse.csc_matrix:
+            // https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csc_matrix.html
+            // As stated in the scipy documentation for the CSC representation: "The row indices for column i
+            // are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in
+            // data[indptr[i]:indptr[i+1]]."
+            auto data_arr = check_matrix.attr("data").cast<py::array_t<uint8_t>>();
+            auto data = data_arr.unchecked<1>();
+            auto indices_arr = check_matrix.attr("indices").cast<py::array_t<int64_t>>();
+            auto indices = indices_arr.unchecked<1>();
+            auto indptr_arr = check_matrix.attr("indptr").cast<py::array_t<int64_t>>();
+            auto indptr = indptr_arr.unchecked<1>();
+
+            py::tuple shape = check_matrix.attr("shape");
+            size_t num_rows = shape[0].cast<size_t>();  // The number of nodes in the matching graph
+            size_t num_cols = shape[1].cast<size_t>();  // The number of edges in the matching graph
+
+            auto weights_unchecked = weights.unchecked<1>();
+            // Check weights array size is correct
+            if (weights_unchecked.size() != num_cols)
+                throw std::invalid_argument(
+                    "The size of the `weights` array (" + std::to_string(weights_unchecked.size()) +
+                    ") should match the number of columns in the check matrix (" + std::to_string(num_cols) + ")");
+            auto error_probabilities_unchecked = error_probabilities.unchecked<1>();
+            // Check error_probabilities array is correct
+            if (error_probabilities_unchecked.size() != num_cols)
+                throw std::invalid_argument(
+                    "The size of the `error_probabilities` array (" +
+                    std::to_string(error_probabilities_unchecked.size()) +
+                    ") should match the number of columns in the check matrix (" + std::to_string(num_cols) + ")");
+
+            // Check indptr array size is correct
+            if (indptr.size() != num_cols + 1)
+                throw std::invalid_argument(
+                    "`check_matrix.indptr` size (" + std::to_string(indptr.size()) +
+                    ") must be 1 larger than number of columns (" + std::to_string(num_cols) + ").");
+
+            // Check data is the same size as indices
+            if (data.size() != indices.size())
+                throw std::invalid_argument("`check_matrix.data` must be the same size as `check_matrix.indices`");
+
+            // Check data only contains ones
+            for (py::ssize_t i = 0; i < data.size(); i++) {
+                if (data(i) == 0) {
+                    throw std::invalid_argument(
+                        "`check_matrix.data` must only contain ones, but a zero was found. First call "
+                        "`check_matrix.eliminate_zeros()` before using this method.");
+                } else if (data(i) != 1) {
+                    throw std::invalid_argument(
+                        "`check_matrix.data` must only contain ones, but the element " + std::to_string(data(i)) +
+                        " was found.");
+                }
+            }
+
+            auto merge_strategy_enum = merge_strategy_from_string(merge_strategy);
+
+            // Now construct the graph
+            size_t num_detectors = num_rows;
+            size_t num_nodes = num_detectors;
+            if (!use_virtual_boundary)
+                num_nodes++;  // Use a boundary node rather than a virtual boundary
+            pm::UserGraph graph(num_nodes, num_cols);
+            // Each column corresponds to an edge. Iterate over the columns, adding the edges to the graph.
+            for (py::ssize_t c = 0; c < num_cols; c++) {
+                auto idx_start = indptr[c];
+                auto idx_end = indptr[c + 1];
+                auto num_dets = idx_end - idx_start;
+                if (idx_start > indices.size() - 1 && idx_start != idx_end)
+                    throw std::invalid_argument(
+                        "`check_matrix.indptr` elements must not exceed size of `check_matrix.indices`");
+                if (num_dets == 2) {
+                    graph.add_or_merge_edge(
+                        indices(idx_start),
+                        indices(idx_start + 1),
+                        {(size_t)c},
+                        weights_unchecked(c),
+                        error_probabilities_unchecked(c),
+                        merge_strategy_enum);
+                } else if (num_dets == 1) {
+                    if (use_virtual_boundary) {
+                        graph.add_or_merge_boundary_edge(
+                            indices(idx_start),
+                            {(size_t)c},
+                            weights_unchecked(c),
+                            error_probabilities_unchecked(c),
+                            merge_strategy_enum);
+                    } else {
+                        graph.add_or_merge_edge(
+                            indices(idx_start),
+                            num_detectors,
+                            {(size_t)c},
+                            weights_unchecked(c),
+                            error_probabilities_unchecked(c),
+                            merge_strategy_enum);
+                    }
+                }
+            }
+
+            if (!use_virtual_boundary)
+                graph.set_boundary({num_detectors});
+
+            return graph;
+        },
+        "check_matrix"_a,
+        "weights"_a,
+        "error_probabilities"_a,
+        "merge_strategy"_a = "smallest-weight",
+        "use_virtual_boundary"_a = false);
 }
