@@ -18,7 +18,7 @@ import numpy as np
 import scipy
 from scipy.sparse import csc_matrix
 
-from pymatching._cpp_pymatching import MatchingGraph
+from pymatching._cpp_pymatching import MatchingGraph, sparse_column_check_matrix_to_matching_graph
 
 
 def load_from_check_matrix(self,
@@ -103,15 +103,11 @@ def load_from_check_matrix(self,
     >>> m
     <pymatching.Matching object with 2 detectors, 1 boundary node, and 3 edges>
     """
-    try:
-        H = csc_matrix(H)
-    except TypeError:
-        raise TypeError("H must be convertible to a scipy.csc_matrix")
-    unique_elements = np.unique(H.data)
-    if len(unique_elements) > 1 or unique_elements[0] != 1:
-        raise ValueError("Nonzero elements in the parity check matrix" \
-                         " must be 1, not {}.".format(unique_elements))
-    H = H.astype(np.uint8)
+    if not isinstance(H, csc_matrix):
+        try:
+            H = csc_matrix(H)
+        except TypeError:
+            raise TypeError("H must be convertible to a `scipy.csc_matrix`")
     num_edges = H.shape[1]
 
     slw = kwargs.get("spacelike_weights")
@@ -132,61 +128,39 @@ def load_from_check_matrix(self,
     elif isinstance(error_probabilities, (int, float)):
         error_probabilities = np.ones(num_edges) * error_probabilities
 
-    column_weights = np.asarray(H.sum(axis=0))[0]
-    unique_column_weights = np.unique(column_weights)
-    if np.setdiff1d(unique_column_weights, np.array([1, 2])).size > 0:
-        raise ValueError("Each column of H must have weight "
-                         "1 or 2, not {}".format(unique_column_weights))
     H.eliminate_zeros()
-    H.sort_indices()
-    num_fault_ids = H.shape[1]
-
-    if weights.shape[0] != num_fault_ids:
-        raise ValueError("Weights array must have num_fault_ids elements")
-
-    timelike_weights = 1.0 if timelike_weights is None else timelike_weights
-    if isinstance(timelike_weights, (int, float, np.integer, np.floating)):
-        timelike_weights = np.ones(H.shape[0], dtype=float) * timelike_weights
-    elif isinstance(timelike_weights, (np.ndarray, list)):
-        timelike_weights = np.array(timelike_weights, dtype=float)
-        if timelike_weights.shape != (H.shape[0],):
-            raise ValueError("timelike_weights should have the same number of elements as there are rows in H")
-    else:
-        raise ValueError("timelike_weights should be a float or a 1d numpy array")
 
     repetitions = 1 if repetitions is None else repetitions
 
-    mep = kwargs.get("measurement_error_probability")
-    if measurement_error_probabilities is not None and mep is not None:
-        raise ValueError("Both `measurement_error_probabilities` and `measurement_error_probability` "
-                         "were provided as arguments. Please "
-                         "provide `measurement_error_probabilities` instead of `measurement_error_probability` "
-                         "as an argument, as use of `measurement_error_probability` has been deprecated.")
-    if measurement_error_probabilities is None and mep is not None:
-        measurement_error_probabilities = mep
+    if repetitions > 1:
+        timelike_weights = 1.0 if timelike_weights is None else timelike_weights
+        if isinstance(timelike_weights, (int, float, np.integer, np.floating)):
+            timelike_weights = np.ones(H.shape[0], dtype=float) * timelike_weights
+        elif isinstance(timelike_weights, (np.ndarray, list)):
+            timelike_weights = np.array(timelike_weights, dtype=float)
+        else:
+            raise ValueError("timelike_weights should be a float or a 1d numpy array")
 
-    p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
-    if isinstance(p_meas, (int, float, np.integer, np.floating)):
-        p_meas = np.ones(H.shape[0], dtype=float)
-    elif isinstance(p_meas, (np.ndarray, list)):
-        p_meas = np.array(p_meas, dtype=float)
-        if p_meas.shape != (H.shape[0],):
-            raise ValueError("measurement_error_probabilities should have dimensions {}"
-                             " not {}".format((H.shape[0],), p_meas.shape))
+        mep = kwargs.get("measurement_error_probability")
+        if measurement_error_probabilities is not None and mep is not None:
+            raise ValueError("Both `measurement_error_probabilities` and `measurement_error_probability` "
+                             "were provided as arguments. Please "
+                             "provide `measurement_error_probabilities` instead of `measurement_error_probability` "
+                             "as an argument, as use of `measurement_error_probability` has been deprecated.")
+        if measurement_error_probabilities is None and mep is not None:
+            measurement_error_probabilities = mep
+
+        p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
+        if isinstance(p_meas, (int, float, np.integer, np.floating)):
+            p_meas = np.ones(H.shape[0], dtype=float)
+        elif isinstance(p_meas, (np.ndarray, list)):
+            p_meas = np.array(p_meas, dtype=float)
+        else:
+            raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
     else:
-        raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
+        timelike_weights = None
+        p_meas = None
 
-    boundary = {H.shape[0] * repetitions} if 1 in unique_column_weights else set()
-    self._matching_graph = MatchingGraph(H.shape[0] * repetitions + len(boundary))
-    self._matching_graph.set_boundary(boundary=boundary)
-    for t in range(repetitions):
-        for i in range(len(H.indptr) - 1):
-            s, e = H.indptr[i:i + 2]
-            v1 = H.indices[s] + H.shape[0] * t
-            v2 = H.indices[e - 1] + H.shape[0] * t if e - s == 2 else next(iter(boundary))
-            self._matching_graph.add_edge(v1, v2, {i}, weights[i],
-                                          error_probabilities[i], merge_strategy=merge_strategy)
-    for t in range(repetitions - 1):
-        for i in range(H.shape[0]):
-            self._matching_graph.add_edge(i + t * H.shape[0], i + (t + 1) * H.shape[0],
-                                          set(), timelike_weights[i], p_meas[i], merge_strategy=merge_strategy)
+    self._matching_graph = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy,
+                                                                        False, repetitions, timelike_weights,
+                                                                        p_meas)

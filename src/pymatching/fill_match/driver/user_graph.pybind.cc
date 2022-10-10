@@ -157,7 +157,10 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
            const py::array_t<double> &weights,
            const py::array_t<double> &error_probabilities,
            const std::string &merge_strategy,
-           bool use_virtual_boundary) {
+           bool use_virtual_boundary,
+           size_t num_repetitions,
+           const py::array_t<double> &timelike_weights,
+           const py::array_t<double> &measurement_error_probabilities) {
             py::object csc_matrix = py::module_::import("scipy.sparse").attr("csc_matrix");
             if (!py::isinstance(check_matrix, csc_matrix))
                 throw std::invalid_argument("Check matrix must be a `scipy.sparse.csc_matrix`.");
@@ -217,48 +220,86 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             auto merge_strategy_enum = merge_strategy_from_string(merge_strategy);
 
             // Now construct the graph
-            size_t num_detectors = num_rows;
-            size_t num_nodes = num_detectors;
-            if (!use_virtual_boundary)
-                num_nodes++;  // Use a boundary node rather than a virtual boundary
-            pm::UserGraph graph(num_nodes, num_cols);
+            size_t num_detectors = num_rows * num_repetitions;
+            pm::UserGraph graph(num_detectors, num_cols);
             // Each column corresponds to an edge. Iterate over the columns, adding the edges to the graph.
-            for (py::ssize_t c = 0; c < num_cols; c++) {
-                auto idx_start = indptr[c];
-                auto idx_end = indptr[c + 1];
-                auto num_dets = idx_end - idx_start;
-                if (idx_start > indices.size() - 1 && idx_start != idx_end)
-                    throw std::invalid_argument(
-                        "`check_matrix.indptr` elements must not exceed size of `check_matrix.indices`");
-                if (num_dets == 2) {
-                    graph.add_or_merge_edge(
-                        indices(idx_start),
-                        indices(idx_start + 1),
-                        {(size_t)c},
-                        weights_unchecked(c),
-                        error_probabilities_unchecked(c),
-                        merge_strategy_enum);
-                } else if (num_dets == 1) {
-                    if (use_virtual_boundary) {
-                        graph.add_or_merge_boundary_edge(
-                            indices(idx_start),
+            // Also iterate over the number of repetitions (in case num_repetitions > 1)
+            for (size_t rep = 0; rep < num_repetitions; rep++) {
+                for (py::ssize_t c = 0; c < num_cols; c++) {
+                    auto idx_start = indptr[c];
+                    auto idx_end = indptr[c + 1];
+                    auto num_dets = idx_end - idx_start;
+                    if (idx_start > indices.size() - 1 && idx_start != idx_end)
+                        throw std::invalid_argument(
+                            "`check_matrix.indptr` elements must not exceed size of `check_matrix.indices`");
+                    if (num_dets == 2) {
+                        graph.add_or_merge_edge(
+                            indices(idx_start) + num_rows * rep,
+                            indices(idx_start + 1) + num_rows * rep,
                             {(size_t)c},
                             weights_unchecked(c),
                             error_probabilities_unchecked(c),
                             merge_strategy_enum);
+                    } else if (num_dets == 1) {
+                        if (use_virtual_boundary) {
+                            graph.add_or_merge_boundary_edge(
+                                indices(idx_start) + num_rows * rep,
+                                {(size_t)c},
+                                weights_unchecked(c),
+                                error_probabilities_unchecked(c),
+                                merge_strategy_enum);
+                        } else {
+                            graph.add_or_merge_edge(
+                                indices(idx_start) + num_rows * rep,
+                                num_detectors,
+                                {(size_t)c},
+                                weights_unchecked(c),
+                                error_probabilities_unchecked(c),
+                                merge_strategy_enum);
+                        }
                     } else {
+                        throw std::invalid_argument(
+                            "`check_matrix` must contain at most two ones per column, but column " + std::to_string(c) +
+                            " has " + std::to_string(num_dets) + " ones.");
+                    }
+                }
+            }
+
+            if (num_repetitions > 1) {
+                if (timelike_weights.is(py::none()))
+                    throw std::invalid_argument("must provide `timelike_weights` for repetitions > 1.");
+                if (measurement_error_probabilities.is(py::none()))
+                    throw std::invalid_argument("must provide `measurement_error_probabilities` for repetitions > 1.");
+                auto t_weights = timelike_weights.unchecked<1>();
+                if (t_weights.size() != num_rows) {
+                    throw std::invalid_argument(
+                        "timelike_weights has length " + std::to_string(t_weights.size()) +
+                        " but its length must equal the number of columns in the check matrix (" +
+                        std::to_string(num_rows) + ").");
+                }
+                auto meas_errs = measurement_error_probabilities.unchecked<1>();
+                if (meas_errs.size() != num_rows) {
+                    throw std::invalid_argument(
+                        "`measurement_error_probabilities` has length " + std::to_string(meas_errs.size()) +
+                        " but its length must equal the number of columns in the check matrix (" +
+                        std::to_string(num_rows) + ").");
+                }
+
+                for (size_t rep = 0; rep < num_repetitions - 1; rep++) {
+                    for (size_t row = 0; row < num_rows; row++) {
                         graph.add_or_merge_edge(
-                            indices(idx_start),
-                            num_detectors,
-                            {(size_t)c},
-                            weights_unchecked(c),
-                            error_probabilities_unchecked(c),
+                            row + rep * num_rows,
+                            row + (rep + 1) * num_rows,
+                            {},
+                            t_weights(row),
+                            meas_errs(row),
                             merge_strategy_enum);
                     }
                 }
             }
 
-            if (!use_virtual_boundary)
+            // Set the boundary if not using a virtual boundary and if a boundary edge was added
+            if (!use_virtual_boundary && graph.nodes.size() == num_detectors + 1)
                 graph.set_boundary({num_detectors});
 
             return graph;
@@ -267,5 +308,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "weights"_a,
         "error_probabilities"_a,
         "merge_strategy"_a = "smallest-weight",
-        "use_virtual_boundary"_a = false);
+        "use_virtual_boundary"_a = false,
+        "num_repetitions"_a = 1,
+        "timelike_weights"_a = py::none(),
+        "measurement_error_probabilities"_a = py::none());
 }

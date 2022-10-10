@@ -32,13 +32,15 @@ def test_boundary_from_check_matrix():
 
 
 def test_nonzero_matrix_elements_not_one_raises_value_error():
-    H = csr_matrix(np.array([[0, 1.01, 1.01], [1.01, 1.01, 0]]))
+    H = csr_matrix(np.array([[0, 2.01, 2.01], [1.01, 1.01, 0]]))
     with pytest.raises(ValueError):
         Matching(H)
 
 
-def test_too_many_checks_per_qubit_raises_value_error():
-    H = csr_matrix(np.array([[1, 1, 0, 0], [1, 0, 1, 0], [1, 0, 0, 1]]))
+def test_too_many_checks_per_column_raises_value_error():
+    H = csr_matrix(np.array([[1, 1, 0, 0],
+                             [1, 0, 1, 0],
+                             [1, 0, 0, 1]]))
     with pytest.raises(ValueError):
         Matching(H)
 
@@ -170,7 +172,7 @@ def test_wrong_measurement_error_probabilities_raises_valueerror(m_errors):
     H = np.array([[1, 1, 0], [0, 1, 1]])
     with pytest.raises(ValueError):
         m = Matching()
-        m.load_from_check_matrix(H, spacelike_weights=np.array([0.3, 0.7, 0.9]),
+        m.load_from_check_matrix(H, weights=np.array([0.3, 0.7, 0.9]),
                                  measurement_error_probabilities=m_errors, repetitions=3)
 
 
@@ -199,6 +201,7 @@ def test_cpp_csc_matrix_to_matching_graph():
         (2, 3, {"fault_ids": {3}, "weight": 2.0, "error_probability": 0.2}),
         (3, 4, {"fault_ids": {4}, "weight": 1.5, "error_probability": 0.1}),
     ]
+    assert g.get_boundary() == {4}
     g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="last-only",
                                                      use_virtual_boundary=True)
     assert g.get_edges() == [
@@ -208,3 +211,20 @@ def test_cpp_csc_matrix_to_matching_graph():
         (2, 3, {"fault_ids": {3}, "weight": 2.0, "error_probability": 0.2}),
         (3, None, {"fault_ids": {4}, "weight": 1.5, "error_probability": 0.1}),
     ]
+    assert g.get_boundary() == set()
+    p_meas = np.array([0.1, 0.2, 0.15, 0.25])
+    t_weights = np.log((1-p_meas)/p_meas)
+    g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
+                                                     use_virtual_boundary=False, num_repetitions=3,
+                                                     timelike_weights=t_weights,
+                                                     measurement_error_probabilities=t_weights
+                                                     )
+
+    with pytest.raises(ValueError):
+        p_meas = np.array([[0.1, 0.2], [0.15, 0.25]])
+        t_weights = np.log((1-p_meas)/p_meas)
+        g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
+                                                         use_virtual_boundary=False, num_repetitions=3,
+                                                         timelike_weights=t_weights,
+                                                         measurement_error_probabilities=t_weights
+                                                         )
