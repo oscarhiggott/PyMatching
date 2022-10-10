@@ -34,14 +34,14 @@ class Matching:
     a `stim.DetectorErrorModel`.
     """
 
-    from pymatching.matching._add_edge import add_edge
+    from pymatching.matching._add_edge import add_edge, add_boundary_edge
     from pymatching.matching._add_noise import add_noise
     from pymatching.matching._decode import decode
     from pymatching.matching._draw import draw
+    from pymatching.matching._load_from_check_matrix import load_from_check_matrix
     from pymatching.matching._load_from_detector_error_model import load_from_detector_error_model
     from pymatching.matching._load_from_networkx import load_from_networkx
     from pymatching.matching._load_from_retworkx import load_from_retworkx
-    from pymatching.matching._load_from_check_matrix import load_from_check_matrix
     from pymatching.matching._output_graph import (edges, to_networkx, to_retworkx)
     from pymatching.matching._properties import (set_boundary_nodes, num_fault_ids, boundary, num_nodes,
                               num_edges, num_detectors)

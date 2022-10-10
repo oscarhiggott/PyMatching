@@ -51,3 +51,39 @@ def test_add_edge():
                 (1, 2, {'fault_ids': {0}, 'weight': 0.6, 'error_probability': 0.3}),
                 (2, 3, {'fault_ids': {1, 2}, 'weight': 0.01, 'error_probability': 0.5})]
     assert m.edges() == expected
+
+
+def test_add_edge_merge_strategy():
+    m = Matching()
+    m.add_edge(0, 10, fault_ids={0}, weight=1.2, error_probability=0.3)
+    assert m.edges() == [(0, 10, {'fault_ids': {0}, 'weight': 1.2, 'error_probability': 0.3})]
+    m.add_edge(0, 10, fault_ids={1}, weight=1.0, error_probability=0.35, merge_strategy="smallest-weight")
+    assert m.edges() == [(0, 10, {'fault_ids': {1}, 'weight': 1.0, 'error_probability': 0.35})]
+    with pytest.raises(ValueError):
+        m.add_edge(0, 10, fault_ids={1}, weight=1.5, error_probability=0.6, merge_strategy="disallow")
+    m.add_edge(0, 10, fault_ids={2}, weight=4.0, error_probability=0.2, merge_strategy="independent")
+    assert m.edges() == [(0, 10, {'fault_ids': {1}, 'weight': 0.9581279969153761, 'error_probability': 0.41})]
+    m = Matching()
+    m.add_edge(1, 10, fault_ids={0}, weight=2, error_probability=0.3)
+    m.add_edge(1, 10, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="first-only")
+    assert m.edges() == [(1, 10, {'fault_ids': {0}, 'weight': 2, 'error_probability': 0.3})]
+    m.add_edge(1, 10, fault_ids={2}, weight=5, error_probability=0.1, merge_strategy="last-only")
+    assert m.edges() == [(1, 10, {'fault_ids': {2}, 'weight': 5, 'error_probability': 0.1})]
+
+
+def test_add_boundary_edge():
+    m = Matching()
+    m.add_boundary_edge(0, fault_ids={0}, weight=1.2, error_probability=0.3)
+    assert m.edges() == [(0, None, {'fault_ids': {0}, 'weight': 1.2, 'error_probability': 0.3})]
+    m.add_boundary_edge(0, fault_ids={1}, weight=1.0, error_probability=0.35, merge_strategy="smallest-weight")
+    assert m.edges() == [(0, None, {'fault_ids': {1}, 'weight': 1.0, 'error_probability': 0.35})]
+    with pytest.raises(ValueError):
+        m.add_boundary_edge(0, fault_ids={1}, weight=1.5, error_probability=0.6, merge_strategy="disallow")
+    m.add_boundary_edge(0, fault_ids={2}, weight=4.0, error_probability=0.2, merge_strategy="independent")
+    assert m.edges() == [(0, None, {'fault_ids': {1}, 'weight': 0.9581279969153761, 'error_probability': 0.41})]
+    m = Matching()
+    m.add_boundary_edge(1, fault_ids={0}, weight=2, error_probability=0.3)
+    m.add_boundary_edge(1, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="first-only")
+    assert m.edges() == [(1, None, {'fault_ids': {0}, 'weight': 2, 'error_probability': 0.3})]
+    m.add_boundary_edge(1, fault_ids={2}, weight=5, error_probability=0.1, merge_strategy="last-only")
+    assert m.edges() == [(1, None, {'fault_ids': {2}, 'weight': 5, 'error_probability': 0.1})]
