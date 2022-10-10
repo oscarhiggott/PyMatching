@@ -157,7 +157,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
            const py::array_t<double> &weights,
            const py::array_t<double> &error_probabilities,
            const std::string &merge_strategy,
-           bool use_virtual_boundary,
+           bool use_virtual_boundary_node,
            size_t num_repetitions,
            const py::array_t<double> &timelike_weights,
            const py::array_t<double> &measurement_error_probabilities) {
@@ -241,7 +241,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                             error_probabilities_unchecked(c),
                             merge_strategy_enum);
                     } else if (num_dets == 1) {
-                        if (use_virtual_boundary) {
+                        if (use_virtual_boundary_node) {
                             graph.add_or_merge_boundary_edge(
                                 indices(idx_start) + num_rows * rep,
                                 {(size_t)c},
@@ -299,7 +299,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             }
 
             // Set the boundary if not using a virtual boundary and if a boundary edge was added
-            if (!use_virtual_boundary && graph.nodes.size() == num_detectors + 1)
+            if (!use_virtual_boundary_node && graph.nodes.size() == num_detectors + 1)
                 graph.set_boundary({num_detectors});
 
             return graph;
@@ -308,7 +308,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "weights"_a,
         "error_probabilities"_a,
         "merge_strategy"_a = "smallest-weight",
-        "use_virtual_boundary"_a = false,
+        "use_virtual_boundary_node"_a = false,
         "num_repetitions"_a = 1,
         "timelike_weights"_a = py::none(),
         "measurement_error_probabilities"_a = py::none());

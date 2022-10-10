@@ -193,7 +193,7 @@ def test_cpp_csc_matrix_to_matching_graph():
     weights = np.array([1.0, 2.0, 3.0, 2.0, 1.5, 5.0])
     error_probabilities = np.array([0.4, 0.3, 0.4, 0.2, 0.1, 0.01])
     g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
-                                                     use_virtual_boundary=False)
+                                                     use_virtual_boundary_node=False)
     assert g.get_edges() == [
         (0, 4, {"fault_ids": {0}, "weight": 1.0, "error_probability": 0.4}),
         (0, 1, {"fault_ids": {1}, "weight": 2.0, "error_probability": 0.3}),
@@ -202,8 +202,9 @@ def test_cpp_csc_matrix_to_matching_graph():
         (3, 4, {"fault_ids": {4}, "weight": 1.5, "error_probability": 0.1}),
     ]
     assert g.get_boundary() == {4}
+    assert g.get_num_nodes() == 5
     g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="last-only",
-                                                     use_virtual_boundary=True)
+                                                     use_virtual_boundary_node=True)
     assert g.get_edges() == [
         (0, None, {"fault_ids": {0}, "weight": 1.0, "error_probability": 0.4}),
         (0, 1, {"fault_ids": {1}, "weight": 2.0, "error_probability": 0.3}),
@@ -212,10 +213,11 @@ def test_cpp_csc_matrix_to_matching_graph():
         (3, None, {"fault_ids": {4}, "weight": 1.5, "error_probability": 0.1}),
     ]
     assert g.get_boundary() == set()
+    assert g.get_num_nodes() == 4
     p_meas = np.array([0.1, 0.2, 0.15, 0.25])
     t_weights = np.log((1-p_meas)/p_meas)
     g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
-                                                     use_virtual_boundary=False, num_repetitions=3,
+                                                     use_virtual_boundary_node=False, num_repetitions=3,
                                                      timelike_weights=t_weights,
                                                      measurement_error_probabilities=t_weights
                                                      )
@@ -224,7 +226,7 @@ def test_cpp_csc_matrix_to_matching_graph():
         p_meas = np.array([[0.1, 0.2], [0.15, 0.25]])
         t_weights = np.log((1-p_meas)/p_meas)
         g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
-                                                         use_virtual_boundary=False, num_repetitions=3,
+                                                         use_virtual_boundary_node=False, num_repetitions=3,
                                                          timelike_weights=t_weights,
                                                          measurement_error_probabilities=t_weights
                                                          )

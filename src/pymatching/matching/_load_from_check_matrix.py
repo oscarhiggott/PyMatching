@@ -30,6 +30,7 @@ def load_from_check_matrix(self,
                            measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
                            *,
                            merge_strategy: str = "smallest-weight",
+                           use_virtual_boundary_node: bool = False,
                            **kwargs
                            ) -> None:
     """
@@ -88,6 +89,16 @@ def load_from_check_matrix(self,
         unchanged. The "first-only" strategy keeps only the existing edge, and ignores the edge being added.
         The "last-only" strategy always keeps the edge being added, replacing the existing edge.
         By default, "smallest-weight"
+    use_virtual_boundary_node: bool, optional
+        This option determines how columns are handled if they contain only a single 1 (representing a boundary edge).
+        Consider a column contains a single 1 at row index i. If `use_virtual_boundary_node=False`, then this column
+        will be handled by adding an edge `(i, H.shape[0])`, and marking the node `H.shape[0]` as a boundary node with
+        `Matching.set_boundary(H.shape[0])`. The resulting graph will contain `H.shape[0]+1` nodes, the largest of
+        which is the boundary node. If `use_virtual_boundary_node=True` then instead the boundary is a virtual node, and
+        this column is handled with `Matching.add_boundary_edge(i, ...)`. The resulting graph will contain `H.shape[0]`
+        nodes, and there is no boundary node. Both options are handled identically by the decoder, although
+        `use_virtual_boundary_node=True` is recommended since it is simpler (with a one-to-one correspondence between
+         nodes and rows of H), and is also slightly more efficient. By default, False (for backward compatibility)
     Examples
     --------
     >>> import pymatching
@@ -162,5 +173,5 @@ def load_from_check_matrix(self,
         p_meas = None
 
     self._matching_graph = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy,
-                                                                        False, repetitions, timelike_weights,
-                                                                        p_meas)
+                                                                        use_virtual_boundary_node, repetitions,
+                                                                        timelike_weights, p_meas)
