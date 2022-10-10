@@ -80,7 +80,7 @@ def load_from_check_matrix(self: 'pymatching.Matching',
         compatibility with previous versions of Pymatching. By default None
     merge_strategy: str, optional
         Which strategy to use when adding an edge (`node1`, `node2`) that is already in the graph. The available
-        options are "disallow", "independent", "smallest-weight", "first-only" and "last-only". "disallow" raises a
+        options are "disallow", "independent", "smallest-weight", "keep-original" and "replace". "disallow" raises a
         `ValueError` if the edge (`node1`, `node2`) is already present. The "independent" strategy assumes that
         the existing edge (`node1`, `node2`) and the edge being added represent independent error mechanisms, and
         they are merged into a new edge with updated weights and error_probabilities accordingly (it is assumed
@@ -88,8 +88,8 @@ def load_from_check_matrix(self: 'pymatching.Matching',
         where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
         the code has distance 2 if parallel edges have different fault_ids anyway). The "smallest-weight" strategy
         keeps only the new edge if it has a smaller weight than the existing edge, otherwise the graph is left
-        unchanged. The "first-only" strategy keeps only the existing edge, and ignores the edge being added.
-        The "last-only" strategy always keeps the edge being added, replacing the existing edge.
+        unchanged. The "keep-original" strategy keeps only the existing edge, and ignores the edge being added.
+        The "replace" strategy always keeps the edge being added, replacing the existing edge.
         By default, "smallest-weight"
     use_virtual_boundary_node: bool, optional
         This option determines how columns are handled if they contain only a single 1 (representing a boundary edge).

@@ -13,29 +13,12 @@
 # limitations under the License.
 
 import warnings
-from typing import Union, List, Set, Tuple, Dict, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pymatching
 
 import networkx as nx
 import retworkx as rx
-
-
-def edges(self: 'pymatching.Matching') -> List[Tuple[int, Optional[int], Dict]]:
-    """Edges of the matching graph
-    Returns a list of edges of the matching graph. Each edge is a
-    tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the
-    indices of the source and target nodes, and `attr` is a dictionary containing the
-    attributes of the edge.
-    The dictionary `attr` has keys `fault_ids` (a set of ints), `weight` (the weight of the edge,
-    set to 1.0 if not specified), and `error_probability`
-    (the error probability of the edge, set to -1 if not specified).
-    Returns
-    -------
-    List of (int, int, dict) tuples
-        A list of edges of the matching graph
-    """
-    return self._matching_graph.get_edges()
 
 
 def to_networkx(self: 'pymatching.Matching') -> nx.Graph:

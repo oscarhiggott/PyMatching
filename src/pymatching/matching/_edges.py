@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Set, TYPE_CHECKING
+from typing import Union, Set, List, Tuple, Optional, Dict, TYPE_CHECKING
 if TYPE_CHECKING:
     import pymatching
 
@@ -56,7 +56,7 @@ def add_edge(
         is flipped independently with the corresponding `error_probability`). By default None
     merge_strategy: str, optional
         Which strategy to use if the edge (`node1`, `node2`) is already in the graph. The available options
-        are "disallow", "independent", "smallest-weight", "first-only" and "last-only". "disallow" raises a
+        are "disallow", "independent", "smallest-weight", "keep-original" and "replace". "disallow" raises a
         `ValueError` if the edge (`node1`, `node2`) is already present. The "independent" strategy assumes that
         the existing edge (`node1`, `node2`) and the edge being added represent independent error mechanisms, and
         they are merged into a new edge with updated weights and error_probabilities accordingly (it is assumed
@@ -65,8 +65,8 @@ def add_edge(
         where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
         the code has distance 2 if parallel edges have different fault_ids anyway). The "smallest-weight" strategy
         keeps only the new edge if it has a smaller weight than the existing edge, otherwise the graph is left
-        unchanged. The "first-only" strategy keeps only the existing edge, and ignores the edge being added.
-        The "last-only" strategy always keeps the edge being added, replacing the existing edge.
+        unchanged. The "keep-original" strategy keeps only the existing edge, and ignores the edge being added.
+        The "replace" strategy always keeps the edge being added, replacing the existing edge.
         By default, "disallow"
     Examples
     --------
@@ -137,7 +137,7 @@ def add_boundary_edge(
         is flipped independently with the corresponding `error_probability`). By default None
     merge_strategy: str, optional
         Which strategy to use if the edge (`node1`, `node2`) is already in the graph. The available options
-        are "disallow", "independent", "smallest-weight", "first-only" and "last-only". "disallow" raises a
+        are "disallow", "independent", "smallest-weight", "keep-original" and "replace". "disallow" raises a
         `ValueError` if the edge (`node1`, `node2`) is already present. The "independent" strategy assumes that
         the existing edge (`node1`, `node2`) and the edge being added represent independent error mechanisms, and
         they are merged into a new edge with updated weights and error_probabilities accordingly (it is assumed
@@ -146,8 +146,8 @@ def add_boundary_edge(
         where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
         the code has distance 2 if parallel edges have different fault_ids anyway). The "smallest-weight" strategy
         keeps only the new edge if it has a smaller weight than the existing edge, otherwise the graph is left
-        unchanged. The "first-only" strategy keeps only the existing edge, and ignores the edge being added.
-        The "last-only" strategy always keeps the edge being added, replacing the existing edge.
+        unchanged. The "keep-original" strategy keeps only the existing edge, and ignores the edge being added.
+        The "replace" strategy always keeps the edge being added, replacing the existing edge.
         By default, "disallow"
     Examples
     --------
@@ -181,3 +181,98 @@ def add_boundary_edge(
     error_probability = error_probability if error_probability is not None else -1
     self._matching_graph.add_boundary_edge(node, fault_ids, weight,
                                            error_probability, merge_strategy)
+
+
+def has_edge(self: 'pymatching.Matching', node1: int, node2: int) -> bool:
+    """
+    Returns True if edge `(node1, node2)` is in the graph.
+
+    Parameters
+    ----------
+    node1: int
+        The index of the first node
+    node2: int
+        The index of the second node
+
+    Returns
+    -------
+    bool
+        True if the edge `(node1, node2)` is in the graph, otherwise False.
+    """
+    return self._matching_graph.has_edge(node1, node2)
+
+
+def has_boundary_edge(self: 'pymatching.Matching', node: int) -> bool:
+    """
+    Returns True if the boundary edge `(node,)` is in the graph. Note: this method does
+    not check if `node` is connected to a boundary node in `Matching.boundary`; it only
+    checks if `node` is connected to the virtual boundary node (i.e. whether there is a boundary
+    edge `(node,)` present).
+
+    Parameters
+    ----------
+    node: int
+        The index of the node
+
+    Returns
+    -------
+    bool
+        True if the boundary edge `(node,)` is present, otherwise False.
+
+    """
+    return self._matching_graph.has_boundary_edge(node)
+
+
+def get_edge_data(self: 'pymatching.Matching', node1: int, node2: int) -> Dict[str, Union[Set[int], float]]:
+    """
+    Returns the edge data associated with the edge `(node1, node2)`.
+
+    Parameters
+    ----------
+    node1: int
+        The index of the first node
+    node2: int
+        The index of the second node
+
+    Returns
+    -------
+    dict
+        A dictionary with keys `fault_ids`, `weight` and `error_probability`, and values giving the respective
+        edge attributes
+    """
+    return self._matching_graph.get_edge_data(node1, node2)
+
+
+def get_boundary_edge_data(self: 'pymatching.Matching', node: int) -> Dict[str, Union[Set[int], float]]:
+    """
+    Returns the edge data associated with the boundary edge `(node,)`.
+
+    Parameters
+    ----------
+    node: int
+        The index of the node
+
+    Returns
+    -------
+    dict
+        A dictionary with keys `fault_ids`, `weight` and `error_probability`, and values giving the respective
+        boundary edge attributes
+    """
+    return self._matching_graph.get_boundary_edge_data(node)
+
+
+def edges(self: 'pymatching.Matching') -> List[Tuple[int, Optional[int], Dict]]:
+    """Edges of the matching graph
+    Returns a list of edges of the matching graph. Each edge is a
+    tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the
+    indices of the source and target nodes, and `attr` is a dictionary containing the
+    attributes of the edge.
+    The dictionary `attr` has keys `fault_ids` (a set of ints), `weight` (the weight of the edge,
+    set to 1.0 if not specified), and `error_probability`
+    (the error probability of the edge, set to -1 if not specified).
+    Returns
+    -------
+    List of (int, int, dict) tuples
+        A list of edges of the matching graph
+    """
+    return self._matching_graph.get_edges()

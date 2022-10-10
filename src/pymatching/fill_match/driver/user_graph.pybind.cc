@@ -19,8 +19,8 @@ pm::MERGE_STRATEGY merge_strategy_from_string(const std::string &merge_strategy)
         {"disallow", pm::DISALLOW},
         {"independent", pm::INDEPENDENT},
         {"smallest-weight", pm::SMALLEST_WEIGHT},
-        {"first-only", pm::FIRST_ONLY},
-        {"last-only", pm::LAST_ONLY}};
+        {"keep-original", pm::KEEP_ORIGINAL},
+        {"replace", pm::REPLACE}};
     auto it = table.find(merge_strategy);
     if (it != table.end()) {
         return it->second;
@@ -145,7 +145,34 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         }
         return edges;
     });
-
+    g.def("has_edge", &pm::UserGraph::has_edge, "node1"_a, "node2"_a);
+    g.def("has_boundary_edge", &pm::UserGraph::has_boundary_edge, "node"_a);
+    g.def("get_edge_data", [](const pm::UserGraph &self, size_t node1, size_t node2) {
+        if (node1 >= self.nodes.size())
+            throw std::invalid_argument("node1 (" + std::to_string(node1) + ") not in graph");
+        size_t idx = self.nodes[node1].index_of_neighbor(node2);
+        if (idx == SIZE_MAX)
+            throw std::invalid_argument(
+                "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
+        auto n = self.nodes[node1].neighbors[idx];
+        std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
+        py::dict attrs(
+            "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
+        return attrs;
+    }, "node1"_a, "node2"_a);
+    g.def("get_boundary_edge_data", [](const pm::UserGraph &self, size_t node) {
+            if (node >= self.nodes.size())
+                throw std::invalid_argument("node (" + std::to_string(node) + ") not in graph");
+            size_t idx = self.nodes[node].index_of_neighbor(SIZE_MAX);
+            if (idx == SIZE_MAX)
+                throw std::invalid_argument(
+                    "Boundary edge (" + std::to_string(node) + ",) not in graph.");
+            auto n = self.nodes[node].neighbors[idx];
+            std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
+            py::dict attrs(
+                "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
+            return attrs;
+        }, "node"_a);
     m.def("detector_error_model_to_matching_graph", [](const char *dem_string) {
         auto dem = stim::DetectorErrorModel(dem_string);
         return pm::detector_error_model_to_user_graph(dem);

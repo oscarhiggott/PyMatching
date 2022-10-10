@@ -21,7 +21,7 @@ struct UserNodeNeighbor {
 class UserNode {
    public:
     UserNode();
-    size_t index_of_neighbor(size_t node);
+    size_t index_of_neighbor(size_t node) const;
     std::vector<UserNodeNeighbor> neighbors;  /// The node's neighbors.
     bool is_boundary;
 };
@@ -30,7 +30,7 @@ typedef std::tuple<size_t, size_t, std::vector<size_t>, double, double> edge_dat
 
 const pm::weight_int NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH = 1 << 14;
 
-enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, FIRST_ONLY, LAST_ONLY };
+enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORIGINAL, REPLACE };
 
 class UserGraph {
    public:
@@ -60,6 +60,8 @@ class UserGraph {
         double weight,
         double error_probability,
         MERGE_STRATEGY merge_strategy = DISALLOW);
+    bool has_edge(size_t node1, size_t node2);
+    bool has_boundary_edge(size_t node);
     void set_boundary(const std::set<size_t>& boundary);
     std::set<size_t> get_boundary();
     size_t get_num_observables();

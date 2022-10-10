@@ -65,9 +65,9 @@ def test_add_edge_merge_strategy():
     assert m.edges() == [(0, 10, {'fault_ids': {1}, 'weight': 0.9581279969153761, 'error_probability': 0.41})]
     m = Matching()
     m.add_edge(1, 10, fault_ids={0}, weight=2, error_probability=0.3)
-    m.add_edge(1, 10, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="first-only")
+    m.add_edge(1, 10, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="keep-original")
     assert m.edges() == [(1, 10, {'fault_ids': {0}, 'weight': 2, 'error_probability': 0.3})]
-    m.add_edge(1, 10, fault_ids={2}, weight=5, error_probability=0.1, merge_strategy="last-only")
+    m.add_edge(1, 10, fault_ids={2}, weight=5, error_probability=0.1, merge_strategy="replace")
     assert m.edges() == [(1, 10, {'fault_ids': {2}, 'weight': 5, 'error_probability': 0.1})]
 
 
@@ -83,7 +83,30 @@ def test_add_boundary_edge():
     assert m.edges() == [(0, None, {'fault_ids': {1}, 'weight': 0.9581279969153761, 'error_probability': 0.41})]
     m = Matching()
     m.add_boundary_edge(1, fault_ids={0}, weight=2, error_probability=0.3)
-    m.add_boundary_edge(1, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="first-only")
+    m.add_boundary_edge(1, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="keep-original")
     assert m.edges() == [(1, None, {'fault_ids': {0}, 'weight': 2, 'error_probability': 0.3})]
-    m.add_boundary_edge(1, fault_ids={2}, weight=5, error_probability=0.1, merge_strategy="last-only")
+    m.add_boundary_edge(1, fault_ids={2}, weight=5, error_probability=0.1, merge_strategy="replace")
     assert m.edges() == [(1, None, {'fault_ids': {2}, 'weight': 5, 'error_probability': 0.1})]
+
+
+def test_has_edge():
+    m = Matching()
+    m.add_edge(0, 1)
+    m.add_edge(1, 2)
+    m.add_boundary_edge(2)
+    m.add_boundary_edge(5)
+    assert m.has_edge(0, 1)
+    assert not m.has_edge(7, 8)
+    assert m.has_edge(1, 2)
+    assert m.has_boundary_edge(2)
+    assert m.has_boundary_edge(5)
+    assert not m.has_boundary_edge(0)
+    assert not m.has_boundary_edge(100)
+
+
+def test_get_edge_data():
+    m = Matching()
+    m.add_edge(0, 1, {0, 1, 2}, 2.5, 0.1)
+    assert m.get_edge_data(0, 1) == {"fault_ids": {0, 1, 2}, "weight": 2.5, "error_probability": 0.1}
+    m.add_boundary_edge(5, {5, 6, 7}, 5.0, 0.34)
+    assert m.get_boundary_edge_data(5) == {"fault_ids": {5, 6, 7}, "weight": 5.0, "error_probability": 0.34}

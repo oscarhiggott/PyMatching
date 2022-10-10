@@ -3,8 +3,8 @@
 pm::UserNode::UserNode() : is_boundary(false) {
 }
 
-size_t pm::UserNode::index_of_neighbor(size_t node) {
-    auto it = std::find_if(neighbors.begin(), neighbors.end(), [&](UserNodeNeighbor& neighbor) {
+size_t pm::UserNode::index_of_neighbor(size_t node) const {
+    auto it = std::find_if(neighbors.begin(), neighbors.end(), [&](const UserNodeNeighbor& neighbor) {
         return neighbor.node == node;
     });
     if (it == neighbors.end())
@@ -28,12 +28,12 @@ void pm::UserGraph::merge_edge_or_boundary_edge(
     if (merge_strategy == DISALLOW) {
         throw std::invalid_argument("Parallel edges not permitted with provided merge strategy");
     } else if (
-        merge_strategy == FIRST_ONLY || (merge_strategy == SMALLEST_WEIGHT && parallel_weight >= neighbor.weight)) {
+        merge_strategy == KEEP_ORIGINAL || (merge_strategy == SMALLEST_WEIGHT && parallel_weight >= neighbor.weight)) {
         return;
     } else {
         double new_weight, new_error_probability;
         bool use_new_observables;
-        if (merge_strategy == LAST_ONLY || merge_strategy == SMALLEST_WEIGHT) {
+        if (merge_strategy == REPLACE || merge_strategy == SMALLEST_WEIGHT) {
             new_weight = parallel_weight;
             new_error_probability = parallel_error_probability;
             use_new_observables = true;
@@ -358,6 +358,18 @@ void pm::UserGraph::get_nodes_on_shortest_path_from_source(size_t src, size_t ds
     } else {
         throw std::invalid_argument("Both the source and destination vertices provided are boundary nodes");
     }
+}
+
+bool pm::UserGraph::has_edge(size_t node1, size_t node2) {
+    if (node1 >= nodes.size())
+        return false;
+    return nodes[node1].index_of_neighbor(node2) != SIZE_MAX;
+}
+
+bool pm::UserGraph::has_boundary_edge(size_t node) {
+    if (node >= nodes.size())
+        return false;
+    return nodes[node].index_of_neighbor(SIZE_MAX) != SIZE_MAX;
 }
 
 pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model) {

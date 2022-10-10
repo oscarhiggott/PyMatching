@@ -31,7 +31,8 @@ class Matching:
     with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
     a `stim.DetectorErrorModel`.
     """
-    from pymatching.matching._add_edge import add_edge, add_boundary_edge
+    from pymatching.matching._edges import (add_edge, add_boundary_edge, edges, has_edge, has_boundary_edge,
+                                            get_edge_data, get_boundary_edge_data)
     from pymatching.matching._add_noise import add_noise
     from pymatching.matching._decode import decode
     from pymatching.matching._draw import draw
@@ -39,7 +40,7 @@ class Matching:
     from pymatching.matching._load_from_detector_error_model import load_from_detector_error_model
     from pymatching.matching._load_from_networkx import load_from_networkx
     from pymatching.matching._load_from_retworkx import load_from_retworkx
-    from pymatching.matching._output_graph import (edges, to_networkx, to_retworkx)
+    from pymatching.matching._output_graph import (to_networkx, to_retworkx)
     from pymatching.matching._properties import (set_boundary_nodes, num_fault_ids, boundary, num_nodes,
                               num_edges, num_detectors)
 

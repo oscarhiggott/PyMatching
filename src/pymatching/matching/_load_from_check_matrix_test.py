@@ -203,7 +203,7 @@ def test_cpp_csc_matrix_to_matching_graph():
     ]
     assert g.get_boundary() == {4}
     assert g.get_num_nodes() == 5
-    g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="last-only",
+    g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="replace",
                                                      use_virtual_boundary_node=True)
     assert g.get_edges() == [
         (0, None, {"fault_ids": {0}, "weight": 1.0, "error_probability": 0.4}),
