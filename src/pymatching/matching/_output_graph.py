@@ -13,20 +13,15 @@
 # limitations under the License.
 
 import warnings
-from typing import Union, List, Set, Tuple, Dict, Optional
+from typing import Union, List, Set, Tuple, Dict, Optional, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
-import matplotlib.cbook
-import numpy as np
 import networkx as nx
 import retworkx as rx
-import scipy
-import stim
-from scipy.sparse import csc_matrix
-
-from pymatching._cpp_pymatching import MatchingGraph, detector_error_model_to_matching_graph
 
 
-def edges(self) -> List[Tuple[int, Optional[int], Dict]]:
+def edges(self: 'pymatching.Matching') -> List[Tuple[int, Optional[int], Dict]]:
     """Edges of the matching graph
     Returns a list of edges of the matching graph. Each edge is a
     tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the
@@ -43,7 +38,7 @@ def edges(self) -> List[Tuple[int, Optional[int], Dict]]:
     return self._matching_graph.get_edges()
 
 
-def to_networkx(self) -> nx.Graph:
+def to_networkx(self: 'pymatching.Matching') -> nx.Graph:
     """Convert to NetworkX graph
     Returns a NetworkX graph corresponding to the matching graph. Each edge
     has attributes `fault_ids`, `weight` and `error_probability` and each node has
@@ -62,7 +57,7 @@ def to_networkx(self) -> nx.Graph:
     return G
 
 
-def to_retworkx(self) -> rx.PyGraph:
+def to_retworkx(self: 'pymatching.Matching') -> rx.PyGraph:
     """Convert to retworkx graph
     Returns a retworkx graph object corresponding to the matching graph. Each edge
     payload is a ``dict`` with keys `fault_ids`, `weight` and `error_probability` and

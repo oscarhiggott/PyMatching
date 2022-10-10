@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import warnings
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 import matplotlib.cbook
 import numpy as np
 import networkx as nx
 
 
-def draw(self) -> None:
+def draw(self: 'pymatching.Matching') -> None:
     """Draw the matching graph using matplotlib
     Draws the matching graph as a matplotlib graph. Stabiliser nodes are
     filled grey and boundary nodes are filled white. The line thickness of each

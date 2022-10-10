@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Set
+from typing import Set, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 
-def set_boundary_nodes(self, nodes: Set[int]) -> None:
+def set_boundary_nodes(self: 'pymatching.Matching', nodes: Set[int]) -> None:
     """
     Set boundary nodes in the matching graph. This defines the
     nodes in `nodes` to be boundary nodes.
@@ -39,7 +41,7 @@ def set_boundary_nodes(self, nodes: Set[int]) -> None:
 
 
 @property
-def num_fault_ids(self) -> int:
+def num_fault_ids(self: 'pymatching.Matching') -> int:
     """
     The number of fault IDs defined in the matching graph
     Returns
@@ -51,7 +53,7 @@ def num_fault_ids(self) -> int:
 
 
 @property
-def boundary(self) -> Set[int]:
+def boundary(self: 'pymatching.Matching') -> Set[int]:
     """Return the indices of the boundary nodes.
     Note that this property is a copy of the set of boundary nodes.
     In-place modification of the set Matching.boundary will not
@@ -66,7 +68,7 @@ def boundary(self) -> Set[int]:
 
 
 @property
-def num_nodes(self) -> int:
+def num_nodes(self: 'pymatching.Matching') -> int:
     """
     The number of nodes in the matching graph
     Returns
@@ -78,7 +80,7 @@ def num_nodes(self) -> int:
 
 
 @property
-def num_edges(self) -> int:
+def num_edges(self: 'pymatching.Matching') -> int:
     """
     The number of edges in the matching graph
     Returns
@@ -90,7 +92,7 @@ def num_edges(self) -> int:
 
 
 @property
-def num_detectors(self) -> int:
+def num_detectors(self: 'pymatching.Matching') -> int:
     """
     The number of detectors in the matching graph. A
     detector is a node that can have a non-trivial syndrome

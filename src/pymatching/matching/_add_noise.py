@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Tuple
+from typing import Union, Tuple, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 import numpy as np
 
 
-def add_noise(self) -> Union[Tuple[np.ndarray, np.ndarray], None]:
+def add_noise(self: 'pymatching.Matching') -> Union[Tuple[np.ndarray, np.ndarray], None]:
     """Add noise by flipping edges in the matching graph with
     a probability given by the error_probility edge attribute.
     The ``error_probability`` must be set for all edges for this

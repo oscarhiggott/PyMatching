@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
-from typing import Union, List, Set, Tuple, Dict, Optional
+from typing import Union, List
 
-import matplotlib.cbook
 import numpy as np
 import networkx as nx
 import retworkx as rx
@@ -23,7 +21,7 @@ import scipy
 import stim
 from scipy.sparse import csc_matrix
 
-from pymatching._cpp_pymatching import MatchingGraph, detector_error_model_to_matching_graph
+from pymatching._cpp_pymatching import MatchingGraph as _MatchingGraph
 
 
 class Matching:
@@ -33,7 +31,6 @@ class Matching:
     with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
     a `stim.DetectorErrorModel`.
     """
-
     from pymatching.matching._add_edge import add_edge, add_boundary_edge
     from pymatching.matching._add_noise import add_noise
     from pymatching.matching._decode import decode
@@ -134,7 +131,7 @@ class Matching:
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
             """
-        self._matching_graph = MatchingGraph()
+        self._matching_graph = _MatchingGraph()
         if graph is None:
             graph = kwargs.get("H")
             if graph is None:

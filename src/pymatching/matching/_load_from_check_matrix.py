@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, List
+from typing import Union, List, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 import numpy as np
 import scipy
@@ -21,7 +23,7 @@ from scipy.sparse import csc_matrix
 from pymatching._cpp_pymatching import MatchingGraph, sparse_column_check_matrix_to_matching_graph
 
 
-def load_from_check_matrix(self,
+def load_from_check_matrix(self: 'pymatching.Matching',
                            H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
                            weights: Union[float, np.ndarray, List[float]] = None,
                            error_probabilities: Union[float, np.ndarray, List[float]] = None,

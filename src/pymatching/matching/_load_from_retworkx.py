@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
+
 import numpy as np
 import retworkx as rx
 
 from pymatching._cpp_pymatching import MatchingGraph
 
 
-def load_from_retworkx(self, graph: rx.PyGraph) -> None:
+def load_from_retworkx(self: 'pymatching.Matching', graph: rx.PyGraph) -> None:
     r"""
     Load a matching graph from a retworkX graph
     Parameters

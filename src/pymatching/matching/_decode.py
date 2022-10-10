@@ -1,9 +1,11 @@
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 import numpy as np
 
 
-def decode(self,
+def decode(self: 'pymatching.Matching',
            z: Union[np.ndarray, List[int]],
            *,
            return_weight: bool = False,

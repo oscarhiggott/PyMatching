@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 import numpy as np
 import networkx as nx
@@ -19,7 +22,7 @@ import networkx as nx
 from pymatching._cpp_pymatching import MatchingGraph
 
 
-def load_from_networkx(self, graph: nx.Graph) -> None:
+def load_from_networkx(self: 'pymatching.Matching', graph: nx.Graph) -> None:
     r"""
     Load a matching graph from a NetworkX graph
     Parameters

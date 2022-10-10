@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Set
+from typing import Union, Set, TYPE_CHECKING
+if TYPE_CHECKING:
+    import pymatching
 
 import numpy as np
 
 
 def add_edge(
-        self,
+        self: 'pymatching.Matching',
         node1: int,
         node2: int,
         fault_ids: Union[int, Set[int]] = None,
@@ -105,7 +107,7 @@ def add_edge(
 
 
 def add_boundary_edge(
-        self,
+        self: 'pymatching.Matching',
         node: int,
         fault_ids: Union[int, Set[int]] = None,
         weight: float = 1.0,
