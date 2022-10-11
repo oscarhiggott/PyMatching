@@ -41,8 +41,8 @@ class Matching:
     from pymatching.matching._load_from_networkx import load_from_networkx
     from pymatching.matching._load_from_retworkx import load_from_retworkx
     from pymatching.matching._output_graph import (to_networkx, to_retworkx)
-    from pymatching.matching._properties import (set_boundary_nodes, num_fault_ids, boundary, num_nodes,
-                              num_edges, num_detectors)
+    from pymatching.matching._properties import (set_boundary_nodes, set_min_num_fault_ids, num_fault_ids,
+                                                 boundary, num_nodes, num_edges, num_detectors)
 
     def __init__(self,
                  graph: Union[scipy.sparse.spmatrix, np.ndarray, rx.PyGraph, nx.Graph, List[

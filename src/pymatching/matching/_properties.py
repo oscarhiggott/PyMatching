@@ -40,6 +40,22 @@ def set_boundary_nodes(self: 'pymatching.Matching', nodes: Set[int]) -> None:
     self._matching_graph.set_boundary(nodes)
 
 
+def set_min_num_fault_ids(self: 'pymatching.Matching', min_num_fault_ids: int) -> None:
+    """
+    Set the minimum number of fault ids in the matching graph.
+
+    Let `max_id` be the maximum fault id assigned to any of the edges in the graph. Then setting
+    `min_num_fault_ids` will ensure that `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`.
+    Note that `Matching.num_fault_ids` sets the length of the correction array output by `Matching.decode`.
+    Parameters
+    ----------
+    min_num_fault_ids: int
+        The required minimum number of fault ids in the matching graph
+
+    """
+    self._matching_graph.set_min_num_observables(min_num_fault_ids)
+
+
 @property
 def num_fault_ids(self: 'pymatching.Matching') -> int:
     """

@@ -22,7 +22,7 @@ import retworkx as rx
 from pymatching._cpp_pymatching import MatchingGraph
 
 
-def load_from_retworkx(self: 'pymatching.Matching', graph: rx.PyGraph) -> None:
+def load_from_retworkx(self: 'pymatching.Matching', graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
     r"""
     Load a matching graph from a retworkX graph
     Parameters
@@ -42,6 +42,11 @@ def load_from_retworkx(self: 'pymatching.Matching', graph: rx.PyGraph) -> None:
         every edge is assigned an error_probability between zero and one,
         then the ``add_noise`` method can be used to simulate noise and
         flip edges independently in the graph.
+    min_num_fault_ids: int
+        Sets the minimum number of fault ids in the matching graph. Let `max_id` be the maximum fault id assigned to
+        any of the edges in the graph. Then setting this argument will ensure that
+        `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`. Note that `Matching.num_fault_ids` sets the length
+        of the correction array output by `Matching.decode`.
     Examples
     --------
     >>> import pymatching
@@ -61,7 +66,8 @@ def load_from_retworkx(self: 'pymatching.Matching', graph: rx.PyGraph) -> None:
         raise TypeError("G must be a retworkx graph")
     boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
     num_nodes = len(graph)
-    g = MatchingGraph(num_nodes)
+    num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
+    g = MatchingGraph(num_nodes, num_fault_ids)
     g.set_boundary(boundary)
     for (u, v, attr) in graph.weighted_edge_list():
         u, v = int(u), int(v)

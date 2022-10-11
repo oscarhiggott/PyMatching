@@ -65,6 +65,7 @@ class UserGraph {
     void set_boundary(const std::set<size_t>& boundary);
     std::set<size_t> get_boundary();
     size_t get_num_observables();
+    void set_min_num_observables(size_t num_observables);
     size_t get_num_nodes();
     size_t get_num_detectors();
     size_t get_num_edges();

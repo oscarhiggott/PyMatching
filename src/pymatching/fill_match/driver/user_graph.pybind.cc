@@ -32,6 +32,7 @@ pm::MERGE_STRATEGY merge_strategy_from_string(const std::string &merge_strategy)
 void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGraph> &g) {
     g.def(py::init<>());
     g.def(py::init<size_t>(), "num_nodes"_a);
+    g.def(py::init<size_t, size_t>(), "num_nodes"_a, "num_fault_ids"_a);
     g.def(
         "add_edge",
         [](pm::UserGraph &self,
@@ -79,6 +80,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     g.def("set_boundary", &pm::UserGraph::set_boundary, "boundary"_a);
     g.def("get_boundary", &pm::UserGraph::get_boundary);
     g.def("get_num_observables", &pm::UserGraph::get_num_observables);
+    g.def("set_min_num_observables", &pm::UserGraph::set_min_num_observables, "num_observables"_a);
     g.def("get_num_nodes", &pm::UserGraph::get_num_nodes);
     g.def("get_num_edges", &pm::UserGraph::get_num_edges);
     g.def("get_num_detectors", &pm::UserGraph::get_num_detectors);

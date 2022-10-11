@@ -368,6 +368,11 @@ bool pm::UserGraph::has_boundary_edge(size_t node) {
     return nodes[node].index_of_neighbor(SIZE_MAX) != SIZE_MAX;
 }
 
+void pm::UserGraph::set_min_num_observables(size_t num_observables) {
+    if (num_observables > _num_observables)
+        _num_observables = num_observables;
+}
+
 pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
     pm::iter_detector_error_model_edges(
