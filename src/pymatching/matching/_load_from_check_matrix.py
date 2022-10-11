@@ -165,7 +165,7 @@ def load_from_check_matrix(self: 'pymatching.Matching',
 
         p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
         if isinstance(p_meas, (int, float, np.integer, np.floating)):
-            p_meas = np.ones(H.shape[0], dtype=float)
+            p_meas = np.ones(H.shape[0], dtype=float) * p_meas
         elif isinstance(p_meas, (np.ndarray, list)):
             p_meas = np.array(p_meas, dtype=float)
         else:
