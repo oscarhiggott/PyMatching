@@ -203,6 +203,11 @@ def test_cpp_csc_matrix_to_matching_graph():
     ]
     assert g.get_boundary() == {4}
     assert g.get_num_nodes() == 5
+    with pytest.raises(ValueError):
+        # Check that scipy.sparse.csr_matrix is not accepted
+        g = sparse_column_check_matrix_to_matching_graph(csr_matrix(H.T), weights, error_probabilities,
+                                                         merge_strategy="smallest-weight",
+                                                         use_virtual_boundary_node=False)
     g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="replace",
                                                      use_virtual_boundary_node=True)
     assert g.get_edges() == [
@@ -215,7 +220,7 @@ def test_cpp_csc_matrix_to_matching_graph():
     assert g.get_boundary() == set()
     assert g.get_num_nodes() == 4
     p_meas = np.array([0.1, 0.2, 0.15, 0.25])
-    t_weights = np.log((1-p_meas)/p_meas)
+    t_weights = np.log((1 - p_meas) / p_meas)
     g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
                                                      use_virtual_boundary_node=False, num_repetitions=3,
                                                      timelike_weights=t_weights,
@@ -224,8 +229,9 @@ def test_cpp_csc_matrix_to_matching_graph():
 
     with pytest.raises(ValueError):
         p_meas = np.array([[0.1, 0.2], [0.15, 0.25]])
-        t_weights = np.log((1-p_meas)/p_meas)
-        g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities, merge_strategy="smallest-weight",
+        t_weights = np.log((1 - p_meas) / p_meas)
+        g = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities,
+                                                         merge_strategy="smallest-weight",
                                                          use_virtual_boundary_node=False, num_repetitions=3,
                                                          timelike_weights=t_weights,
                                                          measurement_error_probabilities=t_weights

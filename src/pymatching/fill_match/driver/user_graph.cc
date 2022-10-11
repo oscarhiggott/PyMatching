@@ -120,7 +120,6 @@ void pm::UserGraph::add_or_merge_boundary_edge(
                 _num_observables = obs + 1;
         }
         _num_edges++;
-        _has_pseudo_boundary_node = true;
         _mwpm_needs_updating = true;
         if (error_probability < 0 || error_probability > 1)
             _all_edges_have_error_probabilities = false;
@@ -133,16 +132,14 @@ pm::UserGraph::UserGraph()
     : _num_observables(0),
       _num_edges(0),
       _mwpm_needs_updating(true),
-      _all_edges_have_error_probabilities(true),
-      _has_pseudo_boundary_node(false) {
+      _all_edges_have_error_probabilities(true) {
 }
 
 pm::UserGraph::UserGraph(size_t num_nodes)
     : _num_observables(0),
       _num_edges(0),
       _mwpm_needs_updating(true),
-      _all_edges_have_error_probabilities(true),
-      _has_pseudo_boundary_node(false) {
+      _all_edges_have_error_probabilities(true) {
     nodes.resize(num_nodes);
 }
 
@@ -150,8 +147,7 @@ pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables)
     : _num_observables(num_observables),
       _num_edges(0),
       _mwpm_needs_updating(true),
-      _all_edges_have_error_probabilities(true),
-      _has_pseudo_boundary_node(false) {
+      _all_edges_have_error_probabilities(true){
     nodes.resize(num_nodes);
 }
 
