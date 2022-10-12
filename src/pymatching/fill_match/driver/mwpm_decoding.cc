@@ -115,7 +115,8 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
     // If some alternating tree nodes remain, a perfect matching cannot be found
     if (mwpm.node_arena.allocated.size() != mwpm.node_arena.available.size()) {
         mwpm.reset();
-        throw std::invalid_argument("No perfect matching could be found. This likely means that the syndrome has odd "
+        throw std::invalid_argument(
+            "No perfect matching could be found. This likely means that the syndrome has odd "
             "parity in the support of a connected component without a boundary.");
     }
 }
@@ -128,6 +129,16 @@ pm::MatchingResult shatter_blossoms_for_all_detection_events_and_extract_obs_mas
             res += mwpm.shatter_blossom_and_extract_matches(mwpm.flooder.graph.nodes[i].region_that_arrived_top);
     }
     return res;
+}
+
+void shatter_blossoms_for_all_detection_events_and_extract_match_edges(
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+    mwpm.flooder.match_edges.clear();
+    for (auto& i : detection_events) {
+        if (mwpm.flooder.graph.nodes[i].region_that_arrived)
+            mwpm.shatter_blossom_and_extract_match_edges(
+                mwpm.flooder.graph.nodes[i].region_that_arrived_top, mwpm.flooder.match_edges);
+    }
 }
 
 pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
@@ -148,12 +159,7 @@ void pm::decode_detection_events(
     process_timeline_until_completion(mwpm, detection_events);
 
     if (num_observables > sizeof(pm::obs_int) * 8) {
-        mwpm.flooder.match_edges.clear();
-        for (auto& i : detection_events) {
-            if (mwpm.flooder.graph.nodes[i].region_that_arrived)
-                mwpm.shatter_blossom_and_extract_match_edges(
-                    mwpm.flooder.graph.nodes[i].region_that_arrived_top, mwpm.flooder.match_edges);
-        }
+        shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
         mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, obs_begin_ptr, weight);
 
         // XOR negative weight observables
@@ -172,4 +178,13 @@ void pm::decode_detection_events(
         // Add negative weight sum to blossom solution weight
         weight = bit_packed_res.weight + mwpm.flooder.negative_weight_sum;
     }
+}
+
+std::vector<pm::CompressedEdge> pm::decode_detection_events_to_match_edges(
+    pm::Mwpm& mwpm,
+    const std::vector<uint64_t>& detection_events) {
+    size_t num_observables = mwpm.flooder.graph.num_observables;
+    process_timeline_until_completion(mwpm, detection_events);
+    shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
+    return std::move(mwpm.flooder.match_edges);
 }

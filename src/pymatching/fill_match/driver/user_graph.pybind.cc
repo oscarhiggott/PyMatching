@@ -342,3 +342,20 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "timelike_weights"_a = py::none(),
         "measurement_error_probabilities"_a = py::none());
 }
+
+//// Convert match edges to a vector of int64_t
+//for (auto& e : mwpm.flooder.match_edges) {
+//    match_edges.push_back(e.loc_from - &mwpm.flooder.graph.nodes[0]);
+//    if (e.loc_to) {
+//        match_edges.push_back(e.loc_to - &mwpm.flooder.graph.nodes[0]);
+//    } else {
+//        match_edges.push_back(-1);
+//    }
+//}
+//
+//// Put observables in a vector of uint64_t, if present
+//if (num_observables <= sizeof(pm::obs_int) * 8 && return_obs_masks_if_present) {
+//    for (auto& e : mwpm.flooder.match_edges) {
+//        observable_masks.push_back(e.obs_mask);
+//    }
+//}

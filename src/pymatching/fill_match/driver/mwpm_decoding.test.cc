@@ -115,6 +115,39 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
     }
 }
 
+TEST(MwpmDecoding, DecodeToMatchEdges) {
+    auto test_case = load_surface_code_d13_p100_test_case();
+
+    pm::weight_int num_distinct_weights = 1001;
+    auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
+
+    stim::SparseShot sparse_shot;
+    size_t num_shots = 0;
+    size_t max_shots = 10;
+    while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
+        if (num_shots > max_shots)
+            break;
+        auto match_edges = pm::decode_detection_events_to_match_edges(mwpm, sparse_shot.hits);
+        uint64_t obs_mask = 0;
+        std::vector<uint64_t> dets;
+        for (auto& e : match_edges) {
+            obs_mask ^= e.obs_mask;
+            dets.push_back(e.loc_from - &mwpm.flooder.graph.nodes[0]);
+            if (e.loc_to)
+                dets.push_back(e.loc_to - &mwpm.flooder.graph.nodes[0]);
+        }
+
+        // sparse_shot.hits already sorted. Compare with sorted dets.
+        std::sort(dets.begin(), dets.end());
+        ASSERT_EQ(dets, sparse_shot.hits);
+
+        // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
+        ASSERT_EQ(obs_mask, test_case.expected_obs_masks[num_shots]);
+        sparse_shot.clear();
+        num_shots++;
+    }
+}
+
 TEST(MwpmDecoding, FillBitVectorFromObsMask) {
     std::vector<uint8_t> expected_bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
     std::vector<uint8_t> bit_vector(10);
@@ -224,7 +257,8 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     for (size_t i = 0; i < num_nodes; i++)
         g.add_edge(i, (i + 1) % num_nodes, 2, {i});
     pm::ExtendedMatchingResult res(num_nodes);
-    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::invalid_argument);
+    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);
+                 , std::invalid_argument);
 }
 
 TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
@@ -253,10 +287,8 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
         } else if (!detection_events.empty() && detection_events[0] == 0) {
             detection_events.erase(detection_events.begin());
         }
-        EXPECT_THROW(
-            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);,
-            std::invalid_argument
-            );
+        EXPECT_THROW(pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);
+                     , std::invalid_argument);
         sparse_shot.clear();
         num_shots++;
     }
