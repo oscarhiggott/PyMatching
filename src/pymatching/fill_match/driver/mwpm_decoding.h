@@ -45,7 +45,7 @@ void decode_detection_events(
     uint8_t* obs_begin_ptr,
     pm::total_weight_int& weight);
 
-std::vector<CompressedEdge> decode_detection_events_to_match_edges(
+void decode_detection_events_to_match_edges(
     pm::Mwpm& mwpm,
     const std::vector<uint64_t>& detection_events);
 

@@ -83,3 +83,27 @@ def test_negative_and_positive_in_matching():
     c, w = m.decode([0, 1, 0, 1], return_weight=True)
     assert np.array_equal(c, np.array([0, 1, 1, 0]))
     assert w == pytest.approx(-9, rel=0.001)
+
+
+def test_decode_to_matched_detection_events():
+    num_nodes = 20
+    m = Matching()
+    m.add_boundary_edge(0)
+    for i in range(num_nodes):
+        m.add_edge(i, i + 1)
+    m.add_boundary_edge(num_nodes)
+
+    dets = np.array([2, 10, 12, 18])
+    syndrome = np.zeros(m.num_detectors, dtype=np.uint8)
+    syndrome[dets] = 1
+
+    arr = m.decode_to_matched_detection_events_array(syndrome)
+    assert np.array_equal(arr, np.array([[2, -1], [10, 12], [18, -1]]))
+
+    d = m.decode_to_matched_detection_events_dict(syndrome)
+    assert d == {
+        2: None,
+        10: 12,
+        12: 10,
+        18: None
+    }

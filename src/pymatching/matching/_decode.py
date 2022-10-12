@@ -1,8 +1,26 @@
 from typing import Union, List, Tuple, TYPE_CHECKING
+
 if TYPE_CHECKING:
     import pymatching
 
 import numpy as np
+
+
+def _syndrome_array_to_detection_events(self: 'pymatching.Matching', z: Union[np.ndarray, List[int]]) -> np.ndarray:
+    try:
+        z = np.array(z, dtype=np.uint8)
+    except:
+        raise TypeError("Syndrome must be of type numpy.ndarray or "
+                        "convertible to numpy.ndarray, not {}".format(z))
+    if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
+                              <= self.num_detectors + len(self.boundary)):
+        detection_events = z.nonzero()[0]
+    elif len(z.shape) == 2 and z.shape[0] * z.shape[1] == self.num_detectors:
+        times, checks = z.T.nonzero()
+        detection_events = times * z.shape[0] + checks
+    else:
+        raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
+    return detection_events
 
 
 def decode(self: 'pymatching.Matching',
@@ -103,21 +121,91 @@ def decode(self: 'pymatching.Matching',
     >>> m.decode(syndrome)
     array([0, 0, 1, 0], dtype=uint8)
     """
-    try:
-        z = np.array(z, dtype=np.uint8)
-    except:
-        raise TypeError("Syndrome must be of type numpy.ndarray or " \
-                        "convertible to numpy.ndarray, not {}".format(z))
-    if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
-                              <= self.num_detectors + len(self.boundary)):
-        defects = z.nonzero()[0]
-    elif len(z.shape) == 2 and z.shape[0] * z.shape[1] == self.num_detectors:
-        times, checks = z.T.nonzero()
-        defects = times * z.shape[0] + checks
-    else:
-        raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
-    correction, weight = self._matching_graph.decode(defects)
+    detection_events = self._syndrome_array_to_detection_events(z)
+    correction, weight = self._matching_graph.decode(detection_events)
     if return_weight:
         return correction, weight
     else:
         return correction
+
+
+def decode_to_matched_detection_events_array(self: 'pymatching.Matching',
+                                             syndrome: Union[np.ndarray, List[int]]
+                                             ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    """
+    Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
+    matched detection events (or detection events matched to the boundary) as a 2D numpy array.
+
+    Parameters
+    ----------
+    syndrome : numpy.ndarray
+        A binary syndrome vector to decode. The number of elements in
+        `syndrome` should equal the number of nodes in the matching graph. If
+        `syndrome` is a 1D array, then `syndrome[i]` is the syndrome at node `i` of
+        the matching graph. If `syndrome` is 2D then `syndrome[i,j]` is the difference
+        (modulo 2) between the (noisy) measurement of stabiliser `i` in time
+        step `j+1` and time step `j` (for the case where the matching graph is
+        constructed from a check matrix with `repetitions>1`).
+    Returns
+    -------
+    numpy.ndarray
+        An 2D array `pairs` giving the endpoints of the paths between detection events in the solution of the matching.
+        If there are `num_paths` paths then the shape of `pairs` is `num_paths.shape=(num_paths, 2)`, and path `i`
+        starts at detection event `pairs[i,0]` and ends at detection event `pairs[i,1]`. For a path `i` connecting
+        a detection event to the boundary (either a boundary node or the virtual boundary node), then `pairs[i,0]` is
+        is the index of the detection event, and `pairs[i,1]=-1` denotes the boundary.
+    >>> import pymatching
+    >>> m = pymatching.Matching()
+    >>> m.add_boundary_edge(0)
+    >>> m.add_edge(0, 1)
+    >>> m.add_edge(1, 2)
+    >>> m.add_edge(2, 3)
+    >>> m.add_edge(3, 4)
+    >>> m.decode_to_matched_detection_events_array([1, 0, 0, 1, 1])
+    array([[ 0, -1],
+           [ 3,  4]])
+    """
+    detection_events = self._syndrome_array_to_detection_events(syndrome)
+    return self._matching_graph.decode_to_matched_detection_events_array(detection_events)
+
+
+def decode_to_matched_detection_events_dict(self: 'pymatching.Matching',
+                                            syndrome: Union[np.ndarray, List[int]]
+                                            ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    """
+    Decode the syndrome `syndrome` using minimum-weight perfect matching, returning a dictionary
+    giving the detection event that each detection event was matched to (or None if it was matched
+    to the boundary)
+
+    Parameters
+    ----------
+    syndrome : numpy.ndarray
+        A binary syndrome vector to decode. The number of elements in
+        `syndrome` should equal the number of nodes in the matching graph. If
+        `syndrome` is a 1D array, then `syndrome[i]` is the syndrome at node `i` of
+        the matching graph. If `syndrome` is 2D then `syndrome[i,j]` is the difference
+        (modulo 2) between the (noisy) measurement of stabiliser `i` in time
+        step `j+1` and time step `j` (for the case where the matching graph is
+        constructed from a check matrix with `repetitions>1`).
+    Returns
+    -------
+    dict
+        A dictionary `mate` giving the detection event that each detection event is matched to (or `None` if
+        it is matched to the boundary). If detection event `i` is matched to detection event `j`, then
+        `mate[i]=j`. If detection event `i` is matched to the boundary (either a boundary node or the virtual boundary
+        node), then `mate[i]=None`.
+    >>> import pymatching
+    >>> m = pymatching.Matching()
+    >>> m.add_boundary_edge(0)
+    >>> m.add_edge(0, 1)
+    >>> m.add_edge(1, 2)
+    >>> m.add_edge(2, 3)
+    >>> m.add_edge(3, 4)
+    >>> d = m.decode_to_matched_detection_events_dict([1, 0, 0, 1, 1])
+    >>> d[3]
+    4
+    >>> d
+    {0: None, 3: 4, 4: 3}
+    """
+    detection_events = self._syndrome_array_to_detection_events(syndrome)
+    return self._matching_graph.decode_to_matched_detection_events_dict(detection_events)

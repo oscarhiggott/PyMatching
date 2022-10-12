@@ -1,8 +1,6 @@
 
 #include "pymatching/fill_match/driver/user_graph.pybind.h"
 
-#include <pybind11/numpy.h>
-
 #include "pybind11/pybind11.h"
 #include "pymatching/fill_match/driver/mwpm_decoding.h"
 #include "stim.h"
@@ -120,6 +118,55 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         std::pair<py::array_t<std::uint8_t>, double> res = {obs_crossed_arr, rescaled_weight};
         return res;
     });
+    g.def(
+        "decode_to_matched_detection_events_array",
+        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
+            auto &mwpm = self.get_mwpm();
+            std::vector<uint64_t> detection_events_vec(
+                detection_events.data(), detection_events.data() + detection_events.size());
+            pm::decode_detection_events_to_match_edges(mwpm, detection_events_vec);
+            //        auto match_edges = new std::vector<int64_t>(2 * mwpm.flooder.match_edges.size());
+            py::ssize_t num_edges = (py::ssize_t)(mwpm.flooder.match_edges.size());
+            py::array_t<int64_t> match_edges = py::array_t<int64_t>(num_edges * 2);
+            py::buffer_info buff = match_edges.request();
+            int64_t *ptr = (int64_t *)buff.ptr;
+
+            // Convert match edges to a vector of int64_t
+            for (size_t i = 0; i < mwpm.flooder.match_edges.size(); i++) {
+                auto &e = mwpm.flooder.match_edges[i];
+                ptr[2 * i] = e.loc_from - &mwpm.flooder.graph.nodes[0];
+                if (e.loc_to) {
+                    ptr[2 * i + 1] = e.loc_to - &mwpm.flooder.graph.nodes[0];
+                } else {
+                    ptr[2 * i + 1] = -1;
+                }
+            }
+            // Reshape the array
+            match_edges.resize({(int)num_edges, 2});
+            return match_edges;
+        });
+    g.def(
+        "decode_to_matched_detection_events_dict",
+        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
+            auto &mwpm = self.get_mwpm();
+            std::vector<uint64_t> detection_events_vec(
+                detection_events.data(), detection_events.data() + detection_events.size());
+            pm::decode_detection_events_to_match_edges(mwpm, detection_events_vec);
+            py::dict match_dict;
+            // Convert match edges to a vector of int64_t
+            for (auto &e : mwpm.flooder.match_edges) {
+                int64_t from_idx = e.loc_from - &mwpm.flooder.graph.nodes[0];
+                if (e.loc_to) {
+                    int64_t to_idx = e.loc_to - &mwpm.flooder.graph.nodes[0];
+                    match_dict[py::cast(from_idx)] = to_idx;
+                    // Also add reversed key-value pair
+                    match_dict[py::cast(to_idx)] = from_idx;
+                } else {
+                    match_dict[py::cast(from_idx)] = py::none();
+                }
+            }
+            return match_dict;
+        });
     g.def("get_edges", [](const pm::UserGraph &self) {
         py::list edges;
         for (size_t i = 0; i < self.nodes.size(); i++) {
@@ -149,32 +196,38 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     });
     g.def("has_edge", &pm::UserGraph::has_edge, "node1"_a, "node2"_a);
     g.def("has_boundary_edge", &pm::UserGraph::has_boundary_edge, "node"_a);
-    g.def("get_edge_data", [](const pm::UserGraph &self, size_t node1, size_t node2) {
-        if (node1 >= self.nodes.size())
-            throw std::invalid_argument("node1 (" + std::to_string(node1) + ") not in graph");
-        size_t idx = self.nodes[node1].index_of_neighbor(node2);
-        if (idx == SIZE_MAX)
-            throw std::invalid_argument(
-                "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
-        auto n = self.nodes[node1].neighbors[idx];
-        std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
-        py::dict attrs(
-            "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
-        return attrs;
-    }, "node1"_a, "node2"_a);
-    g.def("get_boundary_edge_data", [](const pm::UserGraph &self, size_t node) {
+    g.def(
+        "get_edge_data",
+        [](const pm::UserGraph &self, size_t node1, size_t node2) {
+            if (node1 >= self.nodes.size())
+                throw std::invalid_argument("node1 (" + std::to_string(node1) + ") not in graph");
+            size_t idx = self.nodes[node1].index_of_neighbor(node2);
+            if (idx == SIZE_MAX)
+                throw std::invalid_argument(
+                    "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
+            auto n = self.nodes[node1].neighbors[idx];
+            std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
+            py::dict attrs(
+                "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
+            return attrs;
+        },
+        "node1"_a,
+        "node2"_a);
+    g.def(
+        "get_boundary_edge_data",
+        [](const pm::UserGraph &self, size_t node) {
             if (node >= self.nodes.size())
                 throw std::invalid_argument("node (" + std::to_string(node) + ") not in graph");
             size_t idx = self.nodes[node].index_of_neighbor(SIZE_MAX);
             if (idx == SIZE_MAX)
-                throw std::invalid_argument(
-                    "Boundary edge (" + std::to_string(node) + ",) not in graph.");
+                throw std::invalid_argument("Boundary edge (" + std::to_string(node) + ",) not in graph.");
             auto n = self.nodes[node].neighbors[idx];
             std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
             py::dict attrs(
                 "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
             return attrs;
-        }, "node"_a);
+        },
+        "node"_a);
     m.def("detector_error_model_to_matching_graph", [](const char *dem_string) {
         auto dem = stim::DetectorErrorModel(dem_string);
         return pm::detector_error_model_to_user_graph(dem);
@@ -342,20 +395,3 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "timelike_weights"_a = py::none(),
         "measurement_error_probabilities"_a = py::none());
 }
-
-//// Convert match edges to a vector of int64_t
-//for (auto& e : mwpm.flooder.match_edges) {
-//    match_edges.push_back(e.loc_from - &mwpm.flooder.graph.nodes[0]);
-//    if (e.loc_to) {
-//        match_edges.push_back(e.loc_to - &mwpm.flooder.graph.nodes[0]);
-//    } else {
-//        match_edges.push_back(-1);
-//    }
-//}
-//
-//// Put observables in a vector of uint64_t, if present
-//if (num_observables <= sizeof(pm::obs_int) * 8 && return_obs_masks_if_present) {
-//    for (auto& e : mwpm.flooder.match_edges) {
-//        observable_masks.push_back(e.obs_mask);
-//    }
-//}

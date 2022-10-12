@@ -34,7 +34,9 @@ class Matching:
     from pymatching.matching._edges import (add_edge, add_boundary_edge, edges, has_edge, has_boundary_edge,
                                             get_edge_data, get_boundary_edge_data)
     from pymatching.matching._add_noise import add_noise
-    from pymatching.matching._decode import decode
+    from pymatching.matching._decode import (decode, _syndrome_array_to_detection_events,
+                                             decode_to_matched_detection_events_array,
+                                             decode_to_matched_detection_events_dict)
     from pymatching.matching._draw import draw
     from pymatching.matching._load_from_check_matrix import load_from_check_matrix
     from pymatching.matching._load_from_detector_error_model import load_from_detector_error_model

@@ -127,7 +127,8 @@ TEST(MwpmDecoding, DecodeToMatchEdges) {
     while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
         if (num_shots > max_shots)
             break;
-        auto match_edges = pm::decode_detection_events_to_match_edges(mwpm, sparse_shot.hits);
+        pm::decode_detection_events_to_match_edges(mwpm, sparse_shot.hits);
+        auto& match_edges = mwpm.flooder.match_edges;
         uint64_t obs_mask = 0;
         std::vector<uint64_t> dets;
         for (auto& e : match_edges) {
