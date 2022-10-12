@@ -1,7 +1,0 @@
-include LICENSE
-include MANIFEST.in
-include README.md
-include CMakeLists.txt
-recursive-include src *.txt *.py *.cpp *.h
-graft lib
-graft docs
