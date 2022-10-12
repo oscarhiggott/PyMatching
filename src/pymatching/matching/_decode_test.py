@@ -107,3 +107,13 @@ def test_decode_to_matched_detection_events():
         12: 10,
         18: None
     }
+
+
+def test_decode_to_matched_detection_events_with_negative_weights_raises_value_error():
+    m = Matching()
+    m.add_edge(0, 1, weight=-1)
+    with pytest.raises(ValueError):
+        m.decode_to_matched_detection_events_array([0, 0])
+
+    with pytest.raises(ValueError):
+        m.decode_to_matched_detection_events_dict([0, 0])

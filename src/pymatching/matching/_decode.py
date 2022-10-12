@@ -134,7 +134,8 @@ def decode_to_matched_detection_events_array(self: 'pymatching.Matching',
                                              ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
     """
     Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
-    matched detection events (or detection events matched to the boundary) as a 2D numpy array.
+    matched detection events (or detection events matched to the boundary) as a 2D numpy array. Note that
+    (unlike `Matching.decode`), this method currently only supports non-negative edge weights.
 
     Parameters
     ----------
@@ -175,7 +176,8 @@ def decode_to_matched_detection_events_dict(self: 'pymatching.Matching',
     """
     Decode the syndrome `syndrome` using minimum-weight perfect matching, returning a dictionary
     giving the detection event that each detection event was matched to (or None if it was matched
-    to the boundary)
+    to the boundary). Note that (unlike `Matching.decode`), this method currently only supports non-negative
+    edge weights.
 
     Parameters
     ----------
