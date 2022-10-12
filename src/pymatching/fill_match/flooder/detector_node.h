@@ -53,9 +53,9 @@ class DetectorNode {
     std::vector<obs_int> neighbor_observables;  /// Observables crossed by the edge to each neighbor.
 
     /// After it reached this node, how much further did the owning search region grow? Also is it currently growing?
-    inline Varying32 local_radius() const {
+    inline VaryingCT local_radius() const {
         if (region_that_arrived_top == nullptr) {
-            return Varying32{0};
+            return VaryingCT{0};
         }
         return region_that_arrived_top->radius + wrapped_radius_cached;
     }

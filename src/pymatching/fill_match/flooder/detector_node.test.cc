@@ -25,9 +25,9 @@ TEST(DetectorNode, compute_wrapped_radius_within_layer_at_time) {
     owner.blossom_parent = &above;
     above.blossom_parent = &top;
     top.blossom_parent = nullptr;
-    owner.radius = Varying32::frozen(10);
-    above.radius = Varying32::frozen(20);
-    top.radius = Varying32::growing_value_at_time(0, 30);
+    owner.radius = VaryingCT::frozen(10);
+    above.radius = VaryingCT::frozen(20);
+    top.radius = VaryingCT::growing_value_at_time(0, 30);
 
     ASSERT_EQ(node.compute_wrapped_radius(), 25);
 
@@ -57,9 +57,9 @@ TEST(DetectorNode, compute_stitch_radius_at_time_bounded_by_region_towards_neigh
     left.blossom_parent = &parent;
     right.blossom_parent = &parent;
     parent.blossom_parent = nullptr;
-    left.radius = Varying32::frozen(5);
-    right.radius = Varying32::frozen(5);
-    parent.radius = Varying32::growing_value_at_time(0, 5);
+    left.radius = VaryingCT::frozen(5);
+    right.radius = VaryingCT::frozen(5);
+    parent.radius = VaryingCT::growing_value_at_time(0, 5);
     left_node.neighbors.push_back(&right_node);
     right_node.neighbors.push_back(&left_node);
     left_node.neighbor_weights.push_back(20);
@@ -96,9 +96,9 @@ TEST(DetectorNode, compute_stitch_radius_at_time_bounded_by_region_towards_neigh
     left.blossom_parent = &parent;
     right.blossom_parent = &parent;
     parent.blossom_parent = nullptr;
-    left.radius = Varying32::frozen(5);
-    right.radius = Varying32::frozen(8);
-    parent.radius = Varying32::growing_value_at_time(0, 5);
+    left.radius = VaryingCT::frozen(5);
+    right.radius = VaryingCT::frozen(8);
+    parent.radius = VaryingCT::growing_value_at_time(0, 5);
     left_node.neighbors.push_back(&right_node);
     right_node.neighbors.push_back(&left_node);
     left_node.neighbor_weights.push_back(20);

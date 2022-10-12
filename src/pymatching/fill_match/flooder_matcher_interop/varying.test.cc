@@ -1,26 +1,27 @@
 #include "pymatching/fill_match/flooder_matcher_interop/varying.h"
+#include "pymatching/fill_match/ints.h"
 
 #include <gtest/gtest.h>
 
 using namespace pm;
 
 TEST(Varying, GrowingZeroRadiusAtTime) {
-    Varying32 x = Varying32::growing_varying_with_zero_distance_at_time(3);
+    auto x = VaryingCT::growing_varying_with_zero_distance_at_time(3);
     ASSERT_EQ(x.get_distance_at_time(3), 0);
     ASSERT_EQ(x.get_distance_at_time(10), 7);
     ASSERT_EQ(x.get_distance_at_time(0), -3);
 }
 
 TEST(Varying, GetDistanceAtTime) {
-    auto x1 = Varying32((-10 << 2) + 1);
+    auto x1 = VaryingCT((-10 << 2) + 1);
     ASSERT_EQ(x1.get_distance_at_time(15), 5);
     ASSERT_EQ(x1.get_distance_at_time(5), -5);
     ASSERT_EQ(x1.get_growing_distance_at_time(5), -5);
-    auto x2 = Varying32((20 << 2) + 2);
+    auto x2 = VaryingCT((20 << 2) + 2);
     ASSERT_EQ(x2.get_distance_at_time(30), -10);
     ASSERT_EQ(x2.get_distance_at_time(10), 10);
     ASSERT_EQ(x2.get_shrinking_distance_at_time(10), 10);
-    auto x3 = Varying32((120 << 2));
+    auto x3 = VaryingCT((120 << 2));
     ASSERT_EQ(x3.get_distance_at_time(1000), 120);
     ASSERT_EQ(x3.get_distance_at_time(30), 120);
     ASSERT_EQ(x3.y_intercept(), 120);
@@ -42,20 +43,20 @@ TEST(Varying, ThenSlopeAt) {
 }
 
 TEST(Varying, AdditionAndSubtraction) {
-    auto x = Varying32((100 << 2) + 2);
+    auto x = VaryingCT((100 << 2) + 2);
     ASSERT_EQ(x.str(), "100 - t");
     ASSERT_EQ((x + 9).str(), "109 - t");
     ASSERT_EQ((x - 19).str(), "81 - t");
-    auto x2 = Varying32((1000 << 2) + 1);
+    auto x2 = VaryingCT((1000 << 2) + 1);
     ASSERT_EQ((x2 + 100).str(), "1100 + t");
     ASSERT_EQ((x2 - 200).str(), "800 + t");
-    auto x3 = Varying32((50 << 2));
+    auto x3 = VaryingCT((50 << 2));
     ASSERT_EQ((x3 + 1000).str(), "1050");
     ASSERT_EQ((x3 + 1000).str(), "1050");
 }
 
 TEST(Varying, InplaceAdditionAndSubtraction) {
-    auto x = Varying32();
+    auto x = VaryingCT();
     ASSERT_TRUE(x.is_frozen());
     ASSERT_EQ(x.y_intercept(), 0);
 
@@ -76,13 +77,13 @@ TEST(Varying, InplaceAdditionAndSubtraction) {
 }
 
 TEST(Varying, from_base_and_growth) {
-    ASSERT_EQ(Varying32::from_base_and_growth(5, -1).str(), "5 - t");
-    ASSERT_EQ(Varying32::from_base_and_growth(5, 0).str(), "5");
-    ASSERT_EQ(Varying32::from_base_and_growth(5, +1).str(), "5 + t");
+    ASSERT_EQ(VaryingCT::from_base_and_growth(5, -1).str(), "5 - t");
+    ASSERT_EQ(VaryingCT::from_base_and_growth(5, 0).str(), "5");
+    ASSERT_EQ(VaryingCT::from_base_and_growth(5, +1).str(), "5 + t");
 }
 
 TEST(Varying, growing_value_at_time) {
-    auto x = Varying32::growing_value_at_time(10, 5);
+    auto x = VaryingCT::growing_value_at_time(10, 5);
     ASSERT_EQ(x.get_distance_at_time(5), 10);
     ASSERT_EQ(x.get_distance_at_time(6), 11);
     ASSERT_TRUE(x.is_growing());

@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "pymatching/fill_match/ints.h"
+
 namespace pm {
 
 /// A Varying is a value growing linearly with time.
@@ -53,6 +55,7 @@ struct Varying {
 
 using Varying32 = Varying<int32_t>;
 using Varying64 = Varying<int64_t>;
+using VaryingCT = Varying<cumulative_time_int>;
 
 #include "pymatching/fill_match/flooder_matcher_interop/varying.inl"
 

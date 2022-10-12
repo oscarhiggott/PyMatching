@@ -52,14 +52,11 @@ namespace pm {
 /// - Get dequeued out of bucket 0 and yielded as a result.
 template <bool use_validation>
 struct radix_heap_queue {
-    std::array<std::vector<FloodCheckEvent>, sizeof(pm::cyclic_time_int) * 8 + 2> bit_buckets;
+    std::array<std::vector<FloodCheckEvent>, sizeof(pm::cyclic_time_int) * 8 + 1> bit_buckets;
     pm::cumulative_time_int cur_time;
     size_t _num_enqueued;
 
-    radix_heap_queue() : cur_time{0}, _num_enqueued(0) {
-        // Artificial event just to stop the bucket search.
-        bit_buckets.back().push_back(FloodCheckEvent(cyclic_time_int{0xDEAD}));
-    }
+    radix_heap_queue() : cur_time{0}, _num_enqueued(0) {}
 
     size_t size() const {
         return _num_enqueued;
@@ -108,6 +105,8 @@ struct radix_heap_queue {
     ///
     /// If the queue is empty, a tentative event with type NO_TENTATIVE_EVENT is returned.
     FloodCheckEvent dequeue() {
+        if (_num_enqueued == 0)
+            return FloodCheckEvent(cyclic_time_int{0});
         if (bit_buckets[0].empty()) {
             // Need to refill bucket 0, so we can dequeue from it.
 
@@ -115,10 +114,6 @@ struct radix_heap_queue {
             size_t b = 1;
             while (bit_buckets[b].empty()) {
                 b++;
-            }
-            if (b == bit_buckets.size() - 1) {
-                // We found the fake tail bucket. All real buckets are empty. The queue is empty.
-                return FloodCheckEvent(cyclic_time_int{0});
             }
 
             if (b == 1) {

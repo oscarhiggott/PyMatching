@@ -27,7 +27,7 @@ struct GraphFillRegion {
     /// of the region. For graph fill regions starting from blossom-creation events, this is how
     /// much the blossom has grown since it was created (it's the *extra* radius, not the total
     /// radius starting from the detection events).
-    pm::Varying32 radius;
+    pm::VaryingCT radius;
     /// Event tracker for shrink events. Handles ensuring at least, and ideally exactly, one event
     /// to look at the region is in the event queue.
     QueuedEventTracker shrink_event_tracker;

@@ -186,7 +186,7 @@ MwpmEvent GraphFlooder::do_blossom_shattering(GraphFillRegion &region) {
 
 GraphFillRegion *GraphFlooder::create_blossom(std::vector<RegionEdge> &contained_regions) {
     auto blossom_region = region_arena.alloc_default_constructed();
-    blossom_region->radius = Varying32::growing_varying_with_zero_distance_at_time(queue.cur_time);
+    blossom_region->radius = VaryingCT::growing_varying_with_zero_distance_at_time(queue.cur_time);
     blossom_region->blossom_children = std::move(contained_regions);
     for (auto &region_edge : blossom_region->blossom_children) {
         region_edge.region->radius = region_edge.region->radius.then_frozen_at_time(queue.cur_time);

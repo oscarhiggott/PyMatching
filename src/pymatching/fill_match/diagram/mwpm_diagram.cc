@@ -246,7 +246,7 @@ struct StateHelper {
             if (ev.first != SIZE_MAX && ev.second == t) {
                 auto r1 = n.local_radius();
                 auto m = n.neighbors[ev.first];
-                auto r2 = m == nullptr ? Varying32{0} : m->local_radius();
+                auto r2 = m == nullptr ? VaryingCT{0} : m->local_radius();
                 if (!r1.colliding_with(r2)) {
                     continue;
                 }

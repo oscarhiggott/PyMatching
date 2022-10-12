@@ -117,7 +117,7 @@ TEST(Mwpm, BlossomCreatedThenShattered) {
     ASSERT_EQ(
         dequeued_and_processed(25),
         MwpmEvent(RegionHitRegionEventData{blossom, ns[5].region_that_arrived, {&ns[4], &ns[5], 6}}));
-    ASSERT_EQ(blossom->radius, Varying(8 << 2));
+    ASSERT_EQ(blossom->radius, VaryingCT(8 << 2));
 
     // Region 6 collides with matched blossom
     ASSERT_EQ(
@@ -466,8 +466,8 @@ TEST(Mwpm, TwoRegionsGrowingThenMatching) {
     ASSERT_EQ(mwpm.flooder.graph.nodes[1].region_that_arrived->shell_area, expected_area_1);
     std::vector<DetectorNode*> expected_area_3 = {&mwpm.flooder.graph.nodes[3], &mwpm.flooder.graph.nodes[4]};
     ASSERT_EQ(mwpm.flooder.graph.nodes[3].region_that_arrived->shell_area, expected_area_3);
-    ASSERT_EQ(mwpm.flooder.graph.nodes[1].region_that_arrived->radius, Varying(26 << 2));
-    ASSERT_EQ(mwpm.flooder.graph.nodes[3].region_that_arrived->radius, Varying(26 << 2));
+    ASSERT_EQ(mwpm.flooder.graph.nodes[1].region_that_arrived->radius, VaryingCT(26 << 2));
+    ASSERT_EQ(mwpm.flooder.graph.nodes[3].region_that_arrived->radius, VaryingCT(26 << 2));
 }
 
 TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
@@ -508,14 +508,14 @@ TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     mwpm.process_event(e3);
     auto e4 = mwpm.flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(e4.event_type, NO_EVENT);
-    ASSERT_EQ(r1->radius, Varying(14 << 2));
+    ASSERT_EQ(r1->radius, VaryingCT(14 << 2));
     std::vector<DetectorNode*> area_1 = {
         &mwpm.flooder.graph.nodes[1],
         &mwpm.flooder.graph.nodes[0],
         &mwpm.flooder.graph.nodes[2],
         &mwpm.flooder.graph.nodes[3]};
     ASSERT_EQ(r1->shell_area, area_1);
-    ASSERT_EQ(r4->radius, Varying(2 << 2));
+    ASSERT_EQ(r4->radius, VaryingCT(2 << 2));
     std::vector<DetectorNode*> area_4 = {&mwpm.flooder.graph.nodes[4]};
     ASSERT_EQ(r4->shell_area, area_4);
     for (auto ri : {r1, r4, r5, r6})
