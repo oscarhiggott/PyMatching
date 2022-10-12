@@ -84,6 +84,7 @@ set(PERF_FILES
 
 set(PYTHON_API_FILES
         src/pymatching/fill_match/driver/user_graph.pybind.cc
+        src/pymatching/rand/rand_gen.pybind.cc
         src/pymatching/pymatching.pybind.cc
         )
 
@@ -126,5 +127,6 @@ find_package(pybind11 CONFIG REQUIRED)
 pybind11_add_module(pymatching_python_bindings ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
 target_link_libraries(pymatching_python_bindings PRIVATE libstim)
 set_target_properties(pymatching_python_bindings PROPERTIES OUTPUT_NAME _cpp_pymatching)
+target_compile_options(pymatching_python_bindings PRIVATE -O3 -march=native)
 add_compile_definitions(PYMATCHING_PYBIND11_MODULE_NAME=_cpp_pymatching)
 install(TARGETS pymatching_python_bindings DESTINATION .)
