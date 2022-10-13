@@ -44,7 +44,7 @@ int main_predict(int argc, const char **argv) {
     auto writer = stim::MeasureRecordWriter::make(predictions_out, predictions_out_format.id);
     writer->begin_result_type('L');
 
-    pm::weight_int num_buckets = 1000;
+    pm::weight_int num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     stim::SparseShot sparse_shot;
@@ -109,7 +109,7 @@ int main_count_mistakes(int argc, const char **argv) {
     auto reader =
         stim::MeasureRecordReader::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
-    pm::weight_int num_buckets = 1000;
+    pm::weight_int num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     stim::SparseShot sparse_shot;

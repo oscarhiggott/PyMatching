@@ -36,7 +36,7 @@ TEST(UserGraph, ConstructGraph) {
     ASSERT_EQ(g2.nodes.size(), 5);
     pm::Neighbor n = {nullptr, 4.1, {2}};
     ASSERT_EQ(g2.nodes[0].neighbors[0], nullptr);
-    ASSERT_EQ(g2.nodes[0].neighbor_weights[0], (pm::weight_int)(pm::merge_weights(4.1, 1.0) * mwpm.flooder.graph.normalising_constant));
+    ASSERT_EQ(g2.nodes[0].neighbor_weights[0], 2 * (pm::weight_int)(pm::merge_weights(4.1, 1.0) * mwpm.flooder.graph.normalising_constant / 2));
     ASSERT_EQ(g2.nodes[0].neighbor_observables[0], 1 << 2);
     ASSERT_EQ(g2.nodes[0].neighbors[1], &g2.nodes[1]);
     ASSERT_EQ(g2.nodes[0].neighbor_weights[1], 2 * (pm::weight_int)(pm::merge_weights(2.5, 2.1) * mwpm.flooder.graph.normalising_constant / 2));
