@@ -20,3 +20,4 @@ perf.data.old
 __pycache__
 _skbuild
 *.so
+bazel-*

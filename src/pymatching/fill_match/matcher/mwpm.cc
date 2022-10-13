@@ -154,7 +154,8 @@ void Mwpm::handle_blossom_shattering(const BlossomShatterEventData &event) {
     auto blossom_cycle = std::move(event.blossom_region->blossom_children);
     auto blossom_alt_node = event.blossom_region->alt_tree_node;
     size_t bsize = blossom_cycle.size();
-    size_t parent_idx, child_idx;
+    size_t parent_idx = 0;
+    size_t child_idx = 0;
     for (size_t i = 0; i < bsize; i++) {
         if (blossom_cycle[i].region == event.in_parent_region) {
             parent_idx = i;

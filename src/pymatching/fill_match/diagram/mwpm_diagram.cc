@@ -152,7 +152,6 @@ struct StateHelper {
             }
             cx /= p.size();
             cy /= p.size();
-            auto center = coords[b.first - &ns[0]];
             std::sort(p.begin(), p.end(), [&](std::pair<float, float> a, std::pair<float, float> b) -> bool {
                 return atan2f(a.second - cy, a.first - cx) < atan2f(b.second - cy, b.first - cx);
             });
@@ -459,7 +458,7 @@ void pm::write_animated_decoding_svg_frames(
     }
 
     // Run decoding.
-    auto next_draw_time = max_growth_between_frames;
+    auto next_draw_time = (pm::cumulative_time_int)max_growth_between_frames;
     bool just_drew_interesting_event = false;
     while (!check_if_done()) {
         // Advance time.
@@ -472,7 +471,7 @@ void pm::write_animated_decoding_svg_frames(
             mwpm.flooder.queue.cur_time = next_draw_time;
             output_frame(pm::MwpmEvent::no_event());
             mwpm.flooder.queue.cur_time = t;
-            next_draw_time += max_growth_between_frames;
+            next_draw_time += (pm::cumulative_time_int)max_growth_between_frames;
             just_drew_interesting_event = false;
         }
 
