@@ -1,31 +1,36 @@
-name: "Pip"
+name: Pip
 
 on:
   workflow_dispatch:
   pull_request:
   push:
     branches:
-      - sparse-blossom-remove-skbuild
+      - master
 
 jobs:
   build:
-    name: Build with Pip
-    runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.6", "3.10"]
+        python-version: ["3.6", "3.9"]
+
+    runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Build and install
-      run: pip install --verbose .
+      - name: Add requirements
+        run: python -m pip install --upgrade wheel setuptools
 
-    - name: Test
-      run: pytest src
+      - name: Build and install
+        run: pip install --verbose .[test]
+
+      - name: Test
+        run: python -m pytest
