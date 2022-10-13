@@ -25,7 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Build and install
-      run: pip install --verbose .[test]
+      run: pip install --verbose .
 
     - name: Test
       run: pytest src

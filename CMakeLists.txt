@@ -121,9 +121,9 @@ gtest_discover_tests(pymatching_tests)
 #    list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
 #endif()
 
-find_package(Python COMPONENTS Interpreter Development)
-find_package(pybind11 CONFIG REQUIRED)
-
+#find_package(Python COMPONENTS Interpreter Development)
+#find_package(pybind11 CONFIG REQUIRED)
+add_subdirectory(pybind11)
 pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
 target_link_libraries(_cpp_pymatching PRIVATE libstim)
 #set_target_properties(_cpp_pymatching PROPERTIES OUTPUT_NAME _cpp_pymatching)
