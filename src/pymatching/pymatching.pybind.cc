@@ -15,7 +15,7 @@ int pymatching_main(const std::vector<std::string> &args) {
     return pm::main(argv.size(), argv.data());
 }
 
-PYBIND11_MODULE(PYMATCHING_PYBIND11_MODULE_NAME, m) {
+PYBIND11_MODULE(_cpp_pymatching, m) {
     auto matching_graph = pm_pybind::pybind_user_graph(m);
     pm_pybind::pybind_user_graph_methods(m, matching_graph);
     pm_pybind::pybind_rand_gen_methods(m);

@@ -1,4 +1,5 @@
 .idea
+build
 cmake-build*
 Makefile
 PyMatching2.cbp

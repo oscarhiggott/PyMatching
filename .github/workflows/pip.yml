@@ -5,7 +5,7 @@ on:
   pull_request:
   push:
     branches:
-      - sparse-blossom
+      - sparse-blossom-remove-skbuild
 
 jobs:
   build:

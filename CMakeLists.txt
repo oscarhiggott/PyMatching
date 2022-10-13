@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.4...3.18)
 project(PyMatching2)
 
 include_directories(src)
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY out)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY out)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY out)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY out)
+#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY out)
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY out)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -109,24 +109,28 @@ target_link_libraries(pymatching_perf libstim)
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
 
-if(SKBUILD)
-    # Scikit-Build does not add your site-packages to the search path
-    # automatically, so we need to add it _or_ the pybind11 specific directory
-    # here.
-    execute_process(
-            COMMAND "${PYTHON_EXECUTABLE}" -c
-            "import pybind11; print(pybind11.get_cmake_dir())"
-            OUTPUT_VARIABLE _tmp_dir
-            OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
-    list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
-endif()
+#if(SKBUILD)
+#    # Scikit-Build does not add your site-packages to the search path
+#    # automatically, so we need to add it _or_ the pybind11 specific directory
+#    # here.
+#    execute_process(
+#            COMMAND "${PYTHON_EXECUTABLE}" -c
+#            "import pybind11; print(pybind11.get_cmake_dir())"
+#            OUTPUT_VARIABLE _tmp_dir
+#            OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
+#    list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
+#endif()
 
 find_package(Python COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
 
-pybind11_add_module(pymatching_python_bindings ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
-target_link_libraries(pymatching_python_bindings PRIVATE libstim)
-set_target_properties(pymatching_python_bindings PROPERTIES OUTPUT_NAME _cpp_pymatching)
-target_compile_options(pymatching_python_bindings PRIVATE -O3 -march=native)
-add_compile_definitions(PYMATCHING_PYBIND11_MODULE_NAME=_cpp_pymatching)
-install(TARGETS pymatching_python_bindings DESTINATION .)
+pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
+target_link_libraries(_cpp_pymatching PRIVATE libstim)
+#set_target_properties(_cpp_pymatching PROPERTIES OUTPUT_NAME _cpp_pymatching)
+target_compile_options(_cpp_pymatching PRIVATE -O3 -march=native)
+#add_compile_definitions(PYMATCHING_PYBIND11_MODULE_NAME=_cpp_pymatching)
+# EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
+# define (VERSION_INFO) here.
+#target_compile_definitions(_cpp_pymatching
+#        PRIVATE VERSION_INFO=${PYMATCHING_VERSION_INFO})
+#install(TARGETS _cpp_pymatching DESTINATION .)
