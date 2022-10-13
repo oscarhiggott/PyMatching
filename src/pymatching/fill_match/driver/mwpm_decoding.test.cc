@@ -149,6 +149,35 @@ TEST(MwpmDecoding, DecodeToMatchEdges) {
     }
 }
 
+TEST(MwpmDecoding, CompareSolutionObsWithMaxNumBuckets) {
+    for (size_t i : {0, 1}) {
+        auto test_case = load_surface_code_d13_p100_test_case();
+        pm::weight_int num_distinct_weights = 1 << (sizeof(pm::weight_int) * 8 - 4);
+        if (i == 1)
+            test_case.detector_error_model.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+        auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
+
+        stim::SparseShot sparse_shot;
+        size_t num_mistakes = 0;
+        size_t num_shots = 0;
+        size_t max_shots = 100;
+        pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+        while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
+            if (num_shots > max_shots)
+                break;
+            pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+            if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+                num_mistakes++;
+            }
+            ASSERT_EQ(res.obs_crossed[0], test_case.expected_obs_masks[num_shots]);
+            sparse_shot.clear();
+            num_shots++;
+            std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
+            res.weight = 0;
+        }
+    }
+}
+
 TEST(MwpmDecoding, FillBitVectorFromObsMask) {
     std::vector<uint8_t> expected_bit_vector = {0, 0, 0, 1, 0, 0, 0, 1, 0, 1};
     std::vector<uint8_t> bit_vector(10);
