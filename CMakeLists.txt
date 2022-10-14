@@ -11,10 +11,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (CMAKE_OSX_ARCHITECTURES MATCHES arm64)
     # -match=native not supported by Clang on M1 until v15
     set(ARCH_OPT "-O3")
-elseif (MSVC)
-    set(ARCH_OPT "-O2")
+elseif (NOT(MSVC))
+    set(ARCH_OPT "-O3" "-march=native")
 else ()
-    set(ARCH_OPT "-O3 -march=native")
+    set(ARCH_OPT "-O2")
 endif ()
 
 include(FetchContent)
