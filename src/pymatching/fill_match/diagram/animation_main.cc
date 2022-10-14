@@ -20,7 +20,6 @@ int pm::main_animation(int argc, const char **argv) {
             "--held_frames_at_start",
             "--held_frames_at_end",
             "--max_growth_between_frames",
-            "--max_edge_weight",
             "--pixels_per_unit_length",
             "--quiet",
         },
@@ -40,7 +39,6 @@ int pm::main_animation(int argc, const char **argv) {
     size_t held_frames_at_end = stim::find_int64_argument("--held_frames_at_end", -1, 0, 1000000, argc, argv);
     size_t max_growth_between_frames =
         stim::find_int64_argument("--max_growth_between_frames", -1, 0, 1000000, argc, argv);
-    size_t max_edge_weight = stim::find_int64_argument("--max_edge_weight", -1, 4, 2048, argc, argv);
     size_t pixels_per_unit_length = stim::find_int64_argument("--pixels_per_unit_length", -1, 4, 2048, argc, argv);
     std::string out_dir = stim::require_find_argument("--out_dir", argc, argv);
     if (!out_dir.ends_with('/') && !out_dir.ends_with('\\')) {

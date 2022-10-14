@@ -68,29 +68,29 @@ void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const 
 }
 
 MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables)
-    : num_nodes(num_nodes), num_observables(num_observables), negative_weight_sum(0), normalising_constant(0) {
+    : negative_weight_sum(0), num_nodes(num_nodes), num_observables(num_observables), normalising_constant(0) {
     nodes.resize(num_nodes);
 }
 
 MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables, double normalising_constant)
-    : num_nodes(num_nodes),
+    : negative_weight_sum(0),
+      num_nodes(num_nodes),
       num_observables(num_observables),
-      negative_weight_sum(0),
       normalising_constant(normalising_constant) {
     nodes.resize(num_nodes);
 }
 
 MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
     : nodes(std::move(graph.nodes)),
-      negative_weight_observables_set(std::move(graph.negative_weight_observables_set)),
       negative_weight_detection_events_set(std::move(graph.negative_weight_detection_events_set)),
+      negative_weight_observables_set(std::move(graph.negative_weight_observables_set)),
+      negative_weight_sum(graph.negative_weight_sum),
       num_nodes(graph.num_nodes),
       num_observables(graph.num_observables),
-      negative_weight_sum(graph.negative_weight_sum),
       normalising_constant(graph.normalising_constant) {
 }
 
-MatchingGraph::MatchingGraph() : num_nodes(0), num_observables(0), negative_weight_sum(0), normalising_constant(0) {
+MatchingGraph::MatchingGraph() : negative_weight_sum(0), num_nodes(0), num_observables(0), normalising_constant(0) {
 }
 
 void MatchingGraph::update_negative_weight_observables(const std::vector<size_t>& observables) {

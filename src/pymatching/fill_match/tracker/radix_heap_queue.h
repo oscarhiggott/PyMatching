@@ -1,6 +1,7 @@
 #ifndef PYMATCHING2_BUCKET_QUEUE_H
 #define PYMATCHING2_BUCKET_QUEUE_H
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <iostream>

@@ -264,20 +264,20 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
 
             auto weights_unchecked = weights.unchecked<1>();
             // Check weights array size is correct
-            if (weights_unchecked.size() != num_cols)
+            if ((size_t)weights_unchecked.size() != num_cols)
                 throw std::invalid_argument(
                     "The size of the `weights` array (" + std::to_string(weights_unchecked.size()) +
                     ") should match the number of columns in the check matrix (" + std::to_string(num_cols) + ")");
             auto error_probabilities_unchecked = error_probabilities.unchecked<1>();
             // Check error_probabilities array is correct
-            if (error_probabilities_unchecked.size() != num_cols)
+            if ((size_t)error_probabilities_unchecked.size() != num_cols)
                 throw std::invalid_argument(
                     "The size of the `error_probabilities` array (" +
                     std::to_string(error_probabilities_unchecked.size()) +
                     ") should match the number of columns in the check matrix (" + std::to_string(num_cols) + ")");
 
             // Check indptr array size is correct
-            if (indptr.size() != num_cols + 1)
+            if ((size_t)indptr.size() != num_cols + (size_t)1)
                 throw std::invalid_argument(
                     "`check_matrix.indptr` size (" + std::to_string(indptr.size()) +
                     ") must be 1 larger than number of columns (" + std::to_string(num_cols) + ").");
@@ -307,7 +307,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             // Each column corresponds to an edge. Iterate over the columns, adding the edges to the graph.
             // Also iterate over the number of repetitions (in case num_repetitions > 1)
             for (size_t rep = 0; rep < num_repetitions; rep++) {
-                for (py::ssize_t c = 0; c < num_cols; c++) {
+                for (py::ssize_t c = 0; (size_t)c < num_cols; c++) {
                     auto idx_start = indptr[c];
                     auto idx_end = indptr[c + 1];
                     auto num_dets = idx_end - idx_start;
@@ -353,14 +353,14 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 if (measurement_error_probabilities.is(py::none()))
                     throw std::invalid_argument("must provide `measurement_error_probabilities` for repetitions > 1.");
                 auto t_weights = timelike_weights.unchecked<1>();
-                if (t_weights.size() != num_rows) {
+                if ((size_t)t_weights.size() != num_rows) {
                     throw std::invalid_argument(
                         "timelike_weights has length " + std::to_string(t_weights.size()) +
                         " but its length must equal the number of columns in the check matrix (" +
                         std::to_string(num_rows) + ").");
                 }
                 auto meas_errs = measurement_error_probabilities.unchecked<1>();
-                if (meas_errs.size() != num_rows) {
+                if ((size_t)meas_errs.size() != num_rows) {
                     throw std::invalid_argument(
                         "`measurement_error_probabilities` has length " + std::to_string(meas_errs.size()) +
                         " but its length must equal the number of columns in the check matrix (" +

@@ -1,6 +1,7 @@
 #ifndef PYMATCHING_FILL_MATCH_ARENA_H
 #define PYMATCHING_FILL_MATCH_ARENA_H
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include <algorithm>

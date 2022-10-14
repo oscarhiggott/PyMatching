@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "search_flooder.h"
 
 pm::SearchFlooder::SearchFlooder() : target_type(NO_TARGET) {
