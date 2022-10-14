@@ -20,7 +20,7 @@ struct DetectorNode;
 struct CompressedEdge {
     /// The detection event where the path starts.
     DetectorNode* loc_from;
-    /// The detection event where the path ends.
+    /// The detection event where the path ends (or nullptr if it ends at the boundary).
     DetectorNode* loc_to;
     /// A bit mask of which observables were crossed an odd number of
     /// times by the path. The bit 1<<K is set if the K'th observable

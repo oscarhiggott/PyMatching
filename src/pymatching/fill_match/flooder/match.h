@@ -15,7 +15,7 @@ class GraphFillRegion;
 /// process terminated) two of their detection events will be matched to each other. The
 /// specific detection events to match are identified by `edge.loc_from` and `edge.loc_to`.
 struct Match {
-    /// The region being matched to (or nullptr if not matched).
+    /// The region being matched to (or nullptr if matched to the boundary).
     pm::GraphFillRegion* region;
     /// A summary of the low-level path from this region to that region, including the
     /// start/end detection events and the observables that were crossed.
