@@ -8,6 +8,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY out)
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY out)
 
+if (CMAKE_OSX_ARCHITECTURES MATCHES arm64)
+    # -match=native not supported by Clang on M1 until v15
+    set(ARCH_OPT "-O3")
+elseif (MSVC)
+    set(ARCH_OPT "-O2")
+else ()
+    set(ARCH_OPT "-O3 -march=native")
+endif ()
+
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -21,11 +30,16 @@ FetchContent_Declare(stim
         GIT_REPOSITORY https://github.com/quantumlib/stim.git
         GIT_TAG v1.9.0)
 FetchContent_GetProperties(stim)
-if(NOT stim_POPULATED)
+if (NOT stim_POPULATED)
     FetchContent_Populate(stim)
     add_subdirectory(${stim_SOURCE_DIR})
-endif()
-target_compile_options(libstim PRIVATE -O3 -fno-strict-aliasing -fPIC -march=native)
+endif ()
+
+if (NOT (MSVC))
+    target_compile_options(libstim PRIVATE -fno-strict-aliasing -fPIC ${ARCH_OPT})
+else ()
+    target_compile_options(libstim PRIVATE -fPIC ${ARCH_OPT})
+endif ()
 
 set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/driver/namespaced_main.cc
@@ -92,36 +106,32 @@ set(PYTHON_API_FILES
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
 
-target_compile_options(pymatching PRIVATE -O3 -march=native)
-target_link_options(pymatching PRIVATE -pthread -O3 -march=native)
+target_compile_options(pymatching PRIVATE ${ARCH_OPT})
+if (NOT (MSVC))
+    target_link_options(pymatching PRIVATE -pthread ${ARCH_OPT})
+endif ()
 target_link_libraries(pymatching libstim)
 
 enable_testing()
 
 add_executable(pymatching_tests ${SOURCE_FILES_NO_MAIN} ${TEST_FILES})
 target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer -coverage)
-target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined -coverage)
+if (NOT (MSVC))
+    target_link_options(pymatching_tests PRIVATE -pthread -fsanitize=address -fsanitize=undefined -coverage)
+else ()
+    target_link_options(pymatching_tests PRIVATE -fsanitize=address -fsanitize=undefined -coverage)
+endif ()
 target_link_libraries(pymatching_tests GTest::gtest_main GTest::gmock_main libstim)
 
 add_executable(pymatching_perf ${SOURCE_FILES_NO_MAIN} ${PERF_FILES})
-target_compile_options(pymatching_perf PRIVATE -O3 -march=native)
-target_link_options(pymatching_perf PRIVATE -pthread -O3)
+target_compile_options(pymatching_perf PRIVATE ${ARCH_OPT})
+if (NOT (MSVC))
+    target_link_options(pymatching_perf PRIVATE -pthread -O3)
+endif ()
 target_link_libraries(pymatching_perf libstim)
 
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
-
-#if(SKBUILD)
-#    # Scikit-Build does not add your site-packages to the search path
-#    # automatically, so we need to add it _or_ the pybind11 specific directory
-#    # here.
-#    execute_process(
-#            COMMAND "${PYTHON_EXECUTABLE}" -c
-#            "import pybind11; print(pybind11.get_cmake_dir())"
-#            OUTPUT_VARIABLE _tmp_dir
-#            OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ECHO STDOUT)
-#    list(APPEND CMAKE_PREFIX_PATH "${_tmp_dir}")
-#endif()
 
 find_package(Python COMPONENTS Interpreter Development)
 #find_package(pybind11 CONFIG REQUIRED)
@@ -129,7 +139,7 @@ add_subdirectory(pybind11)
 pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
 target_link_libraries(_cpp_pymatching PRIVATE libstim)
 #set_target_properties(_cpp_pymatching PROPERTIES OUTPUT_NAME _cpp_pymatching)
-target_compile_options(_cpp_pymatching PRIVATE -O3 -march=native)
+target_compile_options(_cpp_pymatching PRIVATE ${ARCH_OPT})
 #add_compile_definitions(PYMATCHING_PYBIND11_MODULE_NAME=_cpp_pymatching)
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
