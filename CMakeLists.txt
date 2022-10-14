@@ -25,6 +25,7 @@ if(NOT stim_POPULATED)
     FetchContent_Populate(stim)
     add_subdirectory(${stim_SOURCE_DIR})
 endif()
+target_compile_options(libstim PRIVATE -O3 -fno-strict-aliasing -fPIC -march=native)
 
 set(SOURCE_FILES_NO_MAIN
         src/pymatching/fill_match/driver/namespaced_main.cc
