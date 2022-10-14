@@ -101,6 +101,10 @@ class CMakeBuild(build_ext):
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
 
+        if sys.platform.startswith('linux'):
+            os.environ["CC"] = "gcc-10"
+            os.environ["CXX"] = "g++-10"
+
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
         if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
