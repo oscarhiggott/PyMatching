@@ -133,7 +133,6 @@ pm::MatchingResult shatter_blossoms_for_all_detection_events_and_extract_obs_mas
 
 void shatter_blossoms_for_all_detection_events_and_extract_match_edges(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
-    mwpm.flooder.match_edges.clear();
     for (auto& i : detection_events) {
         if (mwpm.flooder.graph.nodes[i].region_that_arrived)
             mwpm.shatter_blossom_and_extract_match_edges(
@@ -145,6 +144,8 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
     process_timeline_until_completion(mwpm, detection_events);
     auto res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
+    if (!mwpm.flooder.negative_weight_detection_events.empty())
+        res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, mwpm.flooder.negative_weight_detection_events);
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
     res.weight += mwpm.flooder.negative_weight_sum;
     return res;
@@ -159,7 +160,10 @@ void pm::decode_detection_events(
     process_timeline_until_completion(mwpm, detection_events);
 
     if (num_observables > sizeof(pm::obs_int) * 8) {
+        mwpm.flooder.match_edges.clear();
         shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
+        if (!mwpm.flooder.negative_weight_detection_events.empty())
+            shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, mwpm.flooder.negative_weight_detection_events);
         mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, obs_begin_ptr, weight);
 
         // XOR negative weight observables
@@ -171,6 +175,8 @@ void pm::decode_detection_events(
     } else {
         pm::MatchingResult bit_packed_res =
             shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
+        if (!mwpm.flooder.negative_weight_detection_events.empty())
+            bit_packed_res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, mwpm.flooder.negative_weight_detection_events);
         // XOR in negative weight observable mask
         bit_packed_res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
         // Translate observable mask into bit vector
@@ -185,5 +191,6 @@ void pm::decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vecto
         throw std::invalid_argument(
             "Decoding to matched detection events not supported for graphs containing edges with negative weights.");
     process_timeline_until_completion(mwpm, detection_events);
+    mwpm.flooder.match_edges.clear();
     shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
 }

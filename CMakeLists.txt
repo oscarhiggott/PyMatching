@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY out)
 
 if (CMAKE_OSX_ARCHITECTURES MATCHES arm64)
-    # -match=native not supported by Clang on M1 until v15
+    # -march=native not supported by Clang on M1 until v15
     set(ARCH_OPT "-O3")
 elseif (NOT(MSVC))
     set(ARCH_OPT "-O3" "-march=native")
