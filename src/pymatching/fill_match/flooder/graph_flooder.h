@@ -30,7 +30,7 @@ struct GraphFlooder {
 
     /// These are the detection events that would occur if an error occurred on every edge that has a negative weight.
     /// Stored as a sorted vector of indices of detection events.
-    std::vector<size_t> negative_weight_detection_events;
+    std::vector<uint64_t> negative_weight_detection_events;
     /// These are the observables that would be flipped if an error occurred on every edge that has a negative weight.
     /// Stored as a sorted vector of indices of observables.
     std::vector<size_t> negative_weight_observables;

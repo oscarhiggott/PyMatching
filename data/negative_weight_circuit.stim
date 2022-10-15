@@ -1,0 +1,13 @@
+X_ERROR(0.6) 0
+M 0
+DETECTOR(2, 0, 0, 1) rec[-1]
+OBSERVABLE_INCLUDE(0) rec[-1]
+
+X_ERROR(0.5) 1
+M 1
+DETECTOR(1, 0, 0) rec[-1]
+OBSERVABLE_INCLUDE(0) rec[-1]
+       
+X_ERROR(0.1) 2
+M 2
+OBSERVABLE_INCLUDE(0) rec[-1]

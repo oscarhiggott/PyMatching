@@ -56,7 +56,7 @@ TEST(UserGraph, ConstructGraph) {
     std::set<size_t> obs_exp = {1};
     ASSERT_EQ(mwpm.flooder.graph.negative_weight_observables_set, obs_exp);
     ASSERT_EQ(mwpm.flooder.negative_weight_obs_mask, 1 << 1);
-    std::vector<size_t> dets_exp_vec = {1, 2};
+    std::vector<uint64_t> dets_exp_vec = {1, 2};
     ASSERT_EQ(mwpm.flooder.negative_weight_detection_events, dets_exp_vec);
     std::vector<size_t> obs_exp_vec = {1};
     ASSERT_EQ(mwpm.flooder.negative_weight_observables, obs_exp_vec);

@@ -280,6 +280,39 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
     }
 }
 
+TEST(MwpmDecoding, NegativeEdgeWeightFromStim) {
+    auto shots_in = std::fopen(find_test_data_file("negative_weight_circuit_1000.b8").c_str(), "r");
+    auto dem_file = std::fopen(find_test_data_file("negative_weight_circuit.dem").c_str(), "r");
+
+    assert(shots_in);
+    assert(dem_file);
+    stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
+    fclose(dem_file);
+    size_t num_distinct_weights = 1000;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
+    auto reader = stim::MeasureRecordReader::make(
+        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+
+    stim::SparseShot sparse_shot;
+    size_t num_mistakes = 0;
+    size_t num_shots = 0;
+    size_t max_shots = 1000;
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+    while (reader->start_and_read_entire_record(sparse_shot)) {
+        if (num_shots > max_shots)
+            break;
+        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+        if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+            num_mistakes++;
+        }
+        sparse_shot.clear();
+        num_shots++;
+        std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
+        res.weight = 0;
+    }
+    ASSERT_TRUE(num_mistakes == 102);
+}
+
 TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     size_t num_nodes = 5;
     auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)));
