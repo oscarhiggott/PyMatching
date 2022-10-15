@@ -50,7 +50,7 @@ std::pair<size_t, cumulative_time_int> find_next_event_at_node_not_occupied_by_g
         auto rad2 = neighbor->local_radius();
 
         if (rad2.is_growing()) {
-            auto collision_time = rad1.time_of_x_intercept_when_added_to_giving_unit_slope(rad2 - weight);
+            auto collision_time = weight - rad1.y_intercept() - rad2.y_intercept();
             if (collision_time < best_time) {
                 best_time = collision_time;
                 best_neighbor = i;
