@@ -89,7 +89,7 @@ std::pair<size_t, cumulative_time_int> find_next_event_at_node_occupied_by_growi
             continue;
         }
 
-        auto collision_time = -rad1.y_intercept() - rad2.y_intercept() + weight;
+        auto collision_time = weight - rad1.y_intercept() - rad2.y_intercept();
         if (rad2.is_growing())
             collision_time >>= 1;
         if (collision_time < best_time) {
