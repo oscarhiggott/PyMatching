@@ -25,10 +25,11 @@ struct Varying {
     T get_distance_at_time(T time) const;
     T get_shrinking_distance_at_time(T time) const;
     T get_growing_distance_at_time(T time) const;
-    T time_of_x_intercept();
-    T time_of_x_intercept_when_added_to(Varying<T> other);
-    T time_of_x_intercept_for_growing();
-    T time_of_x_intercept_for_shrinking();
+    T time_of_x_intercept() const;
+    T time_of_x_intercept_when_added_to(Varying<T> other) const;
+    T time_of_x_intercept_when_added_to_giving_unit_slope(Varying<T> other) const;
+    T time_of_x_intercept_for_growing() const;
+    T time_of_x_intercept_for_shrinking() const;
     bool is_growing() const;
     bool is_shrinking() const;
     bool is_frozen() const;

@@ -30,7 +30,7 @@ inline T Varying<T>::get_shrinking_distance_at_time(T time) const {
 }
 
 template <typename T>
-inline T Varying<T>::time_of_x_intercept() {
+inline T Varying<T>::time_of_x_intercept() const {
     if (data & 1) {
         return (data >> 2) * -1;
     } else if (data & 2) {
@@ -41,18 +41,18 @@ inline T Varying<T>::time_of_x_intercept() {
 }
 
 template <typename T>
-T Varying<T>::time_of_x_intercept_for_growing() {
+T Varying<T>::time_of_x_intercept_for_growing() const {
     // Assumes Varying is growing
     return -(data >> 2);
 }
 
 template <typename T>
-T Varying<T>::time_of_x_intercept_for_shrinking() {
+T Varying<T>::time_of_x_intercept_for_shrinking() const {
     return data >> 2;
 }
 
 template <typename T>
-inline T Varying<T>::time_of_x_intercept_when_added_to(Varying<T> other) {
+inline T Varying<T>::time_of_x_intercept_when_added_to(Varying<T> other) const {
     // Assumes both this and other are growing or frozen. Cannot have both frozen, or any shrinking.
     T time_with_unit_slope = -(data >> 2) - (other.data >> 2);
     if ((this->data & 1) && (other.data & 1)) {
@@ -61,6 +61,12 @@ inline T Varying<T>::time_of_x_intercept_when_added_to(Varying<T> other) {
         // By assumption on the input, one must be growing, and the other frozen.
         return time_with_unit_slope;
     }
+}
+
+template <typename T>
+inline T Varying<T>::time_of_x_intercept_when_added_to_giving_unit_slope(Varying<T> other) const {
+    // Assumes both this and other are growing or frozen. Cannot have both frozen, or any shrinking.
+    return -(data >> 2) - (other.data >> 2);
 }
 
 template <typename T>

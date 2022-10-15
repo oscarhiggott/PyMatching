@@ -32,23 +32,46 @@ void GraphFlooder::do_region_created_at_empty_detector_node(GraphFillRegion &reg
     reschedule_events_at_detector_node(detector_node);
 }
 
-std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(
-    const DetectorNode &detector_node) const {
+std::pair<size_t, cumulative_time_int> find_next_event_at_node_not_occupied_by_growing_top_region(
+    const DetectorNode &detector_node, VaryingCT rad1) {
     cumulative_time_int best_time = std::numeric_limits<cumulative_time_int>::max();
     size_t best_neighbor = SIZE_MAX;
 
-    auto rad1 = detector_node.local_radius();
-
     size_t start = 0;
-    if (!detector_node.neighbors.empty() && detector_node.neighbors[0] == nullptr) {
-        // If growing towards boundary
-        if (rad1.is_growing()) {
-            auto weight = detector_node.neighbor_weights[0];
-            auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
+    if (!detector_node.neighbors.empty() && detector_node.neighbors[0] == nullptr)
+        start++;
+
+    // Handle non-boundary neighbors.
+    for (size_t i = start; i < detector_node.neighbors.size(); i++) {
+        auto weight = detector_node.neighbor_weights[i];
+
+        auto neighbor = detector_node.neighbors[i];
+
+        auto rad2 = neighbor->local_radius();
+
+        if (rad2.is_growing()) {
+            auto collision_time = rad1.time_of_x_intercept_when_added_to_giving_unit_slope(rad2 - weight);
             if (collision_time < best_time) {
                 best_time = collision_time;
-                best_neighbor = 0;
+                best_neighbor = i;
             }
+        }
+    }
+    return {best_neighbor, best_time};
+}
+
+std::pair<size_t, cumulative_time_int> find_next_event_at_node_occupied_by_growing_top_region(
+    const DetectorNode &detector_node, const VaryingCT &rad1) {
+    cumulative_time_int best_time = std::numeric_limits<cumulative_time_int>::max();
+    size_t best_neighbor = SIZE_MAX;
+    size_t start = 0;
+    if (!detector_node.neighbors.empty() && detector_node.neighbors[0] == nullptr) {
+        // Growing towards boundary
+        auto weight = detector_node.neighbor_weights[0];
+        auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
+        if (collision_time < best_time) {
+            best_time = collision_time;
+            best_neighbor = 0;
         }
         start++;
     }
@@ -62,19 +85,75 @@ std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_ret
             continue;
         }
         auto rad2 = neighbor->local_radius();
-        if (!rad1.colliding_with(rad2)) {
+        if (rad2.is_shrinking()) {
             continue;
         }
 
-        auto collision_time = rad1.time_of_x_intercept_when_added_to(rad2 - weight);
-        if (collision_time >= queue.cur_time && collision_time < best_time) {
+        auto collision_time = -rad1.y_intercept() - rad2.y_intercept() + weight;
+        if (rad2.is_growing())
+            collision_time >>= 1;
+        if (collision_time < best_time) {
             best_time = collision_time;
             best_neighbor = i;
         }
     }
-
     return {best_neighbor, best_time};
 }
+
+std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(
+    const DetectorNode &detector_node) const {
+    auto rad1 = detector_node.local_radius();
+
+    if (rad1.is_growing()) {
+        return find_next_event_at_node_occupied_by_growing_top_region(detector_node, rad1);
+    } else {
+        return find_next_event_at_node_not_occupied_by_growing_top_region(detector_node, rad1);
+    }
+}
+
+// std::pair<size_t, cumulative_time_int> GraphFlooder::find_next_event_at_node_returning_neighbor_index_and_time(
+//     const DetectorNode &detector_node) const {
+//     cumulative_time_int best_time = std::numeric_limits<cumulative_time_int>::max();
+//     size_t best_neighbor = SIZE_MAX;
+//
+//     auto rad1 = detector_node.local_radius();
+//
+//     size_t start = 0;
+//     if (!detector_node.neighbors.empty() && detector_node.neighbors[0] == nullptr) {
+//         // If growing towards boundary
+//         if (rad1.is_growing()) {
+//             auto weight = detector_node.neighbor_weights[0];
+//             auto collision_time = (rad1 - weight).time_of_x_intercept_for_growing();
+//             if (collision_time < best_time) {
+//                 best_time = collision_time;
+//                 best_neighbor = 0;
+//             }
+//         }
+//         start++;
+//     }
+//
+//     // Handle non-boundary neighbors.
+//     for (size_t i = start; i < detector_node.neighbors.size(); i++) {
+//         auto weight = detector_node.neighbor_weights[i];
+//
+//         auto neighbor = detector_node.neighbors[i];
+//         if (detector_node.has_same_owner_as(*neighbor)) {
+//             continue;
+//         }
+//         auto rad2 = neighbor->local_radius();
+//         if (!rad1.colliding_with(rad2)) {
+//             continue;
+//         }
+//
+//         auto collision_time = rad1.time_of_x_intercept_when_added_to(rad2 - weight);
+//         if (collision_time >= queue.cur_time && collision_time < best_time) {
+//             best_time = collision_time;
+//             best_neighbor = i;
+//         }
+//     }
+//
+//     return {best_neighbor, best_time};
+// }
 
 void GraphFlooder::reschedule_events_at_detector_node(DetectorNode &detector_node) {
     auto x = find_next_event_at_node_returning_neighbor_index_and_time(detector_node);
