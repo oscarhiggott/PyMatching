@@ -52,7 +52,7 @@ jobs:
         CIBW_ARCHS_MACOS: "x86_64 arm64"
         CIBW_BEFORE_BUILD: pip install --upgrade ninja
         CIBW_TEST_REQUIRES: pytest
-        CIBW_TEST_COMMAND: pytest {project}/src/pymatching --import-mode importlib
+        CIBW_TEST_COMMAND: python -m pytest {project}/src/pymatching --import-mode importlib
 
     - name: Verify clean directory
       run: git diff --exit-code
