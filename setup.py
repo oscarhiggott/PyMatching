@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+from shutil import which
 
 from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
@@ -101,7 +102,7 @@ class CMakeBuild(build_ext):
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
 
-        if sys.platform.startswith('linux'):
+        if sys.platform.startswith('linux') and which("gcc-10") is not None and which("g++-10") is not None:
             os.environ["CC"] = "gcc-10"
             os.environ["CXX"] = "g++-10"
 
