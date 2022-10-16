@@ -307,7 +307,9 @@ void GraphFlooder::set_region_shrinking(GraphFillRegion &region) {
 MwpmEvent GraphFlooder::do_look_at_node_event(DetectorNode &node) {
     auto next = find_next_event_at_node_returning_neighbor_index_and_time(node);
     if (next.second == queue.cur_time) {
-        // Need to revisit this node immediately after the mwpm event is handled.
+        // Need to revisit this node immediately after the mwpm event is handled. There may be an event to handle
+        // along another edge, or even along the same edge at a later time (e.g. if this event isn't the *first* event
+        // for the neighbor along the current edge when the neighbor is being rescheduled).
         node.node_event_tracker.set_desired_event(
             {
                 &node,
