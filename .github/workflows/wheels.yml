@@ -49,8 +49,7 @@ jobs:
 
     - uses: ilammy/msvc-dev-cmd@v1
       with:
-        sdk: "0.0.22000.194"
-        vsversion: "16.7"
+        vsversion: "16.1"
 
     - uses: pypa/cibuildwheel@v2.11.1
       env:
