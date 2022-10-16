@@ -45,6 +45,8 @@ jobs:
       with:
         submodules: true
 
+    - uses: ilammy/msvc-dev-cmd@v1
+
     - uses: pypa/cibuildwheel@v2.11.1
       env:
         CIBW_ARCHS_MACOS: auto universal2
