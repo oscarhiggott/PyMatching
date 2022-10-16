@@ -133,7 +133,7 @@ target_link_libraries(pymatching_perf libstim)
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
 
-find_package(Python COMPONENTS Interpreter Development)
+#find_package(Python COMPONENTS Interpreter Development)
 #find_package(pybind11 CONFIG REQUIRED)
 add_subdirectory(pybind11)
 pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
