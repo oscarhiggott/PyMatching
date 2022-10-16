@@ -33,8 +33,6 @@ jobs:
   build_wheels:
     name: Wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    sdk: "0.0.22000.194"
-    vsversion: "16.7"
     env:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
       CIBW_BUILD: "cp3*-*"
@@ -50,6 +48,9 @@ jobs:
         submodules: true
 
     - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        sdk: "0.0.22000.194"
+        vsversion: "16.7"
 
     - uses: pypa/cibuildwheel@v2.11.1
       env:
