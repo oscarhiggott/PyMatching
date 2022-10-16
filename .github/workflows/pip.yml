@@ -30,7 +30,7 @@ jobs:
         run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest
 
       - name: Build and install
-        run: pip install --verbose -e .
+        run: pip install --verbose .
 
       - name: Test
-        run: python -m pytest src/pymatching
+        run: python -m pytest tests
