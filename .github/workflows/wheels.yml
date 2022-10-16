@@ -35,6 +35,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
+      CIBW_BUILD: "cp3*-*"
+      CIBW_SKIP: "*-win32"
     strategy:
       fail-fast: false
       matrix:
