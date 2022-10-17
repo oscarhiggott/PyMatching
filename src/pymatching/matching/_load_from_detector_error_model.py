@@ -15,13 +15,13 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import pymatching
+    import stim
 
-import stim
 
 from pymatching._cpp_pymatching import detector_error_model_to_matching_graph
 
 
-def load_from_detector_error_model(self: 'pymatching.Matching', model: stim.DetectorErrorModel) -> None:
+def load_from_detector_error_model(self: 'pymatching.Matching', model: 'stim.DetectorErrorModel') -> None:
     """
     Load from a `stim.DetectorErrorModel`.
 

@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, List
+from typing import Union, List, TYPE_CHECKING
 
 import numpy as np
 import networkx as nx
 import retworkx as rx
 import scipy
-import stim
 from scipy.sparse import csc_matrix
+if TYPE_CHECKING:
+    import stim
 
 from pymatching._cpp_pymatching import MatchingGraph as _MatchingGraph
 
@@ -48,7 +49,7 @@ class Matching:
 
     def __init__(self,
                  graph: Union[scipy.sparse.spmatrix, np.ndarray, rx.PyGraph, nx.Graph, List[
-                     List[int]], stim.DetectorErrorModel] = None,
+                     List[int]], 'stim.DetectorErrorModel'] = None,
                  weights: Union[float, np.ndarray, List[float]] = None,
                  error_probabilities: Union[float, np.ndarray, List[float]] = None,
                  repetitions: int = None,
@@ -144,7 +145,7 @@ class Matching:
             self.load_from_networkx(graph)
         elif isinstance(graph, rx.PyGraph):
             self.load_from_retworkx(graph)
-        elif isinstance(graph, stim.DetectorErrorModel):
+        elif type(graph).__name__ == "DetectorErrorModel":
             self.load_from_detector_error_model(graph)
         else:
             try:
