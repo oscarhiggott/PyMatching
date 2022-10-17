@@ -109,7 +109,7 @@ int main_count_mistakes(int argc, const char **argv) {
     auto reader =
         stim::MeasureRecordReader::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
-    pm::weight_int num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
+    pm::weight_int num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 8);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     stim::SparseShot sparse_shot;
