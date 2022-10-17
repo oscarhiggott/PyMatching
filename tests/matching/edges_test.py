@@ -62,8 +62,9 @@ def test_add_edge_merge_strategy():
     with pytest.raises(ValueError):
         m.add_edge(0, 10, fault_ids={1}, weight=1.5, error_probability=0.6, merge_strategy="disallow")
     m.add_edge(0, 10, fault_ids={2}, weight=4.0, error_probability=0.2, merge_strategy="independent")
-    assert m.edges() == pytest.approx(
-        [(0, 10, {'fault_ids': {1}, 'weight': 0.9581279969153761, 'error_probability': 0.41})])
+    es = m.edges()
+    es[0][2]["weight"] = round(es[0][2]["weight"], 6)
+    assert es == [(0, 10, {'fault_ids': {1}, 'weight': 0.958128, 'error_probability': 0.41})]
     m = Matching()
     m.add_edge(1, 10, fault_ids={0}, weight=2, error_probability=0.3)
     m.add_edge(1, 10, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="keep-original")
@@ -81,8 +82,9 @@ def test_add_boundary_edge():
     with pytest.raises(ValueError):
         m.add_boundary_edge(0, fault_ids={1}, weight=1.5, error_probability=0.6, merge_strategy="disallow")
     m.add_boundary_edge(0, fault_ids={2}, weight=4.0, error_probability=0.2, merge_strategy="independent")
-    assert m.edges() == pytest.approx(
-        [(0, None, {'fault_ids': {1}, 'weight': 0.9581279969153761, 'error_probability': 0.41})])
+    es = m.edges()
+    es[0][2]["weight"] = round(es[0][2]["weight"], 6)
+    assert es == [(0, None, {'fault_ids': {1}, 'weight': 0.958128, 'error_probability': 0.41})]
     m = Matching()
     m.add_boundary_edge(1, fault_ids={0}, weight=2, error_probability=0.3)
     m.add_boundary_edge(1, fault_ids={1}, weight=5, error_probability=0.1, merge_strategy="keep-original")
