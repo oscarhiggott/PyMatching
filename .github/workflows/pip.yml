@@ -27,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Add requirements
-        run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest
+        run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest stim
 
       - name: Build and install
         run: pip install --verbose .
