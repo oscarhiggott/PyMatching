@@ -31,28 +31,78 @@ jobs:
 
 
   build_wheels:
-    name: Wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os_dist.os }}
     env:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
-      CIBW_BUILD: "cp3*-*"
-      CIBW_SKIP: "*-win32"
+      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
+      CIBW_ARCHS_MACOS: "x86_64 arm64"
+      CIBW_BEFORE_BUILD: pip install --upgrade ninja
+      CIBW_TEST_REQUIRES: pytest
+      CIBW_TEST_COMMAND: pytest {project}/tests
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-2022, macos-latest]
-
+        os_dist: [
+          {os: macos-latest, dist: cp36-macosx_x86_64},
+          {os: macos-latest, dist: cp37-macosx_x86_64},
+          {os: macos-latest, dist: cp38-macosx_x86_64},
+          {os: macos-latest, dist: cp38-macosx_universal2},
+          {os: macos-latest, dist: cp38-macosx_arm64},
+          {os: macos-latest, dist: cp39-macosx_x86_64},
+          {os: macos-latest, dist: cp39-macosx_universal2},
+          {os: macos-latest, dist: cp39-macosx_arm64},
+          {os: macos-latest, dist: cp310-macosx_x86_64},
+          {os: macos-latest, dist: cp310-macosx_universal2},
+          {os: macos-latest, dist: cp310-macosx_arm64},
+          {os: macos-latest, dist: cp311-macosx_x86_64},
+          {os: macos-latest, dist: cp311-macosx_universal2},
+          {os: macos-latest, dist: cp311-macosx_arm64},
+          {os: windows-latest, dist: cp36-win_amd64},
+          {os: windows-latest, dist: cp36-win32},
+          {os: windows-latest, dist: cp37-win_amd64},
+          {os: windows-latest, dist: cp37-win32},
+          {os: windows-latest, dist: cp38-win_amd64},
+          {os: windows-latest, dist: cp38-win32},
+          {os: windows-latest, dist: cp39-win_amd64},
+          {os: windows-latest, dist: cp39-win32},
+          {os: windows-latest, dist: cp39-win_arm64},
+          {os: windows-latest, dist: cp310-win_amd64},
+          {os: windows-latest, dist: cp310-win32},
+          {os: windows-latest, dist: cp310-win_arm64},
+          {os: windows-latest, dist: cp311-win_amd64},
+          {os: windows-latest, dist: cp311-win32},
+          {os: windows-latest, dist: cp311-win_arm64},
+          {os: ubuntu-latest, dist: cp36-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp36-manylinux_i686},
+          {os: ubuntu-latest, dist: cp36-musllinux_x86_64},
+          {os: ubuntu-latest, dist: cp36-musllinux_i686},
+          {os: ubuntu-latest, dist: cp37-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp37-manylinux_i686},
+          {os: ubuntu-latest, dist: cp37-musllinux_x86_64},
+          {os: ubuntu-latest, dist: cp37-musllinux_i686},
+          {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp38-manylinux_i686},
+          {os: ubuntu-latest, dist: cp38-musllinux_x86_64},
+          {os: ubuntu-latest, dist: cp38-musllinux_i686},
+          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp39-manylinux_i686},
+          {os: ubuntu-latest, dist: cp39-musllinux_x86_64},
+          {os: ubuntu-latest, dist: cp39-musllinux_i686},
+          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp310-manylinux_i686},
+          {os: ubuntu-latest, dist: cp310-musllinux_x86_64},
+          {os: ubuntu-latest, dist: cp310-musllinux_i686},
+          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp311-manylinux_i686},
+          {os: ubuntu-latest, dist: cp311-musllinux_x86_64},
+          {os: ubuntu-latest, dist: cp311-musllinux_i686},
+        ]
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
 
     - uses: pypa/cibuildwheel@v2.11.1
-      env:
-        CIBW_ARCHS_MACOS: "x86_64 arm64"
-        CIBW_BEFORE_BUILD: pip install --upgrade ninja
-        CIBW_TEST_REQUIRES: pytest
-        CIBW_TEST_COMMAND: pytest {project}/tests
 
     - name: Verify clean directory
       run: git diff --exit-code
