@@ -227,7 +227,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_max_buckets) {
     const auto &dem = data.first;
     const auto &shots = data.second;
 
-    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
+    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 8);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
@@ -328,7 +328,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_max_buckets) {
     const auto &dem = data.first;
     const auto &shots = data.second;
 
-    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
+    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 8);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
@@ -428,7 +428,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_max_buckets) {
     const auto &dem = data.first;
     const auto &shots = data.second;
 
-    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
+    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 8);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
@@ -528,7 +528,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_max_buckets) {
     const auto &dem = data.first;
     const auto &shots = data.second;
 
-    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
+    size_t num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 8);
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
