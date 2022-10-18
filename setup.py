@@ -99,6 +99,8 @@ class CMakeBuild(build_ext):
         if sys.platform.startswith("darwin"):
             # Cross-compile support for macOS - respect ARCHFLAGS if set
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
+            if "arm64" not in archs:
+                archs.append("arm64")   # Add arm64 even for x86_64
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
 
