@@ -10,6 +10,15 @@ namespace py = pybind11;
 
 namespace pm_pybind {
 
+struct CompressedSparseColumnCheckMatrix {
+    explicit CompressedSparseColumnCheckMatrix(const py::object& check_matrix);
+    py::array_t<uint8_t> data;
+    py::array_t<int64_t> indices;
+    py::array_t<int64_t> indptr;
+    size_t num_rows;
+    size_t num_cols;
+};
+
 template <typename T>
 py::array_t<T> vec_to_array(std::vector<T> *vec) {
     auto err_capsule = py::capsule(vec, [](void *x) {
