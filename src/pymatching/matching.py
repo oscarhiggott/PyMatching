@@ -289,9 +289,9 @@ class Matching:
         else:
             return correction
 
-    def decode_to_matched_detection_events_array(self,
-                                                 syndrome: Union[np.ndarray, List[int]]
-                                                 ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    def decode_to_matched_dets_array(self,
+                                     syndrome: Union[np.ndarray, List[int]]
+                                     ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
         matched detection events (or detection events matched to the boundary) as a 2D numpy array. Note that
@@ -322,16 +322,16 @@ class Matching:
         >>> m.add_edge(1, 2)
         >>> m.add_edge(2, 3)
         >>> m.add_edge(3, 4)
-        >>> m.decode_to_matched_detection_events_array([1, 0, 0, 1, 1])
+        >>> m.decode_to_matched_dets_array([1, 0, 0, 1, 1])
         array([[ 0, -1],
                [ 3,  4]])
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
         return self._matching_graph.decode_to_matched_detection_events_array(detection_events)
 
-    def decode_to_matched_detection_events_dict(self: 'pymatching.Matching',
-                                                syndrome: Union[np.ndarray, List[int]]
-                                                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    def decode_to_matched_dets_dict(self,
+                                    syndrome: Union[np.ndarray, List[int]]
+                                    ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning a dictionary
         giving the detection event that each detection event was matched to (or None if it was matched
@@ -362,7 +362,7 @@ class Matching:
         >>> m.add_edge(1, 2)
         >>> m.add_edge(2, 3)
         >>> m.add_edge(3, 4)
-        >>> d = m.decode_to_matched_detection_events_dict([1, 0, 0, 1, 1])
+        >>> d = m.decode_to_matched_dets_dict([1, 0, 0, 1, 1])
         >>> d[3]
         4
         >>> d

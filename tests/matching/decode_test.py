@@ -91,10 +91,10 @@ def test_decode_to_matched_detection_events():
     syndrome = np.zeros(m.num_detectors, dtype=np.uint8)
     syndrome[dets] = 1
 
-    arr = m.decode_to_matched_detection_events_array(syndrome)
+    arr = m.decode_to_matched_dets_array(syndrome)
     assert np.array_equal(arr, np.array([[2, -1], [10, 12], [18, -1]]))
 
-    d = m.decode_to_matched_detection_events_dict(syndrome)
+    d = m.decode_to_matched_dets_dict(syndrome)
     assert d == {
         2: None,
         10: 12,
@@ -107,7 +107,7 @@ def test_decode_to_matched_detection_events_with_negative_weights_raises_value_e
     m = Matching()
     m.add_edge(0, 1, weight=-1)
     with pytest.raises(ValueError):
-        m.decode_to_matched_detection_events_array([0, 0])
+        m.decode_to_matched_dets_array([0, 0])
 
     with pytest.raises(ValueError):
-        m.decode_to_matched_detection_events_dict([0, 0])
+        m.decode_to_matched_dets_dict([0, 0])
