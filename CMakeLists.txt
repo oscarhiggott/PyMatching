@@ -12,7 +12,7 @@ if (CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
     # -march=native not supported by Clang on M1 until v15
     set(ARCH_OPT "-O3")
 elseif (NOT(MSVC))
-    set(ARCH_OPT "-O3" "-march=native")
+    set(ARCH_OPT "-O3")
 else ()
     set(ARCH_OPT "-O2")
 endif ()
