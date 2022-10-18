@@ -134,9 +134,9 @@ def test_matching_edges_from_retworkx():
     es = list(m.edges())
     expected_edges = [
         (0, 1, {'fault_ids': {0}, 'weight': 1.1, 'error_probability': 0.1}),
-        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0}),
         (1, 2, {'fault_ids': {1}, 'weight': 2.1, 'error_probability': 0.2}),
         (2, 3, {'fault_ids': {2, 3}, 'weight': 0.9, 'error_probability': 0.3}),
+        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0}),
     ]
     print(es)
     assert es == expected_edges
@@ -155,8 +155,8 @@ def test_qubit_id_accepted_via_retworkx():
     es = list(m.edges())
     expected_edges = [
         (0, 1, {'fault_ids': {0}, 'weight': 1.1, 'error_probability': 0.1}),
-        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0}),
         (1, 2, {'fault_ids': {1}, 'weight': 2.1, 'error_probability': 0.2}),
         (2, 3, {'fault_ids': {2, 3}, 'weight': 0.9, 'error_probability': 0.3}),
+        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0})
     ]
     assert es == expected_edges
