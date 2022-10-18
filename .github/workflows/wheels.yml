@@ -43,58 +43,73 @@ jobs:
       fail-fast: false
       matrix:
         os_dist: [
+          # macosx x86_64
           {os: macos-latest, dist: cp36-macosx_x86_64},
           {os: macos-latest, dist: cp37-macosx_x86_64},
           {os: macos-latest, dist: cp38-macosx_x86_64},
-#          {os: macos-latest, dist: cp38-macosx_universal2},
-          {os: macos-latest, dist: cp38-macosx_arm64},
           {os: macos-latest, dist: cp39-macosx_x86_64},
-#          {os: macos-latest, dist: cp39-macosx_universal2},
-          {os: macos-latest, dist: cp39-macosx_arm64},
           {os: macos-latest, dist: cp310-macosx_x86_64},
-#          {os: macos-latest, dist: cp310-macosx_universal2},
-          {os: macos-latest, dist: cp310-macosx_arm64},
+          # wait for cp311 release (some dependencies not yet built)
 #          {os: macos-latest, dist: cp311-macosx_x86_64},
-#          {os: macos-latest, dist: cp311-macosx_universal2},
+          # macosx arm64
+          {os: macos-latest, dist: cp38-macosx_arm64},
+          {os: macos-latest, dist: cp39-macosx_arm64},
+          {os: macos-latest, dist: cp310-macosx_arm64},
 #          {os: macos-latest, dist: cp311-macosx_arm64},
+          # universal2 not needed (already building x86_64 and arm64)
+          # Also fails with "cibuildwheel: No build identifiers selected"
+#          {os: macos-latest, dist: cp38-macosx_universal2},
+#          {os: macos-latest, dist: cp39-macosx_universal2},
+#          {os: macos-latest, dist: cp310-macosx_universal2},
+#          {os: macos-latest, dist: cp311-macosx_universal2},
+
+          # windows amd64
           {os: windows-latest, dist: cp36-win_amd64},
-          {os: windows-latest, dist: cp36-win32},
           {os: windows-latest, dist: cp37-win_amd64},
-          {os: windows-latest, dist: cp37-win32},
           {os: windows-latest, dist: cp38-win_amd64},
-          {os: windows-latest, dist: cp38-win32},
           {os: windows-latest, dist: cp39-win_amd64},
-          {os: windows-latest, dist: cp39-win32},
-          {os: windows-latest, dist: cp39-win_arm64},
           {os: windows-latest, dist: cp310-win_amd64},
-          {os: windows-latest, dist: cp310-win32},
-          {os: windows-latest, dist: cp310-win_arm64},
 #          {os: windows-latest, dist: cp311-win_amd64},
+          # windows win32
+          {os: windows-latest, dist: cp36-win32},
+          {os: windows-latest, dist: cp37-win32},
+          # scipy install fails
+#          {os: windows-latest, dist: cp38-win32},
+#          {os: windows-latest, dist: cp39-win32},
+#          {os: windows-latest, dist: cp310-win32},
 #          {os: windows-latest, dist: cp311-win32},
+          # For arm64, get error "cibuildwheel: No build identifiers selected"
+#          {os: windows-latest, dist: cp39-win_arm64},
+#          {os: windows-latest, dist: cp310-win_arm64},
 #          {os: windows-latest, dist: cp311-win_arm64},
+
+          # ubuntu x86_64
           {os: ubuntu-latest, dist: cp36-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp36-manylinux_i686},
-          {os: ubuntu-latest, dist: cp36-musllinux_x86_64},
-          {os: ubuntu-latest, dist: cp36-musllinux_i686},
           {os: ubuntu-latest, dist: cp37-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp37-manylinux_i686},
-          {os: ubuntu-latest, dist: cp37-musllinux_x86_64},
-          {os: ubuntu-latest, dist: cp37-musllinux_i686},
           {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp38-manylinux_i686},
-          {os: ubuntu-latest, dist: cp38-musllinux_x86_64},
-          {os: ubuntu-latest, dist: cp38-musllinux_i686},
           {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp39-manylinux_i686},
-          {os: ubuntu-latest, dist: cp39-musllinux_x86_64},
-          {os: ubuntu-latest, dist: cp39-musllinux_i686},
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp310-manylinux_i686},
-          {os: ubuntu-latest, dist: cp310-musllinux_x86_64},
-          {os: ubuntu-latest, dist: cp310-musllinux_i686},
 #          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          # ubuntu i686
+          {os: ubuntu-latest, dist: cp36-manylinux_i686},
+          {os: ubuntu-latest, dist: cp37-manylinux_i686},
+          # scipy built distribution not available and build fails on manylinux_i686 for python 3.8 up
+#          {os: ubuntu-latest, dist: cp38-manylinux_i686},
+#          {os: ubuntu-latest, dist: cp39-manylinux_i686},
+#          {os: ubuntu-latest, dist: cp310-manylinux_i686},
 #          {os: ubuntu-latest, dist: cp311-manylinux_i686},
+          # Don't include musllinux as it has g++-9 (need g++-10 for <bits>)
+#          {os: ubuntu-latest, dist: cp36-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp37-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp38-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp39-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp310-musllinux_x86_64},
 #          {os: ubuntu-latest, dist: cp311-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp36-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp37-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp38-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp39-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp310-musllinux_i686},
 #          {os: ubuntu-latest, dist: cp311-musllinux_i686},
         ]
     steps:
