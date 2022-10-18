@@ -54,6 +54,23 @@ struct FloodCheckEvent {
     std::string str() const;
 };
 
+inline FloodCheckEvent::FloodCheckEvent(DetectorNode *data_look_at_node, cyclic_time_int time)
+    : data_look_at_node(data_look_at_node), time(time), tentative_event_type(LOOK_AT_NODE) {
+}
+
+inline FloodCheckEvent::FloodCheckEvent(GraphFillRegion *data_look_at_shrinking_region, cyclic_time_int time)
+    : data_look_at_shrinking_region(data_look_at_shrinking_region),
+      time(time),
+      tentative_event_type(LOOK_AT_SHRINKING_REGION) {
+}
+
+inline FloodCheckEvent::FloodCheckEvent(SearchDetectorNode *data_look_at_search_node, cyclic_time_int time)
+    : data_look_at_search_node(data_look_at_search_node), time(time), tentative_event_type(LOOK_AT_SEARCH_NODE) {
+}
+
+inline FloodCheckEvent::FloodCheckEvent(cyclic_time_int time) : time(time), tentative_event_type(NO_FLOOD_CHECK_EVENT) {
+}
+
 std::ostream &operator<<(std::ostream &out, const FloodCheckEvent &c);
 
 }  // namespace pm
