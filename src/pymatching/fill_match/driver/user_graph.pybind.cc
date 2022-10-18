@@ -418,5 +418,5 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "num_repetitions"_a = 1,
         "timelike_weights"_a = py::none(),
         "measurement_error_probabilities"_a = py::none(),
-        "measurement_error_probabilities"_a = py::none());
+        "faults"_a = py::none());
 }
