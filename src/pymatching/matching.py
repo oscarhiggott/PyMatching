@@ -821,12 +821,11 @@ class Matching:
         else:
             timelike_weights = None
             p_meas = None
-
+        faults = csc_matrix(faults) if faults is not None else None
         self._matching_graph = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities,
                                                                             merge_strategy,
                                                                             use_virtual_boundary_node, repetitions,
-                                                                            timelike_weights, p_meas,
-                                                                            csc_matrix(faults))
+                                                                            timelike_weights, p_meas, faults)
 
     def load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
         """
