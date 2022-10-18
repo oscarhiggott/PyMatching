@@ -2,6 +2,7 @@
 #define PYMATCHING2_USER_GRAPH_H
 
 #include <cmath>
+#include <list>
 #include <set>
 #include <vector>
 
@@ -11,8 +12,9 @@
 
 namespace pm {
 
-struct UserNodeNeighbor {
-    size_t node;                             /// The index in UserGraph.nodes of the neighboring node
+struct UserEdge {
+    size_t node1;
+    size_t node2;
     std::vector<size_t> observable_indices;  /// The indices of the observables crossed along this edge
     double weight;                           /// The weight of the edge to this neighboring node
     double error_probability;                /// The error probability associated with this node
@@ -22,7 +24,7 @@ class UserNode {
    public:
     UserNode();
     size_t index_of_neighbor(size_t node) const;
-    std::vector<UserNodeNeighbor> neighbors;  /// The node's neighbors.
+    std::vector<std::list<UserEdge>::iterator> neighbors;  /// The node's neighbors.
     bool is_boundary;
 };
 
@@ -35,6 +37,7 @@ enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORI
 class UserGraph {
    public:
     std::vector<UserNode> nodes;
+    std::list<UserEdge> edges;
     std::set<size_t> boundary_nodes;
 
     UserGraph();
@@ -72,7 +75,6 @@ class UserGraph {
     bool is_boundary_node(size_t node_id);
     void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
     bool all_edges_have_error_probabilities();
-    std::vector<edge_data> get_edges();
     double max_abs_weight();
     template <typename EdgeCallable, typename BoundaryEdgeCallable>
     double iter_discretized_edges(
@@ -91,7 +93,6 @@ class UserGraph {
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;
-    size_t _num_edges;
     bool _mwpm_needs_updating;
     bool _all_edges_have_error_probabilities;
 };
@@ -105,25 +106,20 @@ inline double UserGraph::iter_discretized_edges(
     pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
     pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
     double normalising_constant = (double)max_half_edge_weight / max_weight;
-    for (auto& node : nodes) {
-        for (auto& neighbor : node.neighbors) {
-            auto i = &node - &nodes[0];
-            pm::signed_weight_int w = (pm::signed_weight_int)(neighbor.weight * normalising_constant);
 
-            // Extremely important!
-            // If all edge weights are even integers, then all collision events occur at integer times.
-            w *= 2;
-            if (i < neighbor.node) {
-                bool i_boundary = is_boundary_node(i);
-                bool neighbor_boundary = is_boundary_node(neighbor.node);
-                if (neighbor_boundary && !i_boundary) {
-                    boundary_edge_func(i, w, neighbor.observable_indices);
-                } else if (i_boundary && !neighbor_boundary) {
-                    boundary_edge_func(neighbor.node, w, neighbor.observable_indices);
-                } else if (!i_boundary) {
-                    edge_func(i, neighbor.node, w, neighbor.observable_indices);
-                }
-            }
+    for (auto& e : edges) {
+        pm::signed_weight_int w = (pm::signed_weight_int)(e.weight * normalising_constant);
+        // Extremely important!
+        // If all edge weights are even integers, then all collision events occur at integer times.
+        w *= 2;
+        bool node1_boundary = is_boundary_node(e.node1);
+        bool node2_boundary = is_boundary_node(e.node2);
+        if (node2_boundary && !node1_boundary) {
+            boundary_edge_func(e.node1, w, e.observable_indices);
+        } else if (node1_boundary && !node2_boundary) {
+            boundary_edge_func(e.node2, w, e.observable_indices);
+        } else if (!node1_boundary) {
+            edge_func(e.node1, e.node2, w, e.observable_indices);
         }
     }
     return normalising_constant * 2;

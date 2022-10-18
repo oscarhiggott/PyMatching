@@ -21,6 +21,11 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, con
             std::to_string(num_nodes) + ")");
     }
 
+    // Self-loops are ignored, since they are never included in the shortest-path (the search graph has only
+    // positive weights).
+    if (u == v)
+        return;
+
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observable_indices.push_back(observables);
@@ -40,6 +45,6 @@ void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, cons
     }
 
     nodes[u].neighbors.insert(nodes[u].neighbors.begin(), 1, nullptr);
-    nodes[u].neighbor_weights.insert(nodes[u].neighbor_weights.begin(), 1, weight);
+    nodes[u].neighbor_weights.insert(nodes[u].neighbor_weights.begin(), 1, std::abs(weight));
     nodes[u].neighbor_observable_indices.insert(nodes[u].neighbor_observable_indices.begin(), 1, observables);
 }

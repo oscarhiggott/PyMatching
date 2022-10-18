@@ -15,17 +15,23 @@ void MatchingGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const
             std::to_string(num_nodes) + ")");
     }
 
-    pm::obs_int obs_mask = 0;
-    if (num_observables <= sizeof(pm::obs_int) * 8) {
-        for (auto obs : observables)
-            obs_mask ^= (pm::obs_int)1 << obs;
-    }
-
     if (weight < 0) {
         update_negative_weight_observables(observables);
         update_negative_weight_detection_events(u);
         update_negative_weight_detection_events(v);
         negative_weight_sum += weight;
+    }
+
+    // We don't actually add self-loops into the graph (since a self loop with positive weight should never be added
+    // to the solution, since it causes no detection events). However, if it has a negative edge weight, then it is
+    // always included, and is handled by the negative weight case above.
+    if (u == v)
+        return;
+
+    pm::obs_int obs_mask = 0;
+    if (num_observables <= sizeof(pm::obs_int) * 8) {
+        for (auto obs : observables)
+            obs_mask ^= (pm::obs_int)1 << obs;
     }
 
     nodes[u].neighbors.push_back(&(nodes[v]));

@@ -169,27 +169,22 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         });
     g.def("get_edges", [](const pm::UserGraph &self) {
         py::list edges;
-        for (size_t i = 0; i < self.nodes.size(); i++) {
-            for (size_t j = 0; j < self.nodes[i].neighbors.size(); j++) {
-                auto n = self.nodes[i].neighbors[j];
-                size_t v = n.node;
-                if (i < v) {
-                    double p;
-                    if (n.error_probability < 0 || n.error_probability > 1) {
-                        p = -1.0;
-                    } else {
-                        p = n.error_probability;
-                    }
-                    std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
-                    py::dict attrs("fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = p);
-                    if (v == SIZE_MAX) {
-                        py::tuple edge_props = py::make_tuple(i, py::none(), attrs);
-                        edges.append(edge_props);
-                    } else {
-                        py::tuple edge_props = py::make_tuple(i, v, attrs);
-                        edges.append(edge_props);
-                    }
-                }
+
+        for (auto& e : self.edges) {
+            double p;
+            if (e.error_probability < 0 || e.error_probability > 1) {
+                p = -1.0;
+            } else {
+                p = e.error_probability;
+            }
+            std::set<size_t> observables_set(e.observable_indices.begin(), e.observable_indices.end());
+            py::dict attrs("fault_ids"_a = observables_set, "weight"_a = e.weight, "error_probability"_a = p);
+            if (e.node2 == SIZE_MAX) {
+                py::tuple edge_props = py::make_tuple(e.node1, py::none(), attrs);
+                edges.append(edge_props);
+            } else {
+                py::tuple edge_props = py::make_tuple(e.node1, e.node2, attrs);
+                edges.append(edge_props);
             }
         }
         return edges;
@@ -206,9 +201,9 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 throw std::invalid_argument(
                     "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
             auto n = self.nodes[node1].neighbors[idx];
-            std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
+            std::set<size_t> observables_set(n->observable_indices.begin(), n->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
+                "fault_ids"_a = observables_set, "weight"_a = n->weight, "error_probability"_a = n->error_probability);
             return attrs;
         },
         "node1"_a,
@@ -222,9 +217,9 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             if (idx == SIZE_MAX)
                 throw std::invalid_argument("Boundary edge (" + std::to_string(node) + ",) not in graph.");
             auto n = self.nodes[node].neighbors[idx];
-            std::set<size_t> observables_set(n.observable_indices.begin(), n.observable_indices.end());
+            std::set<size_t> observables_set(n->observable_indices.begin(), n->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n.weight, "error_probability"_a = n.error_probability);
+                "fault_ids"_a = observables_set, "weight"_a = n->weight, "error_probability"_a = n->error_probability);
             return attrs;
         },
         "node"_a);
