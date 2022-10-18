@@ -244,3 +244,47 @@ def test_cpp_csc_matrix_to_matching_graph():
                                                          timelike_weights=t_weights,
                                                          measurement_error_probabilities=t_weights
                                                          )
+
+
+def test_load_from_check_matrix_with_faults():
+    H = csc_matrix(np.array([[1, 1, 0, 0, 0],
+                             [0, 1, 1, 0, 0],
+                             [0, 0, 1, 1, 0],
+                             [0, 0, 0, 1, 1]]))
+    F = csc_matrix(np.array([[0, 0, 1, 1, 1],
+                             [1, 1, 1, 0, 0]]))
+    m = Matching()
+    m.load_from_check_matrix(H, faults=F)
+    assert m.num_fault_ids == 2
+    assert m.edges() == [(0, 4, {'error_probability': -1.0, 'fault_ids': {1}, 'weight': 1.0}),
+                         (0, 1, {'error_probability': -1.0, 'fault_ids': {1}, 'weight': 1.0}),
+                         (1, 2, {'error_probability': -1.0, 'fault_ids': {0, 1}, 'weight': 1.0}),
+                         (2, 3, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0}),
+                         (3, 4, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0})]
+    m = Matching()
+    m.load_from_check_matrix([[1, 1, 0], [0, 1, 1]], faults=[[1, 1, 1]], use_virtual_boundary_node=True)
+    assert m.num_fault_ids == 1
+    assert m.edges() == [(0, None, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0}),
+                         (0, 1, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0}),
+                         (1, None, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0})]
+    m = Matching()
+    m.load_from_check_matrix([[1, 1, 0], [0, 1, 1]], faults=csc_matrix((0, 3), dtype=np.uint8),
+                             use_virtual_boundary_node=True)
+    assert m.num_fault_ids == 0
+    assert m.edges() == [(0, None, {'error_probability': -1.0, 'fault_ids': set(), 'weight': 1.0}),
+                         (0, 1, {'error_probability': -1.0, 'fault_ids': set(), 'weight': 1.0}),
+                         (1, None, {'error_probability': -1.0, 'fault_ids': set(), 'weight': 1.0})]
+    H = csc_matrix(np.array([[1, 1, 0],
+                             [0, 1, 1],
+                             [0, 0, 1]]))
+    F = csc_matrix(np.array([[0, 0, 1],
+                             [1, 1, 1],
+                             [1, 0, 1],
+                             [0, 0, 1],
+                             [1, 1, 0]]))
+    m = Matching()
+    m.load_from_check_matrix(H, faults=F, use_virtual_boundary_node=True)
+    assert m.num_fault_ids == 5
+    assert m.edges() == [(0, None, {'error_probability': -1.0, 'fault_ids': {1, 2, 4}, 'weight': 1.0}),
+                         (0, 1, {'error_probability': -1.0, 'fault_ids': {1, 4}, 'weight': 1.0}),
+                         (1, 2, {'error_probability': -1.0, 'fault_ids': {0, 1, 2, 3}, 'weight': 1.0})]

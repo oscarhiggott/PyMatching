@@ -19,7 +19,7 @@ import numpy as np
 import networkx as nx
 import retworkx as rx
 import scipy
-from scipy.sparse import csc_matrix
+from scipy.sparse import csc_matrix, spmatrix
 import matplotlib.cbook
 
 if TYPE_CHECKING:
@@ -669,13 +669,14 @@ class Matching:
         return self._matching_graph.get_edges()
 
     def load_from_check_matrix(self,
-                               H: Union[scipy.sparse.spmatrix, np.ndarray, List[List[int]]],
+                               H: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]],
                                weights: Union[float, np.ndarray, List[float]] = None,
                                error_probabilities: Union[float, np.ndarray, List[float]] = None,
                                repetitions: int = None,
                                timelike_weights: Union[float, np.ndarray, List[float]] = None,
                                measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
                                *,
+                               faults: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
                                merge_strategy: str = "smallest-weight",
                                use_virtual_boundary_node: bool = False,
                                **kwargs
@@ -723,6 +724,8 @@ class Matching:
             (row) of `H` is set to `measurement_error_probabilities[i]`. This argument can also be
             given using the keyword argument `measurement_error_probability` to maintain backward
             compatibility with previous versions of Pymatching. By default None
+        faults: csc_matrix, optional
+            An array of faults, one per row
         merge_strategy: str, optional
             Which strategy to use when adding an edge (`node1`, `node2`) that is already in the graph. The available
             options are "disallow", "independent", "smallest-weight", "keep-original" and "replace". "disallow" raises a
@@ -822,7 +825,8 @@ class Matching:
         self._matching_graph = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities,
                                                                             merge_strategy,
                                                                             use_virtual_boundary_node, repetitions,
-                                                                            timelike_weights, p_meas)
+                                                                            timelike_weights, p_meas,
+                                                                            csc_matrix(faults))
 
     def load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
         """

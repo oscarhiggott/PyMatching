@@ -11,7 +11,7 @@ namespace py = pybind11;
 namespace pm_pybind {
 
 struct CompressedSparseColumnCheckMatrix {
-    explicit CompressedSparseColumnCheckMatrix(const py::object& check_matrix);
+    explicit CompressedSparseColumnCheckMatrix(const py::object&matrix);
     py::array_t<uint8_t> data;
     py::array_t<int64_t> indices;
     py::array_t<int64_t> indptr;

@@ -7,21 +7,20 @@
 
 using namespace py::literals;
 
-
-pm_pybind::CompressedSparseColumnCheckMatrix::CompressedSparseColumnCheckMatrix(const py::object& check_matrix) {
+pm_pybind::CompressedSparseColumnCheckMatrix::CompressedSparseColumnCheckMatrix(const py::object &matrix) {
     py::object csc_matrix = py::module_::import("scipy.sparse").attr("csc_matrix");
-    if (!py::isinstance(check_matrix, csc_matrix))
+    if (!py::isinstance(matrix, csc_matrix))
         throw std::invalid_argument("Check matrix must be a `scipy.sparse.csc_matrix`.");
     // Extract key attributes from scipy.sparse.csc_matrix:
     // https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csc_matrix.html
     // As stated in the scipy documentation for the CSC representation: "The row indices for column i
     // are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in
     // data[indptr[i]:indptr[i+1]]."
-    data = check_matrix.attr("data").cast<py::array_t<uint8_t>>();
-    indices = check_matrix.attr("indices").cast<py::array_t<int64_t>>();
-    indptr = check_matrix.attr("indptr").cast<py::array_t<int64_t>>();
+    data = matrix.attr("data").cast<py::array_t<uint8_t>>();
+    indices = matrix.attr("indices").cast<py::array_t<int64_t>>();
+    indptr = matrix.attr("indptr").cast<py::array_t<int64_t>>();
 
-    py::tuple shape = check_matrix.attr("shape");
+    py::tuple shape = matrix.attr("shape");
     num_rows = shape[0].cast<size_t>();  // The number of nodes in the matching graph
     num_cols = shape[1].cast<size_t>();  // The number of edges in the matching graph
 
@@ -30,12 +29,12 @@ pm_pybind::CompressedSparseColumnCheckMatrix::CompressedSparseColumnCheckMatrix(
     // Check indptr array size is correct
     if ((size_t)indptr.size() != num_cols + (size_t)1)
         throw std::invalid_argument(
-            "`matrix.indptr` size (" + std::to_string(indptr.size()) +
-            ") must be 1 larger than number of columns (" + std::to_string(num_cols) + ").");
+            "`matrix.indptr` size (" + std::to_string(indptr.size()) + ") must be 1 larger than number of columns (" +
+            std::to_string(num_cols) + ").");
 
     // Check data is the same size as indices
     if (data_unchecked.size() != indices.size())
-        throw std::invalid_argument("`matrix.data` must be the same size as `check_matrix.indices`");
+        throw std::invalid_argument("`matrix.data` must be the same size as `matrix.indices`");
 
     // Check data only contains ones
     for (py::ssize_t i = 0; i < data_unchecked.size(); i++) {
@@ -50,7 +49,6 @@ pm_pybind::CompressedSparseColumnCheckMatrix::CompressedSparseColumnCheckMatrix(
         }
     }
 }
-
 
 py::class_<pm::UserGraph> pm_pybind::pybind_user_graph(py::module &m) {
     auto g = py::class_<pm::UserGraph>(m, "MatchingGraph");
@@ -215,7 +213,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     g.def("get_edges", [](const pm::UserGraph &self) {
         py::list edges;
 
-        for (auto& e : self.edges) {
+        for (auto &e : self.edges) {
             double p;
             if (e.error_probability < 0 || e.error_probability > 1) {
                 p = -1.0;
@@ -282,27 +280,17 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
            bool use_virtual_boundary_node,
            size_t num_repetitions,
            const py::array_t<double> &timelike_weights,
-           const py::array_t<double> &measurement_error_probabilities) {
-            py::object csc_matrix = py::module_::import("scipy.sparse").attr("csc_matrix");
-            if (!py::isinstance(check_matrix, csc_matrix))
-                throw std::invalid_argument("Check matrix must be a `scipy.sparse.csc_matrix`.");
-            // Extract key attributes from scipy.sparse.csc_matrix:
-            // https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csc_matrix.html
-            // As stated in the scipy documentation for the CSC representation: "The row indices for column i
-            // are stored in indices[indptr[i]:indptr[i+1]] and their corresponding values are stored in
-            // data[indptr[i]:indptr[i+1]]."
-//            auto data_arr = check_matrix.attr("data").cast<py::array_t<uint8_t>>();
-//            auto data = data_arr.unchecked<1>();
-//            auto indices_arr = check_matrix.attr("indices").cast<py::array_t<int64_t>>();
-//            auto indices = indices_arr.unchecked<1>();
-//            auto indptr_arr = check_matrix.attr("indptr").cast<py::array_t<int64_t>>();
-//            auto indptr = indptr_arr.unchecked<1>();
-//
-//            py::tuple shape = check_matrix.attr("shape");
-//            size_t num_rows = shape[0].cast<size_t>();  // The number of nodes in the matching graph
-//            size_t num_cols = shape[1].cast<size_t>();  // The number of edges in the matching graph
-
+           const py::array_t<double> &measurement_error_probabilities,
+           py::object &faults) {
             auto H = CompressedSparseColumnCheckMatrix(check_matrix);
+
+            if (faults.is(py::none())) {
+                faults =
+                    py::module_::import("scipy.sparse")
+                        .attr("eye")(
+                            H.num_cols, "dtype"_a = py::module_::import("numpy").attr("uint8"), "format"_a = "csc");
+            }
+            auto F = CompressedSparseColumnCheckMatrix(faults);
 
             auto weights_unchecked = weights.unchecked<1>();
             // Check weights array size is correct
@@ -318,16 +306,22 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                     std::to_string(error_probabilities_unchecked.size()) +
                     ") should match the number of columns in the check matrix (" + std::to_string(H.num_cols) + ")");
 
-
+            if (H.num_cols != F.num_cols)
+                throw std::invalid_argument(
+                    "`faults` array with shape (" + std::to_string(F.num_rows) + ", " + std::to_string(F.num_cols) +
+                    ") must have the same number of columns as the check matrix, which has shape (" +
+                    std::to_string(H.num_rows) + ", " + std::to_string(H.num_cols) + ").");
 
             auto merge_strategy_enum = merge_strategy_from_string(merge_strategy);
 
             auto H_indptr_unchecked = H.indptr.unchecked<1>();
             auto H_indices_unchecked = H.indices.unchecked<1>();
+            auto F_indptr_unchecked = F.indptr.unchecked<1>();
+            auto F_indices_unchecked = F.indices.unchecked<1>();
 
             // Now construct the graph
             size_t num_detectors = H.num_rows * num_repetitions;
-            pm::UserGraph graph(num_detectors, H.num_cols);
+            pm::UserGraph graph(num_detectors, F.num_rows);
             // Each column corresponds to an edge. Iterate over the columns, adding the edges to the graph.
             // Also iterate over the number of repetitions (in case num_repetitions > 1)
             for (size_t rep = 0; rep < num_repetitions; rep++) {
@@ -338,11 +332,17 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                     if (idx_start > H_indices_unchecked.size() - 1 && idx_start != idx_end)
                         throw std::invalid_argument(
                             "`check_matrix.indptr` elements must not exceed size of `check_matrix.indices`");
+                    auto f_idx_start = F_indptr_unchecked[c];
+                    auto f_idx_end = F_indptr_unchecked[c + 1];
+                    std::vector<size_t> obs;
+                    obs.reserve(f_idx_end - f_idx_start);
+                    for (auto q = f_idx_start; q < f_idx_end; q++)
+                        obs.push_back((size_t)F_indices_unchecked(q));
                     if (num_dets == 2) {
                         graph.add_or_merge_edge(
                             H_indices_unchecked(idx_start) + H.num_rows * rep,
                             H_indices_unchecked(idx_start + 1) + H.num_rows * rep,
-                            {(size_t)c},
+                            obs,
                             weights_unchecked(c),
                             error_probabilities_unchecked(c),
                             merge_strategy_enum);
@@ -350,7 +350,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                         if (use_virtual_boundary_node) {
                             graph.add_or_merge_boundary_edge(
                                 H_indices_unchecked(idx_start) + H.num_rows * rep,
-                                {(size_t)c},
+                                obs,
                                 weights_unchecked(c),
                                 error_probabilities_unchecked(c),
                                 merge_strategy_enum);
@@ -358,7 +358,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                             graph.add_or_merge_edge(
                                 H_indices_unchecked(idx_start) + H.num_rows * rep,
                                 num_detectors,
-                                {(size_t)c},
+                                obs,
                                 weights_unchecked(c),
                                 error_probabilities_unchecked(c),
                                 merge_strategy_enum);
@@ -417,5 +417,6 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "use_virtual_boundary_node"_a = false,
         "num_repetitions"_a = 1,
         "timelike_weights"_a = py::none(),
+        "measurement_error_probabilities"_a = py::none(),
         "measurement_error_probabilities"_a = py::none());
 }
