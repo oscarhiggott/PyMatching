@@ -13,16 +13,10 @@
 # limitations under the License.
 
 import numpy as np
-import pymatching
 from scipy.sparse import csc_matrix, csr_matrix
 import pytest
 import networkx as nx
-import retworkx as rx
-import matplotlib.pyplot as plt
-import stim
-import doctest
 
-from pymatching._cpp_pymatching import MatchingGraph
 from pymatching import Matching
 
 

@@ -16,6 +16,7 @@ import stim
 
 from pymatching.matching import Matching
 
+
 def test_load_from_dem():
     c = stim.Circuit.generated("surface_code:rotated_memory_x", distance=5, rounds=5,
                                after_clifford_depolarization=0.01,
