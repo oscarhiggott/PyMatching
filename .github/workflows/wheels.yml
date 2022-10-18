@@ -102,6 +102,12 @@ jobs:
       with:
         submodules: true
 
+    - name: Install g++
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update
+        sudo apt install gcc-10 g++-10
+
     - uses: pypa/cibuildwheel@v2.11.1
 
     - name: Verify clean directory
