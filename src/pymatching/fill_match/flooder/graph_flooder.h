@@ -9,6 +9,7 @@
 #include "pymatching/fill_match/flooder_matcher_interop/mwpm_event.h"
 #include "pymatching/fill_match/flooder_matcher_interop/region_edge.h"
 #include "pymatching/fill_match/tracker/radix_heap_queue.h"
+#include "pymatching/fill_match/tracker/flood_check_event.h"
 
 namespace pm {
 
