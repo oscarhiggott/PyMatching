@@ -129,19 +129,11 @@ target_link_libraries(pymatching_perf libstim)
 
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
-
-#if (NOT(${Python_FOUND}))
-#    find_package(Python COMPONENTS Interpreter Development)
-#endif()
-#find_package(pybind11 CONFIG REQUIRED)
 add_subdirectory(pybind11)
 pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
 target_link_libraries(_cpp_pymatching PRIVATE libstim)
-#set_target_properties(_cpp_pymatching PROPERTIES OUTPUT_NAME _cpp_pymatching)
 target_compile_options(_cpp_pymatching PRIVATE ${ARCH_OPT})
-#add_compile_definitions(PYMATCHING_PYBIND11_MODULE_NAME=_cpp_pymatching)
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
 #target_compile_definitions(_cpp_pymatching
 #        PRIVATE VERSION_INFO=${PYMATCHING_VERSION_INFO})
-#install(TARGETS _cpp_pymatching DESTINATION .)

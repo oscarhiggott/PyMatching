@@ -322,9 +322,10 @@ class Matching:
         >>> m.add_edge(1, 2)
         >>> m.add_edge(2, 3)
         >>> m.add_edge(3, 4)
-        >>> m.decode_to_matched_dets_array([1, 0, 0, 1, 1])
-        array([[ 0, -1],
-               [ 3,  4]])
+        >>> matched_dets = m.decode_to_matched_dets_array([1, 0, 0, 1, 1])
+        >>> print(matched_dets)
+        [[ 0 -1]
+         [ 3  4]]
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
         return self._matching_graph.decode_to_matched_detection_events_array(detection_events)
