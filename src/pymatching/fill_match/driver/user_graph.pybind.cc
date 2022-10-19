@@ -363,7 +363,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                                 error_probabilities_unchecked(c),
                                 merge_strategy_enum);
                         }
-                    } else {
+                    } else if (num_dets != 0) {
                         throw std::invalid_argument(
                             "`check_matrix` must contain at most two ones per column, but column " + std::to_string(c) +
                             " has " + std::to_string(num_dets) + " ones.");
