@@ -169,6 +169,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
+      - run: CC=gcc-10 CXX=g++-10 cmake .
+        if: matrix.os == 'ubuntu-latest'
       - run: cmake .
+        if: matrix.os == 'macos-latest'
       - run: make pymatching_tests
       - run: ./pymatching_tests
