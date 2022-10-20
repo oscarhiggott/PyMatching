@@ -153,9 +153,9 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - run: cmake .
-      - run: CC=gcc-10 CXX=g++-10 make pymatching_perf
+      - run: CC=gcc-10 CXX=g++-10 cmake .
         if: matrix.os == 'ubuntu-latest'
-      - run: make pymatching_perf
+      - run: cmake .
         if: matrix.os == 'macos-latest'
+      - run: make pymatching_perf
       - run: ./pymatching_perf
