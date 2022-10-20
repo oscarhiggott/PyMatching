@@ -130,7 +130,7 @@ def test_matching_solution_integral_weights():
 
 
 def get_full_data_path(filename: str) -> str:
-    for data_dir in ("./data/", "../data/", "../../data/"):
+    for data_dir in ("./PyMatching/data/", "./data/", "../data/", "../../data/"):
         fullpath = os.path.join(data_dir, filename)
         if os.path.isfile(fullpath):
             return fullpath
