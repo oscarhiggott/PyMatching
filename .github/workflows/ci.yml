@@ -170,5 +170,5 @@ jobs:
         with:
           submodules: true
       - run: cmake .
-      - run: make gtest
-      - run: ./gtest
+      - run: make pymatching_tests
+      - run: ./pymatching_tests
