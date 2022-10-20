@@ -1,4 +1,4 @@
-name: Wheels
+name: ci
 
 on:
   workflow_dispatch:
@@ -134,14 +134,17 @@ jobs:
       with:
         path: wheelhouse/*.whl
   benchmark:
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        platform: [windows-latest, macos-latest, ubuntu-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
+      - run: CC=gcc-10; CXX=g++-10
+        if: matrix.os == 'ubuntu-latest'
       - run: cmake .
       - run: make pymatching_perf
       - run: ./pymatching_perf
