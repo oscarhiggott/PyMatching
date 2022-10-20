@@ -31,7 +31,7 @@ BENCHMARK(bucket_queue_sort) {
             }
         }
     })
-        .goal_micros(14)
+        .goal_micros(4.9)
         .show_rate("EnqueueDequeues", (double)v.size());
     if (dependence) {
         std::cerr << "data dependence";
@@ -53,7 +53,7 @@ BENCHMARK(bucket_queue_stream) {
             q.enqueue(FloodCheckEvent(q.dequeue().time + cyclic_time_int{100}));
         }
     })
-        .goal_micros(200)
+        .goal_micros(99)
         .show_rate("EnqueueDequeues", (double)n);
     if (dependence) {
         std::cerr << "data dependence";

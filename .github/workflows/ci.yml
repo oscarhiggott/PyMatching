@@ -133,3 +133,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         path: wheelhouse/*.whl
+  benchmark:
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      matrix:
+        platform: [windows-latest, macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v1
+      - run: cmake .
+      - run: make pymatching_perf
+      - run: ./pymatching_perf
