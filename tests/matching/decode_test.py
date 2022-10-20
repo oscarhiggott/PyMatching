@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pathlib
 import numpy as np
 import stim
 from scipy.sparse import csc_matrix
@@ -20,6 +21,9 @@ import networkx as nx
 import os
 
 from pymatching import Matching
+
+THIS_DIR = pathlib.Path(__file__).parent.resolve()
+DATA_DIR = os.path.join(pathlib.Path(THIS_DIR).parent.parent.absolute(), "data")
 
 
 def repetition_code(n):
@@ -134,19 +138,24 @@ def get_full_data_path(filename: str) -> str:
         fullpath = os.path.join(data_dir, filename)
         if os.path.isfile(fullpath):
             return fullpath
+    raise ValueError(f"No data directory found inside {os.getcwd()}")
 
 
 def test_surface_code_solution_weights():
-    dem = stim.DetectorErrorModel.from_file(get_full_data_path("surface_code_rotated_memory_x_13_0.01.dem"))
+    dem = stim.DetectorErrorModel.from_file(os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01.dem"))
     m = Matching.from_detector_error_model(dem)
-    shots = stim.read_shot_data_file(path=get_full_data_path("surface_code_rotated_memory_x_13_0.01_1000_shots.b8"),
+    shots = stim.read_shot_data_file(path=os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.b8"),
                                      format="b8", num_detectors=m.num_detectors,
                                      num_observables=m.num_fault_ids)
-    with open(get_full_data_path(
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt"), "r") as f:
+    with open(os.path.join(
+            DATA_DIR,
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt"),
+            "r") as f:
         expected_weights = [float(w) for w in f.readlines()]
-    with open(get_full_data_path(
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"), "r") as f:
+    with open(os.path.join(
+            DATA_DIR,
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"),
+            "r") as f:
         expected_observables = [float(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
     weights = []
