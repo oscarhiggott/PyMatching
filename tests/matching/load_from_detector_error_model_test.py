@@ -24,8 +24,7 @@ def test_load_from_dem():
                                after_reset_flip_probability=0.01,
                                before_round_data_depolarization=0.01)
     dem = c.detector_error_model(decompose_errors=True)
-    m = Matching()
-    m.load_from_detector_error_model(dem)
+    m = Matching.from_detector_error_model(dem)
     assert m.num_detectors == dem.num_detectors
     assert m.num_fault_ids == dem.num_observables
     assert m.num_edges == 502

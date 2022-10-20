@@ -254,15 +254,14 @@ def test_load_from_check_matrix_with_faults():
     F = csc_matrix(np.array([[0, 0, 1, 1, 1],
                              [1, 1, 1, 0, 0]]))
     m = Matching()
-    m.load_from_check_matrix(H, faults=F)
+    m.load_from_check_matrix(H=H, faults=F)
     assert m.num_fault_ids == 2
     assert m.edges() == [(0, 4, {'error_probability': -1.0, 'fault_ids': {1}, 'weight': 1.0}),
                          (0, 1, {'error_probability': -1.0, 'fault_ids': {1}, 'weight': 1.0}),
                          (1, 2, {'error_probability': -1.0, 'fault_ids': {0, 1}, 'weight': 1.0}),
                          (2, 3, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0}),
                          (3, 4, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0})]
-    m = Matching()
-    m.load_from_check_matrix([[1, 1, 0], [0, 1, 1]], faults=[[1, 1, 1]], use_virtual_boundary_node=True)
+    m = Matching.from_check_matrix([[1, 1, 0], [0, 1, 1]], faults=[[1, 1, 1]], use_virtual_boundary_node=True)
     assert m.num_fault_ids == 1
     assert m.edges() == [(0, None, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0}),
                          (0, 1, {'error_probability': -1.0, 'fault_ids': {0}, 'weight': 1.0}),
@@ -282,9 +281,21 @@ def test_load_from_check_matrix_with_faults():
                              [1, 0, 1],
                              [0, 0, 1],
                              [1, 1, 0]]))
-    m = Matching()
-    m.load_from_check_matrix(H, faults=F, use_virtual_boundary_node=True)
+    m = Matching.from_check_matrix(check_matrix=H, faults=F, use_virtual_boundary_node=True)
     assert m.num_fault_ids == 5
     assert m.edges() == [(0, None, {'error_probability': -1.0, 'fault_ids': {1, 2, 4}, 'weight': 1.0}),
                          (0, 1, {'error_probability': -1.0, 'fault_ids': {1, 4}, 'weight': 1.0}),
                          (1, 2, {'error_probability': -1.0, 'fault_ids': {0, 1, 2, 3}, 'weight': 1.0})]
+
+
+def test_no_check_matrix_raises_value_error():
+    with pytest.raises(ValueError):
+        m = Matching()
+        m.load_from_check_matrix()
+
+
+def test_from_empty_check_matrix():
+    m = Matching.from_check_matrix([[0, 0, 0], [0, 0, 0]], faults=[[0, 0, 0], [1, 0, 1], [1, 1, 0]])
+    assert m.num_fault_ids == 3
+    assert m.num_edges == 0
+    assert m.num_detectors == 2

@@ -39,7 +39,7 @@ def test_boundary_from_networkx():
     g.add_edge(2, 3, fault_ids=3)
     g.add_edge(3, 4, fault_ids=4)
     g.nodes()[4]['is_boundary'] = True
-    m = Matching(g)
+    m = Matching.from_networkx(g)
     assert m.boundary == {4}
     assert np.array_equal(m.decode(np.array([1, 0, 0, 0])), np.array([1, 0, 0, 0, 0]))
     assert np.array_equal(m.decode(np.array([0, 1, 0, 0])), np.array([1, 1, 0, 0, 0]))
@@ -57,7 +57,7 @@ def test_boundaries_from_networkx():
     g.add_edge(0, 5, fault_ids=-1, weight=0.0)
     g.nodes()[0]['is_boundary'] = True
     g.nodes()[5]['is_boundary'] = True
-    m = Matching(g)
+    m = Matching.from_networkx(g)
     assert m.boundary == {0, 5}
     assert np.array_equal(m.decode(np.array([0, 1, 0, 0, 0, 0])), np.array([1, 0, 0, 0, 0]))
     assert np.array_equal(m.decode(np.array([0, 0, 1, 0, 0])), np.array([1, 1, 0, 0, 0]))

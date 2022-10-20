@@ -18,16 +18,14 @@ import warnings
 import numpy as np
 import networkx as nx
 import retworkx as rx
-import scipy
+import pymatching
 from scipy.sparse import csc_matrix, spmatrix
 import matplotlib.cbook
 
 if TYPE_CHECKING:
     import stim
 
-from pymatching._cpp_pymatching import MatchingGraph as _MatchingGraph
-from pymatching._cpp_pymatching import (sparse_column_check_matrix_to_matching_graph,
-                                        detector_error_model_to_matching_graph)
+import pymatching._cpp_pymatching as _cpp_pm
 
 
 class Matching:
@@ -39,8 +37,8 @@ class Matching:
     """
 
     def __init__(self,
-                 graph: Union[scipy.sparse.spmatrix, np.ndarray, rx.PyGraph, nx.Graph, List[
-                     List[int]], 'stim.DetectorErrorModel'] = None,
+                 graph: Union[csc_matrix, np.ndarray, rx.PyGraph, nx.Graph, List[
+                     List[int]], 'stim.DetectorErrorModel', spmatrix] = None,
                  weights: Union[float, np.ndarray, List[float]] = None,
                  error_probabilities: Union[float, np.ndarray, List[float]] = None,
                  repetitions: int = None,
@@ -89,23 +87,26 @@ class Matching:
             By default None
         repetitions : int, optional
             The number of times the stabiliser measurements are repeated, if
-            the measurements are noisy. This option is only used if `H` is
+            the measurements are noisy. This option is only used if `check_matrix` is
             provided as a check matrix, not a NetworkX graph. By default None
         timelike_weights : float, optional
-            If `H` is given as a scipy or numpy array and `repetitions>1`,
+            If `check_matrix` is given as a scipy or numpy array and `repetitions>1`,
             `timelike_weights` gives the weight of timelike edges.
             If a float is given, all timelike edges weights are set to
-            the same value. If a numpy array of size `(H.shape[0],)` is given, the
+            the same value. If a numpy array of size `(check_matrix.shape[0],)` is given, the
             edge weight for each vertical timelike edge associated with the `i`th check (row)
-            of `H` is set to `timelike_weights[i]`. By default None, in which case all
+            of `check_matrix` is set to `timelike_weights[i]`. By default None, in which case all
             timelike weights are set to 1.0
         measurement_error_probabilities : float, optional
-            If `H` is given as a scipy or numpy array and `repetitions>1`,
+            If `check_matrix` is given as a scipy or numpy array and `repetitions>1`,
             gives the probability of a measurement error to be used for
             the add_noise method. If a float is given, all measurement
-            errors are set to the same value. If a numpy array of size `(H.shape[0],)` is given,
+            errors are set to the same value. If a numpy array of size `(check_matrix.shape[0],)` is given,
             the error probability for each vertical timelike edge associated with the `i`th check
-            (row) of `H` is set to `measurement_error_probabilities[i]`. By default None
+            (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. By default None
+        **kwargs
+            The remaining keyword arguments are passed to `Matching.load_from_check_matrix` if `graph` is a
+            check matrix.
         Examples
         --------
         >>> import pymatching
@@ -126,7 +127,7 @@ class Matching:
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
             """
-        self._matching_graph = _MatchingGraph()
+        self._matching_graph = _cpp_pm.MatchingGraph()
         if graph is None:
             graph = kwargs.get("H")
             if graph is None:
@@ -137,7 +138,7 @@ class Matching:
         elif isinstance(graph, rx.PyGraph):
             self.load_from_retworkx(graph)
         elif type(graph).__name__ == "DetectorErrorModel":
-            self.load_from_detector_error_model(graph)
+            self._load_from_detector_error_model(graph)
         else:
             try:
                 graph = csc_matrix(graph)
@@ -231,11 +232,11 @@ class Matching:
         --------
         >>> import pymatching
         >>> import numpy as np
-        >>> H = np.array([[1, 1, 0, 0, 0],
+        >>> check_matrix = np.array([[1, 1, 0, 0, 0],
         ...               [0, 1, 1, 0, 0],
         ...               [0, 0, 1, 1, 0],
         ...               [0, 0, 0, 1, 1]])
-        >>> m = pymatching.Matching(H)
+        >>> m = pymatching.Matching(check_matrix)
         >>> z = np.array([0, 1, 0, 0])
         >>> m.decode(z)
         array([1, 1, 0, 0, 0], dtype=uint8)
@@ -260,10 +261,10 @@ class Matching:
         >>> import pymatching
         >>> import numpy as np
         >>> np.random.seed(0)
-        >>> H = np.array([[1, 1, 0, 0],
+        >>> check_matrix = np.array([[1, 1, 0, 0],
         ...               [0, 1, 1, 0],
         ...               [0, 0, 1, 1]])
-        >>> m = pymatching.Matching(H, repetitions=5)
+        >>> m = pymatching.Matching(check_matrix, repetitions=5)
         >>> data_qubit_noise = (np.random.rand(4, 5) < 0.1).astype(np.uint8)
         >>> print(data_qubit_noise)
         [[0 0 0 0 0]
@@ -271,7 +272,7 @@ class Matching:
          [0 0 0 0 1]
          [1 1 0 0 0]]
         >>> cumulative_noise = (np.cumsum(data_qubit_noise, 1) % 2).astype(np.uint8)
-        >>> syndrome = H@cumulative_noise % 2
+        >>> syndrome = check_matrix@cumulative_noise % 2
         >>> print(syndrome)
         [[0 0 0 0 0]
          [0 0 0 0 1]
@@ -668,42 +669,43 @@ class Matching:
         """
         return self._matching_graph.get_edges()
 
-    def load_from_check_matrix(self,
-                               H: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]],
-                               weights: Union[float, np.ndarray, List[float]] = None,
-                               error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                               repetitions: int = None,
-                               timelike_weights: Union[float, np.ndarray, List[float]] = None,
-                               measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                               *,
-                               faults: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
-                               merge_strategy: str = "smallest-weight",
-                               use_virtual_boundary_node: bool = False,
-                               **kwargs
-                               ) -> None:
+    @staticmethod
+    def from_check_matrix(
+            check_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]],
+            weights: Union[float, np.ndarray, List[float]] = None,
+            error_probabilities: Union[float, np.ndarray, List[float]] = None,
+            repetitions: int = None,
+            timelike_weights: Union[float, np.ndarray, List[float]] = None,
+            measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+            *,
+            faults: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+            merge_strategy: str = "smallest-weight",
+            use_virtual_boundary_node: bool = False,
+            **kwargs
+    ) -> 'pymatching.Matching':
         """
         Load a matching graph from a check matrix
         Parameters
         ----------
-        H : `scipy.spmatrix` or `numpy.ndarray` or List[List[int]]
+        check_matrix : `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]]
             The quantum code to be decoded with minimum-weight perfect
             matching, given as a binary check matrix (scipy sparse
             matrix or numpy.ndarray)
         weights : float or numpy.ndarray, optional
-            If `H` is given as a scipy or numpy array, `weights` gives the weights
-            of edges in the matching graph corresponding to columns of `H`.
+            If `check_matrix` is given as a scipy or numpy array, `weights` gives the weights
+            of edges in the matching graph corresponding to columns of `check_matrix`.
             If `weights` is a numpy.ndarray, it should be a 1D array with length
-            equal to `H.shape[1]`. If weights is a float, it is used as the weight for all
-            edges corresponding to columns of `H`. By default None, in which case
+            equal to `check_matrix.shape[1]`. If weights is a float, it is used as the weight for all
+            edges corresponding to columns of `check_matrix`. By default None, in which case
             all weights are set to 1.0
             This argument was renamed from `spacelike_weights` in PyMatching v2.0, but
             `spacelike_weights` is still accepted in place of `weights` for backward compatibility.
         error_probabilities : float or numpy.ndarray, optional
             The probabilities with which an error occurs on each edge associated with a
-            column of H. If a
+            column of check_matrix. If a
             single float is given, the same error probability is used for each
             column. If a numpy.ndarray of floats is given, it must have a
-            length equal to the number of columns in H. This parameter is only
+            length equal to the number of columns in check_matrix. This parameter is only
             needed for the Matching.add_noise method, and not for decoding.
             By default None
         repetitions : int, optional
@@ -712,20 +714,29 @@ class Matching:
         timelike_weights : float or numpy.ndarray, optional
             If `repetitions>1`, `timelike_weights` gives the weight of
             timelike edges. If a float is given, all timelike edges weights are set to
-            the same value. If a numpy array of size `(H.shape[0],)` is given, the
+            the same value. If a numpy array of size `(check_matrix.shape[0],)` is given, the
             edge weight for each vertical timelike edge associated with the `i`th check (row)
-            of `H` is set to `timelike_weights[i]`. By default None, in which case all
+            of `check_matrix` is set to `timelike_weights[i]`. By default None, in which case all
             timelike weights are set to 1.0
         measurement_error_probabilities : float or numpy.ndarray, optional
             If `repetitions>1`, gives the probability of a measurement
             error to be used for the add_noise method. If a float is given, all measurement
-            errors are set to the same value. If a numpy array of size `(H.shape[0],)` is given,
+            errors are set to the same value. If a numpy array of size `(check_matrix.shape[0],)` is given,
             the error probability for each vertical timelike edge associated with the `i`th check
-            (row) of `H` is set to `measurement_error_probabilities[i]`. This argument can also be
+            (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. This argument can also be
             given using the keyword argument `measurement_error_probability` to maintain backward
             compatibility with previous versions of Pymatching. By default None
-        faults: csc_matrix, optional
-            An array of faults, one per row
+        faults: `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]], optional
+            A binary array of faults, which can be used to set the `fault_ids` for each edge in the
+            constructed matching graph. The `fault_ids` attribute of the edge corresponding to column
+            `j` of `check_matrix` includes fault id `i` if and only if `faults[i,j]==1`. Therefore, the number
+            of columns in `faults` must match the number of columns in `check_matrix`. By default, `faults` is just
+            set to the identity matrix, in which case the edge corresponding to column `j` of `check_matrix`
+            has `fault_ids={j}`. As an example, if `check_matrix` corresponds to the X check matrix of
+            a CSS stabiliser code, then you could set `faults` to the X logical operators: in this case
+            the output of `Matching.decode` will be a binary array `correction` where `correction[i]==1`
+            if the decoder predicts that the logical operator corresponding to row `i` of `faults` was flipped,
+            given the observed syndrome.
         merge_strategy: str, optional
             Which strategy to use when adding an edge (`node1`, `node2`) that is already in the graph. The available
             options are "disallow", "independent", "smallest-weight", "keep-original" and "replace". "disallow" raises a
@@ -742,34 +753,168 @@ class Matching:
         use_virtual_boundary_node: bool, optional
             This option determines how columns are handled if they contain only a single 1 (representing a boundary edge).
             Consider a column contains a single 1 at row index i. If `use_virtual_boundary_node=False`, then this column
-            will be handled by adding an edge `(i, H.shape[0])`, and marking the node `H.shape[0]` as a boundary node with
-            `Matching.set_boundary(H.shape[0])`. The resulting graph will contain `H.shape[0]+1` nodes, the largest of
+            will be handled by adding an edge `(i, check_matrix.shape[0])`, and marking the node `check_matrix.shape[0]` as a boundary node with
+            `Matching.set_boundary(check_matrix.shape[0])`. The resulting graph will contain `check_matrix.shape[0]+1` nodes, the largest of
             which is the boundary node. If `use_virtual_boundary_node=True` then instead the boundary is a virtual node, and
-            this column is handled with `Matching.add_boundary_edge(i, ...)`. The resulting graph will contain `H.shape[0]`
+            this column is handled with `Matching.add_boundary_edge(i, ...)`. The resulting graph will contain `check_matrix.shape[0]`
             nodes, and there is no boundary node. Both options are handled identically by the decoder, although
             `use_virtual_boundary_node=True` is recommended since it is simpler (with a one-to-one correspondence between
-             nodes and rows of H), and is also slightly more efficient. By default, False (for backward compatibility)
+             nodes and rows of check_matrix), and is also slightly more efficient. By default, False (for backward compatibility)
         Examples
         --------
         >>> import pymatching
-        >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
+        >>> m = pymatching.Matching.from_check_matrix([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
 
         Matching objects can also be initialised from a sparse scipy matrix:
         >>> import pymatching
         >>> from scipy.sparse import csc_matrix
-        >>> H = csc_matrix([[1, 1, 0], [0, 1, 1]])
-        >>> m = pymatching.Matching(H)
+        >>> check_matrix = csc_matrix([[1, 1, 0], [0, 1, 1]])
+        >>> m = pymatching.Matching.from_check_matrix(check_matrix)
         >>> m
         <pymatching.Matching object with 2 detectors, 1 boundary node, and 3 edges>
         """
-        if not isinstance(H, csc_matrix):
+        m = pymatching.Matching()
+        m.load_from_check_matrix(
+            check_matrix=check_matrix,
+            weights=weights,
+            error_probabilities=error_probabilities,
+            repetitions=repetitions,
+            timelike_weights=timelike_weights,
+            measurement_error_probabilities=measurement_error_probabilities,
+            faults=faults,
+            merge_strategy=merge_strategy,
+            use_virtual_boundary_node=use_virtual_boundary_node,
+            kwargs=kwargs
+        )
+        return m
+
+    def load_from_check_matrix(self,
+                               check_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+                               weights: Union[float, np.ndarray, List[float]] = None,
+                               error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                               repetitions: int = None,
+                               timelike_weights: Union[float, np.ndarray, List[float]] = None,
+                               measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                               *,
+                               faults: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+                               merge_strategy: str = "smallest-weight",
+                               use_virtual_boundary_node: bool = False,
+                               **kwargs
+                               ) -> None:
+        """
+        Load a matching graph from a check matrix
+        Parameters
+        ----------
+        check_matrix : `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]]
+            The quantum code to be decoded with minimum-weight perfect
+            matching, given as a binary check matrix (scipy sparse
+            matrix or numpy.ndarray)
+        weights : float or numpy.ndarray, optional
+            If `check_matrix` is given as a scipy or numpy array, `weights` gives the weights
+            of edges in the matching graph corresponding to columns of `check_matrix`.
+            If `weights` is a numpy.ndarray, it should be a 1D array with length
+            equal to `check_matrix.shape[1]`. If weights is a float, it is used as the weight for all
+            edges corresponding to columns of `check_matrix`. By default None, in which case
+            all weights are set to 1.0
+            This argument was renamed from `spacelike_weights` in PyMatching v2.0, but
+            `spacelike_weights` is still accepted in place of `weights` for backward compatibility.
+        error_probabilities : float or numpy.ndarray, optional
+            The probabilities with which an error occurs on each edge associated with a
+            column of check_matrix. If a
+            single float is given, the same error probability is used for each
+            column. If a numpy.ndarray of floats is given, it must have a
+            length equal to the number of columns in check_matrix. This parameter is only
+            needed for the Matching.add_noise method, and not for decoding.
+            By default None
+        repetitions : int, optional
+            The number of times the stabiliser measurements are repeated, if
+            the measurements are noisy. By default None
+        timelike_weights : float or numpy.ndarray, optional
+            If `repetitions>1`, `timelike_weights` gives the weight of
+            timelike edges. If a float is given, all timelike edges weights are set to
+            the same value. If a numpy array of size `(check_matrix.shape[0],)` is given, the
+            edge weight for each vertical timelike edge associated with the `i`th check (row)
+            of `check_matrix` is set to `timelike_weights[i]`. By default None, in which case all
+            timelike weights are set to 1.0
+        measurement_error_probabilities : float or numpy.ndarray, optional
+            If `repetitions>1`, gives the probability of a measurement
+            error to be used for the add_noise method. If a float is given, all measurement
+            errors are set to the same value. If a numpy array of size `(check_matrix.shape[0],)` is given,
+            the error probability for each vertical timelike edge associated with the `i`th check
+            (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. This argument can also be
+            given using the keyword argument `measurement_error_probability` to maintain backward
+            compatibility with previous versions of Pymatching. By default None
+        faults: `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]], optional
+            A binary array of faults, which can be used to set the `fault_ids` for each edge in the
+            constructed matching graph. The `fault_ids` attribute of the edge corresponding to column
+            `j` of `check_matrix` includes fault id `i` if and only if `faults[i,j]==1`. Therefore, the number
+            of columns in `faults` must match the number of columns in `check_matrix`. By default, `faults` is just
+            set to the identity matrix, in which case the edge corresponding to column `j` of `check_matrix`
+            has `fault_ids={j}`. As an example, if `check_matrix` corresponds to the X check matrix of
+            a CSS stabiliser code, then you could set `faults` to the X logical operators: in this case
+            the output of `Matching.decode` will be a binary array `correction` where `correction[i]==1`
+            if the decoder predicts that the logical operator corresponding to row `i` of `faults` was flipped,
+            given the observed syndrome.
+        merge_strategy: str, optional
+            Which strategy to use when adding an edge (`node1`, `node2`) that is already in the graph. The available
+            options are "disallow", "independent", "smallest-weight", "keep-original" and "replace". "disallow" raises a
+            `ValueError` if the edge (`node1`, `node2`) is already present. The "independent" strategy assumes that
+            the existing edge (`node1`, `node2`) and the edge being added represent independent error mechanisms, and
+            they are merged into a new edge with updated weights and error_probabilities accordingly (it is assumed
+            that each weight represents the log-likelihood ratio log((1-p)/p) where p is the `error_probability` and
+            where the natural logarithm is used. The fault_ids associated with the existing edge are kept only, since
+            the code has distance 2 if parallel edges have different fault_ids anyway). The "smallest-weight" strategy
+            keeps only the new edge if it has a smaller weight than the existing edge, otherwise the graph is left
+            unchanged. The "keep-original" strategy keeps only the existing edge, and ignores the edge being added.
+            The "replace" strategy always keeps the edge being added, replacing the existing edge.
+            By default, "smallest-weight"
+        use_virtual_boundary_node: bool, optional
+            This option determines how columns are handled if they contain only a single 1 (representing a boundary edge).
+            Consider a column contains a single 1 at row index i. If `use_virtual_boundary_node=False`, then this column
+            will be handled by adding an edge `(i, check_matrix.shape[0])`, and marking the node `check_matrix.shape[0]` as a boundary node with
+            `Matching.set_boundary(check_matrix.shape[0])`. The resulting graph will contain `check_matrix.shape[0]+1` nodes, the largest of
+            which is the boundary node. If `use_virtual_boundary_node=True` then instead the boundary is a virtual node, and
+            this column is handled with `Matching.add_boundary_edge(i, ...)`. The resulting graph will contain `check_matrix.shape[0]`
+            nodes, and there is no boundary node. Both options are handled identically by the decoder, although
+            `use_virtual_boundary_node=True` is recommended since it is simpler (with a one-to-one correspondence between
+             nodes and rows of check_matrix), and is also slightly more efficient. By default, False (for backward compatibility)
+        Examples
+        --------
+        >>> import pymatching
+        >>> m = pymatching.Matching()
+        >>> m.load_from_check_matrix([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
+        >>> m
+        <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
+
+        Matching objects can also be initialised from a sparse scipy matrix:
+        >>> import pymatching
+        >>> from scipy.sparse import csc_matrix
+        >>> check_matrix = csc_matrix([[1, 1, 0], [0, 1, 1]])
+        >>> m = pymatching.Matching()
+        >>> m.load_from_check_matrix(check_matrix)
+        >>> m
+        <pymatching.Matching object with 2 detectors, 1 boundary node, and 3 edges>
+        """
+        if check_matrix is None:
+            check_matrix = kwargs.get("H", None)
+            if check_matrix is None:
+                raise ValueError("No check_matrix provided")
+
+        if not isinstance(check_matrix, csc_matrix):
             try:
-                H = csc_matrix(H)
+                check_matrix = csc_matrix(check_matrix)
             except TypeError:
-                raise TypeError("H must be convertible to a `scipy.csc_matrix`")
-        num_edges = H.shape[1]
+                raise TypeError("`check_matrix` must be convertible to a `scipy.sparse.csc_matrix`")
+
+        if faults is not None:
+            try:
+                faults = csc_matrix(faults)
+            except TypeError:
+                raise TypeError("`faults` must be convertible to `scipy.sparse.csc_matrix`")
+
+        num_edges = check_matrix.shape[1]
 
         slw = kwargs.get("spacelike_weights")
         if weights is None and slw is not None:
@@ -789,14 +934,14 @@ class Matching:
         elif isinstance(error_probabilities, (int, float)):
             error_probabilities = np.ones(num_edges) * error_probabilities
 
-        H.eliminate_zeros()
+        check_matrix.eliminate_zeros()
 
         repetitions = 1 if repetitions is None else repetitions
 
         if repetitions > 1:
             timelike_weights = 1.0 if timelike_weights is None else timelike_weights
             if isinstance(timelike_weights, (int, float, np.integer, np.floating)):
-                timelike_weights = np.ones(H.shape[0], dtype=float) * timelike_weights
+                timelike_weights = np.ones(check_matrix.shape[0], dtype=float) * timelike_weights
             elif isinstance(timelike_weights, (np.ndarray, list)):
                 timelike_weights = np.array(timelike_weights, dtype=float)
             else:
@@ -813,7 +958,7 @@ class Matching:
 
             p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
             if isinstance(p_meas, (int, float, np.integer, np.floating)):
-                p_meas = np.ones(H.shape[0], dtype=float) * p_meas
+                p_meas = np.ones(check_matrix.shape[0], dtype=float) * p_meas
             elif isinstance(p_meas, (np.ndarray, list)):
                 p_meas = np.array(p_meas, dtype=float)
             else:
@@ -821,15 +966,17 @@ class Matching:
         else:
             timelike_weights = None
             p_meas = None
-        faults = csc_matrix(faults) if faults is not None else None
-        self._matching_graph = sparse_column_check_matrix_to_matching_graph(H, weights, error_probabilities,
-                                                                            merge_strategy,
-                                                                            use_virtual_boundary_node, repetitions,
-                                                                            timelike_weights, p_meas, faults)
+        self._matching_graph = _cpp_pm.sparse_column_check_matrix_to_matching_graph(check_matrix, weights,
+                                                                                    error_probabilities,
+                                                                                    merge_strategy,
+                                                                                    use_virtual_boundary_node,
+                                                                                    repetitions,
+                                                                                    timelike_weights, p_meas, faults)
 
-    def load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
+    @staticmethod
+    def from_detector_error_model(model: 'stim.DetectorErrorModel') -> 'pymatching.Matching':
         """
-        Load from a `stim.DetectorErrorModel`.
+        Constructs a `pymatching.Matching` object by loading from a `stim.DetectorErrorModel`.
 
         A `stim.DetectorErrorModel` (DEM) describes a circuit-level noise model in a quantum error correction protocol,
         and is defined in the
@@ -855,8 +1002,14 @@ class Matching:
 
         Returns
         -------
-
+        pymatching.Matching
+            A `pymatching.Matching` object representing the edge-like fault mechanisms in `model`
         """
+        m = Matching()
+        m._load_from_detector_error_model(model)
+        return m
+
+    def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
         try:
             import stim
         except ImportError as ex:
@@ -866,11 +1019,13 @@ class Matching:
             ) from ex
         if not isinstance(model, stim.DetectorErrorModel):
             raise ValueError(f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}")
-        self._matching_graph = detector_error_model_to_matching_graph(str(model))
+        self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(str(model))
 
-    def load_from_networkx(self, graph: nx.Graph, *, min_num_fault_ids: int = None) -> None:
+    @staticmethod
+    def from_networkx(graph: nx.Graph, *, min_num_fault_ids: int = None) -> 'pymatching.Matching':
         r"""
-        Load a matching graph from a NetworkX graph
+        Returns a new `pymatching.Matching` object from a NetworkX graph
+
         Parameters
         ----------
         graph : networkx.Graph
@@ -882,7 +1037,61 @@ class Matching:
             physical Pauli errors (physical frame changes)
             or to the logical observables that are flipped by the fault
             (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
-            detector error model). The `fault_ids` attribute was previously named `qubit_id` in an
+            detector error model).
+            The `fault_ids` attribute determines how the solution is output via `pymatching.Matching.decode`:
+            the binary `correction` array has length `pymatching.Matching.num_fault_ids`, and `correction[i]`
+            is 1 if and only if an odd number of edges in the MWPM solution have `i` in their `fault_ids` attribute.
+            The `fault_ids` attribute was previously named `qubit_id` in an
+            earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` in order
+            to maintain backward compatibility.
+            Each ``weight`` attribute should be a non-negative float. If
+            every edge is assigned an error_probability between zero and one,
+            then the ``add_noise`` method can be used to simulate noise and
+            flip edges independently in the graph.
+        min_num_fault_ids: int
+            Sets the minimum number of fault ids in the matching graph. Let `max_id` be the maximum fault id assigned to
+            any of the edges in the graph. Then setting this argument will ensure that
+            `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`. Note that `Matching.num_fault_ids` sets the length
+            of the correction array output by `Matching.decode`.
+        Examples
+        --------
+        >>> import pymatching
+        >>> import networkx as nx
+        >>> import math
+        >>> g = nx.Graph()
+        >>> g.add_edge(0, 1, fault_ids=0, weight=math.log((1-0.1)/0.1), error_probability=0.1)
+        >>> g.add_edge(1, 2, fault_ids=1, weight=math.log((1-0.15)/0.15), error_probability=0.15)
+        >>> g.nodes[0]['is_boundary'] = True
+        >>> g.nodes[2]['is_boundary'] = True
+        >>> m = pymatching.Matching.from_networkx(g)
+        >>> m
+        <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
+        """
+        m = Matching()
+        m.load_from_networkx(
+            graph=graph, min_num_fault_ids=min_num_fault_ids
+        )
+        return m
+
+    def load_from_networkx(self, graph: nx.Graph, *, min_num_fault_ids: int = None) -> None:
+        r"""
+        Load a matching graph from a NetworkX graph into a `pymatching.Matching` object
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Each edge in the NetworkX graph can have optional
+            attributes ``fault_ids``, ``weight`` and ``error_probability``.
+            ``fault_ids`` should be an int or a set of ints.
+            Each fault id corresponds to a self-inverse fault that is flipped when the
+            corresponding edge is flipped. These self-inverse faults could correspond to
+            physical Pauli errors (physical frame changes)
+            or to the logical observables that are flipped by the fault
+            (a logical frame change, equivalent to an obersvable ID in an error instruction in a Stim
+            detector error model).
+            The `fault_ids` attribute determines how the solution is output via `pymatching.Matching.decode`:
+            the binary `correction` array has length `pymatching.Matching.num_fault_ids`, and `correction[i]`
+            is 1 if and only if an odd number of edges in the MWPM solution have `i` in their `fault_ids` attribute.
+            The `fault_ids` attribute was previously named `qubit_id` in an
             earlier version of PyMatching, and `qubit_id` is still accepted instead of `fault_ids` in order
             to maintain backward compatibility.
             Each ``weight`` attribute should be a non-negative float. If
@@ -916,7 +1125,7 @@ class Matching:
         num_nodes = graph.number_of_nodes()
         all_fault_ids = set()
         num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
-        g = _MatchingGraph(num_nodes, num_fault_ids)
+        g = _cpp_pm.MatchingGraph(num_nodes, num_fault_ids)
         g.set_boundary(boundary)
         for (u, v, attr) in graph.edges(data=True):
             u, v = int(u), int(v)
@@ -991,7 +1200,7 @@ class Matching:
         boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
         num_nodes = len(graph)
         num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
-        g = _MatchingGraph(num_nodes, num_fault_ids)
+        g = _cpp_pm.MatchingGraph(num_nodes, num_fault_ids)
         g.set_boundary(boundary)
         for (u, v, attr) in graph.weighted_edge_list():
             u, v = int(u), int(v)
@@ -1080,12 +1289,12 @@ class Matching:
         """
         self._matching_graph.set_boundary(nodes)
 
-    def set_min_num_fault_ids(self, min_num_fault_ids: int) -> None:
+    def ensure_num_fault_ids(self, min_num_fault_ids: int) -> None:
         """
         Set the minimum number of fault ids in the matching graph.
 
-        Let `max_id` be the maximum fault id assigned to any of the edges in the graph. Then setting
-        `min_num_fault_ids` will ensure that `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`.
+        Let `max_id` be the maximum fault id assigned to any of the edges in a `pymatching.Matching` graph `m`.
+        Then setting `m.ensure_num_fault_ids(n)` will ensure that `Matching.num_fault_ids=max(n, max_id)`.
         Note that `Matching.num_fault_ids` sets the length of the correction array output by `Matching.decode`.
         Parameters
         ----------

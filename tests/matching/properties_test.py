@@ -29,7 +29,7 @@ def test_set_min_num_fault_ids():
     assert m.num_fault_ids == 0
     m.load_from_check_matrix([[1, 1, 0], [0, 1, 1]])
     assert m.num_fault_ids == 3
-    m.set_min_num_fault_ids(5)
+    m.ensure_num_fault_ids(5)
     assert m.num_fault_ids == 5
     assert m.decode([1, 0]).shape[0] == 5
     m.load_from_check_matrix([[1, 1, 0], [0, 1, 1]])
