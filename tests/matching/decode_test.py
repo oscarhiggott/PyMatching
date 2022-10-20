@@ -144,8 +144,8 @@ def get_full_data_path(filename: str) -> str:
 def test_surface_code_solution_weights():
     dem = stim.DetectorErrorModel.from_file(os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01.dem"))
     m = Matching.from_detector_error_model(dem)
-    shots = stim.read_shot_data_file(path=os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.b8"),
-                                     format="b8", num_detectors=m.num_detectors,
+    shots = stim.read_shot_data_file(path=os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.dets"),
+                                     format="dets", num_detectors=m.num_detectors,
                                      num_observables=m.num_fault_ids)
     with open(os.path.join(
             DATA_DIR,
