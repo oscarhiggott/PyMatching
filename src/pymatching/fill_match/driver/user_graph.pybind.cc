@@ -87,6 +87,15 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             // return -1 as the virtual boundary when inspecting the graph.
             if (node1 < 0 || node2 < 0)
                 throw std::invalid_argument("Node indices must be non-negative.");
+
+            if (std::abs(weight) > pm::MAX_USER_EDGE_WEIGHT) {
+                auto warnings = pybind11::module::import("warnings");
+                warnings.attr("warn")(
+                    "Weight " + std::to_string(weight) + " of edge (" + std::to_string(node1) + ", " +
+                    std::to_string(node2) + ") exceeds maximum edge weight " +
+                    std::to_string(pm::MAX_USER_EDGE_WEIGHT) + " and has not been added to the matching graph.");
+                return;
+            }
             std::vector<size_t> observables_vec(observables.begin(), observables.end());
             self.add_or_merge_edge(
                 node1, node2, observables_vec, weight, error_probability, merge_strategy_from_string(merge_strategy));
@@ -109,6 +118,15 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             // return -1 as the virtual boundary when inspecting the graph.
             if (node < 0)
                 throw std::invalid_argument("Node index must be non-negative.");
+
+            if (std::abs(weight) > pm::MAX_USER_EDGE_WEIGHT) {
+                auto warnings = pybind11::module::import("warnings");
+                warnings.attr("warn")(
+                    "Weight " + std::to_string(weight) + " of edge (" + std::to_string(node) +
+                    ", None) exceeds maximum edge weight " + std::to_string(pm::MAX_USER_EDGE_WEIGHT) +
+                    " and has not been added to the matching graph.");
+                return;
+            }
             std::vector<size_t> observables_vec(observables.begin(), observables.end());
             self.add_or_merge_boundary_edge(
                 node, observables_vec, weight, error_probability, merge_strategy_from_string(merge_strategy));

@@ -114,3 +114,19 @@ def test_get_edge_data():
     assert m.get_edge_data(0, 1) == {"fault_ids": {0, 1, 2}, "weight": 2.5, "error_probability": 0.1}
     m.add_boundary_edge(5, {5, 6, 7}, 5.0, 0.34)
     assert m.get_boundary_edge_data(5) == {"fault_ids": {5, 6, 7}, "weight": 5.0, "error_probability": 0.34}
+
+
+def test_large_edge_weight_not_added_to_graph():
+    m = Matching()
+    m.add_edge(0, 1)
+    x = 0
+    with pytest.warns(UserWarning):
+        m.add_edge(1, 2, weight=9999999999)
+    with pytest.warns(UserWarning):
+        m.add_boundary_edge(3, weight=9999999999)
+    with pytest.warns(UserWarning):
+        m.add_edge(3, 4, weight=-9999999999)
+    with pytest.warns(UserWarning):
+        m.add_boundary_edge(5, weight=-9999999999)
+    assert m.num_edges == 1
+    assert m.edges() == [(0, 1, {"fault_ids": set(), "weight": 1.0, "error_probability": -1.0})]

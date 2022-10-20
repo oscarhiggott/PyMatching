@@ -31,6 +31,7 @@ class UserNode {
 typedef std::tuple<size_t, size_t, std::vector<size_t>, double, double> edge_data;
 
 const pm::weight_int NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH = 1 << (sizeof(pm::weight_int) * 8 - 8);
+const pm::weight_int MAX_USER_EDGE_WEIGHT = NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH - 1;
 
 enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORIGINAL, REPLACE };
 
@@ -76,6 +77,7 @@ class UserGraph {
     void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
     bool all_edges_have_error_probabilities();
     double max_abs_weight();
+    double get_edge_weight_normalising_constant(size_t max_num_distinct_weights);
     template <typename EdgeCallable, typename BoundaryEdgeCallable>
     double iter_discretized_edges(
         pm::weight_int num_distinct_weights,
@@ -102,13 +104,11 @@ inline double UserGraph::iter_discretized_edges(
     pm::weight_int num_distinct_weights,
     const EdgeCallable& edge_func,
     const BoundaryEdgeCallable& boundary_edge_func) {
-    double max_weight = max_abs_weight();
     pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
-    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
-    double normalising_constant = (double)max_half_edge_weight / max_weight;
+    double normalising_constant = get_edge_weight_normalising_constant(num_distinct_weights);
 
     for (auto& e : edges) {
-        pm::signed_weight_int w = (pm::signed_weight_int)(e.weight * normalising_constant);
+        pm::signed_weight_int w = (pm::signed_weight_int)round(e.weight * normalising_constant);
         // Extremely important!
         // If all edge weights are even integers, then all collision events occur at integer times.
         w *= 2;

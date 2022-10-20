@@ -328,6 +328,30 @@ void pm::UserGraph::set_min_num_observables(size_t num_observables) {
         _num_observables = num_observables;
 }
 
+double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distinct_weights) {
+    double max_abs_weight = 0;
+    bool all_integral_weight = true;
+    for (auto& e : edges) {
+        if (std::abs(e.weight) > max_abs_weight)
+            max_abs_weight = std::abs(e.weight);
+
+        if (round(e.weight) != e.weight)
+            all_integral_weight = false;
+    }
+
+    if (max_abs_weight > pm::MAX_USER_EDGE_WEIGHT)
+        throw std::invalid_argument(
+            "maximum absolute edge weight of " + std::to_string(pm::MAX_USER_EDGE_WEIGHT) +
+            " exceeded.");
+
+    if (all_integral_weight) {
+        return 1.0;
+    } else {
+        pm::weight_int max_half_edge_weight = max_num_distinct_weights - 1;
+        return (double)max_half_edge_weight / max_abs_weight;
+    }
+}
+
 pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
     pm::iter_detector_error_model_edges(
