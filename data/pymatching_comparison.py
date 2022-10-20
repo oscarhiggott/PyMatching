@@ -54,7 +54,7 @@ def discretize_weights(g: nx.Graph, num_buckets) -> nx.Graph:
     if min_weight < 0:
         raise NotImplementedError("Negative weights not yet supported")
     for u, v, d in g.edges(data=True):
-        d["weight"] = 2 * int(num_buckets * (float(d.get("weight", 1)) / max_weight))
+        d["weight"] = 2 * round(num_buckets * (float(d.get("weight", 1)) / max_weight))
     return g
 
 
