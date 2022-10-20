@@ -130,7 +130,7 @@ def test_matching_solution_integral_weights():
 
 
 def get_full_data_path(filename: str) -> str:
-    for data_dir in ("data/", "../data/", "../../data/"):
+    for data_dir in ("./data/", "../data/", "../../data/"):
         fullpath = os.path.join(data_dir, filename)
         if os.path.isfile(fullpath):
             return fullpath
@@ -145,9 +145,9 @@ def test_surface_code_solution_weights():
     with open(get_full_data_path(
             "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt"), "r") as f:
         expected_weights = [float(w) for w in f.readlines()]
-        with open(get_full_data_path(
-                "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"), "r") as f:
-            expected_observables = [float(w) for w in f.readlines()]
+    with open(get_full_data_path(
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"), "r") as f:
+        expected_observables = [float(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
     weights = []
     predicted_observables = []
