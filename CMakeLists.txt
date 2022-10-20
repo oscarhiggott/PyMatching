@@ -36,64 +36,64 @@ else ()
 endif ()
 
 set(SOURCE_FILES_NO_MAIN
-        src/pymatching/fill_match/driver/namespaced_main.cc
-        src/pymatching/fill_match/driver/io.cc
-        src/pymatching/fill_match/driver/mwpm_decoding.cc
-        src/pymatching/fill_match/flooder/graph.cc
-        src/pymatching/fill_match/flooder/detector_node.cc
-        src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.cc
-        src/pymatching/fill_match/flooder/graph_fill_region.cc
-        src/pymatching/fill_match/flooder/match.cc
-        src/pymatching/fill_match/flooder/graph_flooder.cc
-        src/pymatching/fill_match/matcher/alternating_tree.cc
-        src/pymatching/fill_match/matcher/mwpm.cc
-        src/pymatching/fill_match/flooder_matcher_interop/region_edge.cc
-        src/pymatching/fill_match/flooder_matcher_interop/mwpm_event.cc
-        src/pymatching/fill_match/tracker/flood_check_event.cc
-        src/pymatching/fill_match/diagram/animation_main.cc
-        src/pymatching/fill_match/diagram/mwpm_diagram.cc
-        src/pymatching/fill_match/search/search_graph.cc
-        src/pymatching/fill_match/search/search_detector_node.cc
-        src/pymatching/fill_match/search/search_flooder.cc
-        src/pymatching/fill_match/driver/user_graph.cc
+        src/pymatching/sparse_blossom/driver/namespaced_main.cc
+        src/pymatching/sparse_blossom/driver/io.cc
+        src/pymatching/sparse_blossom/driver/mwpm_decoding.cc
+        src/pymatching/sparse_blossom/flooder/graph.cc
+        src/pymatching/sparse_blossom/flooder/detector_node.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/compressed_edge.cc
+        src/pymatching/sparse_blossom/flooder/graph_fill_region.cc
+        src/pymatching/sparse_blossom/flooder/match.cc
+        src/pymatching/sparse_blossom/flooder/graph_flooder.cc
+        src/pymatching/sparse_blossom/matcher/alternating_tree.cc
+        src/pymatching/sparse_blossom/matcher/mwpm.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/region_edge.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/mwpm_event.cc
+        src/pymatching/sparse_blossom/tracker/flood_check_event.cc
+        src/pymatching/sparse_blossom/diagram/animation_main.cc
+        src/pymatching/sparse_blossom/diagram/mwpm_diagram.cc
+        src/pymatching/sparse_blossom/search/search_graph.cc
+        src/pymatching/sparse_blossom/search/search_detector_node.cc
+        src/pymatching/sparse_blossom/search/search_flooder.cc
+        src/pymatching/sparse_blossom/driver/user_graph.cc
         src/pymatching/rand/rand_gen.cc
         )
 
 set(TEST_FILES
-        src/pymatching/fill_match/driver/namespaced_main.test.cc
-        src/pymatching/fill_match/driver/io.test.cc
-        src/pymatching/fill_match/driver/mwpm_decoding.test.cc
-        src/pymatching/fill_match/flooder_matcher_interop/varying.test.cc
-        src/pymatching/fill_match/flooder/graph.test.cc
-        src/pymatching/fill_match/flooder/detector_node.test.cc
-        src/pymatching/fill_match/flooder_matcher_interop/compressed_edge.test.cc
-        src/pymatching/fill_match/flooder/graph_fill_region.test.cc
-        src/pymatching/fill_match/flooder/match.test.cc
-        src/pymatching/fill_match/flooder/graph_flooder.test.cc
-        src/pymatching/fill_match/matcher/alternating_tree.test.cc
-        src/pymatching/fill_match/matcher/mwpm.test.cc
-        src/pymatching/fill_match/tracker/flood_check_event.test.cc
-        src/pymatching/fill_match/tracker/radix_heap_queue.test.cc
-        src/pymatching/fill_match/flooder_matcher_interop/mwpm_event.test.cc
-        src/pymatching/fill_match/tracker/queued_event_tracker.test.cc
-        src/pymatching/fill_match/tracker/cyclic.test.cc
-        src/pymatching/fill_match/diagram/mwpm_diagram.test.cc
-        src/pymatching/fill_match/search/search_graph.test.cc
-        src/pymatching/fill_match/search/search_flooder.test.cc
-        src/pymatching/fill_match/driver/user_graph.test.cc
+        src/pymatching/sparse_blossom/driver/namespaced_main.test.cc
+        src/pymatching/sparse_blossom/driver/io.test.cc
+        src/pymatching/sparse_blossom/driver/mwpm_decoding.test.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/varying.test.cc
+        src/pymatching/sparse_blossom/flooder/graph.test.cc
+        src/pymatching/sparse_blossom/flooder/detector_node.test.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/compressed_edge.test.cc
+        src/pymatching/sparse_blossom/flooder/graph_fill_region.test.cc
+        src/pymatching/sparse_blossom/flooder/match.test.cc
+        src/pymatching/sparse_blossom/flooder/graph_flooder.test.cc
+        src/pymatching/sparse_blossom/matcher/alternating_tree.test.cc
+        src/pymatching/sparse_blossom/matcher/mwpm.test.cc
+        src/pymatching/sparse_blossom/tracker/flood_check_event.test.cc
+        src/pymatching/sparse_blossom/tracker/radix_heap_queue.test.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/mwpm_event.test.cc
+        src/pymatching/sparse_blossom/tracker/queued_event_tracker.test.cc
+        src/pymatching/sparse_blossom/tracker/cyclic.test.cc
+        src/pymatching/sparse_blossom/diagram/mwpm_diagram.test.cc
+        src/pymatching/sparse_blossom/search/search_graph.test.cc
+        src/pymatching/sparse_blossom/search/search_flooder.test.cc
+        src/pymatching/sparse_blossom/driver/user_graph.test.cc
         )
 
 set(PERF_FILES
         src/pymatching/perf/main.perf.cc
         src/pymatching/perf/util.perf.cc
-        src/pymatching/fill_match/driver/mwpm_decoding.perf.cc
-        src/pymatching/fill_match/driver/io.perf.cc
-        src/pymatching/fill_match/flooder_matcher_interop/varying.perf.cc
-        src/pymatching/fill_match/tracker/radix_heap_queue.perf.cc
+        src/pymatching/sparse_blossom/driver/mwpm_decoding.perf.cc
+        src/pymatching/sparse_blossom/driver/io.perf.cc
+        src/pymatching/sparse_blossom/flooder_matcher_interop/varying.perf.cc
+        src/pymatching/sparse_blossom/tracker/radix_heap_queue.perf.cc
         )
 
 set(PYTHON_API_FILES
-        src/pymatching/fill_match/driver/user_graph.pybind.cc
+        src/pymatching/sparse_blossom/driver/user_graph.pybind.cc
         src/pymatching/rand/rand_gen.pybind.cc
         src/pymatching/pymatching.pybind.cc
         )

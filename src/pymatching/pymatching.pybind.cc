@@ -1,6 +1,6 @@
 #include "pybind11/pybind11.h"
-#include "pymatching/fill_match/driver/namespaced_main.h"
-#include "pymatching/fill_match/driver/user_graph.pybind.h"
+#include "pymatching/sparse_blossom/driver/namespaced_main.h"
+#include "pymatching/sparse_blossom/driver/user_graph.pybind.h"
 #include "pymatching/rand/rand_gen.pybind.h"
 
 namespace py = pybind11;
