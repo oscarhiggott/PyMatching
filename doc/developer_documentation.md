@@ -12,7 +12,7 @@
 ```bash
 cmake .
 make pymatching
-# result is at out/pymatching
+# result is at ./pymatching
 ```
 
 # <a name="decode"></a>Decode a problem using the pymatching command line tool
@@ -123,7 +123,7 @@ ffmpeg \
 ```bash
 cmake .
 make pymatching_tests
-out/pymatching_tests
+./pymatching_tests
 ```
 
 # <a name="cmake-perf"></a>Run C++ performance benchmarks tests using cmake
@@ -131,7 +131,7 @@ out/pymatching_tests
 ```bash
 cmake .
 make pymatching_perf
-out/pymatching_perf
+./pymatching_perf
 ```
 
 Use `--target_seconds=#` to change how long each benchmark runs for.
