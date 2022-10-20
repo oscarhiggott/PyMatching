@@ -45,14 +45,14 @@ DecodingTestCase load_surface_code_d13_p100_test_case() {
 
     std::ifstream is(
         find_test_data_file(
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_solution_weights_pymatchingv0.7_exact.txt")
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_10000_buckets_solution_weights_pymatchingv0.7_exact.txt")
             .c_str());
     std::istream_iterator<int> start(is), end;
     std::vector<int> expected_weights(start, end);
 
     std::ifstream is2(
         find_test_data_file(
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_1000_buckets_predictions_pymatchingv0.7_exact.txt")
+            "surface_code_rotated_memory_x_13_0.01_1000_shots_10000_buckets_predictions_pymatchingv0.7_exact.txt")
             .c_str());
     std::istream_iterator<int> start2(is2), end2;
     std::vector<int> expected_obs_masks(start2, end2);
@@ -62,7 +62,7 @@ DecodingTestCase load_surface_code_d13_p100_test_case() {
 TEST(MwpmDecoding, CompareSolutionWeights) {
     auto test_case = load_surface_code_d13_p100_test_case();
 
-    pm::weight_int num_distinct_weights = 1001;
+    pm::weight_int num_distinct_weights = 10001;
     auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
 
     stim::SparseShot sparse_shot;
@@ -87,7 +87,7 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
 TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
     for (size_t i : {0, 1}) {
         auto test_case = load_surface_code_d13_p100_test_case();
-        pm::weight_int num_distinct_weights = 1001;
+        pm::weight_int num_distinct_weights = 10001;
         if (i == 1)
             test_case.detector_error_model.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
         auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
@@ -118,7 +118,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
 TEST(MwpmDecoding, DecodeToMatchEdges) {
     auto test_case = load_surface_code_d13_p100_test_case();
 
-    pm::weight_int num_distinct_weights = 1001;
+    pm::weight_int num_distinct_weights = 10001;
     auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
 
     stim::SparseShot sparse_shot;

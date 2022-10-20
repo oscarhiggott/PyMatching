@@ -105,7 +105,7 @@ inline double IntermediateWeightedGraph::iter_discretized_edges(
     for (auto &node : nodes) {
         for (auto &neighbor : node) {
             auto i = &node - &nodes[0];
-            pm::signed_weight_int w = (pm::signed_weight_int) (neighbor.weight * normalising_constant);
+            pm::signed_weight_int w = (pm::signed_weight_int) round(neighbor.weight * normalising_constant);
 
             // Extremely important!
             // If all edge weights are even integers, then all collision events occur at integer times.

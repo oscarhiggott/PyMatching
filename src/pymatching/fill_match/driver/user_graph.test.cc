@@ -1,7 +1,7 @@
+#include "pymatching/fill_match/driver/user_graph.h"
+
 #include <cmath>
 #include <gtest/gtest.h>
-
-#include "pymatching/fill_match/driver/user_graph.h"
 
 TEST(UserGraph, ConstructGraph) {
     pm::UserGraph graph;
@@ -36,21 +36,30 @@ TEST(UserGraph, ConstructGraph) {
     ASSERT_EQ(g2.nodes.size(), 5);
     pm::Neighbor n = {nullptr, 4.1, {2}};
     ASSERT_EQ(g2.nodes[0].neighbors[0], nullptr);
-    ASSERT_EQ(g2.nodes[0].neighbor_weights[0], 2 * (pm::weight_int)(pm::merge_weights(4.1, 1.0) * mwpm.flooder.graph.normalising_constant / 2));
+    ASSERT_EQ(
+        g2.nodes[0].neighbor_weights[0],
+        2 * (pm::weight_int)round(pm::merge_weights(4.1, 1.0) * mwpm.flooder.graph.normalising_constant / 2));
     ASSERT_EQ(g2.nodes[0].neighbor_observables[0], 1 << 2);
     ASSERT_EQ(g2.nodes[0].neighbors[1], &g2.nodes[1]);
-    ASSERT_EQ(g2.nodes[0].neighbor_weights[1], 2 * (pm::weight_int)(pm::merge_weights(2.5, 2.1) * mwpm.flooder.graph.normalising_constant / 2));
+    ASSERT_EQ(
+        g2.nodes[0].neighbor_weights[1],
+        2 * (pm::weight_int)round(pm::merge_weights(2.5, 2.1) * mwpm.flooder.graph.normalising_constant / 2));
     ASSERT_EQ(g2.nodes[0].neighbor_observables[1], 1 << 0);
-    ASSERT_EQ(g2.nodes[1].neighbor_weights[1],  2 * (pm::weight_int)(3.5 * mwpm.flooder.graph.normalising_constant / 2));
+    ASSERT_EQ(
+        g2.nodes[1].neighbor_weights[1], 2 * (pm::weight_int)round(3.5 * mwpm.flooder.graph.normalising_constant / 2));
     ASSERT_EQ(g2.nodes[2].neighbors[0], nullptr);
-    ASSERT_EQ(g2.nodes[2].neighbor_weights[0], 2 * (pm::weight_int)(1.8 * mwpm.flooder.graph.normalising_constant / 2));
+    ASSERT_EQ(
+        g2.nodes[2].neighbor_weights[0], 2 * (pm::weight_int)round(1.8 * mwpm.flooder.graph.normalising_constant / 2));
     ASSERT_EQ(g2.nodes[2].neighbor_observables[0], 1 << 3);
     ASSERT_EQ(g2.nodes[2].neighbors[1], &g2.nodes[1]);
-    ASSERT_EQ(g2.nodes[2].neighbor_weights[1], 2 * (pm::weight_int)(3.5 * mwpm.flooder.graph.normalising_constant / 2));
+    ASSERT_EQ(
+        g2.nodes[2].neighbor_weights[1], 2 * (pm::weight_int)round(3.5 * mwpm.flooder.graph.normalising_constant / 2));
     ASSERT_EQ(g2.nodes[2].neighbor_observables[1], 1 << 1);
     ASSERT_EQ(g2.nodes[2].neighbors.size(), 2);
     ASSERT_EQ(g2.nodes[3].neighbors.size(), 0);
-    ASSERT_EQ(mwpm.flooder.negative_weight_sum, -2 * (pm::total_weight_int)(3.5 * mwpm.flooder.graph.normalising_constant / 2));
+    ASSERT_EQ(
+        mwpm.flooder.negative_weight_sum,
+        -2 * (pm::total_weight_int)round(3.5 * mwpm.flooder.graph.normalising_constant / 2));
     std::set<size_t> dets_exp = {1, 2};
     ASSERT_EQ(mwpm.flooder.graph.negative_weight_detection_events_set.size(), 2);
     std::set<size_t> obs_exp = {1};
