@@ -148,13 +148,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
-      - run: export CC=gcc-10; export CXX=g++-10
-        if: matrix.os == 'ubuntu-latest'
       - run: cmake .
+      - run: CC=gcc-10 CXX=g++-10 make pymatching_perf
+        if: matrix.os == 'ubuntu-latest'
       - run: make pymatching_perf
+        if: matrix.os == 'macos-latest'
       - run: ./pymatching_perf
