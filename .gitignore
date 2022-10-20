@@ -1,3 +1,4 @@
+data/DATA_ENV
 .idea
 build
 cmake-build*
