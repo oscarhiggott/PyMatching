@@ -40,6 +40,24 @@ def test_matching_to_networkx():
     g2edges = [({s, t}, d) for (s, t, d) in g2.edges(data=True)]
     assert sorted(gedges) == sorted(g2edges)
 
+    m = Matching()
+    m.add_boundary_edge(0, weight=2)
+    m.add_edge(0, 1, weight=3)
+    m.add_edge(1, 2, weight=4)
+    g = m.to_networkx()
+    es = list(g.edges(data=True))
+    assert es == [(0, 3, {"weight": 2.0, "error_probability": -1, "fault_ids": set()}),
+                  (0, 1, {"weight": 3.0, "error_probability": -1, "fault_ids": set()}),
+                  (1, 2, {"weight": 4.0, "error_probability": -1, "fault_ids": set()})]
+    assert sorted(list(g.nodes(data=True))) == [(0, {"is_boundary": False}), (1, {"is_boundary": False}),
+                                                (2, {"is_boundary": False}), (3, {"is_boundary": True})]
+
+    m = Matching()
+    m.add_edge(0, 1)
+    g = m.to_networkx()
+    assert list(g.edges(data=True)) == [(0, 1, {"weight": 1.0, "error_probability": -1, "fault_ids": set()})]
+    assert list(g.nodes(data=True)) == [(0, {"is_boundary": False}), (1, {"is_boundary": False})]
+
 
 def test_matching_to_retworkx():
     g = rx.PyGraph()
@@ -64,6 +82,24 @@ def test_matching_to_retworkx():
     gedges = [({s, t}, d) for (s, t, d) in g.weighted_edge_list()]
     g2edges = [({s, t}, d) for (s, t, d) in g.weighted_edge_list()]
     assert sorted(gedges) == sorted(g2edges)
+
+    m = Matching()
+    m.add_boundary_edge(0, weight=2)
+    m.add_edge(0, 1, weight=3)
+    m.add_edge(1, 2, weight=4)
+    g = m.to_retworkx()
+    es = list(g.weighted_edge_list())
+    assert es == [(0, 3, {"weight": 2.0, "error_probability": -1, "fault_ids": set()}),
+                  (0, 1, {"weight": 3.0, "error_probability": -1, "fault_ids": set()}),
+                  (1, 2, {"weight": 4.0, "error_probability": -1, "fault_ids": set()})]
+    assert list(g.nodes()) == [{"is_boundary": False}, {"is_boundary": False},
+                               {"is_boundary": False}, {"is_boundary": True}]
+
+    m = Matching()
+    m.add_edge(0, 1)
+    g = m.to_retworkx()
+    assert list(g.weighted_edge_list()) == [(0, 1, {"weight": 1.0, "error_probability": -1, "fault_ids": set()})]
+    assert list(g.nodes()) == [{"is_boundary": False}, {"is_boundary": False}]
 
 
 def test_negative_weight_edge_returned():

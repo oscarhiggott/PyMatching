@@ -656,7 +656,7 @@ class Matching:
     def edges(self) -> List[Tuple[int, Optional[int], Dict]]:
         """Edges of the matching graph
         Returns a list of edges of the matching graph. Each edge is a
-        tuple `(source, target, attr)` where `source` and `target` are ints corresponding to the
+        tuple ``(source, target, attr)`` where `source` and `target` are ints corresponding to the
         indices of the source and target nodes, and `attr` is a dictionary containing the
         attributes of the edge.
         The dictionary `attr` has keys `fault_ids` (a set of ints), `weight` (the weight of the edge,
@@ -1239,13 +1239,22 @@ class Matching:
         NetworkX.Graph
             NetworkX Graph corresponding to the matching graph
         """
-        G = nx.Graph()
-        G.add_edges_from(self.edges())
+        graph = nx.Graph()
+        num_nodes = self.num_nodes
+        has_virtual_boundary = False
+        for u, v, data in self.edges():
+            if v is None:
+                graph.add_edge(u, num_nodes, **data)
+                has_virtual_boundary = True
+            else:
+                graph.add_edge(u, v, **data)
         boundary = self.boundary
-        for i in G.nodes:
+        for i in graph.nodes:
             is_boundary = i in boundary
-            G.nodes[i]['is_boundary'] = is_boundary
-        return G
+            graph.nodes[i]['is_boundary'] = is_boundary
+        if has_virtual_boundary:
+            graph.nodes[num_nodes]['is_boundary'] = True
+        return graph
 
     def to_retworkx(self) -> rx.PyGraph:
         """Convert to retworkx graph
@@ -1258,14 +1267,25 @@ class Matching:
         retworkx.PyGraph
             retworkx graph corresponding to the matching graph
         """
-        G = rx.PyGraph(multigraph=False)
-        G.add_nodes_from([{} for _ in range(self.num_nodes)])
-        G.extend_from_weighted_edge_list(self.edges())
+        graph = rx.PyGraph(multigraph=False)
+        num_nodes = self.num_nodes
+        has_virtual_boundary = False
+        edges = []
+        for u, v, data in self.edges():
+            if v is None:
+                edges.append((u, num_nodes, data))
+                has_virtual_boundary = True
+            else:
+                edges.append((u, v, data))
+        graph.add_nodes_from([{} for _ in range(num_nodes + has_virtual_boundary)])
+        graph.extend_from_weighted_edge_list(edges)
         boundary = self.boundary
-        for i in G.node_indices():
+        for i in graph.node_indices():
             is_boundary = i in boundary
-            G[i]['is_boundary'] = is_boundary
-        return G
+            graph[i]['is_boundary'] = is_boundary
+        if has_virtual_boundary:
+            graph[num_nodes]["is_boundary"] = True
+        return graph
 
     def set_boundary_nodes(self, nodes: Set[int]) -> None:
         """

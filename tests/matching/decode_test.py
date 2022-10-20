@@ -122,15 +122,18 @@ def test_decode_to_matched_detection_events_with_negative_weights_raises_value_e
 
 def test_matching_solution_integral_weights():
     m = Matching()
-    m.add_edge(0, 1, weight=3)
-    m.add_edge(1, 2, weight=1)
-    m.add_edge(2, 3, weight=100)
-    m.add_edge(3, 4, weight=12)
-    corr, tot_weight = m.decode([1, 0, 0, 0, 1], return_weight=True)
-    assert tot_weight == 116
-    m.add_edge(4, 5, weight=16777215)
-    corr, tot_weight = m.decode([1, 0, 0, 0, 0, 1], return_weight=True)
-    assert tot_weight == 116 + 16777215
+    m.add_boundary_edge(0, weight=3)
+    m.add_edge(0, 1, weight=-1)
+    m.add_edge(1, 2, weight=100)
+    m.add_edge(2, 3, weight=12)
+    corr, tot_weight = m.decode([0, 0, 0, 1], return_weight=True)
+    assert tot_weight == 114
+    m.add_edge(3, 4, weight=16777215)
+    corr, tot_weight = m.decode([0, 0, 0, 0, 1], return_weight=True)
+    assert tot_weight == 114 + 16777215
+    m.add_edge(4, 5, weight=-16777215)
+    corr, tot_weight = m.decode([0, 0, 0, 0, 0, 1], return_weight=True)
+    assert tot_weight == 114
 
 
 def get_full_data_path(filename: str) -> str:
