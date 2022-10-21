@@ -140,7 +140,7 @@ jobs:
         with:
           submodules: true
       - run: cmake .
-      - run: cmake --build . --target pymatching_perf
+      - run: cmake --build . --target pymatching_perf --config Release
       - run: ./pymatching_perf
 #      - uses: microsoft/setup-msbuild@v1.1
 #      - run: cmake .
