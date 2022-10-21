@@ -141,7 +141,7 @@ jobs:
           submodules: true
       - run: cmake .
       - run: cmake --build . --target pymatching_perf --config Release
-      - run: ./pymatching_perf.exe
+      - run: pymatching_perf.exe
   benchmark:
     runs-on: ${{ matrix.os }}
     strategy:
