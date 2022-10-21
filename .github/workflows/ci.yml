@@ -141,11 +141,7 @@ jobs:
           submodules: true
       - run: cmake .
       - run: cmake --build . --target pymatching_perf --config Release
-      - run: ./pymatching_perf
-#      - uses: microsoft/setup-msbuild@v1.1
-#      - run: cmake .
-#      - run: MSBuild.exe pymatching_perf.vcxproj /p:Configuration=Release /p:OutDir=msbuild_out/ /p:O=2
-#      - run: msbuild_out/pymatching_perf.exe
+      - run: ./pymatching_perf.exe
   benchmark:
     runs-on: ${{ matrix.os }}
     strategy:
