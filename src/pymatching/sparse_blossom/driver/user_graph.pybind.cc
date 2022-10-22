@@ -299,16 +299,16 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
            size_t num_repetitions,
            const py::array_t<double> &timelike_weights,
            const py::array_t<double> &measurement_error_probabilities,
-           py::object &faults) {
+           py::object &faults_matrix) {
             auto H = CompressedSparseColumnCheckMatrix(check_matrix);
 
-            if (faults.is(py::none())) {
-                faults =
+            if (faults_matrix.is(py::none())) {
+                faults_matrix =
                     py::module_::import("scipy.sparse")
                         .attr("eye")(
                             H.num_cols, "dtype"_a = py::module_::import("numpy").attr("uint8"), "format"_a = "csc");
             }
-            auto F = CompressedSparseColumnCheckMatrix(faults);
+            auto F = CompressedSparseColumnCheckMatrix(faults_matrix);
 
             auto weights_unchecked = weights.unchecked<1>();
             // Check weights array size is correct
@@ -326,7 +326,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
 
             if (H.num_cols != F.num_cols)
                 throw std::invalid_argument(
-                    "`faults` array with shape (" + std::to_string(F.num_rows) + ", " + std::to_string(F.num_cols) +
+                    "`faults_matrix` array with shape (" + std::to_string(F.num_rows) + ", " + std::to_string(F.num_cols) +
                     ") must have the same number of columns as the check matrix, which has shape (" +
                     std::to_string(H.num_rows) + ", " + std::to_string(H.num_cols) + ").");
 
@@ -436,5 +436,5 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "num_repetitions"_a = 1,
         "timelike_weights"_a = py::none(),
         "measurement_error_probabilities"_a = py::none(),
-        "faults"_a = py::none());
+        "faults_matrix"_a = py::none());
 }

@@ -704,7 +704,7 @@ class Matching:
             timelike_weights: Union[float, np.ndarray, List[float]] = None,
             measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
             *,
-            faults: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+            faults_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
             merge_strategy: str = "smallest-weight",
             use_virtual_boundary_node: bool = False,
             **kwargs
@@ -752,7 +752,7 @@ class Matching:
             (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. This argument can also be
             given using the keyword argument `measurement_error_probability` to maintain backward
             compatibility with previous versions of Pymatching. By default None
-        faults: `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]], optional
+        faults_matrix: `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]], optional
             A binary array of faults, which can be used to set the `fault_ids` for each edge in the
             constructed matching graph. The `fault_ids` attribute of the edge corresponding to column
             `j` of `check_matrix` includes fault id `i` if and only if `faults[i,j]==1`. Therefore, the number
@@ -809,7 +809,7 @@ class Matching:
             repetitions=repetitions,
             timelike_weights=timelike_weights,
             measurement_error_probabilities=measurement_error_probabilities,
-            faults=faults,
+            faults_matrix=faults_matrix,
             merge_strategy=merge_strategy,
             use_virtual_boundary_node=use_virtual_boundary_node,
             kwargs=kwargs
@@ -824,7 +824,7 @@ class Matching:
                                timelike_weights: Union[float, np.ndarray, List[float]] = None,
                                measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
                                *,
-                               faults: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+                               faults_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
                                merge_strategy: str = "smallest-weight",
                                use_virtual_boundary_node: bool = False,
                                **kwargs
@@ -872,7 +872,7 @@ class Matching:
             (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. This argument can also be
             given using the keyword argument `measurement_error_probability` to maintain backward
             compatibility with previous versions of Pymatching. By default None
-        faults: `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]], optional
+        faults_matrix: `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]], optional
             A binary array of faults, which can be used to set the `fault_ids` for each edge in the
             constructed matching graph. The `fault_ids` attribute of the edge corresponding to column
             `j` of `check_matrix` includes fault id `i` if and only if `faults[i,j]==1`. Therefore, the number
@@ -934,9 +934,9 @@ class Matching:
             except TypeError:
                 raise TypeError("`check_matrix` must be convertible to a `scipy.sparse.csc_matrix`")
 
-        if faults is not None:
+        if faults_matrix is not None:
             try:
-                faults = csc_matrix(faults)
+                faults_matrix = csc_matrix(faults_matrix)
             except TypeError:
                 raise TypeError("`faults` must be convertible to `scipy.sparse.csc_matrix`")
 
@@ -997,7 +997,7 @@ class Matching:
                                                                                     merge_strategy,
                                                                                     use_virtual_boundary_node,
                                                                                     repetitions,
-                                                                                    timelike_weights, p_meas, faults)
+                                                                                    timelike_weights, p_meas, faults_matrix)
 
     @staticmethod
     def from_detector_error_model(model: 'stim.DetectorErrorModel') -> 'pymatching.Matching':
