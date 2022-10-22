@@ -187,6 +187,8 @@ class Matching:
 
     def decode(self,
                z: Union[np.ndarray, List[int]],
+               _legacy_num_neighbours: int = None,
+               _legacy_return_weights: bool = None,
                *,
                return_weight: bool = False,
                **kwargs
@@ -203,6 +205,16 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
+        _legacy_num_neighbours: int
+            The `num_neighbours` argument available in PyMatching versions 0.x.x is not
+            available in PyMatching v2.0.0 or later, since it introduced an approximation
+            that is not relevant or required in the new version 2 implementation.
+            Providing num_neighbours as this second positional argument will raise an exception in a
+            future version of PyMatching.
+        _legacy_return_weights: bool
+            ``return_weights`` used to be available as this third positional argument, but should now
+            be set as a keyword argument. In a future version of PyMatching, it will only be possible
+            to provide `return_weight` as a keyword argument.
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
@@ -283,6 +295,16 @@ class Matching:
         >>> m.decode(syndrome)
         array([0, 0, 1, 0], dtype=uint8)
         """
+        if _legacy_num_neighbours is not None:
+            warnings.warn("The ``num_neighbours`` argument no longer has any effect in PyMatching v2.0.0 or later,"
+                          " since it introduced an approximation that is no longer relevant or necessary. Providing "
+                          "``num_neighbours`` as the second positional argument to ``Matching.decode`` will raise an "
+                          "exception in a future version of PyMatching", DeprecationWarning, stacklevel=2)
+        if _legacy_return_weights is not None:
+            warnings.warn("The ``return_weights`` argument was provided as a positional argument, but in a future "
+                          "version of PyMatching, it will be required to provide ``return_weights`` as a keyword "
+                          "argument.")
+            return_weight = _legacy_return_weights
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(detection_events)
         if return_weight:

@@ -170,3 +170,16 @@ def test_surface_code_solution_weights():
     for i in range(len(weights)):
         assert weights[i] == pytest.approx(expected_weights[i], rel=1e-8)
     assert predicted_observables == expected_observables[0:len(predicted_observables)]
+
+
+def test_deprecated_position_arguments_raise_deprecation_warning():
+    m = Matching()
+    m.add_edge(0, 1, fault_ids={0}, weight=4)
+    m.add_edge(1, 2, fault_ids={1}, weight=9)
+    with pytest.warns(DeprecationWarning):
+        correction = m.decode([0, 1, 1], 3)
+        assert np.array_equal(correction, np.array([0, 1]))
+    with pytest.warns(DeprecationWarning):
+        correction, weight = m.decode([0, 1, 1], 3, True)
+        assert np.array_equal(correction, np.array([0, 1]))
+        assert weight == 9.0
