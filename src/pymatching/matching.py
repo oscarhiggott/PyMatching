@@ -1038,13 +1038,14 @@ class Matching:
     def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
         try:
             import stim
-        except ImportError as ex:
-            raise ImportError(
-                "The 'stim' package isn't installed and is required for this method. \n"
+        except ImportError:
+            raise TypeError(
+                f"`model` must be a `stim.DetectorErrorModel. Instead, got: {type(model)}.`"
+                "The 'stim' package also isn't installed and is required for this method. \n"
                 "To install stim using pip, run `pip install stim`."
-            ) from ex
+            )
         if not isinstance(model, stim.DetectorErrorModel):
-            raise ValueError(f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}")
+            raise TypeError(f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}")
         self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(str(model))
 
     @staticmethod

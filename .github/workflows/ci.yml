@@ -191,10 +191,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Add requirements
-        run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest stim~=1.10.dev1666411378
+        run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest
 
       - name: Build and install
         run: pip install --verbose .
 
       - name: Test
+        run: python -m pytest tests
+
+      - name: Add stim
+        run: python -m pip install stim~=1.10.dev1666411378
+
+      - name: Test with stim
         run: python -m pytest tests
