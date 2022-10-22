@@ -37,7 +37,7 @@ jobs:
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
       CIBW_ARCHS_MACOS: "x86_64 arm64"
       CIBW_BEFORE_BUILD: pip install --upgrade ninja
-      CIBW_TEST_REQUIRES: pytest stim
+      CIBW_TEST_REQUIRES: pytest stim~=1.10.dev1666411378
       CIBW_TEST_COMMAND: pytest {project}/tests
     strategy:
       fail-fast: false
