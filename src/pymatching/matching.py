@@ -405,7 +405,7 @@ class Matching:
         this function.
         """
         # Ignore matplotlib deprecation warnings from networkx.draw_networkx
-        warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
+        warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         G = self.to_networkx()
         pos = nx.spectral_layout(G, weight=None)

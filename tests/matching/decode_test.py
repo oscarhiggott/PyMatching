@@ -14,7 +14,6 @@
 
 import pathlib
 import numpy as np
-import stim
 from scipy.sparse import csc_matrix
 import pytest
 import networkx as nx
@@ -145,6 +144,7 @@ def get_full_data_path(filename: str) -> str:
 
 
 def test_surface_code_solution_weights():
+    import stim
     dem = stim.DetectorErrorModel.from_file(os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01.dem"))
     m = Matching.from_detector_error_model(dem)
     shots = stim.read_shot_data_file(path=os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.b8"),
