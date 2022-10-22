@@ -35,6 +35,7 @@ jobs:
     env:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
+      CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
       CIBW_BEFORE_BUILD: pip install --upgrade ninja
       CIBW_TEST_REQUIRES: pytest stim~=1.10.dev1666411378
       CIBW_TEST_COMMAND: pytest {project}/tests
@@ -54,12 +55,11 @@ jobs:
           {os: macos-latest, dist: cp39-macosx_arm64},
           {os: macos-latest, dist: cp310-macosx_arm64},
           {os: macos-latest, dist: cp311-macosx_arm64},
-          # universal2 not needed (already building x86_64 and arm64)
-          # Also fails with "cibuildwheel: No build identifiers selected"
-#          {os: macos-latest, dist: cp38-macosx_universal2},
-#          {os: macos-latest, dist: cp39-macosx_universal2},
-#          {os: macos-latest, dist: cp310-macosx_universal2},
-#          {os: macos-latest, dist: cp311-macosx_universal2},
+          # macosx universal2
+          {os: macos-latest, dist: cp38-macosx_universal2},
+          {os: macos-latest, dist: cp39-macosx_universal2},
+          {os: macos-latest, dist: cp310-macosx_universal2},
+          {os: macos-latest, dist: cp311-macosx_universal2},
 
           # windows amd64
           {os: windows-latest, dist: cp36-win_amd64},
