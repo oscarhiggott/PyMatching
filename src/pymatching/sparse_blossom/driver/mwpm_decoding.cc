@@ -34,11 +34,6 @@ pm::ExtendedMatchingResult pm::ExtendedMatchingResult::operator+(const ExtendedM
     return copy;
 }
 
-void pm::ExtendedMatchingResult::reset() {
-    std::fill(obs_crossed.begin(), obs_crossed.end(), 0);
-    weight = 0;
-}
-
 void pm::fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, uint8_t* obs_begin_ptr, size_t num_observables) {
     auto max_obs = sizeof(pm::obs_int) * 8;
     if (num_observables > max_obs)

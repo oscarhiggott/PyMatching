@@ -166,7 +166,7 @@ bool pm::UserGraph::is_boundary_node(size_t node_id) {
 }
 
 void pm::UserGraph::update_mwpm() {
-    _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH, false);
+    _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS, false);
     _mwpm_needs_updating = false;
 }
 
@@ -270,7 +270,7 @@ pm::Mwpm& pm::UserGraph::get_mwpm_with_search_graph() {
     if (!_mwpm_needs_updating && _mwpm.flooder.graph.nodes.size() == _mwpm.search_flooder.graph.nodes.size()) {
         return _mwpm;
     } else {
-        _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH, true);
+        _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS, true);
         _mwpm_needs_updating = false;
         return _mwpm;
     }

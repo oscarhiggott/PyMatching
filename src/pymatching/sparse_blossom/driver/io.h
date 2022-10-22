@@ -8,6 +8,8 @@
 
 namespace pm {
 
+const pm::weight_int NUM_DISTINCT_WEIGHTS = 1 << (sizeof(pm::weight_int) * 8 - 8);
+
 /// Computes the weight of an edge resulting from merging edges with weight `a' and weight `b', assuming each edge
 /// weight is a log-likelihood ratio log((1-p)/p) associated with the probability p of an error occurring on the
 /// edge, and that the error mechanisms associated with the two edges being merged are independent.

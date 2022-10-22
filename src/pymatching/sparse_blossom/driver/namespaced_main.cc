@@ -44,18 +44,20 @@ int main_predict(int argc, const char **argv) {
     auto writer = stim::MeasureRecordWriter::make(predictions_out, predictions_out_format.id);
     writer->begin_result_type('L');
 
-    pm::weight_int num_buckets = 1 << (sizeof(pm::weight_int) * 8 - 4);
+    pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     stim::SparseShot sparse_shot;
     sparse_shot.clear();
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     while (reader->start_and_read_entire_record(sparse_shot)) {
-        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
+        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
         for (size_t k = 0; k < num_obs; k++) {
-            writer->write_bit((res.obs_mask >> k) & 1);
+            writer->write_bit(res.obs_crossed[k]);
         }
         writer->write_end();
         sparse_shot.clear();
+        res.reset();
     }
     if (predictions_out != stdout) {
         fclose(predictions_out);

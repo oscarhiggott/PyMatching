@@ -30,8 +30,7 @@ class UserNode {
 
 typedef std::tuple<size_t, size_t, std::vector<size_t>, double, double> edge_data;
 
-const pm::weight_int NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH = 1 << (sizeof(pm::weight_int) * 8 - 8);
-const pm::weight_int MAX_USER_EDGE_WEIGHT = NUM_DISTINCT_WEIGHTS_FROM_USER_GRAPH - 1;
+const pm::weight_int MAX_USER_EDGE_WEIGHT = NUM_DISTINCT_WEIGHTS - 1;
 
 enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORIGINAL, REPLACE };
 

@@ -25,6 +25,11 @@ struct ExtendedMatchingResult {
     ExtendedMatchingResult operator+(const ExtendedMatchingResult& rhs) const;
 };
 
+inline void ExtendedMatchingResult::reset() {
+    std::fill(obs_crossed.begin(), obs_crossed.end(), 0);
+    weight = 0;
+}
+
 void fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, uint8_t* obs_begin_ptr, size_t num_observables);
 obs_int bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector);
 
