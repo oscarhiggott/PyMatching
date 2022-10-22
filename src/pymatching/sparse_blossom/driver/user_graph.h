@@ -20,15 +20,18 @@ struct UserEdge {
     double error_probability;                /// The error probability associated with this node
 };
 
+struct UserNeighbor {
+    std::list<UserEdge>::iterator edge_it;
+    uint8_t pos{}; // The position of the neighboring node in the edge (either 0 if node1, or 1 if node2)
+};
+
 class UserNode {
    public:
     UserNode();
     size_t index_of_neighbor(size_t node) const;
-    std::vector<std::list<UserEdge>::iterator> neighbors;  /// The node's neighbors.
+    std::vector<UserNeighbor> neighbors;  /// The node's neighbors.
     bool is_boundary;
 };
-
-typedef std::tuple<size_t, size_t, std::vector<size_t>, double, double> edge_data;
 
 const pm::weight_int MAX_USER_EDGE_WEIGHT = NUM_DISTINCT_WEIGHTS - 1;
 

@@ -130,3 +130,27 @@ def test_large_edge_weight_not_added_to_graph():
         m.add_boundary_edge(5, weight=-9999999999)
     assert m.num_edges == 1
     assert m.edges() == [(0, 1, {"fault_ids": set(), "weight": 1.0, "error_probability": -1.0})]
+
+
+def test_add_self_loop():
+    m = Matching()
+    m.add_edge(0, 1, weight=2)
+    m.add_edge(2, 2, weight=5)
+    m.add_edge(3, 4, weight=10)
+    m.add_edge(4, 4, weight=11)
+    assert m.edges() == [
+        (0, 1, {"fault_ids": set(), "weight": 2.0, "error_probability": -1.0}),
+        (2, 2, {"fault_ids": set(), "weight": 5.0, "error_probability": -1.0}),
+        (3, 4, {"fault_ids": set(), "weight": 10.0, "error_probability": -1.0}),
+        (4, 4, {"fault_ids": set(), "weight": 11.0, "error_probability": -1.0})
+    ]
+    with pytest.raises(ValueError):
+        m.add_edge(4, 4, weight=12)
+    m.add_edge(4, 4, weight=10, merge_strategy="smallest-weight")
+    m.add_edge(4, 3, weight=14, merge_strategy="replace")
+    assert m.edges() == [
+        (0, 1, {"fault_ids": set(), "weight": 2.0, "error_probability": -1.0}),
+        (2, 2, {"fault_ids": set(), "weight": 5.0, "error_probability": -1.0}),
+        (3, 4, {"fault_ids": set(), "weight": 14.0, "error_probability": -1.0}),
+        (4, 4, {"fault_ids": set(), "weight": 10.0, "error_probability": -1.0})
+    ]

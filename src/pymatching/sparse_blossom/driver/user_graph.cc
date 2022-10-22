@@ -4,8 +4,14 @@ pm::UserNode::UserNode() : is_boundary(false) {
 }
 
 size_t pm::UserNode::index_of_neighbor(size_t node) const {
-    auto it = std::find_if(neighbors.begin(), neighbors.end(), [&](std::list<UserEdge>::iterator neighbor) {
-        return neighbor->node1 == node || neighbor->node2 == node;
+    auto it = std::find_if(neighbors.begin(), neighbors.end(), [&](const UserNeighbor& neighbor) {
+        if (neighbor.pos == 0) {
+            return neighbor.edge_it->node1 == node;
+        } else if (neighbor.pos == 1) {
+            return neighbor.edge_it->node2 == node;
+        } else {
+            throw std::runtime_error("`neighbor.pos` should be 0 or 1, but got: " + std::to_string(neighbor.pos));
+        }
     });
     if (it == neighbors.end())
         return SIZE_MAX;
@@ -26,9 +32,14 @@ void pm::UserGraph::merge_edge_or_boundary_edge(
     pm::MERGE_STRATEGY merge_strategy) {
     auto& neighbor = nodes[node].neighbors[neighbor_index];
     if (merge_strategy == DISALLOW) {
-        throw std::invalid_argument("Parallel edges not permitted with provided merge strategy");
+        throw std::invalid_argument(
+            "Edge (" + std::to_string(neighbor.edge_it->node1) + ", " + std::to_string(neighbor.edge_it->node2) +
+            ") already exists in the graph. "
+            "Parallel edges not permitted with the provided `disallow` `merge_strategy`. Please provide a "
+            "different `merge_strategy`.");
     } else if (
-        merge_strategy == KEEP_ORIGINAL || (merge_strategy == SMALLEST_WEIGHT && parallel_weight >= neighbor->weight)) {
+        merge_strategy == KEEP_ORIGINAL ||
+        (merge_strategy == SMALLEST_WEIGHT && parallel_weight >= neighbor.edge_it->weight)) {
         return;
     } else {
         double new_weight, new_error_probability;
@@ -38,21 +49,22 @@ void pm::UserGraph::merge_edge_or_boundary_edge(
             new_error_probability = parallel_error_probability;
             use_new_observables = true;
         } else if (merge_strategy == INDEPENDENT) {
-            new_weight = pm::merge_weights(parallel_weight, neighbor->weight);
+            new_weight = pm::merge_weights(parallel_weight, neighbor.edge_it->weight);
             new_error_probability = -1;
-            if (is_valid_probability(neighbor->error_probability) && is_valid_probability(parallel_error_probability))
-                new_error_probability = parallel_error_probability * (1 - neighbor->error_probability) +
-                                        neighbor->error_probability * (1 - parallel_error_probability);
+            if (is_valid_probability(neighbor.edge_it->error_probability) &&
+                is_valid_probability(parallel_error_probability))
+                new_error_probability = parallel_error_probability * (1 - neighbor.edge_it->error_probability) +
+                                        neighbor.edge_it->error_probability * (1 - parallel_error_probability);
             // We do not need to update the observables. If they do not match up, then the code has distance 2.
             use_new_observables = false;
         } else {
             throw std::invalid_argument("Merge strategy not recognised.");
         }
         // Update the existing edge weight and probability in the adjacency list of `node`
-        neighbor->weight = new_weight;
-        neighbor->error_probability = new_error_probability;
+        neighbor.edge_it->weight = new_weight;
+        neighbor.edge_it->error_probability = new_error_probability;
         if (use_new_observables)
-            neighbor->observable_indices = parallel_observables;
+            neighbor.edge_it->observable_indices = parallel_observables;
 
         _mwpm_needs_updating = true;
         if (new_error_probability < 0 || new_error_probability > 1)
@@ -76,8 +88,9 @@ void pm::UserGraph::add_or_merge_edge(
     if (idx == SIZE_MAX) {
         pm::UserEdge edge = {node1, node2, observables, weight, error_probability};
         edges.push_back(edge);
-        nodes[node1].neighbors.push_back(std::prev(edges.end()));
-        nodes[node2].neighbors.push_back(std::prev(edges.end()));
+        nodes[node1].neighbors.push_back({std::prev(edges.end()), 1});
+        if (node1 != node2)
+            nodes[node2].neighbors.push_back({std::prev(edges.end()), 0});
 
         for (auto& obs : observables) {
             if (obs + 1 > _num_observables)
@@ -105,7 +118,7 @@ void pm::UserGraph::add_or_merge_boundary_edge(
     if (idx == SIZE_MAX) {
         pm::UserEdge edge = {node, SIZE_MAX, observables, weight, error_probability};
         edges.push_back(edge);
-        nodes[node].neighbors.push_back(std::prev(edges.end()));
+        nodes[node].neighbors.push_back({std::prev(edges.end()), 1});
 
         for (auto& obs : observables) {
             if (obs + 1 > _num_observables)
@@ -341,8 +354,7 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
 
     if (max_abs_weight > pm::MAX_USER_EDGE_WEIGHT)
         throw std::invalid_argument(
-            "maximum absolute edge weight of " + std::to_string(pm::MAX_USER_EDGE_WEIGHT) +
-            " exceeded.");
+            "maximum absolute edge weight of " + std::to_string(pm::MAX_USER_EDGE_WEIGHT) + " exceeded.");
 
     if (all_integral_weight) {
         return 1.0;

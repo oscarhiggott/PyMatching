@@ -111,3 +111,14 @@ def test_negative_weight_edge_returned():
                 (1, 2, {'fault_ids': {0}, 'weight': 0.5, 'error_probability': 0.3}),
                 (2, 3, {'fault_ids': {1, 2}, 'weight': -0.5, 'error_probability': 0.7})]
     assert m.edges() == expected
+
+
+def test_self_loop_to_networkx():
+    m = Matching()
+    m.add_edge(0, 0, weight=3)
+    m.add_edge(1, 1, weight=2)
+    m.add_edge(1, 2, weight=1)
+    g = m.to_networkx()
+    assert list(g.edges(data=True)) == [(0, 0, {'fault_ids': set(), 'weight': 3.0, 'error_probability': -1.0}),
+                                        (1, 1, {'fault_ids': set(), 'weight': 2.0, 'error_probability': -1.0}),
+                                        (1, 2, {'fault_ids': set(), 'weight': 1.0, 'error_probability': -1.0})]

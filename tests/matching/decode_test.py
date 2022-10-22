@@ -183,3 +183,18 @@ def test_deprecated_position_arguments_raise_deprecation_warning():
         correction, weight = m.decode([0, 1, 1], 3, True)
         assert np.array_equal(correction, np.array([0, 1]))
         assert weight == 9.0
+
+
+def test_decode_self_loops():
+    m = Matching()
+    m.add_boundary_edge(0, fault_ids={0}, weight=1)
+    m.add_edge(0, 1, fault_ids={1}, weight=3)
+    m.add_edge(1, 2, fault_ids={2}, weight=3)
+    m.add_edge(2, 2, fault_ids={3}, weight=-100)
+    m.add_edge(3, 3, fault_ids={4}, weight=-200)
+    m.add_edge(4, 4, fault_ids={5}, weight=4)
+    corr, weight = m.decode([0, 0, 1, 0, 0], return_weight=True)
+    assert np.array_equal(corr, np.array([1, 1, 1, 1, 1, 0], dtype=np.uint8))
+    assert weight == -293
+    with pytest.raises(ValueError):
+        m.decode([0, 0, 1, 1, 0])

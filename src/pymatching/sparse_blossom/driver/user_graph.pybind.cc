@@ -262,9 +262,9 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 throw std::invalid_argument(
                     "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
             auto n = self.nodes[node1].neighbors[idx];
-            std::set<size_t> observables_set(n->observable_indices.begin(), n->observable_indices.end());
+            std::set<size_t> observables_set(n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n->weight, "error_probability"_a = n->error_probability);
+                "fault_ids"_a = observables_set, "weight"_a = n.edge_it->weight, "error_probability"_a = n.edge_it->error_probability);
             return attrs;
         },
         "node1"_a,
@@ -278,9 +278,9 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             if (idx == SIZE_MAX)
                 throw std::invalid_argument("Boundary edge (" + std::to_string(node) + ",) not in graph.");
             auto n = self.nodes[node].neighbors[idx];
-            std::set<size_t> observables_set(n->observable_indices.begin(), n->observable_indices.end());
+            std::set<size_t> observables_set(n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n->weight, "error_probability"_a = n->error_probability);
+                "fault_ids"_a = observables_set, "weight"_a = n.edge_it->weight, "error_probability"_a = n.edge_it->error_probability);
             return attrs;
         },
         "node"_a);
