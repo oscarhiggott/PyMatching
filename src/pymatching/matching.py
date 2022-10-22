@@ -469,7 +469,9 @@ class Matching:
             compatibility, `qubit_id` can still be used instead of `fault_ids` as a keyword argument.
             By default None
         weight: float, optional
-            The weight of the edge, which must be non-negative, by default 1.0
+            The weight of the edge. The weight can be positive or negative, but its absolute value cannot exceed
+            the maximum absolute edge weight of 2**24-1=16,777,215. If the absolute value of the weight exceeds this
+            value, the edge will not be added to the graph and a warning will be raised. By default 1.0
         error_probability: float, optional
             The probability that the edge is flipped. This is used by the `add_noise()` method
             to sample from the distribution defined by the matching graph (in which each edge
@@ -549,7 +551,9 @@ class Matching:
             this attribute can be used to store the IDs of any logical observables that are
             flipped when an error occurs on an edge (logical frame changes). By default None
         weight: float, optional
-            The weight of the edge, which must be non-negative, by default 1.0
+            The weight of the edge. The weight can be positive or negative, but its absolute value cannot exceed
+            the maximum absolute edge weight of 2**24-1=16,777,215. If the absolute value of the weight exceeds this
+            value, the edge will not be added to the graph and a warning will be raised. By default 1.0
         error_probability: float, optional
             The probability that the edge is flipped. This is used by the `add_noise()` method
             to sample from the distribution defined by the matching graph (in which each edge
