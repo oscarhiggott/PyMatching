@@ -101,6 +101,10 @@ class CMakeBuild(build_ext):
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
+            else:
+                # If archflag not set, use platform.machine() to detect architecture
+                import platform
+                cmake_args += [f"-DCMAKE_OSX_ARCHITECTURES={platform.machine()}"]
 
         if sys.platform.startswith('linux') and which("gcc-10") is not None and which("g++-10") is not None:
             os.environ["CC"] = "gcc-10"
