@@ -145,3 +145,14 @@ Use `--only=prefix*` to only run benchmarks beginning with a prefix.
 ```bash
 pip install -e .
 ```
+
+# <a name="sphinx"></a>Build the Sphinx documentation
+
+The build the html, use:
+```bash
+cd docs
+make html
+```
+
+and view `doc/build/html/index.html` in a browser.
+

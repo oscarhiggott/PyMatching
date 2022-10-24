@@ -18,7 +18,8 @@ extensions = [
     "sphinx.ext.autodoc",
     "numpydoc",
     "sphinx.ext.autosummary",
-    "nbsphinx"
+    "nbsphinx",
+    "myst_parser"
 ]
 
 templates_path = ['_templates']

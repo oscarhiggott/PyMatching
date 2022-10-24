@@ -21,6 +21,6 @@ __pycache__
 _skbuild
 *.so
 bazel-*
-doc/DOC_ENV
-doc/build
+docs/DOCS_ENV
+docs/build
 data/DATA_ENV
