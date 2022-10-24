@@ -191,41 +191,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Add requirements
-        run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest
+        run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest flake8 pytest-cov
 
       - name: Build and install
         run: pip install --verbose .
 
       - name: Test
-        run: python -m pytest tests
+        run: python -m pytest tests --cov=./src/pymatching --cov-report term
+
+      - name: flake8
+        run: flake8 ./src ./tests
 
       - name: Add stim
         run: python -m pip install stim~=1.10.dev1666411378
 
       - name: Test with stim
         run: python -m pytest tests
-  coverage_and_pep8:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: true
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Build and install PyMatching
-        run: pip install --verbose .
-
-      - name: Install dependencies
-        run: python -m pip install flake8 pytest pytest-cov
-
-      - name: flake8
-        run: flake8 src
-
-      - name: pytest-cov
-        run: pytest tests --cov=src --cov-report term
   build_docs:
     runs-on: ubuntu-latest
     steps:
