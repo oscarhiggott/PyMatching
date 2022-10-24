@@ -54,9 +54,12 @@ pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector) {
 }
 
 pm::Mwpm pm::detector_error_model_to_mwpm(
-    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights) {
-    auto weighted_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
-    return weighted_graph.to_mwpm(num_distinct_weights);
+    const stim::DetectorErrorModel& detector_error_model,
+    pm::weight_int num_distinct_weights,
+    bool ensure_search_flooder_included) {
+    auto weighted_graph =
+        pm::detector_error_model_to_weighted_graph(detector_error_model);
+    return weighted_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
 }
 
 void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
@@ -82,7 +85,9 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
         // Now add detection events for unmarked nodes
         for (auto& detection : detection_events) {
             if (detection >= mwpm.flooder.graph.nodes.size())
-                throw std::invalid_argument("Detection event index too large");
+                throw std::invalid_argument(
+                    "Detection event index `" + std::to_string(detection) +
+                    "` is larger than any detector node index in the graph.");
             if (!mwpm.flooder.graph.nodes[detection].radius_of_arrival) {
                 mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
             } else {
@@ -140,7 +145,8 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
     process_timeline_until_completion(mwpm, detection_events);
     auto res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
     if (!mwpm.flooder.negative_weight_detection_events.empty())
-        res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, mwpm.flooder.negative_weight_detection_events);
+        res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
+            mwpm, mwpm.flooder.negative_weight_detection_events);
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
     res.weight += mwpm.flooder.negative_weight_sum;
     return res;
@@ -158,7 +164,8 @@ void pm::decode_detection_events(
         mwpm.flooder.match_edges.clear();
         shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
         if (!mwpm.flooder.negative_weight_detection_events.empty())
-            shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, mwpm.flooder.negative_weight_detection_events);
+            shatter_blossoms_for_all_detection_events_and_extract_match_edges(
+                mwpm, mwpm.flooder.negative_weight_detection_events);
         mwpm.extract_paths_from_match_edges(mwpm.flooder.match_edges, obs_begin_ptr, weight);
 
         // XOR negative weight observables
@@ -171,7 +178,8 @@ void pm::decode_detection_events(
         pm::MatchingResult bit_packed_res =
             shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
         if (!mwpm.flooder.negative_weight_detection_events.empty())
-            bit_packed_res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, mwpm.flooder.negative_weight_detection_events);
+            bit_packed_res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
+                mwpm, mwpm.flooder.negative_weight_detection_events);
         // XOR in negative weight observable mask
         bit_packed_res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
         // Translate observable mask into bit vector

@@ -8,12 +8,6 @@ namespace pm {
 
 enum TargetType : uint8_t { DETECTOR_NODE, BOUNDARY, NO_TARGET };
 
-/// The edge on which two search regions collided
-struct SearchGraphEdge {
-    SearchDetectorNode* detector_node;
-    size_t neighbor_index;
-};
-
 class SearchFlooder {
    public:
     SearchFlooder();

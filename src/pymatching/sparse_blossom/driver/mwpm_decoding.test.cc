@@ -31,9 +31,10 @@ struct DecodingTestCase {
     std::unique_ptr<stim::MeasureRecordReader> reader;
 };
 
-DecodingTestCase load_surface_code_d13_p100_test_case() {
-    auto shots_in = std::fopen(find_test_data_file("surface_code_rotated_memory_x_13_0.01_1000_shots.b8").c_str(), "r");
-    auto dem_file = std::fopen(find_test_data_file("surface_code_rotated_memory_x_13_0.01.dem").c_str(), "r");
+DecodingTestCase load_test_case(
+    const char* dem_fn, const char* b8_fn, const char* weights_fn, const char* predictions_fn) {
+    auto shots_in = std::fopen(find_test_data_file(b8_fn).c_str(), "r");
+    auto dem_file = std::fopen(find_test_data_file(dem_fn).c_str(), "r");
 
     assert(shots_in);
     assert(dem_file);
@@ -43,74 +44,102 @@ DecodingTestCase load_surface_code_d13_p100_test_case() {
     auto reader = stim::MeasureRecordReader::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
-    std::ifstream is(
-        find_test_data_file(
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_10000_buckets_solution_weights_pymatchingv0.7_exact.txt")
-            .c_str());
+    std::ifstream is(find_test_data_file(weights_fn).c_str());
     std::istream_iterator<int> start(is), end;
     std::vector<int> expected_weights(start, end);
 
-    std::ifstream is2(
-        find_test_data_file(
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_10000_buckets_predictions_pymatchingv0.7_exact.txt")
-            .c_str());
+    std::ifstream is2(find_test_data_file(predictions_fn).c_str());
     std::istream_iterator<int> start2(is2), end2;
     std::vector<int> expected_obs_masks(start2, end2);
-    return {expected_weights, expected_obs_masks, dem, std::move(reader)};
+    return {std::move(expected_weights), std::move(expected_obs_masks), std::move(dem), std::move(reader)};
+}
+
+DecodingTestCase load_surface_code_d13_p100_test_case() {
+    return load_test_case(
+        "surface_code_rotated_memory_x_13_0.01.dem",
+        "surface_code_rotated_memory_x_13_0.01_1000_shots.b8",
+        "surface_code_rotated_memory_x_13_0.01_1000_shots_10000_buckets_solution_weights_pymatchingv0.7_exact.txt",
+        "surface_code_rotated_memory_x_13_0.01_1000_shots_10000_buckets_predictions_pymatchingv0.7_exact.txt");
+}
+
+DecodingTestCase load_surface_code_d13_p100_some_negative_weights_test_case() {
+    return load_test_case(
+        "surface_code_rotated_memory_x_13_0.01_prob_0.2_negative.dem",
+        "surface_code_rotated_memory_x_13_0.01_prob_0.2_negative_1000_shots.b8",
+        "surface_code_rotated_memory_x_13_0.01_prob_0.2_negative_1000_shots_10000_buckets_solution_weights_"
+        "pymatchingv0.7_exact.txt",
+        "surface_code_rotated_memory_x_13_0.01_prob_0.2_negative_1000_shots_10000_buckets_predictions_pymatchingv0.7_"
+        "exact.txt");
 }
 
 TEST(MwpmDecoding, CompareSolutionWeights) {
-    auto test_case = load_surface_code_d13_p100_test_case();
-
-    pm::weight_int num_distinct_weights = 10001;
-    auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
-
-    stim::SparseShot sparse_shot;
-    size_t num_mistakes = 0;
-    size_t num_shots = 0;
-    size_t max_shots = 500;
-    while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
-        if (num_shots > max_shots)
-            break;
-        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
-        if (sparse_shot.obs_mask != res.obs_mask) {
-            num_mistakes++;
+    DecodingTestCase test_case;
+    for (int i : {0, 1}) {
+        if (i) {
+            test_case = load_surface_code_d13_p100_some_negative_weights_test_case();
+        } else {
+            test_case = load_surface_code_d13_p100_test_case();
         }
-        EXPECT_EQ(res.weight, test_case.expected_weights[num_shots]);
-        // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
-        ASSERT_EQ(res.obs_mask, test_case.expected_obs_masks[num_shots]);
-        sparse_shot.clear();
-        num_shots++;
-    }
-}
 
-TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
-    for (size_t i : {0, 1}) {
-        auto test_case = load_surface_code_d13_p100_test_case();
         pm::weight_int num_distinct_weights = 10001;
-        if (i == 1)
-            test_case.detector_error_model.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
         auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
 
         stim::SparseShot sparse_shot;
         size_t num_mistakes = 0;
         size_t num_shots = 0;
-        size_t max_shots = 100;
-        pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+        size_t max_shots = 500;
         while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
             if (num_shots > max_shots)
                 break;
-            pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
-            if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
+            if (sparse_shot.obs_mask != res.obs_mask) {
                 num_mistakes++;
             }
             EXPECT_EQ(res.weight, test_case.expected_weights[num_shots]);
             // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
-            ASSERT_EQ(res.obs_crossed[0], test_case.expected_obs_masks[num_shots]);
+            ASSERT_EQ(res.obs_mask, test_case.expected_obs_masks[num_shots]);
             sparse_shot.clear();
             num_shots++;
-            std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
-            res.weight = 0;
+        }
+        ASSERT_TRUE(num_mistakes < max_shots * 50 / 1000);
+    }
+}
+
+TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
+    DecodingTestCase test_case;
+    for (int q : {0, 1}) {
+        for (size_t i : {0, 1}) {
+            if (q) {
+                test_case = load_surface_code_d13_p100_some_negative_weights_test_case();
+            } else {
+                test_case = load_surface_code_d13_p100_test_case();
+            }
+            pm::weight_int num_distinct_weights = 10001;
+            if (i == 1)
+                test_case.detector_error_model.append_logical_observable_instruction(
+                    stim::DemTarget::observable_id(128));
+            auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
+
+            stim::SparseShot sparse_shot;
+            size_t num_mistakes = 0;
+            size_t num_shots = 0;
+            size_t max_shots = 100;
+            pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+            while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
+                if (num_shots > max_shots)
+                    break;
+                pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+                if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+                    num_mistakes++;
+                }
+                EXPECT_EQ(res.weight, test_case.expected_weights[num_shots]);
+                // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
+                ASSERT_EQ(res.obs_crossed[0], test_case.expected_obs_masks[num_shots]);
+                sparse_shot.clear();
+                num_shots++;
+                std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
+                res.weight = 0;
+            }
         }
     }
 }

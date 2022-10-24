@@ -6,6 +6,12 @@
 
 namespace pm {
 
+/// The edge on which two search regions collided
+struct SearchGraphEdge {
+    SearchDetectorNode* detector_node;
+    size_t neighbor_index;
+};
+
 class SearchGraph {
    public:
     std::vector<SearchDetectorNode> nodes;

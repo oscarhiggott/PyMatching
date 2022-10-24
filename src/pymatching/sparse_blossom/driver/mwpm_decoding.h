@@ -34,7 +34,8 @@ void fill_bit_vector_from_obs_mask(pm::obs_int obs_mask, uint8_t* obs_begin_ptr,
 obs_int bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector);
 
 Mwpm detector_error_model_to_mwpm(
-    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights);
+    const stim::DetectorErrorModel& detector_error_model, pm::weight_int num_distinct_weights,
+    bool ensure_search_flooder_included = false);
 
 MatchingResult decode_detection_events_for_up_to_64_observables(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
@@ -50,6 +51,10 @@ void decode_detection_events(
     uint8_t* obs_begin_ptr,
     pm::total_weight_int& weight);
 
+
+/// Decode detection events using a Mwpm object and vector of detection event indices
+/// Returns the compressed edges in the matching: the pairs of detection events that are
+/// matched to each other via paths.
 void decode_detection_events_to_match_edges(
     pm::Mwpm& mwpm,
     const std::vector<uint64_t>& detection_events);

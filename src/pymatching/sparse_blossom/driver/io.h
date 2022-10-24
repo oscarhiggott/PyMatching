@@ -90,7 +90,7 @@ class IntermediateWeightedGraph {
 
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
 
-    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights);
+    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_flooder_included = false);
 
     double max_abs_weight();
 };

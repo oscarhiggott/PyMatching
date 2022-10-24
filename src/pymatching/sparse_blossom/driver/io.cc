@@ -105,8 +105,9 @@ pm::SearchGraph pm::IntermediateWeightedGraph::to_search_graph(pm::weight_int nu
     return search_graph;
 }
 
-pm::Mwpm pm::IntermediateWeightedGraph::to_mwpm(pm::weight_int num_distinct_weights) {
-    if (num_observables > sizeof(pm::obs_int) * 8) {
+pm::Mwpm pm::IntermediateWeightedGraph::to_mwpm(
+    pm::weight_int num_distinct_weights, bool ensure_search_flooder_included) {
+    if (num_observables > sizeof(pm::obs_int) * 8 || ensure_search_flooder_included) {
         auto mwpm = pm::Mwpm(
             pm::GraphFlooder(to_matching_graph(num_distinct_weights)),
             pm::SearchFlooder(to_search_graph(num_distinct_weights)));
@@ -124,8 +125,7 @@ pm::IntermediateWeightedGraph pm::detector_error_model_to_weighted_graph(
     pm::IntermediateWeightedGraph weighted_graph(
         detector_error_model.count_detectors(), detector_error_model.count_observables());
     pm::iter_detector_error_model_edges(
-        detector_error_model,
-        [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
+        detector_error_model, [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
             weighted_graph.handle_dem_instruction(p, detectors, observables);
         });
     return weighted_graph;

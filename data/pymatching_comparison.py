@@ -49,10 +49,7 @@ def set_bits(n: int) -> Set[int]:
 
 
 def discretize_weights(g: nx.Graph, num_buckets) -> nx.Graph:
-    max_weight = max(float(e[2].get("weight", 1)) for e in g.edges(data=True))
-    min_weight = min(float(e[2].get("weight", 1)) for e in g.edges(data=True))
-    if min_weight < 0:
-        raise NotImplementedError("Negative weights not yet supported")
+    max_weight = max(abs(float(e[2].get("weight", 1))) for e in g.edges(data=True))
     for u, v, d in g.edges(data=True):
         d["weight"] = 2 * round(num_buckets * (float(d.get("weight", 1)) / max_weight))
     return g
