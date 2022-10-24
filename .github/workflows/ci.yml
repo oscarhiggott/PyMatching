@@ -224,7 +224,7 @@ jobs:
           python -m pip install pandoc
 
       - name: Add sphinx requirements
-        run: python -m pip install -r ./docs/requirements.txt
+        run: python -m pip install -r ./docs/sphinx_docs/requirements.txt
 
       - name: Build and install PyMatching
         run: pip install --verbose .
