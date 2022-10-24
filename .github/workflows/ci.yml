@@ -215,6 +215,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install pandoc
+        run: |
+          sudo apt install pandoc
+          python -m pip install pandoc
+
       - name: Add sphinx requirements
         run: python -m pip install -r ./docs/requirements.txt
 
