@@ -15,6 +15,8 @@ be fast and easy to use.
    :caption: Contents:
 
    installation
+   usage.ipynb
+   toric-code-example.ipynb
    api
 
 

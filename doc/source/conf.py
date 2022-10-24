@@ -17,11 +17,12 @@ release = 'v2.0.dev0'
 extensions = [
     "sphinx.ext.autodoc",
     "numpydoc",
-    "sphinx.ext.autosummary"
+    "sphinx.ext.autosummary",
+    "nbsphinx"
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['**.ipynb_checkpoints']
 
 # # https://stackoverflow.com/a/65203035
 numpydoc_show_class_members = True
