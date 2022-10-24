@@ -200,6 +200,10 @@ void pm::decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vecto
 
 void pm::decode_detection_events_to_edges(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges) {
+    // TODO: This method does not yet work! The issue is that the MARKER is being XORed into the edge
+    // weights while they are still needed for Dijkstra. Need to either mask the weights during the search, or
+    // leave markers on the edges via some other method. Also: need to be careful handling the case where an edge
+    // appears in two separate Dijkstra searchers.
     if (mwpm.flooder.graph.nodes.size() != mwpm.search_flooder.graph.nodes.size()) {
         throw std::invalid_argument(
             "Mwpm object does not contain search flooder, which is required to decode to edges.");
@@ -233,13 +237,13 @@ void pm::decode_detection_events_to_edges(
     }
     // Then add any negative weight edges that are still marked as seen, and mark all edges as unseen.
     for (const auto& neg_edge : mwpm.search_flooder.graph.negative_weight_edges) {
-        if (neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] & SEEN) {
+        if (neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] & MARKER) {
             int64_t node1 = neg_edge.detector_node - &mwpm.search_flooder.graph.nodes[0];
             auto node2_ptr = neg_edge.detector_node->neighbors[neg_edge.neighbor_index];
             int64_t node2 = node2_ptr ? node2_ptr - &mwpm.search_flooder.graph.nodes[0] : -1;
             edges.push_back(node1);
             edges.push_back(node2);
-            neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] ^= SEEN;
+            neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] ^= MARKER;
         }
     }
 }
