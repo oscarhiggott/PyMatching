@@ -178,6 +178,53 @@ TEST(MwpmDecoding, DecodeToMatchEdges) {
     }
 }
 
+TEST(MwpmDecoding, DecodeToEdges) {
+    DecodingTestCase test_case;
+    for (int q : {0, 1}) {
+        if (q) {
+            test_case = load_surface_code_d13_p100_some_negative_weights_test_case();
+        } else {
+            test_case = load_surface_code_d13_p100_test_case();
+        }
+
+        pm::weight_int num_distinct_weights = 10001;
+        auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights, true);
+
+        stim::SparseShot sparse_shot;
+        size_t num_shots = 0;
+        size_t max_shots = 20;
+        std::vector<int64_t> solution_edges;
+        while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
+            solution_edges.clear();
+            if (num_shots > max_shots)
+                break;
+            pm::decode_detection_events_to_edges(mwpm, sparse_shot.hits, solution_edges);
+            uint64_t obs_mask = 0;
+            pm::total_weight_int tot_weight = 0;
+            for (size_t i = 0; i < solution_edges.size() / 2; i++) {
+                int64_t u = solution_edges[2 * i];
+                int64_t v = solution_edges[2 * i + 1];
+                auto& u_node = mwpm.flooder.graph.nodes[u];
+                size_t idx = SIZE_MAX;
+                if (v == -1) {
+                    idx = 0;
+                } else {
+                    auto v_ptr = &mwpm.flooder.graph.nodes[v];
+                    idx = u_node.index_of_neighbor(v_ptr);
+                }
+                // In this case, we know all edge weights are positive. Just add absolute weight.
+                tot_weight += u_node.neighbor_weights[idx];
+                obs_mask ^= u_node.neighbor_observables[idx];
+            }
+            // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
+            ASSERT_EQ(obs_mask, test_case.expected_obs_masks[num_shots]);
+//            EXPECT_EQ(tot_weight, test_case.expected_weights[num_shots]);
+            sparse_shot.clear();
+            num_shots++;
+        }
+    }
+}
+
 TEST(MwpmDecoding, CompareSolutionObsWithMaxNumBuckets) {
     for (size_t i : {0, 1}) {
         auto test_case = load_surface_code_d13_p100_test_case();

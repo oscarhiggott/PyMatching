@@ -5,6 +5,9 @@
 
 namespace pm {
 
+const pm::weight_int MARKER = 1 << (sizeof(pm::weight_int) * 8 - 1);
+const pm::weight_int NOT_MARKER = ~MARKER;
+
 class SearchDetectorNode {
    public:
     SearchDetectorNode() : reached_from_source(nullptr), index_of_predecessor(SIZE_MAX), distance_from_source(0) {

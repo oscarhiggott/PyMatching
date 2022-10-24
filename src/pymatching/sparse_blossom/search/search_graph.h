@@ -16,6 +16,7 @@ class SearchGraph {
    public:
     std::vector<SearchDetectorNode> nodes;
     size_t num_nodes;
+    std::vector<SearchGraphEdge> negative_weight_edges;
 
     SearchGraph();
     explicit SearchGraph(size_t num_nodes);

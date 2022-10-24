@@ -8,7 +8,9 @@ pm::SearchGraph::SearchGraph(size_t num_nodes) : num_nodes(num_nodes) {
 }
 
 pm::SearchGraph::SearchGraph(pm::SearchGraph &&graph) noexcept
-    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {
+    : nodes(std::move(graph.nodes)),
+      num_nodes(graph.num_nodes),
+      negative_weight_edges(std::move(graph.negative_weight_edges)) {
 }
 
 void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t> &observables) {
@@ -26,6 +28,10 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, con
     if (u == v)
         return;
 
+    if (weight < 0) {
+        negative_weight_edges.push_back({&nodes[u], nodes[u].neighbors.size()});
+    }
+
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observable_indices.push_back(observables);
@@ -42,6 +48,10 @@ void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, cons
             " exceeds number of nodes "
             "in graph (" +
             std::to_string(num_nodes) + ")");
+    }
+
+    if (weight < 0) {
+        negative_weight_edges.push_back({&nodes[u], 0});
     }
 
     nodes[u].neighbors.insert(nodes[u].neighbors.begin(), 1, nullptr);
