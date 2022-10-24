@@ -1,3 +1,16 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include "pymatching/sparse_blossom/driver/user_graph.pybind.h"
 
@@ -262,9 +275,12 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 throw std::invalid_argument(
                     "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
             auto n = self.nodes[node1].neighbors[idx];
-            std::set<size_t> observables_set(n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
+            std::set<size_t> observables_set(
+                n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n.edge_it->weight, "error_probability"_a = n.edge_it->error_probability);
+                "fault_ids"_a = observables_set,
+                "weight"_a = n.edge_it->weight,
+                "error_probability"_a = n.edge_it->error_probability);
             return attrs;
         },
         "node1"_a,
@@ -278,9 +294,12 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             if (idx == SIZE_MAX)
                 throw std::invalid_argument("Boundary edge (" + std::to_string(node) + ",) not in graph.");
             auto n = self.nodes[node].neighbors[idx];
-            std::set<size_t> observables_set(n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
+            std::set<size_t> observables_set(
+                n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n.edge_it->weight, "error_probability"_a = n.edge_it->error_probability);
+                "fault_ids"_a = observables_set,
+                "weight"_a = n.edge_it->weight,
+                "error_probability"_a = n.edge_it->error_probability);
             return attrs;
         },
         "node"_a);
@@ -326,7 +345,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
 
             if (H.num_cols != F.num_cols)
                 throw std::invalid_argument(
-                    "`faults_matrix` array with shape (" + std::to_string(F.num_rows) + ", " + std::to_string(F.num_cols) +
+                    "`faults_matrix` array with shape (" + std::to_string(F.num_rows) + ", " +
+                    std::to_string(F.num_cols) +
                     ") must have the same number of columns as the check matrix, which has shape (" +
                     std::to_string(H.num_rows) + ", " + std::to_string(H.num_cols) + ").");
 

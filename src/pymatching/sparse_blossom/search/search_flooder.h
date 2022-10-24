@@ -1,3 +1,17 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef PYMATCHING2_SEARCH_FLOODER_H
 #define PYMATCHING2_SEARCH_FLOODER_H
 
@@ -58,7 +72,8 @@ void SearchFlooder::iter_edges_on_path_traced_back_from_node(SearchDetectorNode*
 }
 
 template <typename Callable>
-void SearchFlooder::iter_edges_tracing_back_from_collision_edge(const SearchGraphEdge& collision_edge, Callable handle_edge){
+void SearchFlooder::iter_edges_tracing_back_from_collision_edge(
+    const SearchGraphEdge& collision_edge, Callable handle_edge) {
     iter_edges_on_path_traced_back_from_node(collision_edge.detector_node, handle_edge);
     auto other_node = collision_edge.detector_node->neighbors[collision_edge.neighbor_index];
     if (other_node)
@@ -92,9 +107,10 @@ void SearchFlooder::iter_edges_on_shortest_path_from_source(size_t src, size_t d
     auto collision_edge = run_until_collision(loc_from_ptr, loc_to_ptr);
 
     std::vector<SearchGraphEdge> path_edges_1;
-    iter_edges_on_path_traced_back_from_node(collision_edge.detector_node, [&path_edges_1](const SearchGraphEdge& edge) {
+    iter_edges_on_path_traced_back_from_node(
+        collision_edge.detector_node, [&path_edges_1](const SearchGraphEdge& edge) {
             path_edges_1.push_back(edge);
-    });
+        });
 
     std::vector<SearchGraphEdge> path_edges_2 = {collision_edge};
     auto other_node = collision_edge.detector_node->neighbors[collision_edge.neighbor_index];

@@ -1,4 +1,4 @@
-# Copyright 2020 Oscar Higgott
+# Copyright 2022 PyMatching Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ class Matching:
     with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
     a `stim.DetectorErrorModel`.
     """
+
     def __init__(self,
                  graph: Union[csc_matrix, np.ndarray, rx.PyGraph, nx.Graph, List[
                      List[int]], 'stim.DetectorErrorModel', spmatrix] = None,
