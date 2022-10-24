@@ -23,7 +23,7 @@ from scipy.sparse import csc_matrix, spmatrix
 import matplotlib.cbook
 
 if TYPE_CHECKING:
-    import stim
+    import stim   # pragma: no cover
 
 import pymatching._cpp_pymatching as _cpp_pm
 
@@ -176,9 +176,9 @@ class Matching:
     def _syndrome_array_to_detection_events(self, z: Union[np.ndarray, List[int]]) -> np.ndarray:
         try:
             z = np.array(z, dtype=np.uint8)
-        except:
-            raise TypeError("Syndrome must be of type numpy.ndarray or "
-                            "convertible to numpy.ndarray, not {}".format(z))
+        except ValueError:
+            raise ValueError("Syndrome must be of type numpy.ndarray or "
+                             "convertible to numpy.ndarray, not {}".format(z))
         if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
                                   <= self.num_detectors + len(self.boundary)):
             detection_events = z.nonzero()[0]
@@ -455,8 +455,8 @@ class Matching:
                "{} detector{}, " \
                "{} boundary node{}, " \
                "and {} edge{}>".format(
-            m, 's' if m != 1 else '', b, 's' if b != 1 else '',
-            e, 's' if e != 1 else '')
+                m, 's' if m != 1 else '', b, 's' if b != 1 else '',
+                e, 's' if e != 1 else '')
 
     def add_edge(
             self,
@@ -840,7 +840,7 @@ class Matching:
             faults_matrix=faults_matrix,
             merge_strategy=merge_strategy,
             use_virtual_boundary_node=use_virtual_boundary_node,
-            kwargs=kwargs
+            **kwargs
         )
         return m
 
@@ -1070,7 +1070,7 @@ class Matching:
     def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
         try:
             import stim
-        except ImportError:
+        except ImportError:  # pragma no cover
             raise TypeError(
                 f"`model` must be a `stim.DetectorErrorModel. Instead, got: {type(model)}.`"
                 "The 'stim' package also isn't installed and is required for this method. \n"
@@ -1205,10 +1205,10 @@ class Matching:
                 try:
                     fault_ids = set(fault_ids)
                     if not all(isinstance(q, (int, np.integer)) for q in fault_ids):
-                        raise ValueError("fault_ids must be a set of ints, not {}".format(fault_ids))
-                except:
-                    raise ValueError(
-                        "fault_ids property must be an int or a set of int" \
+                        raise TypeError("fault_ids must be a set of ints, not {}".format(fault_ids))
+                except TypeError:
+                    raise TypeError(
+                        "fault_ids property must be an int or a set of int"
                         " (or convertible to a set), not {}".format(fault_ids))
             all_fault_ids = all_fault_ids | fault_ids
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
@@ -1282,10 +1282,10 @@ class Matching:
                 try:
                     fault_ids = set(fault_ids)
                     if not all(isinstance(q, (int, np.integer)) for q in fault_ids):
-                        raise ValueError("fault_ids must be a set of ints, not {}".format(fault_ids))
-                except:
-                    raise ValueError(
-                        "fault_ids property must be an int or a set of int" \
+                        raise TypeError("fault_ids must be a set of ints, not {}".format(fault_ids))
+                except TypeError:
+                    raise TypeError(
+                        "fault_ids property must be an int or a set of int"
                         " (or convertible to a set), not {}".format(fault_ids))
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)

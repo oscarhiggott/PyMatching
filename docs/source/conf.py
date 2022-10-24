@@ -9,7 +9,10 @@
 project = 'PyMatching'
 copyright = '2022, PyMatching Contributors'
 author = 'Oscar Higgott and Craig Gidney'
-release = 'v2.0.dev0'
+
+from pymatching._version import __version__
+version = __version__
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

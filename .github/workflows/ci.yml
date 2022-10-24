@@ -204,6 +204,28 @@ jobs:
 
       - name: Test with stim
         run: python -m pytest tests
+  coverage_and_pep8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Build and install PyMatching
+        run: pip install --verbose .
+
+      - name: Install dependencies
+        run: python -m pip install flake8 pytest pytest-cov
+
+      - name: flake8
+        run: flake8 src
+
+      - name: pytest-cov
+        run: pytest tests --cov=src --cov-report term
   build_docs:
     runs-on: ubuntu-latest
     steps:

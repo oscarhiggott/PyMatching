@@ -40,12 +40,12 @@ def test_load_from_dem_wrong_type_raises_type_error():
     c = stim.Circuit.generated("surface_code:rotated_memory_x", distance=3, rounds=1,
                                after_clifford_depolarization=0.01)
     with pytest.raises(TypeError):
-        m = Matching.from_detector_error_model(c)
+        Matching.from_detector_error_model(c)
 
 
 def test_load_from_dem_without_stim_raises_type_error():
     try:
-        import stim
+        import stim  # noqa
     except ImportError:
         with pytest.raises(TypeError):
-            m = Matching.from_detector_error_model("test")
+            Matching.from_detector_error_model("test")

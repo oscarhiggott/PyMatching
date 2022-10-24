@@ -198,3 +198,10 @@ def test_decode_self_loops():
     assert weight == -293
     with pytest.raises(ValueError):
         m.decode([0, 0, 1, 1, 0])
+
+
+def test_decode_wrong_syndrome_type_raises_type_error():
+    with pytest.raises(ValueError):
+        m = Matching()
+        m.add_edge(0, 1)
+        m.decode([0, "A"])

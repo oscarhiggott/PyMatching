@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pymatching._cpp_pymatching import (randomize, set_seed, rand_float)
-from pymatching.matching import Matching
+from pymatching._cpp_pymatching import (randomize, set_seed, rand_float)  # noqa
+from pymatching.matching import Matching  # noqa
 
 randomize()  # Set random seed using std::random_device

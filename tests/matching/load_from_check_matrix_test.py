@@ -72,9 +72,9 @@ def test_error_probability_from_array():
 
 def test_weighted_mwpm_from_array():
     H = csc_matrix([[1, 0], [1, 1], [0, 1]])
-    m = Matching(H, spacelike_weights=np.array([1., 2.]))
+    Matching(H, spacelike_weights=np.array([1., 2.]))
     with pytest.raises(ValueError):
-        m = Matching(H, spacelike_weights=np.array([1.]))
+        Matching(H, spacelike_weights=np.array([1.]))
 
 
 def test_load_matching_from_dense_array():
@@ -299,3 +299,13 @@ def test_from_empty_check_matrix():
     assert m.num_fault_ids == 3
     assert m.num_edges == 0
     assert m.num_detectors == 2
+
+
+def test_type_error_from_check_matrix():
+    with pytest.raises(TypeError):
+        Matching.from_check_matrix([[0, 1, 1]], faults_matrix=["A", 1])
+
+
+def test_spacelike_weights_and_weights_raises_value_error():
+    with pytest.raises(ValueError):
+        Matching.from_check_matrix([[0, 1, 1]], weights=[1, 1, 1], spacelike_weights=[2, 2, 2])

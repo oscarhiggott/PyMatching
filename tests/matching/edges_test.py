@@ -119,7 +119,6 @@ def test_get_edge_data():
 def test_large_edge_weight_not_added_to_graph():
     m = Matching()
     m.add_edge(0, 1)
-    x = 0
     with pytest.warns(UserWarning):
         m.add_edge(1, 2, weight=9999999999)
     with pytest.warns(UserWarning):
