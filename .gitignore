@@ -23,5 +23,5 @@ _skbuild
 *.so
 bazel-*
 docs/DOCS_ENV
-docs/build
+docs/sphinx_docs/build
 data/DATA_ENV

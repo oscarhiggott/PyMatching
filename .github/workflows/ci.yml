@@ -194,7 +194,7 @@ jobs:
         run: python -m pip install --upgrade wheel setuptools cmake>=3.12 ninja pytest flake8 pytest-cov
 
       - name: Build and install
-        run: pip install --verbose .
+        run: pip install --verbose -e .
 
       - name: Test
         run: python -m pytest tests --cov=./src/pymatching --cov-report term

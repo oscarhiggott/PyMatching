@@ -1,6 +1,6 @@
 :Version: |version|
 
-.. include:: ../../README.md
+.. include:: ../../../README.md
    :parser: myst_parser.sphinx_
 
 .. toctree::
@@ -8,8 +8,8 @@
    :caption: Contents:
 
    installation
-   usage.ipynb
-   toric-code-example.ipynb
+   usage
+   toric-code-example
    api
 
 

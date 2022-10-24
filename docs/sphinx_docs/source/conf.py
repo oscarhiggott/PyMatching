@@ -22,7 +22,8 @@ extensions = [
     "numpydoc",
     "sphinx.ext.autosummary",
     "nbsphinx",
-    "myst_parser"
+    "myst_parser",
+    "nbsphinx_link"
 ]
 
 templates_path = ['_templates']
