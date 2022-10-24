@@ -29,13 +29,13 @@ import pymatching._cpp_pymatching as _cpp_pm
 
 
 class Matching:
-    """A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder.
+    """
+    A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder.
     The matching graph can be constructed using the `Matching.add_edge` and `Matching.add_boundary_edge`
     methods. Alternatively, it can be loaded from a parity check matrix (a `scipy.sparse` matrix or `numpy.ndarray`
     with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
     a `stim.DetectorErrorModel`.
     """
-
     def __init__(self,
                  graph: Union[csc_matrix, np.ndarray, rx.PyGraph, nx.Graph, List[
                      List[int]], 'stim.DetectorErrorModel', spmatrix] = None,
@@ -47,6 +47,7 @@ class Matching:
                  **kwargs
                  ):
         r"""Constructor for the Matching class
+
         Parameters
         ----------
         graph : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` or `stim.DetectorErrorModel`, optional
@@ -107,6 +108,7 @@ class Matching:
         **kwargs
             The remaining keyword arguments are passed to `Matching.load_from_check_matrix` if `graph` is a
             check matrix.
+
         Examples
         --------
         >>> import pymatching
@@ -126,7 +128,7 @@ class Matching:
         >>> m = pymatching.Matching([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
-            """
+        """
         self._matching_graph = _cpp_pm.MatchingGraph()
         if graph is None:
             graph = kwargs.get("H")
@@ -156,6 +158,7 @@ class Matching:
         The ``error_probability`` must be set for all edges for this
         method to run, otherwise it returns `None`.
         All boundary nodes are always given a 0 syndrome.
+
         Returns
         -------
         numpy.ndarray of dtype int
@@ -193,7 +196,8 @@ class Matching:
                return_weight: bool = False,
                **kwargs
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
-        """Decode the syndrome `z` using minimum-weight perfect matching
+        r"""
+        Decode the syndrome `z` using minimum-weight perfect matching
 
         Parameters
         ----------
@@ -218,6 +222,7 @@ class Matching:
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
+
         Returns
         -------
         correction : numpy.ndarray or list[int]
@@ -235,11 +240,13 @@ class Matching:
             Present only if `return_weight==True`.
             The sum of the weights of the edges in the minimum-weight perfect
             matching.
+
         Raises
         ------
         ValueError
             If there is no error consistent with the provided syndrome. Occurs if the syndrome has odd parity in the
             support of a connected component without a boundary.
+
         Examples
         --------
         >>> import pymatching
@@ -253,10 +260,11 @@ class Matching:
         >>> m.decode(z)
         array([1, 1, 0, 0, 0], dtype=uint8)
 
-        Each bit in the correction provided by Matching.decode corresponds to a
+        Each bit in the correction provided by ``Matching.decode`` corresponds to a
         fault_ids. The index of a bit in a correction corresponds to its fault_ids.
         For example, here an error on edge (0, 1) flips fault_ids 2 and 3, as
         inferred by the minimum-weight correction:
+
         >>> import pymatching
         >>> m = pymatching.Matching()
         >>> m.add_edge(0, 1, fault_ids={2, 3})
@@ -270,6 +278,7 @@ class Matching:
         construct a matching graph with a time dimension (where nodes in consecutive time steps
         are connected by an edge), and then decode with a 2D syndrome
         (dimension 0 is space, dimension 1 is time):
+
         >>> import pymatching
         >>> import numpy as np
         >>> np.random.seed(0)
@@ -295,6 +304,7 @@ class Matching:
         >>> m.decode(syndrome)
         array([0, 0, 1, 0], dtype=uint8)
         """
+
         if _legacy_num_neighbours is not None:
             warnings.warn("The ``num_neighbours`` argument no longer has any effect in PyMatching v2.0.0 or later,"
                           " since it introduced an approximation that is no longer relevant or necessary. Providing "
@@ -330,6 +340,7 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
+
         Returns
         -------
         numpy.ndarray
@@ -338,6 +349,9 @@ class Matching:
             starts at detection event `pairs[i,0]` and ends at detection event `pairs[i,1]`. For a path `i` connecting
             a detection event to the boundary (either a boundary node or the virtual boundary node), then `pairs[i,0]` is
             is the index of the detection event, and `pairs[i,1]=-1` denotes the boundary.
+
+        Examples
+        --------
         >>> import pymatching
         >>> m = pymatching.Matching()
         >>> m.add_boundary_edge(0)
@@ -372,6 +386,7 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
+
         Returns
         -------
         dict
@@ -379,6 +394,9 @@ class Matching:
             it is matched to the boundary). If detection event `i` is matched to detection event `j`, then
             `mate[i]=j`. If detection event `i` is matched to the boundary (either a boundary node or the virtual boundary
             node), then `mate[i]=None`.
+
+        Examples
+        --------
         >>> import pymatching
         >>> m = pymatching.Matching()
         >>> m.add_boundary_edge(0)
@@ -452,6 +470,7 @@ class Matching:
     ) -> None:
         """
         Add an edge to the matching graph
+
         Parameters
         ----------
         node1: int
@@ -490,6 +509,7 @@ class Matching:
             unchanged. The "keep-original" strategy keeps only the existing edge, and ignores the edge being added.
             The "replace" strategy always keeps the edge being added, replacing the existing edge.
             By default, "disallow"
+
         Examples
         --------
         >>> import pymatching
@@ -572,6 +592,7 @@ class Matching:
             unchanged. The "keep-original" strategy keeps only the existing edge, and ignores the edge being added.
             The "replace" strategy always keeps the edge being added, replacing the existing edge.
             By default, "disallow"
+
         Examples
         --------
         >>> import pymatching
@@ -688,6 +709,7 @@ class Matching:
         The dictionary `attr` has keys `fault_ids` (a set of ints), `weight` (the weight of the edge,
         set to 1.0 if not specified), and `error_probability`
         (the error probability of the edge, set to -1 if not specified).
+
         Returns
         -------
         List of (int, int, dict) tuples
@@ -709,8 +731,9 @@ class Matching:
             use_virtual_boundary_node: bool = False,
             **kwargs
     ) -> 'pymatching.Matching':
-        """
+        r"""
         Load a matching graph from a check matrix
+
         Parameters
         ----------
         check_matrix : `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]]
@@ -785,21 +808,25 @@ class Matching:
             this column is handled with `Matching.add_boundary_edge(i, ...)`. The resulting graph will contain `check_matrix.shape[0]`
             nodes, and there is no boundary node. Both options are handled identically by the decoder, although
             `use_virtual_boundary_node=True` is recommended since it is simpler (with a one-to-one correspondence between
-             nodes and rows of check_matrix), and is also slightly more efficient. By default, False (for backward compatibility)
+            nodes and rows of check_matrix), and is also slightly more efficient. By default, False (for backward compatibility)
+
         Examples
         --------
+
         >>> import pymatching
         >>> m = pymatching.Matching.from_check_matrix([[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 1, 1]])
         >>> m
         <pymatching.Matching object with 3 detectors, 1 boundary node, and 4 edges>
 
         Matching objects can also be initialised from a sparse scipy matrix:
+
         >>> import pymatching
         >>> from scipy.sparse import csc_matrix
         >>> check_matrix = csc_matrix([[1, 1, 0], [0, 1, 1]])
         >>> m = pymatching.Matching.from_check_matrix(check_matrix)
         >>> m
         <pymatching.Matching object with 2 detectors, 1 boundary node, and 3 edges>
+
         """
         m = pymatching.Matching()
         m.load_from_check_matrix(
@@ -831,6 +858,7 @@ class Matching:
                                ) -> None:
         """
         Load a matching graph from a check matrix
+
         Parameters
         ----------
         check_matrix : `scipy.csc_matrix` or `numpy.ndarray` or List[List[int]]
@@ -905,7 +933,8 @@ class Matching:
             this column is handled with `Matching.add_boundary_edge(i, ...)`. The resulting graph will contain `check_matrix.shape[0]`
             nodes, and there is no boundary node. Both options are handled identically by the decoder, although
             `use_virtual_boundary_node=True` is recommended since it is simpler (with a one-to-one correspondence between
-             nodes and rows of check_matrix), and is also slightly more efficient. By default, False (for backward compatibility)
+            nodes and rows of check_matrix), and is also slightly more efficient. By default, False (for backward compatibility)
+
         Examples
         --------
         >>> import pymatching
@@ -997,7 +1026,8 @@ class Matching:
                                                                                     merge_strategy,
                                                                                     use_virtual_boundary_node,
                                                                                     repetitions,
-                                                                                    timelike_weights, p_meas, faults_matrix)
+                                                                                    timelike_weights, p_meas,
+                                                                                    faults_matrix)
 
     @staticmethod
     def from_detector_error_model(model: 'stim.DetectorErrorModel') -> 'pymatching.Matching':
@@ -1018,10 +1048,10 @@ class Matching:
         `logical_observable` indices associated with the corresponding graphlike fault mechanism in the DEM.
         Parallel edges are merged, with weights chosen on the assumption that the error mechanisms associated with the
         parallel edges are independent.
-        If parallel edges have different `logical_observable` indices, this implies the code has distance 2, and only
-         the `logical_observable` indices associated with the first added parallel edge are kept for the merged edge.
+        the `logical_observable` indices associated with the first added parallel edge are kept for the merged edge.
         If you are loading a `pymatching.Matching` graph from a DEM, you may be interested in
         using the sinter Python package for monte carlo sampling: https://pypi.org/project/sinter/.
+
         Parameters
         ----------
         model
@@ -1030,6 +1060,7 @@ class Matching:
         -------
         pymatching.Matching
             A `pymatching.Matching` object representing the edge-like fault mechanisms in `model`
+
         """
         m = Matching()
         m._load_from_detector_error_model(model)
@@ -1080,6 +1111,7 @@ class Matching:
             any of the edges in the graph. Then setting this argument will ensure that
             `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`. Note that `Matching.num_fault_ids` sets the length
             of the correction array output by `Matching.decode`.
+
         Examples
         --------
         >>> import pymatching
@@ -1103,6 +1135,7 @@ class Matching:
     def load_from_networkx(self, graph: nx.Graph, *, min_num_fault_ids: int = None) -> None:
         r"""
         Load a matching graph from a NetworkX graph into a `pymatching.Matching` object
+
         Parameters
         ----------
         graph : networkx.Graph
@@ -1130,6 +1163,7 @@ class Matching:
             any of the edges in the graph. Then setting this argument will ensure that
             `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`. Note that `Matching.num_fault_ids` sets the length
             of the correction array output by `Matching.decode`.
+
         Examples
         --------
         >>> import pymatching
@@ -1185,6 +1219,7 @@ class Matching:
     def load_from_retworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
         r"""
         Load a matching graph from a retworkX graph
+
         Parameters
         ----------
         graph : retworkx.PyGraph
@@ -1207,6 +1242,7 @@ class Matching:
             any of the edges in the graph. Then setting this argument will ensure that
             `Matching.num_fault_ids=max(min_num_fault_ids, max_id)`. Note that `Matching.num_fault_ids` sets the length
             of the correction array output by `Matching.decode`.
+
         Examples
         --------
         >>> import pymatching
@@ -1261,6 +1297,7 @@ class Matching:
         Returns a NetworkX graph corresponding to the matching graph. Each edge
         has attributes `fault_ids`, `weight` and `error_probability` and each node has
         the attribute `is_boundary`.
+
         Returns
         -------
         NetworkX.Graph
@@ -1289,6 +1326,7 @@ class Matching:
         payload is a ``dict`` with keys `fault_ids`, `weight` and `error_probability` and
         each node has a ``dict`` payload with the key ``is_boundary`` and the value is
         a boolean.
+
         Returns
         -------
         retworkx.PyGraph
@@ -1318,10 +1356,12 @@ class Matching:
         """
         Set boundary nodes in the matching graph. This defines the
         nodes in `nodes` to be boundary nodes.
+
         Parameters
         ----------
         nodes: set[int]
             The IDs of the nodes to be set as boundary nodes
+
         Examples
         --------
         >>> import pymatching
@@ -1343,6 +1383,7 @@ class Matching:
         Let `max_id` be the maximum fault id assigned to any of the edges in a `pymatching.Matching` graph `m`.
         Then setting `m.ensure_num_fault_ids(n)` will ensure that `Matching.num_fault_ids=max(n, max_id)`.
         Note that `Matching.num_fault_ids` sets the length of the correction array output by `Matching.decode`.
+
         Parameters
         ----------
         min_num_fault_ids: int
@@ -1355,6 +1396,7 @@ class Matching:
     def num_fault_ids(self) -> int:
         """
         The number of fault IDs defined in the matching graph
+
         Returns
         -------
         int
@@ -1369,6 +1411,7 @@ class Matching:
         In-place modification of the set Matching.boundary will not
         change the boundary nodes of the matching graph - boundary nodes should
         instead be set or updated using the `Matching.set_boundary_nodes` method.
+
         Returns
         -------
         set of int
@@ -1380,6 +1423,7 @@ class Matching:
     def num_nodes(self) -> int:
         """
         The number of nodes in the matching graph
+
         Returns
         -------
         int
@@ -1391,6 +1435,7 @@ class Matching:
     def num_edges(self) -> int:
         """
         The number of edges in the matching graph
+
         Returns
         -------
         int
@@ -1404,6 +1449,7 @@ class Matching:
         The number of detectors in the matching graph. A
         detector is a node that can have a non-trivial syndrome
         (i.e. it is a node that is not a boundary node).
+
         Returns
         -------
         int
