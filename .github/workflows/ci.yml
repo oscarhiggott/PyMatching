@@ -230,4 +230,4 @@ jobs:
         run: pip install --verbose .
 
       - name: Build docs
-        run: cd docs && make html
+        run: cd docs/sphinx_docs && make html
