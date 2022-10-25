@@ -5,3 +5,4 @@ nbsphinx
 ipython
 myst-parser
 nbsphinx-link
+cmake
