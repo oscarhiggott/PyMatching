@@ -1,5 +1,12 @@
 version: 2
 
+build:
+  image: latest
+  apt_packages:
+    - gcc-10
+    - g++-10
+    - cmake
+
 sphinx:
   configuration: docs/sphinx_docs/conf.py
 
