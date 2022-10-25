@@ -12,7 +12,7 @@ build:
     - cmake
 
 sphinx:
-  configuration: docs/sphinx_docs/conf.py
+  configuration: docs/sphinx_docs/source/conf.py
 
 formats: all
 python:
