@@ -51,7 +51,7 @@ distance > 10, where N is the number of detectors (nodes) per round, and T is th
 
 |                              Decoding time per round for p=0.1% circuit-level noise                              |                                  Decoding time per round for p=0.5% circuit-level noise                                   |
 |:----------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------:|
- | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.001_per_round_fix_ylim.png" width="500"> | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.005_per_round_fix_ylim.png" width="500"> |
+ | <img src="https://github.com/oscarhiggott/PyMatching/blob/2ec80a2c1895b296272ad1d951a97d58279cae54/docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.001_per_round_fix_ylim.png" width="500"> | <img src="https://github.com/oscarhiggott/PyMatching/blob/2ec80a2c1895b296272ad1d951a97d58279cae54/docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.005_per_round_fix_ylim.png" width="500"> |
 
 Sparse blossom is conceptually similar to the approach described in [this paper](https://arxiv.org/abs/1307.1740) 
 by Austin Fowler, although our approach differs in many of the details (which will be explained in our upcoming paper).
@@ -60,7 +60,7 @@ There are even more similarities with the very nice independent work by Yue Wu, 
 One of the differences with our approach is that fusion-blossom grows the exploratory regions of alternating trees 
 in a similar way to how clusters are grown in Union-Find, whereas our approach instead progresses along a timeline, 
 and uses a global priority queue to grow alternating trees.
-Yue also has a paper coming soon, so stay tuned for that as well!
+Yue also has a paper coming soon, so stay tuned for that as well.
 
 ## Installation
 
