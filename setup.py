@@ -141,6 +141,7 @@ setup(
     author="Oscar Higgott and Craig Gidney",
     description="A package for decoding quantum error correcting codes using minimum-weight perfect matching.",
     long_description=long_description,
+    long_description_content_type='text/markdown',
     ext_modules=[CMakeExtension("pymatching._cpp_pymatching")],
     packages=find_packages("src"),
     package_dir={'': 'src'},

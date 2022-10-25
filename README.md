@@ -19,32 +19,35 @@ and can also be used to decode various other code families, including
 
 Version 2.0 includes a new implementation of the blossom algorithm which is **100-1000x faster** than previous versions
 of PyMatching. 
-PyMatching can be configured using _arbitrary_ weighted graphs, with or without a boundary.
+PyMatching can be configured using arbitrary weighted graphs, with or without a boundary, and can be combined with 
+Craig Gidney's [Stim](https://github.com/quantumlib/Stim) library to simulate and decode error correction circuits 
+in the presence of circuit-level noise. The [sinter](https://pypi.org/project/sinter/) package combines Stim and 
+PyMatching to perform fast, parallelised monte-carlo sampling of quantum error correction circuits.
 
 Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/en/stable/)
 
 ## The new >100x faster implementation for Version 2.0
 
-Version 2.0 features a brand-new implementation of the blossom algorithm, which I wrote with Craig Gidney.
+Version 2.0 features a new implementation of the blossom algorithm, which I wrote with Craig Gidney.
 Our new implementation, which we refer to as the _sparse blossom_ algorithm, can be seen as a generalisation of the 
 blossom algorithm to handle the decoding problem relevant to QEC. 
-More specifically, we solve the problem of finding shortest-paths between detection events in a detector graph 
+We solve the problem of finding minimum-weight paths between detection events in a detector graph 
 _directly_, which avoids the need to use costly all-to-all Dijkstra searches to find a MWPM in a derived 
 graph using the original blossom algorithm.
 
 Our new implementation is **over 100x faster** than previous versions of PyMatching, and is 
 **over 100,000x faster** than NetworkX (benchmarked with surface code circuits). 
-At 0.1% circuit-noise, PyMatching v2.0 can decode in **realtime** for surface code superconducting quantum computers up to 
-distance 13, taking **less than 0.5 microseconds per measurement round**.
-Furthmore, the runtime is approximately _linear_ in the size of the graph.
+At 0.1% circuit-noise, PyMatching v2.0 can decode a distance 19 surface code in less than 1 microsecond per 
+measurement round. The runtime is approximately linear in the size of the graph.
+
 The benchmarks in the two plots below (run on an M1 chip) compare the performance of PyMatching v2.0 with the previous 
 version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise. 
-The equations T=N^x in the legends are best fit lines for distance > 10, where N is the number of detectors (nodes) in 
-the matching graph.
+The equations T=N^x in the legends (and plotted as dashed lines) are obtained from a fit to the same data for 
+distance > 10, where N is the number of detectors (nodes) per round, and T is the decoding time per round.
 
-|                              Decoding time per round for p=0.1% circuit-level noise                              |                              Decoding time per round for p=0.5% circuit-level noise                              |
-|:----------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------:|
- | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.001_per_round.png" width="500"> | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.005_per_round.png" width="500"> |
+|                              Decoding time per round for p=0.1% circuit-level noise                              |                                  Decoding time per round for p=0.5% circuit-level noise                                   |
+|:----------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------:|
+ | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.001_per_round_fix_ylim.png" width="500"> | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.005_per_round_fix_ylim.png" width="500"> |
 
 
 
@@ -126,3 +129,7 @@ cite:
 
 Note: the existing PyMatching [paper](https://arxiv.org/abs/2105.13082) descibes the implementation in version 0.7 and 
 earlier of PyMatching (not v2.0).
+
+## Acknowledgements
+
+We are grateful to the Google Quantum AI team for supporting the development of PyMatching v2.0.
