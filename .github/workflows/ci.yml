@@ -250,7 +250,7 @@ jobs:
     name: Upload to pypi
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
     steps:
       - uses: actions/setup-python@v4
         with:
