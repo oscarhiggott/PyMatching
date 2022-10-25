@@ -1,0 +1,16 @@
+version: 2
+
+sphinx:
+  configuration: docs/sphinx_docs/conf.py
+
+formats: all
+python:
+  version: "3.10"
+  install:
+    - requirements: docs/sphinx_docs/requirements.txt
+    - method: pip
+      path: .
+  system_packages: true
+
+submodules:
+  include: all

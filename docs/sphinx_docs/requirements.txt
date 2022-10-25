@@ -1,0 +1,7 @@
+sphinx==5.3.0
+sphinx_rtd_theme
+numpydoc
+nbsphinx
+ipython
+myst-parser
+nbsphinx-link

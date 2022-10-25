@@ -1,35 +1,266 @@
-# This workflow will install Python dependencies and run tests with a variety of Python versions
+name: ci
 
-name: Continuous Integration
-
-on: [push, pull_request]
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+     - master
 
 jobs:
-  build:
-
+  build_sdist:
+    name: Build SDist
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Build SDist
+      run: pipx run build --sdist
+
+    - name: Check metadata
+      run: pipx run twine check dist/*
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: dist/*.tar.gz
+
+
+  build_wheels:
+    runs-on: ${{ matrix.os_dist.os }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "10.15"
+      CIBW_BUILD: "${{ matrix.os_dist.dist }}"
+      CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
+      CIBW_BEFORE_BUILD: pip install --upgrade ninja
+      CIBW_TEST_REQUIRES: pytest stim~=1.10.dev1666411378
+      CIBW_TEST_COMMAND: pytest {project}/tests
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, '3.10']
+        os_dist: [
+          # macosx x86_64
+          {os: macos-latest, dist: cp36-macosx_x86_64},
+          {os: macos-latest, dist: cp37-macosx_x86_64},
+          {os: macos-latest, dist: cp38-macosx_x86_64},
+          {os: macos-latest, dist: cp39-macosx_x86_64},
+          {os: macos-latest, dist: cp310-macosx_x86_64},
+          {os: macos-latest, dist: cp311-macosx_x86_64},
+          # macosx arm64
+          {os: macos-latest, dist: cp38-macosx_arm64},
+          {os: macos-latest, dist: cp39-macosx_arm64},
+          {os: macos-latest, dist: cp310-macosx_arm64},
+          {os: macos-latest, dist: cp311-macosx_arm64},
+          # macosx universal2
+          {os: macos-latest, dist: cp38-macosx_universal2},
+          {os: macos-latest, dist: cp39-macosx_universal2},
+          {os: macos-latest, dist: cp310-macosx_universal2},
+          {os: macos-latest, dist: cp311-macosx_universal2},
+
+          # windows amd64
+          {os: windows-latest, dist: cp36-win_amd64},
+          {os: windows-latest, dist: cp37-win_amd64},
+          {os: windows-latest, dist: cp38-win_amd64},
+          {os: windows-latest, dist: cp39-win_amd64},
+          {os: windows-latest, dist: cp310-win_amd64},
+          {os: windows-latest, dist: cp311-win_amd64},
+          # windows win32
+          {os: windows-latest, dist: cp36-win32},
+          {os: windows-latest, dist: cp37-win32},
+          # scipy install fails
+#          {os: windows-latest, dist: cp38-win32},
+#          {os: windows-latest, dist: cp39-win32},
+#          {os: windows-latest, dist: cp310-win32},
+#          {os: windows-latest, dist: cp311-win32},
+          # For arm64, get error "cibuildwheel: No build identifiers selected"
+#          {os: windows-latest, dist: cp39-win_arm64},
+#          {os: windows-latest, dist: cp310-win_arm64},
+#          {os: windows-latest, dist: cp311-win_arm64},
+
+          # ubuntu x86_64
+          {os: ubuntu-latest, dist: cp36-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp37-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          # ubuntu i686
+          {os: ubuntu-latest, dist: cp36-manylinux_i686},
+          {os: ubuntu-latest, dist: cp37-manylinux_i686},
+          # scipy built distribution not available and build fails on manylinux_i686 for python 3.8 up
+#          {os: ubuntu-latest, dist: cp38-manylinux_i686},
+#          {os: ubuntu-latest, dist: cp39-manylinux_i686},
+#          {os: ubuntu-latest, dist: cp310-manylinux_i686},
+#          {os: ubuntu-latest, dist: cp311-manylinux_i686},
+          # Don't include musllinux as it has g++-9 (need g++-10 for <bits>)
+#          {os: ubuntu-latest, dist: cp36-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp37-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp38-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp39-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp310-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp311-musllinux_x86_64},
+#          {os: ubuntu-latest, dist: cp36-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp37-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp38-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp39-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp310-musllinux_i686},
+#          {os: ubuntu-latest, dist: cp311-musllinux_i686},
+        ]
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    - name: Install g++
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update
+        sudo apt install gcc-10 g++-10
+
+    - uses: pypa/cibuildwheel@v2.11.1
+
+    - name: Verify clean directory
+      run: git diff --exit-code
+      shell: bash
+
+    - name: Upload wheels
+      uses: actions/upload-artifact@v3
+      with:
+        path: wheelhouse/*.whl
+  benchmark_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: cmake .
+      - run: cmake --build . --target pymatching_perf --config Release
+      - run: Release\pymatching_perf.exe
+  benchmark:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: CC=gcc-10 CXX=g++-10 cmake .
+        if: matrix.os == 'ubuntu-latest'
+      - run: cmake .
+        if: matrix.os == 'macos-latest'
+      - run: make pymatching_perf
+      - run: ./pymatching_perf
+  gtest:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: CC=gcc-10 CXX=g++-10 cmake .
+        if: matrix.os == 'ubuntu-latest'
+      - run: cmake .
+        if: matrix.os == 'macos-latest'
+      - run: make pymatching_tests
+      - run: ./pymatching_tests
+  pip_install:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ["3.10"]
+
+    runs-on: ${{ matrix.platform }}
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install flake8 pytest pytest-cov==2.10.1 coverage==4.5.4
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Install PyMatching
-      run: |
-        pip install -e .
-    - name: Test with pytest
-      run: |
-        pytest tests src --cov=src --cov-report term
-    - uses: codecov/codecov-action@v2
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Add requirements
+        run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov
+
+      - name: Build and install
+        run: pip install --verbose -e .
+
+      - name: Test without stim
+        run: python -m pytest tests
+
+      - name: Add stim
+        run: python -m pip install stim~=1.10.dev1666411378
+
+      - name: Test with stim using coverage
+        run: python -m pytest tests --cov=./src/pymatching --cov-report term
+
+      - name: flake8
+        run: flake8 ./src ./tests
+
+  build_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pandoc
+        run: |
+          sudo apt install pandoc
+          python -m pip install pandoc
+
+      - name: Add sphinx requirements
+        run: python -m pip install -r ./docs/sphinx_docs/requirements.txt
+
+      - name: Build and install PyMatching
+        run: pip install --verbose .
+
+      - name: Build docs
+        run: cd docs/sphinx_docs && make html
+  codecov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Add requirements
+        run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov stim~=1.10.dev1666411378
+      - name: Build and install
+        run: pip install --verbose -e .
+      - name: Run tests and collect coverage
+        run: pytest tests --cov=./src/pymatching --cov-report=xml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+#  upload_all:
+#    name: Upload to pypi
+#    needs: [build_wheels, build_sdist]
+#    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/master'
+#    steps:
+#      - uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.x"
+#
+#      - uses: actions/download-artifact@v3
+#        with:
+#          name: artifact
+#          path: dist
+#
+#      - uses: pypa/gh-action-pypi-publish@v1.5.1
+#        with:
+#          password: ${{ secrets.pypi_password }}

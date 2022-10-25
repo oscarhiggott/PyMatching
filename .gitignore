@@ -1,92 +1,28 @@
-ENV
-
-### VSCode ####
-
-.vscode
-
-
-### C++ ###
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Executables
-*.exe
-*.out
-*.app
-
-### PyCharm ###
-.idea
-
-# CMake
-cmake-build-*/
-build
-
-
-### Python ###
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-# lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-### Vim ###
-# Swap
-[._]*.s[a-v][a-z]
-[._]*.sw[a-p]
-[._]s[a-rt-v][a-z]
-[._]ss[a-gi-z]
-[._]sw[a-p]
-
-# Session
-Session.vim
-Sessionx.vim
-
-### Pytest ####
 .coverage
-htmlcov
-
-
-### Timing ###
-timing
-
-### Jupyter ###
-.ipynb_checkpoints
-
-.clwb
-bazel*
+*.ipynb_checkpoints
+.idea
+cmake-build*
+Makefile
+PyMatching2.cbp
+Testing/
+_deps/
+*.cmake
+ENV
+circuits
+notes
+dist
+CMakeFiles
+CMakeCache.txt
+lib/
+out/
+perf.data
+perf.data.old
+*.egg-info/
+__pycache__
+_skbuild
+*.so
+bazel-*
+docs/DOCS_ENV
+docs/sphinx_docs/build
+data/DATA_ENV
+build

@@ -1,138 +1,153 @@
-# Copyright 2020 Oscar Higgott
-
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#      http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import os
 import re
-import sys
-import platform
 import subprocess
-import urllib.request
-import shutil
+import sys
+from shutil import which
 
-from setuptools import setup, Extension, find_packages
+from setuptools import Extension, setup, find_packages
 from setuptools.command.build_ext import build_ext
-from distutils.version import LooseVersion
+
+# Convert distutils Windows platform specifiers to CMake -A arguments
+PLAT_TO_CMAKE = {
+    "win32": "Win32",
+    "win-amd64": "x64",
+    "win-arm32": "ARM",
+    "win-arm64": "ARM64",
+}
 
 
-def pip_install(package):
-    return subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
-
-# CMake is needed only if built from source (not for wheels)
-pip_install("cmake")
-
-root_dir = os.path.dirname(os.path.realpath(__file__))
-lib_dir = os.path.join(root_dir, "lib")
-
-
-def download_and_extract(pkg_url, pkg_fn, pkg_orig_dir=None, pkg_new_dir=None):
-    if not os.path.isfile(pkg_fn):
-        try:
-            with urllib.request.urlopen(pkg_url) as r, open(pkg_fn, 'wb') as f:
-                shutil.copyfileobj(r, f)
-        except:
-            print("Failed to download {} dependency, aborting installation.".format(pkg_url))
-            raise
-    shutil.unpack_archive(pkg_fn, lib_dir)
-    if pkg_orig_dir is not None and pkg_new_dir is not None:
-        os.rename(pkg_orig_dir, pkg_new_dir)
-    if os.path.isfile(pkg_fn):
-        os.remove(pkg_fn)
-
-lemon_url = "http://lemon.cs.elte.hu/hg/lemon-1.3/archive/e5af35e6c93f.tar.gz"
-# lemon_url = "http://lemon.cs.elte.hu/pub/sources/lemon-1.3.1.tar.gz"
-lemon_fn = os.path.join(root_dir, "lemon-1-3-e5af35e6c93f.tar.gz")
-lemon_old_dir = os.path.join(lib_dir, "lemon-1-3-e5af35e6c93f")
-lemon_new_dir = os.path.join(lib_dir, "lemon")
-
-if not os.path.isfile(os.path.join(lemon_new_dir, "CMakeLists.txt")):
-    download_and_extract(lemon_url, lemon_fn, lemon_old_dir, lemon_new_dir)
-
-
+# A CMakeExtension needs a sourcedir instead of a file list.
+# The name must be the _single_ output extension from the CMake build.
+# If you need multiple extensions, see scikit-build.
 class CMakeExtension(Extension):
-    def __init__(self, name, sourcedir=''):
+    def __init__(self, name, sourcedir=""):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
 
 
 class CMakeBuild(build_ext):
-    def run(self):
-        try:
-            out = subprocess.check_output(['cmake', '--version'])
-        except OSError:
-            raise RuntimeError("CMake must be installed to build the following extensions: " +
-                               ", ".join(e.name for e in self.extensions))
-
-        if platform.system() == "Windows":
-            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
-            if cmake_version < '3.1.0':
-                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
-
-        for ext in self.extensions:
-            self.build_extension(ext)
-
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
-                      '-DPYTHON_EXECUTABLE=' + sys.executable]
 
-        cfg = 'Debug' if self.debug else 'Release'
-        build_args = ['--config', cfg]
+        # required for auto-detection & inclusion of auxiliary "native" libs
+        if not extdir.endswith(os.path.sep):
+            extdir += os.path.sep
 
-        if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
+        debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
+        cfg = "Debug" if debug else "Release"
+
+        # CMake lets you override the generator - we need to check this.
+        # Can be set with Conda-Build, for example.
+        cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
+
+        # Set Python_EXECUTABLE instead if you use PYBIND11_FINDPYTHON
+        # EXAMPLE_VERSION_INFO shows you how to pass a value into the C++ code
+        # from Python.
+        cmake_args = [
+            f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}",
+            f"-DPYTHON_EXECUTABLE={sys.executable}",
+            f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
+        ]
+        build_args = []
+        # Adding CMake arguments set as environment variable
+        # (needed e.g. to build for ARM OSx on conda-forge)
+        if "CMAKE_ARGS" in os.environ:
+            cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
+
+        # # In this example, we pass in the version to C++. You might not need to.
+        # cmake_args += [f"-DPYMATCHING_VERSION_INFO={self.distribution.get_version()}"]
+
+        if self.compiler.compiler_type != "msvc":
+            # Using Ninja-build since it a) is available as a wheel and b)
+            # multithreads automatically. MSVC would require all variables be
+            # exported for Ninja to pick it up, which is a little tricky to do.
+            # Users can override the generator with CMAKE_GENERATOR in CMake
+            # 3.15+.
+            if not cmake_generator or cmake_generator == "Ninja":
+                try:
+                    import ninja  # noqa: F401
+
+                    ninja_executable_path = os.path.join(ninja.BIN_DIR, "ninja")
+                    cmake_args += [
+                        "-GNinja",
+                        f"-DCMAKE_MAKE_PROGRAM:FILEPATH={ninja_executable_path}",
+                    ]
+                except ImportError:
+                    pass
+
         else:
-            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j2']
 
-        env = os.environ.copy()
-        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
-                                                              self.distribution.get_version())
-        if not os.path.exists(self.build_temp):
-            os.makedirs(self.build_temp)
-        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
+            # Single config generators are handled "normally"
+            single_config = any(x in cmake_generator for x in {"NMake", "Ninja"})
+
+            # CMake allows an arch-in-generator style for backward compatibility
+            contains_arch = any(x in cmake_generator for x in {"ARM", "Win64"})
+
+            # Specify the arch if using MSVC generator, but only if it doesn't
+            # contain a backward-compatibility arch spec already in the
+            # generator name.
+            if not single_config and not contains_arch:
+                cmake_args += ["-A", PLAT_TO_CMAKE[self.plat_name]]
+
+            # Multi-config generators have a different way to specify configs
+            if not single_config:
+                cmake_args += [
+                    f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{cfg.upper()}={extdir}"
+                ]
+                build_args += ["--config", cfg]
+
+        if sys.platform.startswith("darwin"):
+            # Cross-compile support for macOS - respect ARCHFLAGS if set
+            archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
+            if archs:
+                cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
+            else:
+                # If archflag not set, use platform.machine() to detect architecture
+                import platform
+                arch = platform.machine()
+                if arch:
+                    cmake_args += [f"-DCMAKE_OSX_ARCHITECTURES={platform.machine()}"]
+
+        if sys.platform.startswith('linux') and which("gcc-10") is not None and which("g++-10") is not None:
+            os.environ["CC"] = "gcc-10"
+            os.environ["CXX"] = "g++-10"
+
+        # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
+        # across all generators.
+        if "CMAKE_BUILD_PARALLEL_LEVEL" not in os.environ:
+            # self.parallel is a Python 3 only way to set parallel jobs by hand
+            # using -j in the build_ext call, not supported by pip or PyPA-build.
+            if hasattr(self, "parallel") and self.parallel:
+                # CMake 3.12+ only.
+                build_args += [f"-j{self.parallel}"]
+
+        build_temp = os.path.join(self.build_temp, ext.name)
+        if not os.path.exists(build_temp):
+            os.makedirs(build_temp)
+        subprocess.check_call(["cmake", ext.sourcedir] + cmake_args, cwd=build_temp)
+        subprocess.check_call(["cmake", "--build", ".", "--target", "_cpp_pymatching"] + build_args, cwd=build_temp)
 
 
 version = {}
-here = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(here,"src/pymatching/_version.py")) as fp:
+with open("src/pymatching/_version.py") as fp:
     exec(fp.read(), version)
-
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-
 setup(
-    name='PyMatching',
+    name="PyMatching",
     version=version['__version__'],
-    author='Oscar Higgott',
-    description='A package for decoding quantum error correcting codes using minimum-weight perfect matching.',
-    url="https://github.com/oscarhiggott/PyMatching",
-    ext_modules=[CMakeExtension('pymatching._cpp_mwpm')],
-    packages=find_packages("src"),
-    package_dir={'':'src'},
-    cmdclass=dict(build_ext=CMakeBuild),
-    install_requires=['scipy', 'numpy', 'networkx','retworkx>=0.11.0','matplotlib'],
-    classifiers=[
-        "License :: OSI Approved :: Apache Software License"
-    ],
+    author="Oscar Higgott and Craig Gidney",
+    description="A package for decoding quantum error correcting codes using minimum-weight perfect matching.",
     long_description=long_description,
     long_description_content_type='text/markdown',
-    python_requires='>=3',
+    ext_modules=[CMakeExtension("pymatching._cpp_pymatching")],
+    packages=find_packages("src"),
+    package_dir={'': 'src'},
+    cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
+    extras_require={"test": ["pytest>=6.0"]},
+    python_requires=">=3.6",
+    install_requires=['scipy', 'numpy', 'networkx', 'retworkx>=0.11.0', 'matplotlib']
 )
