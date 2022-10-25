@@ -7,7 +7,6 @@
    :maxdepth: 2
    :caption: Contents:
 
-   installation
    toric-code-example
    api
 
