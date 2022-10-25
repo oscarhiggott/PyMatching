@@ -22,9 +22,11 @@ extensions = [
     "numpydoc",
     "sphinx.ext.autosummary",
     "nbsphinx",
-    "myst_parser",
+    "m2r2",
     "nbsphinx_link"
 ]
+
+source_suffix = ['.rst', '.md']
 
 templates_path = ['_templates']
 exclude_patterns = ['**.ipynb_checkpoints']

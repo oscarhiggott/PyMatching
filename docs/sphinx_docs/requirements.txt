@@ -3,5 +3,5 @@ sphinx_rtd_theme
 numpydoc
 nbsphinx
 ipython
-myst-parser==0.18.1
+m2r2
 nbsphinx-link
