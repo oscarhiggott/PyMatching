@@ -1,4 +1,4 @@
-# PyMatching
+# PyMatching 2.0
 
 ![Continuous Integration](https://github.com/oscarhiggott/PyMatching/workflows/ci/badge.svg)
 [![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/PyMatching)
@@ -6,45 +6,60 @@
 [![PyPI version](https://badge.fury.io/py/PyMatching.svg)](https://badge.fury.io/py/PyMatching)
 [![Unitary Fund](https://img.shields.io/badge/Supported%20By-UNITARY%20FUND-brightgreen.svg?style=for-the-badge)](http://unitary.fund)
 
-PyMatching is a fast Python/C++ library for decoding quantum error correcting codes (QECC) using the Minimum Weight
-Perfect Matching (MWPM) decoder. PyMatching can decode codes for which each error generates a pair of syndrome defects (
-or only a single defect at a boundary). Codes that satisfy these properties include two-dimensional topological codes
-such as the [toric code](https://en.wikipedia.org/wiki/Toric_code),
-the [surface code](https://arxiv.org/abs/quant-ph/0110143) and [2D hyperbolic codes](https://arxiv.org/abs/1506.04029),
-amongst others. PyMatching can also be used as a subroutine to decode other codes, such as the 3D toric code and
-the [color code](https://arxiv.org/abs/1905.07393). PyMatching can handle boundaries, measurement errors and weighted
-edges in the matching graph. Since the core algorithms are written in C++, PyMatching is much faster than a pure Python
-NetworkX implementation.
+PyMatching is a fast Python/C++ library for decoding quantum error correcting (QEC) codes using the Minimum Weight
+Perfect Matching (MWPM) decoder.
+Given the syndrome measurements from a quantum error correction circuit, the MWPM decoder finds the most probable set 
+of errors, given the assumption that error mechanisms are _independent_, as well as _graphlike_ (each error causes 
+either one or two detection events).
+The MWPM decoder is the most popular decoder for decoding [surface codes](https://arxiv.org/abs/quant-ph/0110143), 
+and can also be used to decode various other code families, including 
+[subsystem codes](https://arxiv.org/abs/1207.1443), 
+[honeycomb codes](https://quantum-journal.org/papers/q-2021-10-19-564/) and 
+[2D hyperbolic codes](https://arxiv.org/abs/1506.04029).
+
+Version 2.0 includes a new implementation of the blossom algorithm which is **100-1000x faster** than previous versions
+of PyMatching. 
+PyMatching can be configured using _arbitrary_ weighted graphs, with or without a boundary.
 
 Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/en/stable/)
 
+## The new >100x faster implementation for Version 2.0
+
+Version 2.0 features a brand-new implementation of the blossom algorithm, which I wrote with Craig Gidney.
+Our new implementation, which we refer to as the _sparse blossom_ algorithm, can be seen as a generalisation of the 
+blossom algorithm to handle the decoding problem relevant to QEC. 
+More specifically, we solve the problem of finding shortest-paths between detection events in a detector graph 
+_directly_, which avoids the need to use costly all-to-all Dijkstra searches to find a MWPM in a derived 
+graph using the original blossom algorithm.
+
+Our new implementation is **over 100x faster** than previous versions of PyMatching, and is 
+**over 100,000x faster** than NetworkX (benchmarked with surface code circuits). 
+At 0.1% circuit-noise, PyMatching v2.0 can decode in **realtime** for surface code superconducting quantum computers up to 
+distance 13, taking **less than 0.5 microseconds per measurement round**.
+Furthmore, the runtime is approximately _linear_ in the size of the graph.
+The benchmarks in the two plots below (run on an M1 chip) compare the performance of PyMatching v2.0 with the previous 
+version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise. 
+The equations T=N^x in the legends are best fit lines for distance > 10, where N is the number of detectors (nodes) in 
+the matching graph.
+
+|                              Decoding time per round for p=0.1% circuit-level noise                              |                              Decoding time per round for p=0.5% circuit-level noise                              |
+|:----------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------:|
+ | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.001_per_round.png" width="500"> | <img src="docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p=0.005_per_round.png" width="500"> |
+
+
+
 ## Installation
 
-PyMatching can be downloaded and installed from [PyPI](https://pypi.org/project/PyMatching/) with the command:
+The latest version of PyMatching can be downloaded and installed from [PyPI](https://pypi.org/project/PyMatching/) 
+with the command:
 
 ```
-pip install pymatching
+pip install -U pymatching
 ```
 
-This is the recommended way to install PyMatching since pip will fetch the pre-compiled binaries, rather than building
-the C++ extension from source on your machine. Note that PyMatching requires Python 3.
-
-If instead you would like to install PyMatching from source, clone the repository (using the `--recursive` flag to
-include the lib/pybind11 submodule) and then use `pip` to install:
-
-```
-git clone --recursive https://github.com/oscarhiggott/PyMatching.git
-pip install -e ./PyMatching
-```
-
-The installation may take a few minutes since the C++ extension has to be compiled. If you'd also like to run the tests,
-first install [pytest](https://docs.pytest.org/en/stable/), and then run:
-
-```
-pytest ./PyMatching/tests ./PyMatching/src
-```
 
 ## Usage
+
 
 In order to decode a parity check matrix `H` (a `scipy.sparse` matrix) with syndrome vector `z` (a bitstring which is a
 numpy array of dtype int), first construct the `Matching` object after importing it:
@@ -92,3 +107,8 @@ example that uses Stim and PyMatching to estimate the circuit-level threshold of
 
 For more details on how to use PyMatching,
 see [the documentation](https://pymatching.readthedocs.io/en/stable/usage.html).
+
+## Attribution
+
+Our paper on the new implementation for version 2.0 (sparse blossom) will be published soon. In the meantime, please 
+cite:
