@@ -44,14 +44,12 @@ Our new implementation is **over 100x faster** than previous versions of PyMatch
 At 0.1% circuit-noise, PyMatching v2.0 can decode a distance 19 surface code in less than 1 microsecond per 
 measurement round, and the runtime is approximately linear in the size of the graph.
 
-The benchmarks in the two plots below (run on an M1 chip) compare the performance of PyMatching v2.0 with the previous 
-version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise. 
+The plot below compares the performance of PyMatching v2.0 with the previous 
+version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise (all decoders were run on an M1 processor). 
 The equations T=N^x in the legends (and plotted as dashed lines) are obtained from a fit to the same dataset for 
 distance > 10, where N is the number of detectors (nodes) per round, and T is the decoding time per round.
 
-|                              Decoding time per round for p=0.1% circuit-level noise                              |                                  Decoding time per round for p=0.5% circuit-level noise                                   |
-|:----------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------:|
- | ![Below threshold](docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p_0_001_per_round_fix_ylim.png) | ![Near threshold](docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p_0_005_per_round_fix_ylim.png)  |
+![PyMatching new vs old vs NetworkX](https://github.com/oscarhiggott/PyMatching/raw/master/docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p_0_001_per_round.png)
 
 
 Sparse blossom is conceptually similar to the approach described in [this paper](https://arxiv.org/abs/1307.1740) 
