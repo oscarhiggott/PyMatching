@@ -88,11 +88,14 @@ To install stim, run `pip install stim --upgrade`.
 
 First, we generate a stim circuit. Here, we use a surface code circuit included with stim:
 
-```pycon
->>> import numpy as np
->>> import stim
->>> import pymatching
->>> circuit = stim.Circuit.generated("surface_code:rotated_memory_x", distance=5, rounds=5, after_clifford_depolarization=0.005)
+```python
+import numpy as np
+import stim
+import pymatching
+circuit = stim.Circuit.generated("surface_code:rotated_memory_x", 
+                                 distance=5, 
+                                 rounds=5, 
+                                 after_clifford_depolarization=0.005)
 ```
 
 Next, we use stim to generate a `stim.DetectorErrorModel` (DEM), which is effectively a 
@@ -101,32 +104,29 @@ By setting `decompose_errors=True`, stim decomposes all error mechanisms into _e
 mechanisms (which cause either one or two detection events).
 This ensures that our DEM is graphlike, and can be loaded by pymatching:
 
-```
->>> model = circuit.detector_error_model(decompose_errors=True)
->>> matching = pymatching.Matching.from_detector_error_model(model)
+```python
+model = circuit.detector_error_model(decompose_errors=True)
+matching = pymatching.Matching.from_detector_error_model(model)
 ```
 
 Next, we will sample 1000 shots from the circuit. Each shot (a row of `shots`) contains the full syndrome (detector 
 measurements), as well as the logical observable measurements, from simulating the noisy circuit:
 
-```
->>> sampler = circuit.compile_detector_sampler()
->>> shots = sampler.sample(shots=1000, append_observables=True)
+```python
+sampler = circuit.compile_detector_sampler()
+syndrome, actual_observables = sampler.sample(shots=1000, separate_observables=True)
 ```
 
 Now we can decode! We compare PyMatching's predictions of the logical observables with the actual observables sampled 
 with stim, in order to count the number of mistakes and estimate the logical error rate:
 
-```
->>> num_errors = 0
->>> for i in range(shots.shape[0]):
-...     syndrome = shots[i, 0:circuit.num_detectors]
-...     actual_observables = shots[i, circuit.num_detectors:]
-...     predicted_observables = matching.decode(syndrome)
-...     num_errors += not np.array_equal(actual_observables, predicted_observables)
-... 
->>> num_errors
-4
+```python
+num_errors = 0
+for i in range(syndrome.shape[0]):
+    predicted_observables = matching.decode(syndrome[i,:])
+    num_errors += not np.array_equal(actual_observables[i,:], predicted_observables)
+
+print(num_errors)  # prints 8
 ```
 
 ### Loading from a parity check matrix
@@ -160,46 +160,48 @@ Our decoding is successful if `observables@noise % 2 == observables@predictions 
 
 Putting this together, we can decode a distance 5 repetition code as follows:
 
-```pycon
->>> import numpy as np
->>> from scipy.sparse import csc_matrix
->>> import pymatching
->>> H = csc_matrix([[1, 1, 0, 0, 0],
-...                 [0, 1, 1, 0, 0],
-...                 [0, 0, 1, 1, 0],
-...                 [0, 0, 0, 1, 1]])
->>> weights = np.array([4, 3, 2, 3, 4])   # Set arbitrary weights for illustration
->>> matching = pymatching.Matching(H, weights=weights)
-array([0, 0, 1, 1, 0], dtype=uint8)
->>> matching.decode(np.array([0, 1, 0, 1]), return_weight=True)  # Optionally, we can return the weight as well
-(array([0, 0, 1, 1, 0], dtype=uint8), 5.0)
+```python
+import numpy as np
+from scipy.sparse import csc_matrix
+import pymatching
+H = csc_matrix([[1, 1, 0, 0, 0],
+                 [0, 1, 1, 0, 0],
+                 [0, 0, 1, 1, 0],
+                 [0, 0, 0, 1, 1]])
+weights = np.array([4, 3, 2, 3, 4])   # Set arbitrary weights for illustration
+matching = pymatching.Matching(H, weights=weights)
+prediction = matching.decode(np.array([0, 1, 0, 1]))
+print(prediction)  # prints: [0 0 1 1 0]
+# Optionally, we can return the weight as well:
+prediction, solution_weight = matching.decode(np.array([0, 1, 0, 1]), return_weight=True)
+print(prediction)  # prints: [0 0 1 1 0]
+print(solution_weight)  # prints: 5.0
 ```
 
 And in order to estimate the logical error rate for a physical error rate of 10%, we can sample 
 as follows:
 
-```pycon
->>> import numpy as np
->>> from scipy.sparse import csc_matrix
->>> import pymatching
->>> H = csc_matrix([[1, 1, 0, 0, 0],
-...                 [0, 1, 1, 0, 0],
-...                 [0, 0, 1, 1, 0],
-...                 [0, 0, 0, 1, 1]])
->>> observables = csc_matrix([[1, 0, 0, 0, 0]])
->>> error_probability = 0.1
->>> weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
->>> matching = pymatching.Matching.from_check_matrix(H, weights=weights)
->>> num_errors = 0
->>> for i in range(1000):
-...     noise = (np.random.random(H.shape[1]) < error_probability).astype(np.uint8)
-...     syndrome = H@noise % 2
-...     prediction = matching.decode(syndrome)
-...     predicted_observables = observables@prediction % 2
-...     actual_observables = observables@noise % 2
-...     num_errors += not np.array_equal(predicted_observables, actual_observables)
->>> num_errors
-4
+```python
+import numpy as np
+from scipy.sparse import csc_matrix
+import pymatching
+H = csc_matrix([[1, 1, 0, 0, 0],
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1]])
+observables = csc_matrix([[1, 0, 0, 0, 0]])
+error_probability = 0.1
+weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
+matching = pymatching.Matching.from_check_matrix(H, weights=weights)
+num_errors = 0
+for i in range(1000):
+    noise = (np.random.random(H.shape[1]) < error_probability).astype(np.uint8)
+    syndrome = H@noise % 2
+    prediction = matching.decode(syndrome)
+    predicted_observables = observables@prediction % 2
+    actual_observables = observables@noise % 2
+    num_errors += not np.array_equal(predicted_observables, actual_observables)
+print(num_errors)  # prints 4
 ```
 
 Note that we can also ask PyMatching to estimate the logical observables directly, by supplying them 
@@ -207,28 +209,28 @@ to the `faults_matrix` argument when constructing the `pymatching.Matching` obje
 some additional optimisations, that speed up the decoding procedure a bit. The following example uses this approach, 
 and is equivalent to the example above:
 
-```pycon
->>> import numpy as np
->>> from scipy.sparse import csc_matrix
->>> import pymatching
->>> 
->>> H = csc_matrix([[1, 1, 0, 0, 0],
-...                 [0, 1, 1, 0, 0],
-...                 [0, 0, 1, 1, 0],
-...                 [0, 0, 0, 1, 1]])
->>> observables = csc_matrix([[1, 0, 0, 0, 0]])
->>> error_probability = 0.1
->>> weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
->>> matching = pymatching.Matching.from_check_matrix(H, weights=weights, faults_matrix=observables)
->>> num_errors = 0
->>> for i in range(1000):
-...     noise = (np.random.random(H.shape[1]) < error_probability).astype(np.uint8)
-...     syndrome = H@noise % 2
-...     predicted_observables = matching.decode(syndrome)
-...     actual_observables = observables@noise % 2
-...     num_errors += not np.array_equal(predicted_observables, actual_observables)
->>> num_errors
-6
+```python
+import numpy as np
+from scipy.sparse import csc_matrix
+import pymatching
+
+H = csc_matrix([[1, 1, 0, 0, 0],
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1]])
+observables = csc_matrix([[1, 0, 0, 0, 0]])
+error_probability = 0.1
+weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
+matching = pymatching.Matching.from_check_matrix(H, weights=weights, faults_matrix=observables)
+num_errors = 0
+for i in range(1000):
+    noise = (np.random.random(H.shape[1]) < error_probability).astype(np.uint8)
+    syndrome = H@noise % 2
+    predicted_observables = matching.decode(syndrome)
+    actual_observables = observables@noise % 2
+    num_errors += not np.array_equal(predicted_observables, actual_observables)
+
+print(num_errors)  # prints 6
 ```
 
 Instead of using a check matrix, the Matching object can also be constructed using
