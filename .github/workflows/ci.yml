@@ -246,21 +246,21 @@ jobs:
         run: pytest tests --cov=./src/pymatching --cov-report=xml
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
-#  upload_all:
-#    name: Upload to pypi
-#    needs: [build_wheels, build_sdist]
-#    runs-on: ubuntu-latest
-#    if: github.ref == 'refs/heads/master'
-#    steps:
-#      - uses: actions/setup-python@v4
-#        with:
-#          python-version: "3.x"
-#
-#      - uses: actions/download-artifact@v3
-#        with:
-#          name: artifact
-#          path: dist
-#
-#      - uses: pypa/gh-action-pypi-publish@v1.5.1
-#        with:
-#          password: ${{ secrets.pypi_password }}
+  upload_all:
+    name: Upload to pypi
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.5.1
+        with:
+          password: ${{ secrets.pypi_password }}
