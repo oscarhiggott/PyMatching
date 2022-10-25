@@ -1,6 +1,5 @@
 # PyMatching 2.0
 
-![Continuous Integration](https://github.com/oscarhiggott/PyMatching/workflows/ci/badge.svg)
 [![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/PyMatching)
 [![docs](https://readthedocs.org/projects/pymatching/badge/?version=latest&style=plastic)](https://readthedocs.org/projects/pymatching/builds/)
 [![PyPI version](https://badge.fury.io/py/PyMatching.svg)](https://badge.fury.io/py/PyMatching)
