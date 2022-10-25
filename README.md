@@ -110,5 +110,19 @@ see [the documentation](https://pymatching.readthedocs.io/en/stable/usage.html).
 
 ## Attribution
 
-Our paper on the new implementation for version 2.0 (sparse blossom) will be published soon. In the meantime, please 
+A paper on our new implementation used in PyMatching version 2.0 (sparse blossom) will be published soon. In the meantime, please 
 cite:
+
+```asm
+@misc{pymatchingv2,
+  author = {Higgott, Oscar and Gidney, Craig},
+  title = {PyMatching v2},
+  year = {2022},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/oscarhiggott/PyMatching}}
+}
+```
+
+Note: the existing PyMatching [paper](https://arxiv.org/abs/2105.13082) descibes the implementation in version 0.7 and 
+earlier of PyMatching (not v2.0).
