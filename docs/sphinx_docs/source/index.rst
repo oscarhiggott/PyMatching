@@ -8,7 +8,6 @@
    :caption: Contents:
 
    installation
-   usage
    toric-code-example
    api
 
