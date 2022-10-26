@@ -22,7 +22,7 @@ extensions = [
     "numpydoc",
     "sphinx.ext.autosummary",
     "nbsphinx",
-    "m2r2",
+    'sphinx_mdinclude',
     "nbsphinx_link"
 ]
 

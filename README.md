@@ -239,7 +239,7 @@ and
 methods, or by loading from a NetworkX or retworkx graph. 
 
 For more details on how to use PyMatching,
-see [the documentation](https://pymatching.readthedocs.io/en/stable/usage.html).
+see [the documentation](https://pymatching.readthedocs.io).
 
 ## Attribution
 
