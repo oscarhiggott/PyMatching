@@ -139,6 +139,7 @@ setup(
     name="PyMatching",
     version=version['__version__'],
     author="Oscar Higgott and Craig Gidney",
+    url="https://github.com/oscarhiggott/PyMatching",
     description="A package for decoding quantum error correcting codes using minimum-weight perfect matching.",
     long_description=long_description,
     long_description_content_type='text/markdown',

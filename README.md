@@ -203,7 +203,7 @@ for i in range(1000):
 print(num_errors)  # prints 4
 ```
 
-Note that we can also ask PyMatching to estimate the logical observables directly, by supplying them 
+Note that we can also ask PyMatching to predict the logical observables directly, by supplying them 
 to the `faults_matrix` argument when constructing the `pymatching.Matching` object. This allows the decoder to make 
 some additional optimisations, that speed up the decoding procedure a bit. The following example uses this approach, 
 and is equivalent to the example above:
