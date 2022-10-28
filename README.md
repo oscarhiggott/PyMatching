@@ -40,19 +40,20 @@ graph using the original blossom algorithm.
 The new version is also exact - unlike previous versions of PyMatching, no approximation is made.
 
 Our new implementation is **over 100x faster** than previous versions of PyMatching, and is 
-**over 100,000x faster** than NetworkX (benchmarked with surface code circuits). 
-At 0.1% circuit-noise, PyMatching v2 can decode a distance 19 surface code in less than 1 microsecond per 
-measurement round, and the runtime is approximately linear in the size of the graph.
+**over 100,000x faster** than NetworkX (benchmarked with surface code circuits). At 0.1% circuit-noise, PyMatching can 
+decode both X and Z basis measurements of surface code circuits up to distance 13 in under 1 microsecond per round 
+of syndrome extraction on a single core (or up to distance 19 if only X-basis measurements are processed - however 
+both X and Z basis measurements must be decoded at scale). Furthermore, the runtime is roughly linear in the number 
+of nodes in the graph.
 
 The plot below compares the performance of PyMatching v2 with the previous 
 version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise. 
 All decoders were run on a single core of an M1 processor, processing both the X and Z basis measurements.
-At 0.1% circuit-noise, PyMatching can decode up to distance 13 in under 1 microsecond per round of syndrome extraction
-(or up to distance 
-19 if only X-basis measurements are processed - however both X and Z basis measurements must be decoded at scale).
 The equations T=N^x in the legend (and plotted as dashed lines) are 
 obtained from a fit to the same dataset for 
 distance > 10, where N is the number of detectors (nodes) per round, and T is the decoding time per round.
+See the [benchmarks](https://github.com/oscarhiggott/PyMatching/raw/master/benchmarks) folder in the repository 
+for the data and stim circuits, as well as additional benchmarks.
 
 
 ![PyMatching new vs old vs NetworkX](https://github.com/oscarhiggott/PyMatching/raw/master/benchmarks/surface_codes/surface_code_rotated_memory_x_p_0.001_d_5_7_9_13_17_23_29_39_50_both_bases/pymatching_v0.7_vs_pymatching_v2_vs_networkx_timing_p=0.001_per_round_both_bases_decoded.png)
