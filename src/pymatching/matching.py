@@ -192,7 +192,7 @@ class Matching:
     def decode(self,
                z: Union[np.ndarray, List[int]],
                _legacy_num_neighbours: int = None,
-               _legacy_return_weights: bool = None,
+               _legacy_return_weight: bool = None,
                *,
                return_weight: bool = False,
                **kwargs
@@ -216,8 +216,8 @@ class Matching:
             that is not relevant or required in the new version 2 implementation.
             Providing num_neighbours as this second positional argument will raise an exception in a
             future version of PyMatching.
-        _legacy_return_weights: bool
-            ``return_weights`` used to be available as this third positional argument, but should now
+        _legacy_return_weight: bool
+            ``return_weight`` used to be available as this third positional argument, but should now
             be set as a keyword argument. In a future version of PyMatching, it will only be possible
             to provide `return_weight` as a keyword argument.
         return_weight : bool, optional
@@ -311,11 +311,11 @@ class Matching:
                           " since it introduced an approximation that is no longer relevant or necessary. Providing "
                           "``num_neighbours`` as the second positional argument to ``Matching.decode`` will raise an "
                           "exception in a future version of PyMatching", DeprecationWarning, stacklevel=2)
-        if _legacy_return_weights is not None:
+        if _legacy_return_weight is not None:
             warnings.warn("The ``return_weights`` argument was provided as a positional argument, but in a future "
                           "version of PyMatching, it will be required to provide ``return_weights`` as a keyword "
                           "argument.")
-            return_weight = _legacy_return_weights
+            return_weight = _legacy_return_weight
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(detection_events)
         if return_weight:
