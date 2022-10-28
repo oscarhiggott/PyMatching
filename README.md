@@ -1,4 +1,4 @@
-# PyMatching 2.0
+# PyMatching 2
 
 ![Continuous Integration](https://github.com/oscarhiggott/PyMatching/workflows/ci/badge.svg)
 [![codecov](https://codecov.io/gh/oscarhiggott/PyMatching/branch/master/graph/badge.svg)](https://codecov.io/gh/oscarhiggott/PyMatching)
@@ -17,7 +17,7 @@ and can also be used to decode various other code families, including
 [honeycomb codes](https://quantum-journal.org/papers/q-2021-10-19-564/) and 
 [2D hyperbolic codes](https://arxiv.org/abs/1506.04029).
 
-Version 2.0 includes a new implementation of the blossom algorithm which is **100-1000x faster** than previous versions
+Version 2 includes a new implementation of the blossom algorithm which is **100-1000x faster** than previous versions
 of PyMatching. 
 PyMatching can be configured using arbitrary weighted graphs, with or without a boundary, and can be combined with 
 Craig Gidney's [Stim](https://github.com/quantumlib/Stim) library to simulate and decode error correction circuits 
@@ -29,9 +29,9 @@ Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https:
 To see how stim, sinter and pymatching can be used to estimate the threshold of an error correcting code with 
 circuit-level noise, try out the [stim getting started notebook](https://github.com/quantumlib/Stim/blob/main/doc/getting_started.ipynb).
 
-## The new >100x faster implementation for Version 2.0
+## The new >100x faster implementation for Version 2
 
-Version 2.0 features a new implementation of the blossom algorithm, which I wrote with Craig Gidney.
+Version 2 features a new implementation of the blossom algorithm, which I wrote with Craig Gidney.
 Our new implementation, which we refer to as the _sparse blossom_ algorithm, can be seen as a generalisation of the 
 blossom algorithm to handle the decoding problem relevant to QEC. 
 We solve the problem of finding minimum-weight paths between detection events in a detector graph 
@@ -41,15 +41,21 @@ The new version is also exact - unlike previous versions of PyMatching, no appro
 
 Our new implementation is **over 100x faster** than previous versions of PyMatching, and is 
 **over 100,000x faster** than NetworkX (benchmarked with surface code circuits). 
-At 0.1% circuit-noise, PyMatching v2.0 can decode a distance 19 surface code in less than 1 microsecond per 
+At 0.1% circuit-noise, PyMatching v2 can decode a distance 19 surface code in less than 1 microsecond per 
 measurement round, and the runtime is approximately linear in the size of the graph.
 
-The plot below compares the performance of PyMatching v2.0 with the previous 
-version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise (all decoders were run on an M1 processor). 
-The equations T=N^x in the legends (and plotted as dashed lines) are obtained from a fit to the same dataset for 
+The plot below compares the performance of PyMatching v2 with the previous 
+version (v0.7) as well as with NetworkX for decoding surface code circuits with circuit-level depolarising noise. 
+All decoders were run on a single core of an M1 processor, processing both the X and Z basis measurements.
+At 0.1% circuit-noise, PyMatching can decode up to distance 13 in under 1 microsecond per round of syndrome extraction
+(or up to distance 
+19 if only X-basis measurements are processed - however both X and Z basis measurements must be decoded at scale).
+The equations T=N^x in the legend (and plotted as dashed lines) are 
+obtained from a fit to the same dataset for 
 distance > 10, where N is the number of detectors (nodes) per round, and T is the decoding time per round.
 
-![PyMatching new vs old vs NetworkX](https://github.com/oscarhiggott/PyMatching/raw/master/docs/figures/pymatching_v0_7_vs_pymatching_v2_0_vs_networkx_timing_p_0_001_per_round.png)
+
+![PyMatching new vs old vs NetworkX](https://github.com/oscarhiggott/PyMatching/raw/master/benchmarks/surface_codes/surface_code_rotated_memory_x_p_0.001_d_5_7_9_13_17_23_29_39_50_both_bases/pymatching_v0.7_vs_pymatching_v2_vs_networkx_timing_p=0.001_per_round_both_bases_decoded.png)
 
 
 Sparse blossom is conceptually similar to the approach described in [this paper](https://arxiv.org/abs/1307.1740) 
@@ -243,7 +249,7 @@ see [the documentation](https://pymatching.readthedocs.io).
 
 ## Attribution
 
-A paper on our new implementation used in PyMatching version 2.0 (sparse blossom) will be published soon. In the meantime, please 
+A paper on our new implementation used in PyMatching version 2 (sparse blossom) will be published soon. In the meantime, please 
 cite:
 
 ```
@@ -258,9 +264,9 @@ cite:
 ```
 
 Note: the existing PyMatching [paper](https://arxiv.org/abs/2105.13082) descibes the implementation in version 0.7 and 
-earlier of PyMatching (not v2.0).
+earlier of PyMatching (not v2).
 
 ## Acknowledgements
 
-We are grateful to the Google Quantum AI team for supporting the development of PyMatching v2.0. Earlier versions of 
+We are grateful to the Google Quantum AI team for supporting the development of PyMatching v2. Earlier versions of 
 PyMatching were supported by Unitary Fund and EPSRC.
