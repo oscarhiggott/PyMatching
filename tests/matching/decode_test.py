@@ -205,3 +205,16 @@ def test_decode_wrong_syndrome_type_raises_type_error():
         m = Matching()
         m.add_edge(0, 1)
         m.decode([0, "A"])
+
+
+def test_syndrome_on_boundary_nodes():
+    m = Matching()
+    m.add_edge(0, 1, fault_ids={0})
+    m.add_edge(1, 2, fault_ids={1})
+    m.add_edge(2, 3, fault_ids={2})
+    m.add_edge(3, 4, fault_ids={3})
+    m.set_boundary_nodes({3, 4})
+    m.decode([0, 0, 0, 1, 0])
+    m.decode([0, 0, 0, 0, 1])
+    m.decode([0, 0, 0, 1, 1])
+    m.decode([1, 0, 1, 0, 1])
