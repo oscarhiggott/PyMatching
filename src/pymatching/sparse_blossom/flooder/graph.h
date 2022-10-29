@@ -38,6 +38,11 @@ class MatchingGraph {
     std::set<size_t> negative_weight_observables_set;
     /// The sum of the negative edge weights. This number is negative, rather than the absolute value.
     pm::total_weight_int negative_weight_sum;
+    /// is_user_graph_boundary_node is only filled if MatchingGraph is constructed from a UserGraph
+    /// is_user_graph_boundary_node[i] is true if i is a boudary node in the UserGraph
+    /// This vector is used to check that a detection event is not added to a node marked as a boundary node
+    /// in the UserGraph (as such an event cannot be matched, and will raise an error).
+    std::vector<bool> is_user_graph_boundary_node;
     size_t num_nodes;
     size_t num_observables;
     /// This is the normalising constant that the edge weights were multiplied by when converting from floats to

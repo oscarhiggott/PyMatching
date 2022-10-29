@@ -86,7 +86,9 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
         for (auto& detection : detection_events) {
             if (detection >= mwpm.flooder.graph.nodes.size())
                 throw std::invalid_argument("Detection event index too large");
-            mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
+            if (detection + 1 > mwpm.flooder.graph.is_user_graph_boundary_node.size() ||
+                !mwpm.flooder.graph.is_user_graph_boundary_node[detection])
+                mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
         }
 
     } else {
@@ -102,7 +104,9 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
                     "Detection event index `" + std::to_string(detection) +
                     "` is larger than any detector node index in the graph.");
             if (!mwpm.flooder.graph.nodes[detection].radius_of_arrival) {
-                mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
+                if (detection + 1 > mwpm.flooder.graph.is_user_graph_boundary_node.size() ||
+                    !mwpm.flooder.graph.is_user_graph_boundary_node[detection])
+                    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
             } else {
                 // Unmark node
                 mwpm.flooder.graph.nodes[detection].radius_of_arrival = 0;

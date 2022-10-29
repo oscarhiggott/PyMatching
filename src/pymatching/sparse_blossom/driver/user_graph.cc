@@ -258,6 +258,12 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
                 matching_graph.add_boundary_edge(u, weight, observables);
         });
     matching_graph.normalising_constant = normalising_constant;
+    if (boundary_nodes.size() > 0) {
+        matching_graph.is_user_graph_boundary_node.clear();
+        matching_graph.is_user_graph_boundary_node.resize(nodes.size(), false);
+        for (auto& i : boundary_nodes)
+            matching_graph.is_user_graph_boundary_node[i] = true;
+    }
     return matching_graph;
 }
 
