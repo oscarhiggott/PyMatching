@@ -19,6 +19,7 @@ import pytest
 import networkx as nx
 import os
 
+import pymatching
 from pymatching import Matching
 
 THIS_DIR = pathlib.Path(__file__).parent.resolve()
@@ -159,7 +160,7 @@ def test_surface_code_solution_weights():
             DATA_DIR,
             "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"),
             "r") as f:
-        expected_observables = [float(w) for w in f.readlines()]
+        expected_observables = [int(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
     weights = []
     predicted_observables = []
@@ -170,6 +171,54 @@ def test_surface_code_solution_weights():
     for i in range(len(weights)):
         assert weights[i] == pytest.approx(expected_weights[i], rel=1e-8)
     assert predicted_observables == expected_observables[0:len(predicted_observables)]
+
+    expected_observables_arr = np.zeros((shots.shape[0], 1), dtype=np.uint8)
+    expected_observables_arr[:, 0] = np.array(expected_observables)
+
+    sampler = dem.compile_sampler()
+    temp_shots, _, _ = sampler.sample(shots=10, bit_packed=True)
+    assert temp_shots.shape[1] == np.ceil(dem.num_detectors // 8)
+
+    batch_predictions = m.decode_batch(shots[:, 0:-m.num_fault_ids])
+    assert np.array_equal(batch_predictions, expected_observables_arr)
+
+    batch_predictions, batch_weights = m.decode_batch(shots[:, 0:-m.num_fault_ids], return_weights=True)
+    assert np.array_equal(batch_predictions, expected_observables_arr)
+    assert np.allclose(batch_weights, expected_weights, rtol=1e-8)
+
+    bitpacked_shots = np.packbits(shots[:, 0:dem.num_detectors], bitorder='little', axis=1)
+    batch_predictions_from_bitpacked, bitpacked_batch_weights = m.decode_batch(bitpacked_shots, return_weights=True,
+                                                                               bit_packed_shots=True)
+    assert np.array_equal(batch_predictions_from_bitpacked, expected_observables_arr)
+    assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
+
+    bitpacked_batch_predictions_from_bitpacked, bitpacked_batch_weights = m.decode_batch(bitpacked_shots,
+                                                                                         return_weights=True,
+                                                                                         bit_packed_shots=True,
+                                                                                         bit_packed_predictions=True)
+    assert np.array_equal(bitpacked_batch_predictions_from_bitpacked, expected_observables_arr)
+    assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
+
+
+def test_decode_batch_to_bitpacked_predictions():
+    m = pymatching.Matching()
+    m.add_edge(0, 1, fault_ids={0})
+    m.add_edge(1, 2, fault_ids={10})
+    m.add_edge(2, 3, fault_ids={3})
+    m.add_edge(3, 4, fault_ids={20})
+
+    predictions = m.decode_batch(np.array([[1, 0, 1, 0, 0], [0, 0, 1, 0, 1]], dtype=np.uint8),
+                                 bit_packed_predictions=True)
+    assert np.array_equal(predictions, np.array([[1, 4, 0], [8, 0, 16]], dtype=np.uint8))
+
+
+def test_detection_event_too_large_raises_value_error():
+    m = pymatching.Matching()
+    m.add_edge(0, 1)
+    with pytest.raises(ValueError):
+        m.decode([1, 0, 1])
+    with pytest.raises(ValueError):
+        m.decode_batch([[8]], bit_packed_shots=True)
 
 
 def test_deprecated_position_arguments_raise_deprecation_warning():
