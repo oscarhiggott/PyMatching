@@ -15,9 +15,11 @@
 import pymatching
 
 import doctest
+import pytest
 
 
 def test_matching_docstrings():
+    pytest.importorskip("stim")
     doctest.testmod(pymatching.matching, raise_on_error=True)
 
 
