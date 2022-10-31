@@ -129,8 +129,8 @@ with stim, in order to count the number of mistakes and estimate the logical err
 ```python
 num_errors = 0
 for i in range(syndrome.shape[0]):
-    predicted_observables = matching.decode(syndrome[i,:])
-    num_errors += not np.array_equal(actual_observables[i,:], predicted_observables)
+    predicted_observables = matching.decode(syndrome[i, :])
+    num_errors += not np.array_equal(actual_observables[i, :], predicted_observables)
 
 print(num_errors)  # prints 8
 ```
