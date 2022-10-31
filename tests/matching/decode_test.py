@@ -220,6 +220,7 @@ def test_detection_event_too_large_raises_value_error():
     with pytest.raises(ValueError):
         m.decode_batch([[8]], bit_packed_shots=True)
 
+
 def test_deprecated_position_arguments_raise_deprecation_warning():
     m = Matching()
     m.add_edge(0, 1, fault_ids={0}, weight=4)

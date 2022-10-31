@@ -554,8 +554,8 @@ class Matching:
                "{} detector{}, " \
                "{} boundary node{}, " \
                "and {} edge{}>".format(
-            m, 's' if m != 1 else '', b, 's' if b != 1 else '',
-            e, 's' if e != 1 else '')
+                m, 's' if m != 1 else '', b, 's' if b != 1 else '',
+                e, 's' if e != 1 else '')
 
     def add_edge(
             self,
