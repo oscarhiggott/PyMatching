@@ -249,7 +249,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
 
             // Reserve all-zeros predictions array
             size_t num_observable_bytes =
-                bit_packed_predictions ?(self.get_num_observables() + 7) >> 3 : self.get_num_observables();
+                bit_packed_predictions ? (self.get_num_observables() + 7) >> 3 : self.get_num_observables();
             py::array_t<uint8_t> predictions = py::array_t<uint8_t>(shots.shape(0) * num_observable_bytes);
             predictions[py::make_tuple(py::ellipsis())] = 0;  // Initialise to 0
             py::buffer_info buff = predictions.request();
@@ -287,9 +287,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 pm::total_weight_int solution_weight = 0;
                 if (bit_packed_predictions) {
                     std::fill(temp_predictions.begin(), temp_predictions.end(), 0);
-                    pm::decode_detection_events(
-                        mwpm, detection_events, temp_predictions.data(), solution_weight
-                        );
+                    pm::decode_detection_events(mwpm, detection_events, temp_predictions.data(), solution_weight);
                     // bitpack the predictions
                     for (size_t k = 0; k < temp_predictions.size(); k++) {
                         size_t arr_idx = k >> 3;
@@ -397,7 +395,27 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         auto dem = stim::DetectorErrorModel(dem_string);
         return pm::detector_error_model_to_user_graph(dem);
     });
-
+    m.def("detector_error_model_file_to_matching_graph", [](const char *dem_path) {
+        FILE *file = fopen(dem_path, "r");
+        if (file == nullptr) {
+            std::stringstream msg;
+            msg << "Failed to open '" << dem_path << "'";
+            throw std::invalid_argument(msg.str());
+        }
+        auto dem = stim::DetectorErrorModel::from_file(file);
+        return pm::detector_error_model_to_user_graph(dem);
+    });
+    m.def("stim_circuit_file_to_matching_graph", [](const char *stim_circuit_path) {
+        FILE *file = fopen(stim_circuit_path, "r");
+        if (file == nullptr) {
+            std::stringstream msg;
+            msg << "Failed to open '" << stim_circuit_path << "'";
+            throw std::invalid_argument(msg.str());
+        }
+        auto circuit = stim::Circuit::from_file(file);
+        auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, true, true, false, 0, false, false);
+        return pm::detector_error_model_to_user_graph(dem);
+    });
     m.def(
         "sparse_column_check_matrix_to_matching_graph",
         [](const py::object &check_matrix,

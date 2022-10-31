@@ -1154,16 +1154,118 @@ class Matching:
 
         Parameters
         ----------
-        model
+        model : stim.DetectorErrorModel
+            A stim DetectorErrorModel, with all error mechanisms either graphlike, or decomposed into graphlike
+            error mechanisms
 
         Returns
         -------
         pymatching.Matching
-            A `pymatching.Matching` object representing the edge-like fault mechanisms in `model`
+            A `pymatching.Matching` object representing the graphlike error mechanisms in `model`
 
+        Examples
+        --------
+        >>> import stim
+        >>> import pymatching
+        >>> circuit = stim.Circuit.generated("surface_code:rotated_memory_x",
+        ...                                  distance=5,
+        ...                                  rounds=5,
+        ...                                  after_clifford_depolarization=0.005)
+        >>> model = circuit.detector_error_model(decompose_errors=True)
+        >>> matching = pymatching.Matching.from_detector_error_model(model)
+        >>> matching
+        <pymatching.Matching object with 120 detectors, 0 boundary nodes, and 502 edges>
         """
         m = Matching()
         m._load_from_detector_error_model(model)
+        return m
+
+    @staticmethod
+    def from_detector_error_model_file(dem_path: str) -> 'pymatching.Matching':
+        """
+        Construct a `pymatching.Matching` by loading from a stim DetectorErrorModel file path.
+
+        Parameters
+        ----------
+        dem_path : str
+            The path of the detector error model file
+
+        Returns
+        -------
+        pymatching.Matching
+            A `pymatching.Matching` object representing the graphlike error mechanisms in the stim DetectorErrorModel
+            in the file `dem_path`
+        """
+        m = Matching()
+        m._matching_graph = _cpp_pm.detector_error_model_file_to_matching_graph(dem_path)
+        return m
+
+    @staticmethod
+    def from_stim_circuit(circuit: 'stim.Circuit') -> 'pymatching.Matching':
+        """
+        Constructs a `pymatching.Matching` object by loading from a `stim.Circuit`
+
+        Parameters
+        ----------
+        circuit : stim.Circuit
+            A stim circuit containing error mechanisms that are all either graphlike, or decomposable into
+            graphlike error mechanisms
+
+        Returns
+        -------
+        pymatching.Matching
+            A `pymatching.Matching` object representing the graphlike error mechanisms in `circuit`, with any hyperedge
+            error mechanisms decomposed into graphlike error mechanisms. Parallel edges are merged using
+            `merge_strategy="independent"`.
+
+
+        Examples
+        --------
+        >>> import stim
+        >>> import pymatching
+        >>> circuit = stim.Circuit.generated("surface_code:rotated_memory_x",
+        ...                                  distance=5,
+        ...                                  rounds=5,
+        ...                                  after_clifford_depolarization=0.005)
+        >>> matching = pymatching.Matching.from_stim_circuit(circuit)
+        >>> matching
+        <pymatching.Matching object with 120 detectors, 0 boundary nodes, and 502 edges>
+        """
+        try:
+            import stim
+        except ImportError:  # pragma no cover
+            raise TypeError(
+                f"`circuit` must be a `stim.Circuit. Instead, got: {type(circuit)}.`"
+                "The 'stim' package also isn't installed and is required for this method. \n"
+                "To install stim using pip, run `pip install stim`."
+            )
+        if not isinstance(circuit, stim.Circuit):
+            raise TypeError(f"`circuit` must be a `stim.Circuit`. Instead, got {type(circuit)}")
+        m = Matching()
+        m._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(
+            str(circuit.detector_error_model(decompose_errors=True))
+        )
+        return m
+
+    @staticmethod
+    def from_stim_circuit_file(stim_circuit_path: str) -> 'pymatching.Matching':
+        """
+        Construct a `pymatching.Matching` by loading from a stim circuit file path.
+
+        Parameters
+        ----------
+        stim_circuit_path : str
+            The path of the stim circuit file
+
+        Returns
+        -------
+        pymatching.Matching
+            A `pymatching.Matching` object representing the graphlike error mechanisms in the stim circuit
+            in the file `stim_circuit_path`, with any hyperedge error mechanisms decomposed into graphlike error
+            mechanisms. Parallel edges are merged using `merge_strategy="independent"`.
+        """
+        m = Matching()
+        m._matching_graph = _cpp_pm.stim_circuit_file_to_matching_graph(stim_circuit_path)
         return m
 
     def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
