@@ -403,6 +403,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             throw std::invalid_argument(msg.str());
         }
         auto dem = stim::DetectorErrorModel::from_file(file);
+        fclose(file);
         return pm::detector_error_model_to_user_graph(dem);
     });
     m.def("stim_circuit_file_to_matching_graph", [](const char *stim_circuit_path) {
@@ -413,6 +414,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             throw std::invalid_argument(msg.str());
         }
         auto circuit = stim::Circuit::from_file(file);
+        fclose(file);
         auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, true, true, false, 0, false, false);
         return pm::detector_error_model_to_user_graph(dem);
     });
