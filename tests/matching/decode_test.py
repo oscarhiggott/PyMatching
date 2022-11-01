@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pathlib
 import numpy as np
 from scipy.sparse import csc_matrix
 import pytest
@@ -22,8 +21,7 @@ import os
 import pymatching
 from pymatching import Matching
 
-THIS_DIR = pathlib.Path(__file__).parent.resolve()
-DATA_DIR = os.path.join(pathlib.Path(THIS_DIR).parent.parent.absolute(), "data")
+from .config import DATA_DIR
 
 
 def repetition_code(n):
