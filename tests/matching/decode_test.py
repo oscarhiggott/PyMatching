@@ -202,12 +202,18 @@ def test_decode_batch_to_bitpacked_predictions():
     m = pymatching.Matching()
     m.add_edge(0, 1, fault_ids={0})
     m.add_edge(1, 2, fault_ids={10})
-    m.add_edge(2, 3, fault_ids={3})
-    m.add_edge(3, 4, fault_ids={20})
+    m.add_edge(2, 3, fault_ids={3, 5})
+    m.add_edge(3, 4, fault_ids={20, 16})
 
     predictions = m.decode_batch(np.array([[1, 0, 1, 0, 0], [0, 0, 1, 0, 1]], dtype=np.uint8),
                                  bit_packed_predictions=True)
-    assert np.array_equal(predictions, np.array([[1, 4, 0], [8, 0, 16]], dtype=np.uint8))
+    assert np.array_equal(predictions, np.array([[1, 4, 0], [40, 0, 17]], dtype=np.uint8))
+
+    predictions = m.decode_batch(np.array([[5], [20]], dtype=np.uint8), bit_packed_shots=True,
+                                 bit_packed_predictions=True)
+    assert np.array_equal(predictions, np.array([[1, 4, 0], [40, 0, 17]], dtype=np.uint8))
+    with pytest.raises(ValueError):
+        m.decode_batch(np.array([[]], dtype=np.uint8))
 
 
 def test_detection_event_too_large_raises_value_error():
