@@ -1,4 +1,4 @@
-# Copyright 2022 Oscar Higgott
+# Copyright 2022 PyMatching Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
 import pymatching
 
 import doctest
+import pytest
 
 
 def test_matching_docstrings():
+    pytest.importorskip("stim")
     doctest.testmod(pymatching.matching, raise_on_error=True)
 
 

@@ -1,3 +1,17 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
 
 #include <set>
@@ -441,13 +455,13 @@ void Mwpm::extract_paths_from_match_edges(
     const std::vector<CompressedEdge> &match_edges, uint8_t *obs_begin_ptr, total_weight_int &weight) {
     for (auto &edge : match_edges) {
         size_t loc_to_idx = edge.loc_to ? edge.loc_to - &flooder.graph.nodes[0] : SIZE_MAX;
-        search_flooder.iter_edges_on_shortest_path_from_middle(edge.loc_from - &flooder.graph.nodes[0], loc_to_idx,
-                                                               [&](const pm::SearchGraphEdge& e){
-           auto &obs = e.detector_node->neighbor_observable_indices[e.neighbor_index];
-           for (auto i : obs)
-               *(obs_begin_ptr + i) ^= 1;
-           weight += e.detector_node->neighbor_weights[e.neighbor_index];
-        });
+        search_flooder.iter_edges_on_shortest_path_from_middle(
+            edge.loc_from - &flooder.graph.nodes[0], loc_to_idx, [&](const pm::SearchGraphEdge &e) {
+                auto &obs = e.detector_node->neighbor_observable_indices[e.neighbor_index];
+                for (auto i : obs)
+                    *(obs_begin_ptr + i) ^= 1;
+                weight += e.detector_node->neighbor_weights[e.neighbor_index];
+            });
     }
 }
 
@@ -455,9 +469,9 @@ Mwpm::Mwpm() {
 }
 
 void Mwpm::reset() {
-    for (auto& n : flooder.graph.nodes)
+    for (auto &n : flooder.graph.nodes)
         n.reset();
-    for (auto& m : search_flooder.graph.nodes)
+    for (auto &m : search_flooder.graph.nodes)
         m.reset();
     flooder.queue.clear();
     node_arena.~Arena();

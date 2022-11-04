@@ -1,0 +1,26 @@
+version: 2
+
+build:
+  os: ubuntu-20.04
+  tools:
+    # For available versions, see:
+    # https://docs.readthedocs.io/en/stable/config-file/v2.html#build-tools-python
+    python: "3.9"  # Keep in sync with .github/workflows/checks.yml
+  apt_packages:
+    - gcc-10
+    - g++-10
+    - cmake
+
+sphinx:
+  configuration: docs/sphinx_docs/source/conf.py
+
+formats: all
+python:
+  install:
+    - requirements: docs/sphinx_docs/requirements.txt
+    - method: pip
+      path: .
+  system_packages: true
+
+submodules:
+  include: all

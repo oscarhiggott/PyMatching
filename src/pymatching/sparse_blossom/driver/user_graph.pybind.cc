@@ -1,3 +1,16 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include "pymatching/sparse_blossom/driver/user_graph.pybind.h"
 
@@ -162,23 +175,26 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         std::pair<py::array_t<std::uint8_t>, py::array_t<std::uint8_t>> res = {error_arr, syndrome_arr};
         return res;
     });
-    g.def("decode", [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
-        std::vector<uint64_t> detection_events_vec(
-            detection_events.data(), detection_events.data() + detection_events.size());
-        auto &mwpm = self.get_mwpm();
-        auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
-        pm::total_weight_int weight = 0;
-        pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight);
-        double rescaled_weight = (double)weight / mwpm.flooder.graph.normalising_constant;
+    g.def(
+        "decode",
+        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
+            std::vector<uint64_t> detection_events_vec(
+                detection_events.data(), detection_events.data() + detection_events.size());
+            auto &mwpm = self.get_mwpm();
+            auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
+            pm::total_weight_int weight = 0;
+            pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight);
+            double rescaled_weight = (double)weight / mwpm.flooder.graph.normalising_constant;
 
-        auto err_capsule = py::capsule(obs_crossed, [](void *x) {
-            delete reinterpret_cast<std::vector<uint8_t> *>(x);
-        });
-        py::array_t<uint8_t> obs_crossed_arr =
-            py::array_t<uint8_t>(obs_crossed->size(), obs_crossed->data(), err_capsule);
-        std::pair<py::array_t<std::uint8_t>, double> res = {obs_crossed_arr, rescaled_weight};
-        return res;
-    });
+            auto err_capsule = py::capsule(obs_crossed, [](void *x) {
+                delete reinterpret_cast<std::vector<uint8_t> *>(x);
+            });
+            py::array_t<uint8_t> obs_crossed_arr =
+                py::array_t<uint8_t>(obs_crossed->size(), obs_crossed->data(), err_capsule);
+            std::pair<py::array_t<std::uint8_t>, double> res = {obs_crossed_arr, rescaled_weight};
+            return res;
+        },
+        "detection_events"_a);
     g.def(
         "decode_to_matched_detection_events_array",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
@@ -186,7 +202,6 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
             pm::decode_detection_events_to_match_edges(mwpm, detection_events_vec);
-            //        auto match_edges = new std::vector<int64_t>(2 * mwpm.flooder.match_edges.size());
             py::ssize_t num_edges = (py::ssize_t)(mwpm.flooder.match_edges.size());
             py::array_t<int64_t> match_edges = py::array_t<int64_t>(num_edges * 2);
             py::buffer_info buff = match_edges.request();
@@ -203,9 +218,94 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 }
             }
             // Reshape the array
-            match_edges.resize({(int)num_edges, 2});
+            match_edges.resize({(py::ssize_t)num_edges, (py::ssize_t)2});
             return match_edges;
-        });
+        },
+        "detection_events"_a);
+    g.def(
+        "decode_batch",
+        [](pm::UserGraph &self, const py::array_t<uint8_t> &shots, bool bit_packed_shots, bool bit_packed_predictions) {
+            if (shots.ndim() != 2)
+                throw std::invalid_argument(
+                    "`shots` array should have two dimensions, not " + std::to_string(shots.ndim()));
+            if (bit_packed_shots) {
+                size_t cols_min = (self.get_num_detectors() + 7) >> 3;
+                size_t cols_max = (self.get_num_nodes() + 7) >> 3;
+                if (shots.shape(1) < cols_min || shots.shape(1) > cols_max)
+                    throw std::invalid_argument(
+                        "bit_packed `shots` array should have at least " + std::to_string(cols_min) +
+                        " columns (ceil(num_detectors/8)) and at most " + std::to_string(cols_max) +
+                        " columns, (ceil(num_nodes/8)). Instead it has " + std::to_string(shots.shape(1)) +
+                        " columns.");
+            } else {
+                if (shots.shape(1) < self.get_num_detectors() || shots.shape(1) > self.get_num_nodes())
+                    throw std::invalid_argument(
+                        "`shots` array should have at least " + std::to_string(self.get_num_detectors()) +
+                        " columns (the number of "
+                        "detectors), and no more than " +
+                        std::to_string(self.get_num_nodes()) + " columns (the number of nodes), but instead has " +
+                        std::to_string(shots.shape(1)) + " columns");
+            }
+
+            // Reserve all-zeros predictions array
+            size_t num_observable_bytes =
+                bit_packed_predictions ? (self.get_num_observables() + 7) >> 3 : self.get_num_observables();
+            py::array_t<uint8_t> predictions = py::array_t<uint8_t>(shots.shape(0) * num_observable_bytes);
+            predictions[py::make_tuple(py::ellipsis())] = 0;  // Initialise to 0
+            py::buffer_info buff = predictions.request();
+            uint8_t *predictions_ptr = (uint8_t *)buff.ptr;
+
+            // Reserve weights array
+            py::array_t<double> weights = py::array_t<double>(shots.shape(0));
+            auto ws = weights.mutable_unchecked<1>();
+
+            auto &mwpm = self.get_mwpm();
+            std::vector<uint64_t> detection_events;
+
+            // Vector used to extract predicted observables when decoding if bit_packed_predictions is true
+            std::vector<uint8_t> temp_predictions;
+            if (bit_packed_predictions)
+                temp_predictions.resize(self.get_num_observables());
+
+            // Iterate over the shots, getting detection events and decoding
+            auto s = shots.unchecked<2>();
+            for (py::ssize_t i = 0; i < s.shape(0); i++) {
+                if (bit_packed_shots) {
+                    for (py::ssize_t j = 0; j < s.shape(1); j++) {
+                        size_t bit_offset = j << 3;
+                        for (size_t r = 0; r < 8; r++) {
+                            if (s(i, j) & (1 << r))
+                                detection_events.push_back(bit_offset + r);
+                        }
+                    }
+                } else {
+                    for (py::ssize_t j = 0; j < s.shape(1); j++) {
+                        if (s(i, j))
+                            detection_events.push_back(j);
+                    }
+                }
+                pm::total_weight_int solution_weight = 0;
+                if (bit_packed_predictions) {
+                    std::fill(temp_predictions.begin(), temp_predictions.end(), 0);
+                    pm::decode_detection_events(mwpm, detection_events, temp_predictions.data(), solution_weight);
+                    // bitpack the predictions
+                    for (size_t k = 0; k < temp_predictions.size(); k++) {
+                        size_t arr_idx = k >> 3;
+                        *(predictions_ptr + (num_observable_bytes * i) + arr_idx) ^= (temp_predictions[k] << (k % 8));
+                    }
+                } else {
+                    pm::decode_detection_events(
+                        mwpm, detection_events, predictions_ptr + (num_observable_bytes * i), solution_weight);
+                }
+                ws(i) = (double)solution_weight / mwpm.flooder.graph.normalising_constant;
+                detection_events.clear();
+            }
+            predictions.resize({(py::ssize_t)shots.shape(0), (py::ssize_t)num_observable_bytes});
+            return py::make_tuple(predictions, weights);
+        },
+        "shots"_a,
+        "bit_packed_shots"_a = false,
+        "bit_packed_predictions"_a = false);
     g.def(
         "decode_to_matched_detection_events_dict",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
@@ -227,7 +327,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 }
             }
             return match_dict;
-        });
+        },
+        "detection_events"_a);
     g.def("get_edges", [](const pm::UserGraph &self) {
         py::list edges;
 
@@ -262,9 +363,12 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 throw std::invalid_argument(
                     "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) + ") not in graph.");
             auto n = self.nodes[node1].neighbors[idx];
-            std::set<size_t> observables_set(n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
+            std::set<size_t> observables_set(
+                n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n.edge_it->weight, "error_probability"_a = n.edge_it->error_probability);
+                "fault_ids"_a = observables_set,
+                "weight"_a = n.edge_it->weight,
+                "error_probability"_a = n.edge_it->error_probability);
             return attrs;
         },
         "node1"_a,
@@ -278,9 +382,12 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             if (idx == SIZE_MAX)
                 throw std::invalid_argument("Boundary edge (" + std::to_string(node) + ",) not in graph.");
             auto n = self.nodes[node].neighbors[idx];
-            std::set<size_t> observables_set(n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
+            std::set<size_t> observables_set(
+                n.edge_it->observable_indices.begin(), n.edge_it->observable_indices.end());
             py::dict attrs(
-                "fault_ids"_a = observables_set, "weight"_a = n.edge_it->weight, "error_probability"_a = n.edge_it->error_probability);
+                "fault_ids"_a = observables_set,
+                "weight"_a = n.edge_it->weight,
+                "error_probability"_a = n.edge_it->error_probability);
             return attrs;
         },
         "node"_a);
@@ -288,7 +395,29 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         auto dem = stim::DetectorErrorModel(dem_string);
         return pm::detector_error_model_to_user_graph(dem);
     });
-
+    m.def("detector_error_model_file_to_matching_graph", [](const char *dem_path) {
+        FILE *file = fopen(dem_path, "r");
+        if (file == nullptr) {
+            std::stringstream msg;
+            msg << "Failed to open '" << dem_path << "'";
+            throw std::invalid_argument(msg.str());
+        }
+        auto dem = stim::DetectorErrorModel::from_file(file);
+        fclose(file);
+        return pm::detector_error_model_to_user_graph(dem);
+    });
+    m.def("stim_circuit_file_to_matching_graph", [](const char *stim_circuit_path) {
+        FILE *file = fopen(stim_circuit_path, "r");
+        if (file == nullptr) {
+            std::stringstream msg;
+            msg << "Failed to open '" << stim_circuit_path << "'";
+            throw std::invalid_argument(msg.str());
+        }
+        auto circuit = stim::Circuit::from_file(file);
+        fclose(file);
+        auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, true, true, false, 0, false, false);
+        return pm::detector_error_model_to_user_graph(dem);
+    });
     m.def(
         "sparse_column_check_matrix_to_matching_graph",
         [](const py::object &check_matrix,
@@ -326,7 +455,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
 
             if (H.num_cols != F.num_cols)
                 throw std::invalid_argument(
-                    "`faults_matrix` array with shape (" + std::to_string(F.num_rows) + ", " + std::to_string(F.num_cols) +
+                    "`faults_matrix` array with shape (" + std::to_string(F.num_rows) + ", " +
+                    std::to_string(F.num_cols) +
                     ") must have the same number of columns as the check matrix, which has shape (" +
                     std::to_string(H.num_rows) + ", " + std::to_string(H.num_cols) + ").");
 

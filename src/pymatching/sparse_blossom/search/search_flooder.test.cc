@@ -1,3 +1,17 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "pymatching/sparse_blossom/search/search_flooder.h"
 
 #include "gtest/gtest.h"
@@ -68,7 +82,6 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
     flooder.reset();
 }
 
-
 TEST(SearchFlooder, RepCodeSourceToDestPath) {
     size_t num_nodes = 20;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
@@ -79,7 +92,7 @@ TEST(SearchFlooder, RepCodeSourceToDestPath) {
     size_t i_start = 10;
     for (size_t i_end = 14; i_end < 18; i_end++) {
         std::vector<pm::SearchGraphEdge> edges;
-        flooder.iter_edges_on_shortest_path_from_source(i_start, i_end, [&](const pm::SearchGraphEdge &edge) {
+        flooder.iter_edges_on_shortest_path_from_source(i_start, i_end, [&](const pm::SearchGraphEdge& edge) {
             edges.push_back(edge);
         });
 
@@ -87,7 +100,7 @@ TEST(SearchFlooder, RepCodeSourceToDestPath) {
         for (size_t i = 0; i < edges.size(); i++) {
             node_indices.push_back(edges[i].detector_node - &flooder.graph.nodes[0]);
             if (i + 1 < edges.size())
-                ASSERT_EQ(edges[i].detector_node->neighbors[edges[i].neighbor_index], edges[i+1].detector_node);
+                ASSERT_EQ(edges[i].detector_node->neighbors[edges[i].neighbor_index], edges[i + 1].detector_node);
         }
         std::vector<size_t> expected_node_indices;
         for (size_t i = i_start; i < i_end; i++)
@@ -96,7 +109,7 @@ TEST(SearchFlooder, RepCodeSourceToDestPath) {
     }
 
     std::vector<pm::SearchGraphEdge> edges;
-    flooder.iter_edges_on_shortest_path_from_source(4, SIZE_MAX, [&](const pm::SearchGraphEdge &edge) {
+    flooder.iter_edges_on_shortest_path_from_source(4, SIZE_MAX, [&](const pm::SearchGraphEdge& edge) {
         edges.push_back(edge);
     });
     std::vector<size_t> node_indices;

@@ -128,14 +128,21 @@ class CMakeBuild(build_ext):
         subprocess.check_call(["cmake", "--build", ".", "--target", "_cpp_pymatching"] + build_args, cwd=build_temp)
 
 
-# The information here can also be placed in setup.cfg - better separation of
-# logic and declaration, and simpler if you include description/version in a file.
+version = {}
+with open("src/pymatching/_version.py") as fp:
+    exec(fp.read(), version)
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name="PyMatching",
-    version="2.0.0",
+    version=version['__version__'],
     author="Oscar Higgott and Craig Gidney",
+    url="https://github.com/oscarhiggott/PyMatching",
     description="A package for decoding quantum error correcting codes using minimum-weight perfect matching.",
-    long_description="",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     ext_modules=[CMakeExtension("pymatching._cpp_pymatching")],
     packages=find_packages("src"),
     package_dir={'': 'src'},

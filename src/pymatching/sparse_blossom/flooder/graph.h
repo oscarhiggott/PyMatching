@@ -1,3 +1,17 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef PYMATCHING2_GRAPH_H
 #define PYMATCHING2_GRAPH_H
 
@@ -24,6 +38,11 @@ class MatchingGraph {
     std::set<size_t> negative_weight_observables_set;
     /// The sum of the negative edge weights. This number is negative, rather than the absolute value.
     pm::total_weight_int negative_weight_sum;
+    /// is_user_graph_boundary_node is only filled if MatchingGraph is constructed from a UserGraph
+    /// is_user_graph_boundary_node[i] is true if i is a boudary node in the UserGraph
+    /// This vector is used to check that a detection event is not added to a node marked as a boundary node
+    /// in the UserGraph (as such an event cannot be matched, and will raise an error).
+    std::vector<bool> is_user_graph_boundary_node;
     size_t num_nodes;
     size_t num_observables;
     /// This is the normalising constant that the edge weights were multiplied by when converting from floats to

@@ -1,4 +1,19 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "pymatching/sparse_blossom/driver/user_graph.h"
+#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
 #include <cmath>
 #include <gtest/gtest.h>
@@ -127,5 +142,27 @@ TEST(UserGraph, NodesAlongShortestPath) {
         graph.get_nodes_on_shortest_path_from_source(5, 3, nodes);
         std::vector<size_t> nodes_expected = {4, 3};
         ASSERT_EQ(nodes, nodes_expected);
+    }
+}
+
+TEST(UserGraph, DecodeUserGraphDetectionEventOnBoundaryNode) {
+    {
+        pm::UserGraph graph;
+        graph.add_or_merge_edge(0, 1, {0}, 1.0, -1);
+        graph.add_or_merge_edge(1, 2, {1}, 1.0, -1);
+        graph.set_boundary({2});
+        auto& mwpm = graph.get_mwpm();
+        pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+        pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight);
+    }
+
+    {
+        pm::UserGraph graph;
+        graph.add_or_merge_edge(0, 1, {0}, -1.0, -1);
+        graph.add_or_merge_edge(1, 2, {1}, 1.0, -1);
+        graph.set_boundary({2});
+        auto& mwpm = graph.get_mwpm();
+        pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+        pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight);
     }
 }

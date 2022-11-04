@@ -1,6 +1,6 @@
-data/DATA_ENV
+.coverage
+*.ipynb_checkpoints
 .idea
-build
 cmake-build*
 Makefile
 PyMatching2.cbp
@@ -22,3 +22,7 @@ __pycache__
 _skbuild
 *.so
 bazel-*
+docs/DOCS_ENV
+docs/sphinx_docs/build
+data/DATA_ENV
+build

@@ -1,4 +1,4 @@
-# Copyright 2020 Oscar Higgott
+# Copyright 2022 PyMatching Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -160,3 +160,31 @@ def test_qubit_id_accepted_via_retworkx():
         (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0})
     ]
     assert es == expected_edges
+
+
+def test_load_from_retworkx_raises_value_error_if_qubit_id_and_fault_ids_both_supplied():
+    with pytest.raises(ValueError):
+        g = rx.PyGraph()
+        g.add_nodes_from([{} for _ in range(3)])
+        g.add_edge(0, 1, dict(qubit_id=0, fault_ids=0))
+        g.add_edge(1, 2, dict(qubit_id=1, fault_ids=1))
+        m = Matching()
+        m.load_from_retworkx(g)
+
+
+def test_load_from_retworkx_type_errors_raised():
+    with pytest.raises(TypeError):
+        m = Matching()
+        m.load_from_retworkx("A")
+    with pytest.raises(TypeError):
+        g = rx.PyGraph()
+        g.add_nodes_from([{} for _ in range(2)])
+        g.add_edge(0, 1, dict(fault_ids={0, "a"}))
+        m = Matching()
+        m.load_from_retworkx(g)
+    with pytest.raises(TypeError):
+        g = rx.PyGraph()
+        g.add_nodes_from([{} for _ in range(2)])
+        g.add_edge(0, 1, dict(fault_ids=[[0], [2]]))
+        m = Matching()
+        m.load_from_retworkx(g)

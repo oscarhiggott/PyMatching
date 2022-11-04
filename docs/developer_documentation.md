@@ -145,3 +145,22 @@ Use `--only=prefix*` to only run benchmarks beginning with a prefix.
 ```bash
 pip install -e .
 ```
+
+# <a name="sphinx"></a>Build the Sphinx documentation
+
+First install the sphinx requirements:
+
+```bash
+pip install -r docs/requirements.txt
+```
+
+You will also need to install the latest version of pymatching, and you may also need to [install pandoc](https://pandoc.org/installing.html).
+
+Then, to build the html sphinx docs, run:
+```bash
+cd docs
+make html
+```
+
+and view `doc/build/html/index.html` in a browser.
+

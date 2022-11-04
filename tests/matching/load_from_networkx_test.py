@@ -1,4 +1,4 @@
-# Copyright 2022 Oscar Higgott
+# Copyright 2022 PyMatching Contributors
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ from pymatching._cpp_pymatching import MatchingGraph
 def test_bad_fault_ids_raises_value_error():
     g = nx.Graph()
     g.add_edge(0, 1, fault_ids='test')
-    with pytest.raises(ValueError):
-        m = Matching(g)
+    with pytest.raises(TypeError):
+        Matching(g)
     g = nx.Graph()
     g.add_edge(0, 1, fault_ids=[[1], [2]])
-    with pytest.raises(ValueError):
-        m = Matching(g)
+    with pytest.raises(TypeError):
+        Matching(g)
 
 
 def test_boundary_from_networkx():

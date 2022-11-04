@@ -1,3 +1,17 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
 pm::UserNode::UserNode() : is_boundary(false) {
@@ -244,6 +258,12 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
                 matching_graph.add_boundary_edge(u, weight, observables);
         });
     matching_graph.normalising_constant = normalising_constant;
+    if (boundary_nodes.size() > 0) {
+        matching_graph.is_user_graph_boundary_node.clear();
+        matching_graph.is_user_graph_boundary_node.resize(nodes.size(), false);
+        for (auto& i : boundary_nodes)
+            matching_graph.is_user_graph_boundary_node[i] = true;
+    }
     return matching_graph;
 }
 

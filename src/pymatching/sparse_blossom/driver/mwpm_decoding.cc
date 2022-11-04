@@ -1,3 +1,17 @@
+// Copyright 2022 PyMatching Contributors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
 pm::ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
@@ -57,8 +71,7 @@ pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model,
     pm::weight_int num_distinct_weights,
     bool ensure_search_flooder_included) {
-    auto weighted_graph =
-        pm::detector_error_model_to_weighted_graph(detector_error_model);
+    auto weighted_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
     return weighted_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
 }
 
@@ -72,8 +85,12 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
         // Just add detection events if graph has no negative weights
         for (auto& detection : detection_events) {
             if (detection >= mwpm.flooder.graph.nodes.size())
-                throw std::invalid_argument("Detection event index too large");
-            mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
+                throw std::invalid_argument("The detection event with index " + std::to_string(detection)
+                                            + " does not correspond to a node in the graph, which only has "
+                                            + std::to_string(mwpm.flooder.graph.nodes.size()) + " nodes.");
+            if (detection + 1 > mwpm.flooder.graph.is_user_graph_boundary_node.size() ||
+                !mwpm.flooder.graph.is_user_graph_boundary_node[detection])
+                mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
         }
 
     } else {
@@ -89,7 +106,9 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
                     "Detection event index `" + std::to_string(detection) +
                     "` is larger than any detector node index in the graph.");
             if (!mwpm.flooder.graph.nodes[detection].radius_of_arrival) {
-                mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
+                if (detection + 1 > mwpm.flooder.graph.is_user_graph_boundary_node.size() ||
+                    !mwpm.flooder.graph.is_user_graph_boundary_node[detection])
+                    mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
             } else {
                 // Unmark node
                 mwpm.flooder.graph.nodes[detection].radius_of_arrival = 0;

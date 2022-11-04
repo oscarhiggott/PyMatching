@@ -13,5 +13,5 @@ def test_add_noise_without_error_probabilities_returns_none():
 
 def test_rand_float():
     N = 1000
-    s = sum(rand_float(0.,1.) for i in range(N))
+    s = sum(rand_float(0., 1.) for i in range(N))
     assert 430 < s < 570
