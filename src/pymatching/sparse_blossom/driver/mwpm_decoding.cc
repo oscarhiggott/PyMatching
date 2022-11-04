@@ -219,10 +219,7 @@ void pm::decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vecto
 
 void pm::decode_detection_events_to_edges(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges) {
-    // TODO: This method does not yet work! The issue is that the MARKER is being XORed into the edge
-    // weights while they are still needed for Dijkstra. Need to either mask the weights during the search, or
-    // leave markers on the edges via some other method. Also: need to be careful handling the case where an edge
-    // appears in two separate Dijkstra searchers.
+    // TODO: Need to be careful handling the case where an edge appears in two separate Dijkstra searches.
     if (mwpm.flooder.graph.nodes.size() != mwpm.search_flooder.graph.nodes.size()) {
         throw std::invalid_argument(
             "Mwpm object does not contain search flooder, which is required to decode to edges.");
@@ -233,18 +230,19 @@ void pm::decode_detection_events_to_edges(
     if (!mwpm.flooder.negative_weight_detection_events.empty())
         shatter_blossoms_for_all_detection_events_and_extract_match_edges(
             mwpm, mwpm.flooder.negative_weight_detection_events);
-    // Mark edges with negative weights as seen. The last bit of the edge weights is never used.
+    // Mark edges with negative weights as seen.
+    uint8_t SEEN = 1;
     for (const auto& neg_edge : mwpm.search_flooder.graph.negative_weight_edges) {
-        neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] ^= pm::MARKER;
+        neg_edge.detector_node->neighbor_markers[neg_edge.neighbor_index] ^= SEEN;
     }
-    // Then unseen edges to the solution on the shortest path between the matched detection events.
+    // Then add unseen edges to the solution on the shortest path between the matched detection events.
     // When an edge is encountered that has already been marked as seen, mark it as unseen.
     for (const auto& match_edge : mwpm.flooder.match_edges) {
         size_t node_from = match_edge.loc_from - &mwpm.flooder.graph.nodes[0];
         size_t node_to = match_edge.loc_to ? match_edge.loc_to - &mwpm.flooder.graph.nodes[0] : SIZE_MAX;
         mwpm.search_flooder.iter_edges_on_shortest_path_from_middle(node_from, node_to, [&](const SearchGraphEdge& e) {
-            if (e.detector_node->neighbor_weights[e.neighbor_index] & MARKER) {
-                e.detector_node->neighbor_weights[e.neighbor_index] ^= MARKER;
+            if (e.detector_node->neighbor_markers[e.neighbor_index] & SEEN) {
+                e.detector_node->neighbor_markers[e.neighbor_index] ^= SEEN;
             } else {
                 int64_t node1 = e.detector_node - &mwpm.search_flooder.graph.nodes[0];
                 auto node2_ptr = e.detector_node->neighbors[e.neighbor_index];
@@ -256,13 +254,13 @@ void pm::decode_detection_events_to_edges(
     }
     // Then add any negative weight edges that are still marked as seen, and mark all edges as unseen.
     for (const auto& neg_edge : mwpm.search_flooder.graph.negative_weight_edges) {
-        if (neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] & MARKER) {
+        if (neg_edge.detector_node->neighbor_markers[neg_edge.neighbor_index] & SEEN) {
             int64_t node1 = neg_edge.detector_node - &mwpm.search_flooder.graph.nodes[0];
             auto node2_ptr = neg_edge.detector_node->neighbors[neg_edge.neighbor_index];
             int64_t node2 = node2_ptr ? node2_ptr - &mwpm.search_flooder.graph.nodes[0] : -1;
             edges.push_back(node1);
             edges.push_back(node2);
-            neg_edge.detector_node->neighbor_weights[neg_edge.neighbor_index] ^= MARKER;
+            neg_edge.detector_node->neighbor_markers[neg_edge.neighbor_index] ^= SEEN;
         }
     }
 }

@@ -19,8 +19,6 @@
 
 namespace pm {
 
-const pm::weight_int MARKER = 1 << (sizeof(pm::weight_int) * 8 - 1);
-const pm::weight_int NOT_MARKER = ~MARKER;
 
 class SearchDetectorNode {
    public:
@@ -44,7 +42,8 @@ class SearchDetectorNode {
     std::vector<SearchDetectorNode *> neighbors;  /// The node's neighbors.
     std::vector<weight_int> neighbor_weights;     /// Distance crossed by the edge to each neighbor.
     std::vector<std::vector<size_t>>
-        neighbor_observable_indices;  /// Indices of observables crossed by the edge to each neighbor.
+        neighbor_observable_indices;        /// Indices of observables crossed by the edge to each neighbor.
+    std::vector<uint8_t> neighbor_markers;  /// Used to mark edges as "seen" when decoding to an edge list.
 
     size_t index_of_neighbor(SearchDetectorNode *target) const;
 

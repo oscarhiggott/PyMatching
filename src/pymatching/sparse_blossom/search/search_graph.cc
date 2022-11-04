@@ -49,10 +49,12 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, con
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observable_indices.push_back(observables);
+    nodes[u].neighbor_markers.push_back(0);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observable_indices.push_back(observables);
+    nodes[v].neighbor_markers.push_back(0);
 }
 
 void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t> &observables) {
@@ -71,4 +73,5 @@ void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, cons
     nodes[u].neighbors.insert(nodes[u].neighbors.begin(), 1, nullptr);
     nodes[u].neighbor_weights.insert(nodes[u].neighbor_weights.begin(), 1, std::abs(weight));
     nodes[u].neighbor_observable_indices.insert(nodes[u].neighbor_observable_indices.begin(), 1, observables);
+    nodes[u].neighbor_markers.push_back(0);
 }
