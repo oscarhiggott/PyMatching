@@ -192,6 +192,55 @@ TEST(MwpmDecoding, DecodeToMatchEdges) {
     }
 }
 
+std::vector<uint64_t> get_syndrome_from_edges(const std::vector<int64_t>& edges) {
+    std::set<int64_t> syndrome;
+    for (size_t i = 0; i < edges.size() / 2; i++) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+
+        auto u_it = syndrome.find(u);
+        if (u_it == syndrome.end()) {
+            syndrome.insert(u);
+        } else {
+            syndrome.erase(u_it);
+        }
+
+        if (v != -1) {
+            auto v_it = syndrome.find(v);
+            if (v_it == syndrome.end()) {
+                syndrome.insert(v);
+            } else {
+                syndrome.erase(v_it);
+            }
+        }
+    }
+    std::vector<uint64_t> sorted_syndrome;
+    for (auto& s : syndrome)
+        sorted_syndrome.push_back(s);
+    return sorted_syndrome;
+}
+
+uint64_t get_observables_from_edges(const std::vector<int64_t>& edges, pm::Mwpm& mwpm) {
+    uint64_t obs_mask = 0;
+    pm::total_weight_int tot_weight = 0;
+    for (size_t i = 0; i < edges.size() / 2; i++) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+
+        auto& u_node = mwpm.search_flooder.graph.nodes[u];
+        size_t idx = SIZE_MAX;
+        if (v == -1) {
+            idx = 0;
+        } else {
+            auto v_ptr = &mwpm.search_flooder.graph.nodes[v];
+            idx = u_node.index_of_neighbor(v_ptr);
+        }
+        for (auto& obs : u_node.neighbor_observable_indices[idx])
+            obs_mask ^= 1 << obs;
+    }
+    return obs_mask;
+}
+
 TEST(MwpmDecoding, DecodeToEdges) {
     DecodingTestCase test_case;
     for (int q : {0, 1}) {
@@ -218,21 +267,30 @@ TEST(MwpmDecoding, DecodeToEdges) {
             for (size_t i = 0; i < solution_edges.size() / 2; i++) {
                 int64_t u = solution_edges[2 * i];
                 int64_t v = solution_edges[2 * i + 1];
-                auto& u_node = mwpm.flooder.graph.nodes[u];
+                auto& u_node = mwpm.search_flooder.graph.nodes[u];
                 size_t idx = SIZE_MAX;
                 if (v == -1) {
                     idx = 0;
                 } else {
-                    auto v_ptr = &mwpm.flooder.graph.nodes[v];
+                    auto v_ptr = &mwpm.search_flooder.graph.nodes[v];
                     idx = u_node.index_of_neighbor(v_ptr);
                 }
-                // In this case, we know all edge weights are positive. Just add absolute weight.
-                tot_weight += u_node.neighbor_weights[idx];
-                obs_mask ^= u_node.neighbor_observables[idx];
+                if (u_node.neighbor_markers[idx] & pm::WEIGHT_SIGN) {
+                    tot_weight -= u_node.neighbor_weights[idx];
+                } else {
+                    tot_weight += u_node.neighbor_weights[idx];
+                }
+                for (auto& obs : u_node.neighbor_observable_indices[idx])
+                    obs_mask ^= 1 << obs;
             }
+
+            auto sorted_sol_synd = get_syndrome_from_edges(solution_edges);
+            ASSERT_EQ(sorted_sol_synd, sparse_shot.hits);
+
             // Observable masks do not need to match exactly due to degeneracy, but they do for this dataset
             ASSERT_EQ(obs_mask, test_case.expected_obs_masks[num_shots]);
-//            EXPECT_EQ(tot_weight, test_case.expected_weights[num_shots]);
+            EXPECT_EQ(tot_weight, test_case.expected_weights[num_shots]);
+
             sparse_shot.clear();
             num_shots++;
         }
@@ -366,6 +424,9 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
                     expected_obs_mask ^= (pm::obs_int)1 << i;
             }
             ASSERT_EQ(res2.obs_mask, expected_obs_mask);
+        } else {
+            std::vector<int64_t> edges;
+            pm::decode_detection_events_to_edges(mwpm, {0, 1, 2, 5, 6, 7}, edges);
         }
     }
 }
@@ -399,6 +460,41 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStim) {
         num_shots++;
         std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
         res.weight = 0;
+    }
+    ASSERT_TRUE(num_mistakes == 102);
+}
+
+TEST(MwpmDecoding, NegativeEdgeWeightFromStimDecodeToEdges) {
+    auto shots_in = std::fopen(find_test_data_file("negative_weight_circuit_1000.b8").c_str(), "r");
+    auto dem_file = std::fopen(find_test_data_file("negative_weight_circuit.dem").c_str(), "r");
+
+    assert(shots_in);
+    assert(dem_file);
+    stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
+    fclose(dem_file);
+    size_t num_distinct_weights = 1000;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights, true);
+    auto reader = stim::MeasureRecordReader::make(
+        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+
+    stim::SparseShot sparse_shot;
+    size_t num_mistakes = 0;
+    size_t num_shots = 0;
+    size_t max_shots = 1000;
+    std::vector<int64_t> edges;
+    while (reader->start_and_read_entire_record(sparse_shot)) {
+        if (num_shots > max_shots)
+            break;
+        edges.clear();
+        pm::decode_detection_events_to_edges(mwpm, sparse_shot.hits, edges);
+        auto syndrome = get_syndrome_from_edges(edges);
+        auto obs = get_observables_from_edges(edges, mwpm);
+        ASSERT_EQ(syndrome, sparse_shot.hits);
+        if (sparse_shot.obs_mask != obs) {
+            num_mistakes++;
+        }
+        sparse_shot.clear();
+        num_shots++;
     }
     ASSERT_TRUE(num_mistakes == 102);
 }

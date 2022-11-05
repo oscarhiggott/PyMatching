@@ -129,13 +129,13 @@ pm::SearchGraphEdge pm::SearchFlooder::do_look_at_node_event(pm::SearchDetectorN
 }
 
 pm::SearchGraphEdge pm::SearchFlooder::run_until_collision(pm::SearchDetectorNode *src, pm::SearchDetectorNode *dst) {
-    do_search_starting_at_empty_search_detector_node(src);
     if (!dst) {
         target_type = BOUNDARY;
     } else {
-        do_search_starting_at_empty_search_detector_node(dst);
         target_type = DETECTOR_NODE;
+        do_search_starting_at_empty_search_detector_node(dst);
     }
+    do_search_starting_at_empty_search_detector_node(src);
 
     while (!queue.empty()) {
         FloodCheckEvent ev = queue.dequeue();

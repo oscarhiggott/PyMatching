@@ -19,6 +19,8 @@
 
 namespace pm {
 
+const uint8_t FLIPPED = 1;
+const uint8_t WEIGHT_SIGN = 2;
 
 class SearchDetectorNode {
    public:
