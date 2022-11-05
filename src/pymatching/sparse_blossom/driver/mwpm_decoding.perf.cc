@@ -270,6 +270,32 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     }
 }
 
+BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.01, 8);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_millis(8.2)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
 BENCHMARK(Decode_surface_r21_d21_p1000) {
     size_t rounds = 21;
     auto data = generate_data(21, rounds, 0.001, 256);
@@ -329,13 +355,39 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(10)
+        .goal_millis(7.7)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * shots.size())
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
+}
+
+BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.001, 256);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_millis(8.4)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
 }
 
 BENCHMARK(Decode_surface_r21_d21_p10000) {
@@ -406,6 +458,32 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     }
 }
 
+BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.0001, 512);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_millis(1.4)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
 BENCHMARK(Decode_surface_r21_d21_p100000) {
     size_t rounds = 21;
     auto data = generate_data(21, rounds, 0.00001, 512);
@@ -472,4 +550,30 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
+}
+
+BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.00001, 512);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_micros(130)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * shots.size())
+        .show_rate("shots", (double)shots.size());
 }

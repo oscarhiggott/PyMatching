@@ -85,9 +85,10 @@ void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_
         // Just add detection events if graph has no negative weights
         for (auto& detection : detection_events) {
             if (detection >= mwpm.flooder.graph.nodes.size())
-                throw std::invalid_argument("The detection event with index " + std::to_string(detection)
-                                            + " does not correspond to a node in the graph, which only has "
-                                            + std::to_string(mwpm.flooder.graph.nodes.size()) + " nodes.");
+                throw std::invalid_argument(
+                    "The detection event with index " + std::to_string(detection) +
+                    " does not correspond to a node in the graph, which only has " +
+                    std::to_string(mwpm.flooder.graph.nodes.size()) + " nodes.");
             if (detection + 1 > mwpm.flooder.graph.is_user_graph_boundary_node.size() ||
                 !mwpm.flooder.graph.is_user_graph_boundary_node[detection])
                 mwpm.create_detection_event(&mwpm.flooder.graph.nodes[detection]);
@@ -215,4 +216,73 @@ void pm::decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vecto
     process_timeline_until_completion(mwpm, detection_events);
     mwpm.flooder.match_edges.clear();
     shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
+}
+
+void flip_edge(const pm::SearchGraphEdge& edge) {
+    edge.detector_node->neighbor_markers[edge.neighbor_index] ^= pm::FLIPPED;
+    auto neighbor = edge.detector_node->neighbors[edge.neighbor_index];
+    if (neighbor) {
+        auto idx_from_neighbor = neighbor->index_of_neighbor(edge.detector_node);
+        neighbor->neighbor_markers[idx_from_neighbor] ^= pm::FLIPPED;
+    }
+}
+
+void pm::decode_detection_events_to_edges(
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges) {
+    if (mwpm.flooder.graph.nodes.size() != mwpm.search_flooder.graph.nodes.size()) {
+        throw std::invalid_argument(
+            "Mwpm object does not contain search flooder, which is required to decode to edges.");
+    }
+    process_timeline_until_completion(mwpm, detection_events);
+    mwpm.flooder.match_edges.clear();
+    shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
+    if (!mwpm.flooder.negative_weight_detection_events.empty())
+        shatter_blossoms_for_all_detection_events_and_extract_match_edges(
+            mwpm, mwpm.flooder.negative_weight_detection_events);
+    // Flip edges with negative weights and add to edges vector.
+    for (const auto& neg_node_pair : mwpm.search_flooder.graph.negative_weight_edges) {
+        auto node1_ptr = &mwpm.search_flooder.graph.nodes[neg_node_pair.first];
+        auto node2_ptr =
+            neg_node_pair.second != SIZE_MAX ? &mwpm.search_flooder.graph.nodes[neg_node_pair.second] : nullptr;
+        SearchGraphEdge neg_edge = {node1_ptr, node1_ptr->index_of_neighbor(node2_ptr)};
+        flip_edge(neg_edge);
+        int64_t node1 = neg_edge.detector_node - &mwpm.search_flooder.graph.nodes[0];
+        int64_t node2 = node2_ptr ? node2_ptr - &mwpm.search_flooder.graph.nodes[0] : -1;
+        edges.push_back(node1);
+        edges.push_back(node2);
+    }
+    // Flip edges along a shortest path between matched detection events and add to edges vector
+    for (const auto& match_edge : mwpm.flooder.match_edges) {
+        size_t node_from = match_edge.loc_from - &mwpm.flooder.graph.nodes[0];
+        size_t node_to = match_edge.loc_to ? match_edge.loc_to - &mwpm.flooder.graph.nodes[0] : SIZE_MAX;
+        mwpm.search_flooder.iter_edges_on_shortest_path_from_middle(node_from, node_to, [&](const SearchGraphEdge& e) {
+            flip_edge(e);
+            int64_t node1 = e.detector_node - &mwpm.search_flooder.graph.nodes[0];
+            auto node2_ptr = e.detector_node->neighbors[e.neighbor_index];
+            int64_t node2 = node2_ptr ? node2_ptr - &mwpm.search_flooder.graph.nodes[0] : -1;
+            edges.push_back(node1);
+            edges.push_back(node2);
+        });
+    }
+    // Remove any edges in the edges vector that are no longer flipped. Also unflip edges.
+    for (size_t i = 0; i < edges.size() / 2;) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+        auto& u_node = mwpm.search_flooder.graph.nodes[u];
+        size_t idx;
+        if (v == -1) {
+            idx = 0;
+        } else {
+            auto v_ptr = &mwpm.search_flooder.graph.nodes[v];
+            idx = u_node.index_of_neighbor(v_ptr);
+        }
+        if (!(u_node.neighbor_markers[idx] & pm::FLIPPED)) {
+            edges[2 * i] = edges[edges.size() - 2];
+            edges[2 * i + 1] = edges[edges.size() - 1];
+            edges.resize(edges.size() - 2);
+        } else {
+            flip_edge({&u_node, idx});
+            i++;
+        }
+    }
 }

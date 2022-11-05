@@ -271,3 +271,12 @@ def test_syndrome_on_boundary_nodes():
     m.decode([0, 0, 0, 0, 1])
     m.decode([0, 0, 0, 1, 1])
     m.decode([1, 0, 1, 0, 1])
+
+
+def test_decode_to_edges():
+    m = Matching()
+    m.add_boundary_edge(0)
+    for i in range(10):
+        m.add_edge(i, i + 1)
+    edges = m.decode_to_edges_array([0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0])
+    assert np.array_equal(edges, np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64))
