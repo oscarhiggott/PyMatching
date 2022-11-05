@@ -196,6 +196,22 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         },
         "detection_events"_a);
     g.def(
+         "decode_to_edges_array",
+         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
+             auto &mwpm = self.get_mwpm_with_search_graph();
+             std::vector<uint64_t> detection_events_vec(
+                 detection_events.data(), detection_events.data() + detection_events.size());
+             auto edges = new std::vector<int64_t>();
+             edges->reserve(detection_events_vec.size() / 2);
+             pm::decode_detection_events_to_edges(mwpm, detection_events_vec, *edges);
+             auto num_edges = edges->size() / 2;
+             auto edges_arr = pm_pybind::vec_to_array<int64_t>(edges);
+             edges_arr.resize({(py::ssize_t)num_edges, (py::ssize_t)2});
+             return edges_arr;
+         },
+        "detection_events"_a
+         );
+    g.def(
         "decode_to_matched_detection_events_array",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
             auto &mwpm = self.get_mwpm();

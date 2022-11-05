@@ -71,6 +71,16 @@ void decode_detection_events(
 /// matched to each other via paths.
 void decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
 
+/// Decode detection events using a Mwpm object and vector of detection event indices.
+/// Returns the edges in the matching: these are pairs of *detectors* forming *edges* in the
+/// matching solution (rather than pairs of detection *events* matched via *paths* as returned
+/// instead by `decode_detection_events_to_match_edges`).
+void decode_detection_events_to_edges(
+    pm::Mwpm& mwpm,
+    const std::vector<uint64_t>& detection_events,
+    std::vector<int64_t>& edges
+    );
+
 }  // namespace pm
 
 #endif  // PYMATCHING2_MWPM_DECODING_H

@@ -22,7 +22,9 @@ pm::SearchGraph::SearchGraph(size_t num_nodes) : num_nodes(num_nodes) {
 }
 
 pm::SearchGraph::SearchGraph(pm::SearchGraph &&graph) noexcept
-    : nodes(std::move(graph.nodes)), num_nodes(graph.num_nodes) {
+    : nodes(std::move(graph.nodes)),
+      num_nodes(graph.num_nodes),
+      negative_weight_edges(std::move(graph.negative_weight_edges)) {
 }
 
 void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t> &observables) {
@@ -40,13 +42,21 @@ void pm::SearchGraph::add_edge(size_t u, size_t v, signed_weight_int weight, con
     if (u == v)
         return;
 
+    uint8_t weight_sign = 0;
+    if (weight < 0) {
+        negative_weight_edges.push_back({u, v});
+        weight_sign = pm::WEIGHT_SIGN;
+    }
+
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observable_indices.push_back(observables);
+    nodes[u].neighbor_markers.push_back(weight_sign);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observable_indices.push_back(observables);
+    nodes[v].neighbor_markers.push_back(weight_sign);
 }
 
 void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t> &observables) {
@@ -58,7 +68,14 @@ void pm::SearchGraph::add_boundary_edge(size_t u, signed_weight_int weight, cons
             std::to_string(num_nodes) + ")");
     }
 
+    uint8_t weight_sign = 0;
+    if (weight < 0) {
+        negative_weight_edges.push_back({u, SIZE_MAX});
+        weight_sign = pm::WEIGHT_SIGN;
+    }
+
     nodes[u].neighbors.insert(nodes[u].neighbors.begin(), 1, nullptr);
     nodes[u].neighbor_weights.insert(nodes[u].neighbor_weights.begin(), 1, std::abs(weight));
     nodes[u].neighbor_observable_indices.insert(nodes[u].neighbor_observable_indices.begin(), 1, observables);
+    nodes[u].neighbor_markers.insert(nodes[u].neighbor_markers.begin(), 1, weight_sign);
 }

@@ -25,8 +25,8 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
         g.add_edge(i, i + 1, 2, {i + 1});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[1], &g.nodes[20]);
-    ASSERT_EQ(collision_edge.detector_node, &g.nodes[10]);
-    ASSERT_EQ(collision_edge.neighbor_index, 1);
+    ASSERT_EQ(collision_edge.detector_node, &g.nodes[11]);
+    ASSERT_EQ(collision_edge.neighbor_index, 0);
     ASSERT_EQ(flooder.target_type, pm::DETECTOR_NODE);
     std::vector<uint8_t> observables(num_nodes, 0);
     pm::total_weight_int weight = 0;

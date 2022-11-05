@@ -422,13 +422,12 @@ class Matching:
         else:
             return predictions
 
-    def decode_to_matched_dets_array(self,
-                                     syndrome: Union[np.ndarray, List[int]]
-                                     ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    def decode_to_edges_array(self,
+                              syndrome: Union[np.ndarray, List[int]]
+                              ) -> np.ndarray:
         """
-        Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
-        matched detection events (or detection events matched to the boundary) as a 2D numpy array. Note that
-        (unlike `Matching.decode`), this method currently only supports non-negative edge weights.
+        Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the edges in the
+        solution, given as pairs of detector node indices in a numpy array.
 
         Parameters
         ----------
@@ -444,11 +443,12 @@ class Matching:
         Returns
         -------
         numpy.ndarray
-            An 2D array `pairs` giving the endpoints of the paths between detection events in the solution of the matching.
-            If there are `num_paths` paths then the shape of `pairs` is `num_paths.shape=(num_paths, 2)`, and path `i`
-            starts at detection event `pairs[i,0]` and ends at detection event `pairs[i,1]`. For a path `i` connecting
-            a detection event to the boundary (either a boundary node or the virtual boundary node), then `pairs[i,0]` is
-            is the index of the detection event, and `pairs[i,1]=-1` denotes the boundary.
+            A 2D array `edges` giving the edges in the matching solution as pairs of detector nodes (or as a detector
+            node and the boundary, for a boundary edge). If there are `num_predicted_edges` edges then the shape of
+            `edges` is `edges.shape=(num_predicted_edges, 2)`, and edge `i` is between detector node `edges[i, 0]`
+            and detector node `edges[i, 1]`. For a boundary edge `i` between a detector node `k` and the boundary
+            (either a boundary node or the virtual boundary node), then `pairs[i,0]` is `k`, and `pairs[i,1]=-1`
+            denotes the boundary (the boundary is always denoted by -1 and is always in the second column).
 
         Examples
         --------
@@ -459,10 +459,65 @@ class Matching:
         >>> m.add_edge(1, 2)
         >>> m.add_edge(2, 3)
         >>> m.add_edge(3, 4)
-        >>> matched_dets = m.decode_to_matched_dets_array([1, 0, 0, 1, 1])
+        >>> m.add_edge(4, 5)
+        >>> m.add_edge(5, 6)
+        >>> edges = m.decode_to_edges_array([0, 1, 0, 0, 1, 0, 1])
+        >>> print(edges)
+        [[ 0  1]
+         [ 0 -1]
+         [ 5  4]
+         [ 5  6]]
+        """
+        detection_events = self._syndrome_array_to_detection_events(syndrome)
+        return self._matching_graph.decode_to_edges_array(detection_events)
+
+    def decode_to_matched_dets_array(self,
+                                     syndrome: Union[np.ndarray, List[int]]
+                                     ) -> np.ndarray:
+        """
+        Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
+        matched detection events (or detection events matched to the boundary) as a 2D numpy array.
+        Each pair of matched detection events returned by this method corresponds to a shortest path
+        between the detection events in the solution to the problem: if you instead want the set of
+        all edges in the solution (pairs of detector nodes), use `Matching.decode_to_edges` instead.
+        Note that, unlike `Matching.decode`, `Matching.decode_batch` and `Matching.decode_to_edges_array`,
+        this method currently only supports non-negative edge weights.
+
+        Parameters
+        ----------
+        syndrome : numpy.ndarray
+            A binary syndrome vector to decode. The number of elements in
+            `syndrome` should equal the number of nodes in the matching graph. If
+            `syndrome` is a 1D array, then `syndrome[i]` is the syndrome at node `i` of
+            the matching graph. If `syndrome` is 2D then `syndrome[i,j]` is the difference
+            (modulo 2) between the (noisy) measurement of stabiliser `i` in time
+            step `j+1` and time step `j` (for the case where the matching graph is
+            constructed from a check matrix with `repetitions>1`).
+
+        Returns
+        -------
+        numpy.ndarray
+            An 2D array `pairs` giving the endpoints of the paths between detection events in the solution of the
+            matching. If there are `num_paths` paths then the shape of `pairs` is `pairs.shape=(num_paths, 2)`, and
+            path `i` starts at detection event `pairs[i,0]` and ends at detection event `pairs[i,1]`. For a path `i`
+            connecting a detection event to the boundary (either a boundary node or the virtual boundary node), then
+            `pairs[i,0]` is the index of the detection event, and `pairs[i,1]=-1` denotes the boundary.
+
+        Examples
+        --------
+        >>> import pymatching
+        >>> m = pymatching.Matching()
+        >>> m.add_boundary_edge(0)
+        >>> m.add_edge(0, 1)
+        >>> m.add_edge(1, 2)
+        >>> m.add_edge(2, 3)
+        >>> m.add_edge(3, 4)
+        >>> m.add_edge(4, 5)
+        >>> m.add_edge(5, 6)
+        >>> matched_dets = m.decode_to_matched_dets_array([0, 1, 0, 0, 1, 0, 1])
         >>> print(matched_dets)
-        [[ 0 -1]
-         [ 3  4]]
+        [[ 1 -1]
+         [ 4  6]]
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
         return self._matching_graph.decode_to_matched_detection_events_array(detection_events)

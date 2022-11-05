@@ -19,6 +19,9 @@
 
 namespace pm {
 
+const uint8_t FLIPPED = 1;
+const uint8_t WEIGHT_SIGN = 2;
+
 class SearchDetectorNode {
    public:
     SearchDetectorNode() : reached_from_source(nullptr), index_of_predecessor(SIZE_MAX), distance_from_source(0) {
@@ -41,7 +44,8 @@ class SearchDetectorNode {
     std::vector<SearchDetectorNode *> neighbors;  /// The node's neighbors.
     std::vector<weight_int> neighbor_weights;     /// Distance crossed by the edge to each neighbor.
     std::vector<std::vector<size_t>>
-        neighbor_observable_indices;  /// Indices of observables crossed by the edge to each neighbor.
+        neighbor_observable_indices;        /// Indices of observables crossed by the edge to each neighbor.
+    std::vector<uint8_t> neighbor_markers;  /// Used to mark edges as "seen" when decoding to an edge list.
 
     size_t index_of_neighbor(SearchDetectorNode *target) const;
 
