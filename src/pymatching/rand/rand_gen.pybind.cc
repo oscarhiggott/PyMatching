@@ -43,12 +43,14 @@ void pm_pybind::pybind_rand_gen_methods(py::module &m) {
     m.def("rand_float", &pm::rand_float, "from"_a, "to"_a, R"pbdoc(
         Generate a floating point number chosen uniformly at random
         over the interval between `from` and `to`
+
         Parameters
         ----------
         from: float
             Smallest float that can be drawn from the distribution
         to: float
             Largest float that can be drawn from the distribution
+
         Returns
         -------
         float

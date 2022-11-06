@@ -21,7 +21,7 @@ import os
 import pymatching
 from pymatching import Matching
 
-from .config import DATA_DIR
+from tests.config import DATA_DIR
 
 
 def repetition_code(n):

@@ -151,16 +151,16 @@ pip install -e .
 First install the sphinx requirements:
 
 ```bash
-pip install -r docs/requirements.txt
+pip install -r docs/sphinx_docs/requirements.txt
 ```
 
 You will also need to install the latest version of pymatching, and you may also need to [install pandoc](https://pandoc.org/installing.html).
 
 Then, to build the html sphinx docs, run:
 ```bash
-cd docs
+cd docs/sphinx_docs
 make html
 ```
 
-and view `doc/build/html/index.html` in a browser.
+and view `docs/sphinx_docs/build/html/index.html` in a browser.
 
