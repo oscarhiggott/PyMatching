@@ -149,6 +149,9 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},
+    entry_points={
+        'console_scripts': ['pymatching=pymatching._cli_argv:cli_argv'],
+    },
     python_requires=">=3.6",
     install_requires=['scipy', 'numpy', 'networkx', 'retworkx>=0.11.0', 'matplotlib']
 )
