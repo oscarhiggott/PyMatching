@@ -17,7 +17,7 @@ import os
 import pytest
 
 from pymatching.matching import Matching
-from .config import DATA_DIR
+from tests.config import DATA_DIR
 
 
 def test_load_from_stim_objects():
