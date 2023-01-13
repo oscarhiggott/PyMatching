@@ -570,10 +570,11 @@ class Matching:
 
     def draw(self) -> None:
         """Draw the matching graph using matplotlib
-        Draws the matching graph as a matplotlib graph. Stabiliser nodes are
+        Draws the matching graph as a matplotlib graph. Detector nodes are
         filled grey and boundary nodes are filled white. The line thickness of each
         edge is determined from its weight (with min and max thicknesses of 0.2 pts
         and 2 pts respectively).
+        Each node is labelled with its id/index, and each edge is labelled with its `fault_ids`.
         Note that you may need to call `plt.figure()` before and `plt.show()` after calling
         this function.
         """
