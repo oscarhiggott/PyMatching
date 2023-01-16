@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(stim
         GIT_REPOSITORY https://github.com/quantumlib/stim.git
-        GIT_TAG v1.10.0)
+        GIT_TAG bb161b78239795bbddc540dd05df6487991ad811)
 FetchContent_GetProperties(stim)
 if (NOT stim_POPULATED)
     FetchContent_Populate(stim)
