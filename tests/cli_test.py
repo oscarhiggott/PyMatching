@@ -19,7 +19,7 @@ def three_errors_data(in_fmt: str):
         "predict",
         "--dem", os.path.join(DATA_DIR, "three_errors.dem"),
         "--in", os.path.join(DATA_DIR, "three_errors." + in_fmt),
-        "--in_format", "dets",
+        "--in_format", in_fmt,
         "--out", out_fn,
         "--out_format", "dets",
     ]
