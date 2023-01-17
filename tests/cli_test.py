@@ -54,3 +54,19 @@ def test_cli_argv():
     with three_errors_data("dets") as args:
         with patch.object(sys, 'argv', ["cli"] + args):
             cli_argv()
+
+
+def test_load_surface_code_b8_cli():
+    dem_path = os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01.dem")
+    dets_b8_in_path = os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.b8")
+    out_fn = os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots_temp_predictions.b8")
+
+    pymatching._cpp_pymatching.main(command_line_args=[
+        "predict",
+        "--dem", dem_path,
+        "--in", dets_b8_in_path,
+        "--in_format", "b8",
+        "--out", out_fn,
+        "--out_format", "b8",
+    ])
+    os.remove(out_fn)
