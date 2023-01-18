@@ -24,12 +24,38 @@ for a given error rate `p` and code distance `distance` in `{5, 7, 9, 13, 17, 23
 From a stim circuit `circuit`, the corresponding `stim.DetectorErrorModel` used to configure the decoder can be 
 generated using `circuit.detector_error_model(decompose_errors=True)`.
 
-Then, using stim to generate some samples in b8 format (in this case with appended observables), the time per shot 
-in microseconds for pymatching 2 was measured (on an M1 Max processor) using the pymatching command line tool, where here 
-`$samples_fn` is the filename of the b8 samples file and `$dem_fn` is the filename of the detector error model:
 
-```shell
-pymatching count_mistakes --in $samples_fn --in_format b8 --dem $dem_fn --in_includes_appended_observables --time 2>&1 >/dev/null | sed -n -E 's/Decoding time per shot: (.+)us/\1/p' 
+Then, using stim to generate some samples, the time per shot 
+in microseconds for pymatching 2 was measured (on an M1 Max processor) by running `pymatching.Matching.decode_batch` on 
+at least 10000 shots. For example, the number of microseconds per shot can be measured using the following function:
+```python
+import time
+import stim
+import pymatching
+
+
+def time_surface_code_circuit(distance: int, p: float, num_shots: int = 10000) -> float:
+    circuit = stim.Circuit.generated(
+        "surface_code:rotated_memory_x",
+        distance=distance,
+        rounds=distance,
+        after_clifford_depolarization=p,
+        before_round_data_depolarization=p,
+        before_measure_flip_probability=p,
+        after_reset_flip_probability=p
+    )
+    dem = circuit.detector_error_model(decompose_errors=True)
+    matching = pymatching.Matching.from_detector_error_model(dem)
+    sampler = circuit.compile_detector_sampler()
+    shots, actual_observables = sampler.sample(shots=num_shots, separate_observables=True)
+    # Decode one shot first to ensure internal C++ representation of the matching graph is fully cached
+    matching.decode_batch(shots[0:1, :])
+    # Now time decoding the batch
+    t0 = time.time()
+    matching.decode_batch(shots)
+    t1 = time.time()
+    microseconds_per_shot = 1e6*(t1-t0)/num_shots
+    return microseconds_per_shot
 ```
 
 In the figure in each subdirectory, 
@@ -46,3 +72,12 @@ must be done by the decoder within the wider context of a fault-tolerant quantum
 where the basis of the logical measurement is not always known apriori (both X and Z logical operators must be 
 preserved) and the X and Z matching graphs can become connected (such as when implementing a logical S gate in the 
 surface code by [braiding twist defects](https://arxiv.org/abs/1609.04673)).
+
+If you've looked at the benchmarks in this repository before, you may have noticed that there have been two previous 
+versions of the data. In the first version, 
+only the X basis was decoded, which did not fully represent the work required to decode a surface code at scale, 
+as described above. In the second version, both bases were decoded (and since the problems became 2x bigger, 
+the time per round also doubled). However, for both the first and second versions, the timing data was collected by 
+decoding shot data from file using the pymatching command line interface. At low p (e.g. around 0.1%), it turned out 
+that almost half the time was spent reading the shot data from file. So in the current version the shot data is 
+decoded in a batch from memory (see above), with both bases still decoded.
