@@ -126,10 +126,24 @@ Now we can decode! We compare PyMatching's predictions of the logical observable
 with stim, in order to count the number of mistakes and estimate the logical error rate:
 
 ```python
+num_errors = 0
+for i in range(syndrome.shape[0]):
+    predicted_observables = matching.decode(syndrome[i, :])
+    num_errors += not np.array_equal(actual_observables[i, :], predicted_observables)
+
+print(num_errors)  # prints 8
+```
+
+As of PyMatching v2.1.0, you can use `matching.decode_batch` to decode a batch of shots instead.
+Since `matching.decode_batch` iterates over the shots in C++, it's faster than iterating over calls 
+to `matching.decode` in Python. The following cell is therefore a faster 
+equivalent to the cell above:
+
+```python
 predicted_observables = matching.decode_batch(syndrome)
 num_errors = np.sum(np.any(predicted_observables != actual_observables, axis=1))
 
-print(num_errors)  # prints 5
+print(num_errors)  # prints 8
 ```
 
 ### Loading from a parity check matrix
@@ -196,8 +210,9 @@ observables = csc_matrix([[1, 0, 0, 0, 0]])
 error_probability = 0.1
 weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
 matching = pymatching.Matching.from_check_matrix(H, weights=weights)
+num_shots = 1000
 num_errors = 0
-for i in range(1000):
+for i in range(num_shots):
     noise = (np.random.random(H.shape[1]) < error_probability).astype(np.uint8)
     syndrome = H@noise % 2
     prediction = matching.decode(syndrome)
@@ -225,8 +240,9 @@ observables = csc_matrix([[1, 0, 0, 0, 0]])
 error_probability = 0.1
 weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
 matching = pymatching.Matching.from_check_matrix(H, weights=weights, faults_matrix=observables)
+num_shots = 1000
 num_errors = 0
-for i in range(1000):
+for i in range(num_shots):
     noise = (np.random.random(H.shape[1]) < error_probability).astype(np.uint8)
     syndrome = H@noise % 2
     predicted_observables = matching.decode(syndrome)
@@ -235,6 +251,34 @@ for i in range(1000):
 
 print(num_errors)  # prints 6
 ```
+
+We'll make one more optimisation, which is to use `matching.decode_batch` to decode the batch of shots, rather than
+iterating over calls to `matching.decode` in Python:
+
+```python
+import numpy as np
+from scipy.sparse import csc_matrix
+import pymatching
+
+H = csc_matrix([[1, 1, 0, 0, 0],
+                [0, 1, 1, 0, 0],
+                [0, 0, 1, 1, 0],
+                [0, 0, 0, 1, 1]])
+observables = csc_matrix([[1, 0, 0, 0, 0]])
+error_probability = 0.1
+num_shots = 1000
+weights = np.ones(H.shape[1]) * np.log((1-error_probability)/error_probability)
+matching = pymatching.Matching.from_check_matrix(H, weights=weights, faults_matrix=observables)
+noise = (np.random.random((num_shots, H.shape[1])) < error_probability).astype(np.uint8)
+shots = (noise @ H.T) % 2
+actual_observables = (noise @ observables.T) % 2
+predicted_observables = matching.decode_batch(shots)
+num_errors = np.sum(np.any(predicted_observables != actual_observables, axis=1))
+print(num_errors)  # prints 6
+
+```
+
+
 
 Instead of using a check matrix, the Matching object can also be constructed using
 the [`Matching.add_edge`](https://pymatching.readthedocs.io/en/stable/api.html#pymatching.matching.Matching.add_edge)
