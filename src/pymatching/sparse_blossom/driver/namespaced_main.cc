@@ -40,8 +40,8 @@ int main_predict(int argc, const char **argv) {
         argc,
         argv);
 
-    FILE *shots_in = stim::find_open_file_argument("--in", stdin, "r", argc, argv);
-    FILE *predictions_out = stim::find_open_file_argument("--out", stdout, "w", argc, argv);
+    FILE *shots_in = stim::find_open_file_argument("--in", stdin, "rb", argc, argv);
+    FILE *predictions_out = stim::find_open_file_argument("--out", stdout, "wb", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem", nullptr, "r", argc, argv);
     stim::FileFormatData shots_in_format =
         stim::find_enum_argument("--in_format", "b8", stim::format_name_to_enum_map, argc, argv);
@@ -100,9 +100,9 @@ int main_count_mistakes(int argc, const char **argv) {
         argc,
         argv);
 
-    FILE *shots_in = stim::find_open_file_argument("--in", stdin, "r", argc, argv);
-    FILE *obs_in = stim::find_open_file_argument("--obs_in", stdin, "r", argc, argv);
-    FILE *stats_out = stim::find_open_file_argument("--out", stdout, "w", argc, argv);
+    FILE *shots_in = stim::find_open_file_argument("--in", stdin, "rb", argc, argv);
+    FILE *obs_in = stim::find_open_file_argument("--obs_in", stdin, "rb", argc, argv);
+    FILE *stats_out = stim::find_open_file_argument("--out", stdout, "wb", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem", nullptr, "r", argc, argv);
     stim::FileFormatData shots_in_format =
         stim::find_enum_argument("--in_format", "01", stim::format_name_to_enum_map, argc, argv);

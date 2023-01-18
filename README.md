@@ -41,9 +41,8 @@ The new version is also exact - unlike previous versions of PyMatching, no appro
 
 Our new implementation is **over 100x faster** than previous versions of PyMatching, and is 
 **over 100,000x faster** than NetworkX (benchmarked with surface code circuits). At 0.1% circuit-noise, PyMatching can 
-decode both X and Z basis measurements of surface code circuits up to distance 13 in under 1 microsecond per round 
-of syndrome extraction on a single core (or up to distance 19 if only X-basis measurements are processed - however 
-both X and Z basis measurements must be decoded at scale). Furthermore, the runtime is roughly linear in the number 
+decode both X and Z basis measurements of surface code circuits up to distance 17 in under 1 microsecond per round 
+of syndrome extraction on a single core. Furthermore, the runtime is roughly linear in the number 
 of nodes in the graph.
 
 The plot below compares the performance of PyMatching v2 with the previous 
@@ -127,12 +126,10 @@ Now we can decode! We compare PyMatching's predictions of the logical observable
 with stim, in order to count the number of mistakes and estimate the logical error rate:
 
 ```python
-num_errors = 0
-for i in range(syndrome.shape[0]):
-    predicted_observables = matching.decode(syndrome[i, :])
-    num_errors += not np.array_equal(actual_observables[i, :], predicted_observables)
+predicted_observables = matching.decode_batch(syndrome)
+num_errors = np.sum(np.any(predicted_observables != actual_observables, axis=1))
 
-print(num_errors)  # prints 8
+print(num_errors)  # prints 5
 ```
 
 ### Loading from a parity check matrix
