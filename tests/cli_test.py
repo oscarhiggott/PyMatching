@@ -68,5 +68,6 @@ def test_load_surface_code_b8_cli():
         "--in_format", "b8",
         "--out", out_fn,
         "--out_format", "b8",
+        "--in_includes_appended_observables"
     ])
     os.remove(out_fn)
