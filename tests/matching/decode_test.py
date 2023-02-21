@@ -21,8 +21,6 @@ import os
 import pymatching
 from pymatching import Matching
 
-from tests.config import DATA_DIR
-
 
 def repetition_code(n):
     row_ind, col_ind = zip(*((i, j) for i in range(n) for j in (i, (i + 1) % n)))
@@ -142,21 +140,17 @@ def get_full_data_path(filename: str) -> str:
     raise ValueError(f"No data directory found inside {os.getcwd()}")
 
 
-def test_surface_code_solution_weights():
+def test_surface_code_solution_weights(data_dir):
     stim = pytest.importorskip("stim")
-    dem = stim.DetectorErrorModel.from_file(os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01.dem"))
+    dem = stim.DetectorErrorModel.from_file(data_dir / "surface_code_rotated_memory_x_13_0.01.dem")
     m = Matching.from_detector_error_model(dem)
-    shots = stim.read_shot_data_file(path=os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.b8"),
+    shots = stim.read_shot_data_file(path=data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots.b8",
                                      format="b8", num_detectors=m.num_detectors,
                                      num_observables=m.num_fault_ids)
-    with open(os.path.join(
-            DATA_DIR,
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt"),
+    with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt",
             "r") as f:
         expected_weights = [float(w) for w in f.readlines()]
-    with open(os.path.join(
-            DATA_DIR,
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"),
+    with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt",
             "r") as f:
         expected_observables = [int(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
