@@ -187,23 +187,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Add requirements
-        run: python -m pip install --upgrade cmake>=3.12 ninja==1.10.2.4 pytest flake8 pytest-cov
-
-      - name: Build and install
-        run: pip install --verbose -e .
+      - name: Install tox
+        run: python -m pip install --upgrade tox>4.2
 
       - name: Test without stim
-        run: python -m pytest tests
-
-      - name: Add stim
-        run: python -m pip install stim~=1.10.dev1666411378
+        run: tox r -e pytest
 
       - name: Test with stim using coverage
-        run: python -m pytest tests --cov=./src/pymatching --cov-report term
+        run: tox r -e pytest-cov
 
       - name: flake8
-        run: flake8 ./src ./tests
+        run: tox r -e flake8
 
   build_docs:
     runs-on: ubuntu-latest
@@ -216,19 +210,15 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install tox
+        run: python -m pip install --upgrade tox>4.2
+
       - name: Install pandoc
-        run: |
-          sudo apt install pandoc
-          python -m pip install pandoc
-
-      - name: Add sphinx requirements
-        run: python -m pip install -r ./docs/sphinx_docs/requirements.txt
-
-      - name: Build and install PyMatching
-        run: pip install --verbose .
+        run: sudo apt install pandoc
 
       - name: Build docs
-        run: cd docs/sphinx_docs && make html
+        run: tox -e docs
+
   codecov:
     runs-on: ubuntu-latest
     steps:
@@ -238,12 +228,13 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Add requirements
-        run: python -m pip install --upgrade cmake>=3.12 ninja==1.10.2.4 pytest flake8 pytest-cov stim~=1.10.dev1666411378
-      - name: Build and install
-        run: pip install --verbose -e .
+
+      - name: Install tox
+        run: python -m pip install --upgrade tox>4.2
+
       - name: Run tests and collect coverage
-        run: pytest tests --cov=./src/pymatching --cov-report=xml
+        run: tox -e pytest-cov -- --cov-report=xml
+
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
 #  upload_all:
