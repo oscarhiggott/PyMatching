@@ -148,10 +148,10 @@ def test_surface_code_solution_weights(data_dir):
                                      format="b8", num_detectors=m.num_detectors,
                                      num_observables=m.num_fault_ids)
     with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt",
-            "r") as f:
+              "r", encoding="utf-8") as f:
         expected_weights = [float(w) for w in f.readlines()]
     with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt",
-            "r") as f:
+              "r", encoding="utf-8") as f:
         expected_observables = [int(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
     weights = []
@@ -160,8 +160,8 @@ def test_surface_code_solution_weights(data_dir):
         prediction, weight = m.decode(shots[i, 0:-m.num_fault_ids], return_weight=True)
         weights.append(weight)
         predicted_observables.append(prediction)
-    for i in range(len(weights)):
-        assert weights[i] == pytest.approx(expected_weights[i], rel=1e-8)
+    for weight, expected_weight in zip(weights, expected_weights):
+        assert weight == pytest.approx(expected_weight, rel=1e-8)
     assert predicted_observables == expected_observables[0:len(predicted_observables)]
 
     expected_observables_arr = np.zeros((shots.shape[0], 1), dtype=np.uint8)
