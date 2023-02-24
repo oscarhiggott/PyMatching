@@ -44,9 +44,9 @@ int main_predict(int argc, const char **argv) {
     FILE *predictions_out = stim::find_open_file_argument("--out", stdout, "wb", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem", nullptr, "r", argc, argv);
     stim::FileFormatData shots_in_format =
-        stim::find_enum_argument("--in_format", "b8", stim::format_name_to_enum_map, argc, argv);
+        stim::find_enum_argument("--in_format", "b8", stim::format_name_to_enum_map(), argc, argv);
     stim::FileFormatData predictions_out_format =
-        stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map, argc, argv);
+        stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
 
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
@@ -105,9 +105,9 @@ int main_count_mistakes(int argc, const char **argv) {
     FILE *stats_out = stim::find_open_file_argument("--out", stdout, "wb", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem", nullptr, "r", argc, argv);
     stim::FileFormatData shots_in_format =
-        stim::find_enum_argument("--in_format", "01", stim::format_name_to_enum_map, argc, argv);
+        stim::find_enum_argument("--in_format", "01", stim::format_name_to_enum_map(), argc, argv);
     stim::FileFormatData obs_in_format =
-        stim::find_enum_argument("--obs_in_format", "01", stim::format_name_to_enum_map, argc, argv);
+        stim::find_enum_argument("--obs_in_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
     bool time = stim::find_bool_argument("--time", argc, argv);
     if (!append_obs && obs_in == nullptr) {

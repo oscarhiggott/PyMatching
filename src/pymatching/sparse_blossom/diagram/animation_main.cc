@@ -45,7 +45,7 @@ int pm::main_animation(int argc, const char **argv) {
     FILE *dets_file = stim::find_open_file_argument("--dets_in", nullptr, "r", argc, argv);
     FILE *dem_file = stim::find_open_file_argument("--dem_in", nullptr, "r", argc, argv);
     stim::FileFormatData dets_in_format =
-        stim::find_enum_argument("--dets_in_format", nullptr, stim::format_name_to_enum_map, argc, argv);
+        stim::find_enum_argument("--dets_in_format", nullptr, stim::format_name_to_enum_map(), argc, argv);
     bool dets_includes_obs = stim::find_bool_argument("--dets_in_includes_appended_observables", argc, argv);
     bool quiet = stim::find_bool_argument("--quiet", argc, argv);
     size_t held_frames_per_event = stim::find_int64_argument("--held_frames_per_event", -1, 0, 1000000, argc, argv);
