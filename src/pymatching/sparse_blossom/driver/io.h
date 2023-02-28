@@ -114,7 +114,6 @@ inline double IntermediateWeightedGraph::iter_discretized_edges(
     const EdgeCallable &edge_func,
     const BoundaryEdgeCallable &boundary_edge_func) {
     double max_weight = max_abs_weight();
-    pm::MatchingGraph matching_graph(nodes.size(), num_observables);
     pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
     double normalising_constant = (double)max_half_edge_weight / max_weight;
     for (auto &node : nodes) {
