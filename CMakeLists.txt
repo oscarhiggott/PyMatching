@@ -5,18 +5,12 @@ set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ version selection")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SIMD_WIDTH 128)
-if (NOT(MSVC))
-    set(ARCH_OPT "-O3" "-mno-avx2")
-else ()
-    set(ARCH_OPT "-O2")
-    # https://stackoverflow.com/a/8591946 (RTC1 incompatible with O2 flag)
-    STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-endif ()
 
 include_directories(src)
 include_directories(include)
 
 add_subdirectory(src/blossom)
+add_subdirectory(apps/pymatching)
 
 include(FetchContent)
 FetchContent_Declare(
@@ -66,16 +60,7 @@ set(PYTHON_API_FILES
     src/pymatching/pymatching.pybind.cc
 )
 
-add_executable(pymatching src/main.cc)
-target_link_libraries(pymatching libblossom)
-
-target_compile_options(pymatching PRIVATE ${ARCH_OPT})
-if (NOT (MSVC))
-    target_link_options(pymatching PRIVATE -pthread ${ARCH_OPT})
-endif ()
-
 enable_testing()
-
 add_executable(pymatching_tests ${TEST_FILES})
 target_link_libraries(pymatching_tests libblossom)
 target_compile_options(pymatching_tests PRIVATE -fsanitize=address -g -fsanitize=undefined -fno-omit-frame-pointer -coverage)
