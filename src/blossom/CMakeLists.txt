@@ -1,3 +1,18 @@
+include(FetchContent)
+
+FetchContent_Declare(
+    stim
+    GIT_REPOSITORY https://github.com/quantumlib/stim.git
+    GIT_TAG 15f9dd72210d0a7fdc8602d3d03ebb7ce9271d9d
+)
+FetchContent_MakeAvailable(stim)
+
+if (NOT (MSVC))
+    target_compile_options(libstim PRIVATE -fno-strict-aliasing -fPIC ${ARCH_OPT})
+else ()
+    target_compile_options(libstim PRIVATE -fPIC ${ARCH_OPT})
+endif ()
+
 add_library(libblossom
     driver/namespaced_main.cc
     driver/io.cc

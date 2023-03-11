@@ -26,16 +26,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 
-FetchContent_Declare(stim
-        GIT_REPOSITORY https://github.com/quantumlib/stim.git
-        GIT_TAG 15f9dd72210d0a7fdc8602d3d03ebb7ce9271d9d)
-FetchContent_MakeAvailable(stim)
-if (NOT (MSVC))
-    target_compile_options(libstim PRIVATE -fno-strict-aliasing -fPIC ${ARCH_OPT})
-else ()
-    target_compile_options(libstim PRIVATE -fPIC ${ARCH_OPT})
-endif ()
-
 set(TEST_FILES
     src/blossom/driver/namespaced_main.test.cc
     src/blossom/driver/io.test.cc
