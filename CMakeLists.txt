@@ -1,13 +1,9 @@
 cmake_minimum_required(VERSION 3.4...3.18)
 project(PyMatching2)
 
-include_directories(src)
-include_directories(include)
-
-add_subdirectory(src/blossom)
-
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ version selection")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(SIMD_WIDTH 128)
 if (NOT(MSVC))
     set(ARCH_OPT "-O3" "-mno-avx2")
@@ -16,6 +12,11 @@ else ()
     # https://stackoverflow.com/a/8591946 (RTC1 incompatible with O2 flag)
     STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif ()
+
+include_directories(src)
+include_directories(include)
+
+add_subdirectory(src/blossom)
 
 include(FetchContent)
 FetchContent_Declare(
