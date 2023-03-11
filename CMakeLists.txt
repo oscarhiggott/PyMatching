@@ -10,6 +10,8 @@ include_directories(src)
 include_directories(include)
 
 add_subdirectory(src/blossom)
+add_subdirectory(src/benchmark)
+
 add_subdirectory(apps/pymatching)
 
 include(FetchContent)
@@ -45,15 +47,6 @@ set(TEST_FILES
     src/blossom/driver/user_graph.test.cc
 )
 
-set(PERF_FILES
-    src/pymatching/perf/main.perf.cc
-    src/pymatching/perf/util.perf.cc
-    src/blossom/driver/mwpm_decoding.perf.cc
-    src/blossom/driver/io.perf.cc
-    src/blossom/flooder_matcher_interop/varying.perf.cc
-    src/blossom/tracker/radix_heap_queue.perf.cc
-)
-
 set(PYTHON_API_FILES
     src/blossom/driver/user_graph.pybind.cc
     src/pymatching/rand/rand_gen.pybind.cc
@@ -70,13 +63,6 @@ else ()
     target_link_options(pymatching_tests PRIVATE -fsanitize=address -fsanitize=undefined -coverage)
 endif ()
 target_link_libraries(pymatching_tests GTest::gtest_main GTest::gmock_main libstim)
-
-add_executable(pymatching_perf ${PERF_FILES})
-target_link_libraries(pymatching_perf libblossom)
-target_compile_options(pymatching_perf PRIVATE ${ARCH_OPT})
-if (NOT (MSVC))
-    target_link_options(pymatching_perf PRIVATE -pthread -O3)
-endif ()
 
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)

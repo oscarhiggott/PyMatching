@@ -14,7 +14,7 @@
 
 #include "blossom/driver/mwpm_decoding.h"
 
-#include "pymatching/perf/util.perf.h"
+#include "benchmark/util.h"
 #include "stim.h"
 
 std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data(

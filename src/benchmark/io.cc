@@ -15,7 +15,7 @@
 #include "blossom/driver/io.h"
 
 #include "blossom/driver/mwpm_decoding.h"
-#include "pymatching/perf/util.perf.h"
+#include "benchmark/util.h"
 
 stim::DetectorErrorModel generate_dem(size_t distance, size_t rounds, double noise) {
     stim::CircuitGenParameters gen(rounds, distance, "rotated_memory_x");

@@ -1,0 +1,15 @@
+if (NOT(MSVC))
+    set(ARCH_OPT "-O3" "-mno-avx2")
+else ()
+    set(ARCH_OPT "-O2")
+    # https://stackoverflow.com/a/8591946 (RTC1 incompatible with O2 flag)
+    STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif ()
+
+add_executable(pymatching_perf main.cc)
+
+target_link_libraries(pymatching_perf libbenchmark libblossom)
+target_compile_options(pymatching_perf PRIVATE ${ARCH_OPT})
+if (NOT (MSVC))
+    target_link_options(pymatching_perf PRIVATE -pthread -O3)
+endif ()

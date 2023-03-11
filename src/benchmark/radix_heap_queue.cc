@@ -17,7 +17,7 @@
 #include <iostream>
 #include <random>
 
-#include "pymatching/perf/util.perf.h"
+#include "benchmark/util.h"
 
 using namespace pm;
 

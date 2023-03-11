@@ -17,7 +17,7 @@
 #include <iostream>
 #include <random>
 
-#include "pymatching/perf/util.perf.h"
+#include "benchmark/util.h"
 
 BENCHMARK(Varying32_get_distance_at_time) {
     const int NUM_ITEMS = 10000000;
