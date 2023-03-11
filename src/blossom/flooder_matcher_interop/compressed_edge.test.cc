@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder_matcher_interop/compressed_edge.h"
+#include "blossom/flooder_matcher_interop/compressed_edge.h"
 
 #include <gtest/gtest.h>
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
+#include "blossom/flooder/graph.h"
 
 using namespace pm;
 

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include "blossom/driver/mwpm_decoding.h"
 
 #include <fstream>
 
 #include "gtest/gtest.h"
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
+#include "blossom/flooder/graph.h"
 #include "stim.h"
 
 std::string find_test_data_file(const char* name) {

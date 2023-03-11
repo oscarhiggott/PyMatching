@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "pymatching/sparse_blossom/ints.h"
+#include "blossom/ints.h"
 
 namespace pm {
 
@@ -72,7 +72,7 @@ using Varying32 = Varying<int32_t>;
 using Varying64 = Varying<int64_t>;
 using VaryingCT = Varying<cumulative_time_int>;
 
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.inl"
+#include "blossom/flooder_matcher_interop/varying.inl"
 
 }  // namespace pm
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "search_graph.h"
+#include "blossom/search/search_graph.h"
 
 pm::SearchGraph::SearchGraph() : num_nodes(0) {
 }

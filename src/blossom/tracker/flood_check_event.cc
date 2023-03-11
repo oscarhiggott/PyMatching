@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/tracker/flood_check_event.h"
+#include "blossom/tracker/flood_check_event.h"
 
 using namespace pm;
 

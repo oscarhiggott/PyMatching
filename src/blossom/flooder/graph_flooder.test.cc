@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder/graph_flooder.h"
+#include "blossom/flooder/graph_flooder.h"
 
 #include "gtest/gtest.h"
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/mwpm_event.h"
-#include "pymatching/sparse_blossom/ints.h"
+#include "blossom/flooder/graph_fill_region.h"
+#include "blossom/flooder_matcher_interop/mwpm_event.h"
+#include "blossom/ints.h"
 
 using namespace pm;
 

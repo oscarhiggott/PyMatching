@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder/detector_node.h"
+#include "blossom/flooder/detector_node.h"
 
 #include <optional>
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
+#include "blossom/flooder/graph_fill_region.h"
 
 namespace pm {
 

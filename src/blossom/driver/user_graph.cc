@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/user_graph.h"
+#include "blossom/driver/user_graph.h"
 
 pm::UserNode::UserNode() : is_boundary(false) {
 }

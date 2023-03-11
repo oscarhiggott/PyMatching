@@ -15,8 +15,8 @@
 #ifndef PYMATCHING2_SEARCH_FLOODER_H
 #define PYMATCHING2_SEARCH_FLOODER_H
 
-#include "pymatching/sparse_blossom/search/search_graph.h"
-#include "pymatching/sparse_blossom/tracker/radix_heap_queue.h"
+#include "blossom/search/search_graph.h"
+#include "blossom/tracker/radix_heap_queue.h"
 
 namespace pm {
 

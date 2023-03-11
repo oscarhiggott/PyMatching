@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/tracker/radix_heap_queue.h"
+#include "blossom/tracker/radix_heap_queue.h"
 
 #include <gtest/gtest.h>
 #include <random>

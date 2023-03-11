@@ -15,9 +15,9 @@
 #ifndef PYMATCHING2_IO_H
 #define PYMATCHING2_IO_H
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
-#include "pymatching/sparse_blossom/matcher/mwpm.h"
-#include "pymatching/sparse_blossom/search/search_graph.h"
+#include "blossom/flooder/graph.h"
+#include "blossom/matcher/mwpm.h"
+#include "blossom/search/search_graph.h"
 #include "stim.h"
 
 namespace pm {

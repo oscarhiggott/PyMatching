@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "io.h"
+#include "blossom/driver/io.h"
 
-#include "mwpm_decoding.h"
+#include "blossom/driver/mwpm_decoding.h"
 #include "pymatching/perf/util.perf.h"
 
 stim::DetectorErrorModel generate_dem(size_t distance, size_t rounds, double noise) {

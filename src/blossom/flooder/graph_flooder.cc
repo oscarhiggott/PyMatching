@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder/graph_flooder.h"
+#include "blossom/flooder/graph_flooder.h"
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
-#include "pymatching/sparse_blossom/matcher/alternating_tree.h"
+#include "blossom/flooder/graph.h"
+#include "blossom/flooder/graph_fill_region.h"
+#include "blossom/flooder_matcher_interop/varying.h"
+#include "blossom/matcher/alternating_tree.h"
 
 using namespace pm;
 

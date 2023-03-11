@@ -15,7 +15,7 @@
 #ifndef PYMATCHING2_FLOOD_CHECK_EVENT_H
 #define PYMATCHING2_FLOOD_CHECK_EVENT_H
 
-#include "pymatching/sparse_blossom/ints.h"
+#include "blossom/ints.h"
 
 namespace pm {
 

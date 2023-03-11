@@ -22,9 +22,9 @@
 #include <queue>
 #include <vector>
 
-#include "pymatching/sparse_blossom/ints.h"
-#include "pymatching/sparse_blossom/tracker/cyclic.h"
-#include "pymatching/sparse_blossom/tracker/flood_check_event.h"
+#include "blossom/ints.h"
+#include "blossom/tracker/cyclic.h"
+#include "blossom/tracker/flood_check_event.h"
 
 namespace pm {
 

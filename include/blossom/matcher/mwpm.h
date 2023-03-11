@@ -15,9 +15,9 @@
 #ifndef PYMATCHING2_MWPM_H
 #define PYMATCHING2_MWPM_H
 
-#include "pymatching/sparse_blossom/flooder/graph_flooder.h"
-#include "pymatching/sparse_blossom/matcher/alternating_tree.h"
-#include "pymatching/sparse_blossom/search/search_flooder.h"
+#include "blossom/flooder/graph_flooder.h"
+#include "blossom/matcher/alternating_tree.h"
+#include "blossom/search/search_flooder.h"
 
 namespace pm {
 

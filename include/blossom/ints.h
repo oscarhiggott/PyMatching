@@ -17,7 +17,7 @@
 
 #include <cstddef>
 
-#include "pymatching/sparse_blossom/tracker/cyclic.h"
+#include "blossom/tracker/cyclic.h"
 
 namespace pm {
 

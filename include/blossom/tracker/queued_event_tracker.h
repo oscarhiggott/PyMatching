@@ -15,7 +15,7 @@
 #ifndef PYMATCHING_FILL_MATCH_QUEUED_EVENT_TRACKER_H
 #define PYMATCHING_FILL_MATCH_QUEUED_EVENT_TRACKER_H
 
-#include "pymatching/sparse_blossom/tracker/radix_heap_queue.h"
+#include "blossom/tracker/radix_heap_queue.h"
 
 namespace pm {
 

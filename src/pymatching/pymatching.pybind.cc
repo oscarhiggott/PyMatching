@@ -14,8 +14,8 @@
 
 #include "pybind11/pybind11.h"
 #include "pymatching/rand/rand_gen.pybind.h"
-#include "pymatching/sparse_blossom/driver/namespaced_main.h"
-#include "pymatching/sparse_blossom/driver/user_graph.pybind.h"
+#include "blossom/driver/namespaced_main.h"
+#include "blossom/driver/user_graph.pybind.h"
 
 namespace py = pybind11;
 using namespace py::literals;

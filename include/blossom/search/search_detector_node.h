@@ -15,7 +15,7 @@
 #ifndef PYMATCHING2_SEARCH_DETECTOR_NODE_H
 #define PYMATCHING2_SEARCH_DETECTOR_NODE_H
 
-#include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
+#include "blossom/tracker/queued_event_tracker.h"
 
 namespace pm {
 

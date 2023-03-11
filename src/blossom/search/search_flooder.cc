@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "search_flooder.h"
+#include "blossom/search/search_flooder.h"
 
 #include <limits>
 

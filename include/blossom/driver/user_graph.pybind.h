@@ -18,7 +18,7 @@
 #include "pybind11/numpy.h"
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
-#include "pymatching/sparse_blossom/driver/user_graph.h"
+#include "blossom/driver/user_graph.h"
 
 namespace py = pybind11;
 

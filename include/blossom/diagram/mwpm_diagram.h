@@ -15,7 +15,7 @@
 #ifndef PYMATCHING2_DIAGRAM_MWPM_DIAGRAM_H
 #define PYMATCHING2_DIAGRAM_MWPM_DIAGRAM_H
 
-#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "blossom/matcher/mwpm.h"
 #include "stim.h"
 
 namespace pm {

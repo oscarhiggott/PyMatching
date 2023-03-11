@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/tracker/cyclic.h"
+#include "blossom/tracker/cyclic.h"
 
 #include <gtest/gtest.h>
 

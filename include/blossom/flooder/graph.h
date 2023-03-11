@@ -18,10 +18,10 @@
 #include <set>
 #include <vector>
 
-#include "pymatching/sparse_blossom/flooder/detector_node.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
-#include "pymatching/sparse_blossom/tracker/flood_check_event.h"
-#include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
+#include "blossom/flooder/detector_node.h"
+#include "blossom/flooder_matcher_interop/varying.h"
+#include "blossom/tracker/flood_check_event.h"
+#include "blossom/tracker/queued_event_tracker.h"
 
 namespace pm {
 

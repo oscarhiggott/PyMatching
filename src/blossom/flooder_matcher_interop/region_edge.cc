@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder_matcher_interop/region_edge.h"
+#include "blossom/flooder_matcher_interop/region_edge.h"
 
 bool pm::RegionEdge::operator==(const pm::RegionEdge &rhs) const {
     return region == rhs.region && edge == rhs.edge;

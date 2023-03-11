@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "varying.h"
+#include "blossom/flooder_matcher_interop/varying.h"
 
 template <typename T>
 inline Varying<T>::Varying() = default;

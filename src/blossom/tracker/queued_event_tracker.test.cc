@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
+#include "blossom/tracker/queued_event_tracker.h"
 
 #include <gtest/gtest.h>
 #include <random>

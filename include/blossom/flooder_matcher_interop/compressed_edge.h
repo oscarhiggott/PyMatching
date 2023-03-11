@@ -15,7 +15,7 @@
 #ifndef PYMATCHING2_COMPRESSED_EDGE_H
 #define PYMATCHING2_COMPRESSED_EDGE_H
 
-#include "pymatching/sparse_blossom/ints.h"
+#include "blossom/ints.h"
 
 namespace pm {
 

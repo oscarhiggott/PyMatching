@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/namespaced_main.h"
+#include "blossom/driver/namespaced_main.h"
 
 #include "gtest/gtest.h"
 

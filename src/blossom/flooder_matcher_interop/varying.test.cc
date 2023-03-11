@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
+#include "blossom/flooder_matcher_interop/varying.h"
 
 #include <gtest/gtest.h>
 
-#include "pymatching/sparse_blossom/ints.h"
+#include "blossom/ints.h"
 
 using namespace pm;
 

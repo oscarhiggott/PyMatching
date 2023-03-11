@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/matcher/alternating_tree.h"
+#include "blossom/matcher/alternating_tree.h"
 
 #include <algorithm>
 #include <iterator>
 #include <utility>
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
+#include "blossom/flooder/graph_fill_region.h"
 
 using namespace pm;
 

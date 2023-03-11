@@ -15,9 +15,9 @@
 #ifndef PYMATCHING2_GRAPH_FILL_REGION_TEST_H
 #define PYMATCHING2_GRAPH_FILL_REGION_TEST_H
 
-#include "pymatching/sparse_blossom/arena.h"
-#include "pymatching/sparse_blossom/flooder/graph.h"
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
+#include "blossom/arena.h"
+#include "blossom/flooder/graph.h"
+#include "blossom/flooder/graph_fill_region.h"
 
 namespace pm {
 struct GraphFillTestData {

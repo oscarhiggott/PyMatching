@@ -17,8 +17,8 @@
 
 #include <vector>
 
-#include "pymatching/sparse_blossom/arena.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/region_edge.h"
+#include "blossom/arena.h"
+#include "blossom/flooder_matcher_interop/region_edge.h"
 
 namespace pm {
 

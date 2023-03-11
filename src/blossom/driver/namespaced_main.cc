@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/namespaced_main.h"
+#include "blossom/driver/namespaced_main.h"
 
 #include <chrono>
 #include <cstring>
 #include <iostream>
 #include <vector>
 
-#include "pymatching/sparse_blossom/diagram/animation_main.h"
-#include "pymatching/sparse_blossom/driver/io.h"
-#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include "blossom/diagram/animation_main.h"
+#include "blossom/driver/io.h"
+#include "blossom/driver/mwpm_decoding.h"
 #include "stim.h"
 #include "stim/simulators/detection_simulator.h"
 

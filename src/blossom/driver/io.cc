@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/io.h"
+#include "blossom/driver/io.h"
 
 #include <algorithm>
 #include <utility>
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
+#include "blossom/flooder/graph.h"
 
 double pm::merge_weights(double a, double b) {
     auto sgn = std::copysign(1, a) * std::copysign(1, b);

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "search_detector_node.h"
+#include "blossom/search/search_detector_node.h"
 
 size_t pm::SearchDetectorNode::index_of_neighbor(SearchDetectorNode *target) const {
     for (size_t k = 0; k < neighbors.size(); k++) {

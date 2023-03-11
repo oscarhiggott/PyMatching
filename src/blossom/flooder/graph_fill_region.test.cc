@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
+#include "blossom/flooder/graph_fill_region.h"
 
 #include <gtest/gtest.h>
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.test.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/region_edge.h"
+#include "blossom/flooder/graph_fill_region.test.h"
+#include "blossom/flooder_matcher_interop/region_edge.h"
 
 using namespace pm;
 

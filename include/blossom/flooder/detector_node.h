@@ -18,9 +18,9 @@
 #include <optional>
 #include <vector>
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
-#include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
+#include "blossom/flooder/graph_fill_region.h"
+#include "blossom/flooder_matcher_interop/varying.h"
+#include "blossom/tracker/queued_event_tracker.h"
 
 namespace pm {
 

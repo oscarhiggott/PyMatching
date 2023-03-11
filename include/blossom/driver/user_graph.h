@@ -21,8 +21,8 @@
 #include <vector>
 
 #include "pymatching/rand/rand_gen.h"
-#include "pymatching/sparse_blossom/driver/io.h"
-#include "pymatching/sparse_blossom/ints.h"
+#include "blossom/driver/io.h"
+#include "blossom/ints.h"
 
 namespace pm {
 

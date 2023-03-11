@@ -14,7 +14,7 @@
 
 #include <gtest/gtest.h>
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
+#include "blossom/flooder/graph.h"
 
 using namespace pm;
 

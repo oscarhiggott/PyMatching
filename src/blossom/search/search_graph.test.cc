@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/search/search_graph.h"
+#include "blossom/search/search_graph.h"
 
 #include <gtest/gtest.h>
 #include <vector>

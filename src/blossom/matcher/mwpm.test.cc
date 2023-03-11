@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "blossom/matcher/mwpm.h"
 
 #include <gtest/gtest.h>
 
-#include "pymatching/sparse_blossom/arena.h"
-#include "pymatching/sparse_blossom/flooder/graph.h"
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
-#include "pymatching/sparse_blossom/matcher/alternating_tree.h"
+#include "blossom/arena.h"
+#include "blossom/flooder/graph.h"
+#include "blossom/flooder/graph_fill_region.h"
+#include "blossom/matcher/alternating_tree.h"
 
 using namespace pm;
 

@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/diagram/animation_main.h"
+#include "blossom/diagram/animation_main.h"
 
 #include <filesystem>
 
-#include "pymatching/sparse_blossom/diagram/mwpm_diagram.h"
-#include "pymatching/sparse_blossom/driver/io.h"
-#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
-#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "blossom/diagram/mwpm_diagram.h"
+#include "blossom/driver/io.h"
+#include "blossom/driver/mwpm_decoding.h"
+#include "blossom/matcher/mwpm.h"
 #include "stim.h"
 
 int pm::main_animation(int argc, const char **argv) {

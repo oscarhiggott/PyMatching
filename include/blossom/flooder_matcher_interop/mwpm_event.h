@@ -15,8 +15,8 @@
 #ifndef PYMATCHING_FILL_MATCH_MWPM_EVENT_H
 #define PYMATCHING_FILL_MATCH_MWPM_EVENT_H
 
-#include "pymatching/sparse_blossom/flooder_matcher_interop/compressed_edge.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
+#include "blossom/flooder_matcher_interop/compressed_edge.h"
+#include "blossom/flooder_matcher_interop/varying.h"
 
 namespace pm {
 

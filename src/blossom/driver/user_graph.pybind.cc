@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/user_graph.pybind.h"
+#include "blossom/driver/user_graph.pybind.h"
 
 #include "pybind11/pybind11.h"
-#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include "blossom/driver/mwpm_decoding.h"
 #include "stim.h"
 
 using namespace py::literals;

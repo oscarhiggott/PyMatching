@@ -17,7 +17,7 @@
 
 #include <vector>
 
-#include "pymatching/sparse_blossom/flooder_matcher_interop/compressed_edge.h"
+#include "blossom/flooder_matcher_interop/compressed_edge.h"
 
 namespace pm {
 

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
+#include "blossom/flooder/graph.h"
 
 #include <gtest/gtest.h>
 
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.test.h"
+#include "blossom/flooder/graph_fill_region.test.h"
 
 TEST(Graph, AddEdge) {
     pm::MatchingGraph g(4, 64);
