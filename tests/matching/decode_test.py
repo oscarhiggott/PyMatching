@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from pathlib import Path
+
 import numpy as np
+import numpy.typing as npt
 from scipy.sparse import csc_matrix
 import pytest
 import networkx as nx
-import os
 
 import pymatching
 from pymatching import Matching
 
 
-def repetition_code(n):
+def repetition_code(n: int) -> npt.NDArray[np.uint8]:
     row_ind, col_ind = zip(*((i, j) for i in range(n) for j in (i, (i + 1) % n)))
     data = np.ones(2 * n, dtype=np.uint8)
     return csc_matrix((data, (row_ind, col_ind)))
@@ -34,7 +37,7 @@ weight_fixtures = [
 
 
 @pytest.mark.parametrize("n", weight_fixtures)
-def test_matching_weight(n):
+def test_matching_weight(n: int):
     p = 0.4
     H = repetition_code(n)
     noise = np.random.rand(n) < p
@@ -140,7 +143,7 @@ def get_full_data_path(filename: str) -> str:
     raise ValueError(f"No data directory found inside {os.getcwd()}")
 
 
-def test_surface_code_solution_weights(data_dir):
+def test_surface_code_solution_weights(data_dir: Path):
     stim = pytest.importorskip("stim")
     dem = stim.DetectorErrorModel.from_file(data_dir / "surface_code_rotated_memory_x_13_0.01.dem")
     m = Matching.from_detector_error_model(dem)

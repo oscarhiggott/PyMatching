@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
+
 import pytest
 
 from pymatching.matching import Matching
@@ -39,7 +41,7 @@ def test_load_from_stim_objects():
     assert m3.num_edges == 502
 
 
-def test_load_from_stim_files(data_dir):
+def test_load_from_stim_files(data_dir: Path):
     circuit_path = data_dir / "negative_weight_circuit.stim"
     m = Matching.from_stim_circuit_file(str(circuit_path))
     assert m.num_detectors == 2
