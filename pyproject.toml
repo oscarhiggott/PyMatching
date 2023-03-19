@@ -1,0 +1,7 @@
+[build-system]
+requires = [
+    "setuptools",
+    "cmake>=3.12",
+    "ninja>=1.10"
+]
+build-backend = "setuptools.build_meta"

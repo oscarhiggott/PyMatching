@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from pathlib import Path
+
 import numpy as np
 from scipy.sparse import csc_matrix
 import pytest
 import networkx as nx
-import os
 
 import pymatching
 from pymatching import Matching
 
-from tests.config import DATA_DIR
 
-
-def repetition_code(n):
+def repetition_code(n: int):
     row_ind, col_ind = zip(*((i, j) for i in range(n) for j in (i, (i + 1) % n)))
     data = np.ones(2 * n, dtype=np.uint8)
     return csc_matrix((data, (row_ind, col_ind)))
@@ -36,7 +36,7 @@ weight_fixtures = [
 
 
 @pytest.mark.parametrize("n", weight_fixtures)
-def test_matching_weight(n):
+def test_matching_weight(n: int):
     p = 0.4
     H = repetition_code(n)
     noise = np.random.rand(n) < p
@@ -142,22 +142,18 @@ def get_full_data_path(filename: str) -> str:
     raise ValueError(f"No data directory found inside {os.getcwd()}")
 
 
-def test_surface_code_solution_weights():
+def test_surface_code_solution_weights(data_dir: Path):
     stim = pytest.importorskip("stim")
-    dem = stim.DetectorErrorModel.from_file(os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01.dem"))
+    dem = stim.DetectorErrorModel.from_file(data_dir / "surface_code_rotated_memory_x_13_0.01.dem")
     m = Matching.from_detector_error_model(dem)
-    shots = stim.read_shot_data_file(path=os.path.join(DATA_DIR, "surface_code_rotated_memory_x_13_0.01_1000_shots.b8"),
+    shots = stim.read_shot_data_file(path=data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots.b8",
                                      format="b8", num_detectors=m.num_detectors,
                                      num_observables=m.num_fault_ids)
-    with open(os.path.join(
-            DATA_DIR,
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt"),
-            "r") as f:
+    with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt",
+              "r", encoding="utf-8") as f:
         expected_weights = [float(w) for w in f.readlines()]
-    with open(os.path.join(
-            DATA_DIR,
-            "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt"),
-            "r") as f:
+    with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt",
+              "r", encoding="utf-8") as f:
         expected_observables = [int(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
     weights = []
@@ -166,8 +162,8 @@ def test_surface_code_solution_weights():
         prediction, weight = m.decode(shots[i, 0:-m.num_fault_ids], return_weight=True)
         weights.append(weight)
         predicted_observables.append(prediction)
-    for i in range(len(weights)):
-        assert weights[i] == pytest.approx(expected_weights[i], rel=1e-8)
+    for weight, expected_weight in zip(weights, expected_weights):
+        assert weight == pytest.approx(expected_weight, rel=1e-8)
     assert predicted_observables == expected_observables[0:len(predicted_observables)]
 
     expected_observables_arr = np.zeros((shots.shape[0], 1), dtype=np.uint8)
