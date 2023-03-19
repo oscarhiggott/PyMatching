@@ -16,7 +16,6 @@ import os
 from pathlib import Path
 
 import numpy as np
-import numpy.typing as npt
 from scipy.sparse import csc_matrix
 import pytest
 import networkx as nx
@@ -25,7 +24,7 @@ import pymatching
 from pymatching import Matching
 
 
-def repetition_code(n: int) -> npt.NDArray[np.uint8]:
+def repetition_code(n: int):
     row_ind, col_ind = zip(*((i, j) for i in range(n) for j in (i, (i + 1) % n)))
     data = np.ones(2 * n, dtype=np.uint8)
     return csc_matrix((data, (row_ind, col_ind)))
