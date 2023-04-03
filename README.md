@@ -18,13 +18,15 @@ and can also be used to decode various other code families, including
 [2D hyperbolic codes](https://arxiv.org/abs/1506.04029).
 
 Version 2 includes a new implementation of the blossom algorithm which is **100-1000x faster** than previous versions
-of PyMatching. 
+of PyMatching.
 PyMatching can be configured using arbitrary weighted graphs, with or without a boundary, and can be combined with 
 Craig Gidney's [Stim](https://github.com/quantumlib/Stim) library to simulate and decode error correction circuits 
 in the presence of circuit-level noise. The [sinter](https://pypi.org/project/sinter/) package combines Stim and 
 PyMatching to perform fast, parallelised monte-carlo sampling of quantum error correction circuits.
 
 Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/en/stable/)
+
+Our [paper](https://arxiv.org/abs/2303.15933) gives more background on the MWPM decoder and our implementation (sparse blossom) released in PyMatching v2.
 
 To see how stim, sinter and pymatching can be used to estimate the threshold of an error correcting code with 
 circuit-level noise, try out the [stim getting started notebook](https://github.com/quantumlib/Stim/blob/main/doc/getting_started.ipynb).
@@ -38,6 +40,7 @@ We solve the problem of finding minimum-weight paths between detection events in
 _directly_, which avoids the need to use costly all-to-all Dijkstra searches to find a MWPM in a derived 
 graph using the original blossom algorithm.
 The new version is also exact - unlike previous versions of PyMatching, no approximation is made.
+See our [paper](https://arxiv.org/abs/2303.15933) for more details.
 
 Our new implementation is **over 100x faster** than previous versions of PyMatching, and is 
 **over 100,000x faster** than NetworkX (benchmarked with surface code circuits). At 0.1% circuit-noise, PyMatching can 
@@ -291,21 +294,18 @@ see [the documentation](https://pymatching.readthedocs.io).
 
 ## Attribution
 
-A paper on our new implementation used in PyMatching version 2 (sparse blossom) will be published soon. In the meantime, please 
-cite:
+When using PyMatching please cite our [paper](https://arxiv.org/abs/2303.15933) on the sparse blossom algorithm (implemented in version 2):
 
 ```
-@misc{pymatchingv2,
-  author = {Higgott, Oscar and Gidney, Craig},
-  title = {PyMatching v2},
-  year = {2022},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/oscarhiggott/PyMatching}}
+@article{higgott2023sparse,
+  title={Sparse Blossom: correcting a million errors per core second with minimum-weight matching},
+  author={Higgott, Oscar and Gidney, Craig},
+  journal={arXiv preprint arXiv:2303.15933},
+  year={2023}
 }
 ```
 
-Note: the existing PyMatching [paper](https://arxiv.org/abs/2105.13082) descibes the implementation in version 0.7 and 
+Note: the previous PyMatching [paper](https://arxiv.org/abs/2105.13082) descibes the implementation in version 0.7 and 
 earlier of PyMatching (not v2).
 
 ## Acknowledgements
