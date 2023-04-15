@@ -106,6 +106,14 @@ jobs:
 #          {os: ubuntu-latest, dist: cp39-musllinux_i686},
 #          {os: ubuntu-latest, dist: cp310-musllinux_i686},
 #          {os: ubuntu-latest, dist: cp311-musllinux_i686},
+
+          # manylinux_aarch64
+          {os: ubuntu-latest, dist: cp36-manylinux_aarch64},
+          {os: ubuntu-latest, dist: cp37-manylinux_aarch64},
+          {os: ubuntu-latest, dist: cp38-manylinux_aarch64},
+          {os: ubuntu-latest, dist: cp39-manylinux_aarch64},
+          {os: ubuntu-latest, dist: cp310-manylinux_aarch64},
+          {os: ubuntu-latest, dist: cp311-manylinux_aarch64},
         ]
     steps:
     - uses: actions/checkout@v3
