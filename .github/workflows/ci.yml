@@ -32,7 +32,7 @@ jobs:
     env:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
-      CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
+#      CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
 #      CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
       CIBW_BEFORE_BUILD: pip install --upgrade ninja
       CIBW_TEST_REQUIRES: pytest stim~=1.10.dev1666411378
@@ -121,11 +121,11 @@ jobs:
       with:
         submodules: true
 #
-#    - name: Set up QEMU
-#      if: runner.os == 'Linux'
-#      uses: docker/setup-qemu-action@v2
-#      with:
-#        platforms: all
+    - name: Set up QEMU
+      if: runner.os == 'Linux'
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: all
 
     - name: Install g++
       if: runner.os == 'Linux'
