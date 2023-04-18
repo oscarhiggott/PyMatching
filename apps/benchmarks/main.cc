@@ -15,7 +15,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "pymatching/perf/util.perf.h"
+#include "benchmark/util.h"
 #include "stim.h"
 
 RegisteredBenchmark *running_benchmark = nullptr;

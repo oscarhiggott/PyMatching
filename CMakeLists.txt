@@ -13,6 +13,7 @@ add_subdirectory(src/blossom)
 add_subdirectory(src/benchmark)
 
 add_subdirectory(apps/pymatching)
+add_subdirectory(apps/benchmarks)
 
 add_subdirectory(tests/cpp)
 
