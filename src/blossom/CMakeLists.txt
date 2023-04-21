@@ -36,3 +36,5 @@ add_library(blossom
     driver/user_graph.cc
 )
 target_link_libraries(blossom random libstim)
+target_compile_options(blossom PRIVATE ${ARCH_OPT} -fPIC)
+target_link_options(blossom PRIVATE -pthread)
