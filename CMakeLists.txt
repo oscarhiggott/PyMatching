@@ -6,11 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SIMD_WIDTH 128)
 
-include_directories(src)
 include_directories(include)
 
 add_subdirectory(src/blossom)
+add_subdirectory(src/random)
 add_subdirectory(src/benchmark)
+
 if (IS_DIRECTORY ${pybind11_DIR})
     add_subdirectory(src/python_bindings)
 endif()

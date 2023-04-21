@@ -20,7 +20,7 @@
 #include <set>
 #include <vector>
 
-#include "pymatching/rand/rand_gen.h"
+#include "random/rand_gen.h"
 #include "blossom/driver/io.h"
 #include "blossom/ints.h"
 

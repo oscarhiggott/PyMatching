@@ -14,7 +14,7 @@
 
 #include "python_bindings/rand_gen.h"
 
-#include "pymatching/rand/rand_gen.h"
+#include "random/rand_gen.h"
 
 void pm_pybind::pybind_rand_gen_methods(py::module &m) {
     m.def("randomize", &pm::randomize, R"pbdoc(

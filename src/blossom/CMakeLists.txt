@@ -34,7 +34,5 @@ add_library(blossom
     search/search_detector_node.cc
     search/search_flooder.cc
     driver/user_graph.cc
-    # Will remove when random generation is a separate library
-    ../../src/pymatching/rand/rand_gen.cc
 )
-target_link_libraries(blossom libstim)
+target_link_libraries(blossom random libstim)

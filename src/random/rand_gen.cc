@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/rand/rand_gen.h"
+#include "random/rand_gen.h"
 
 #include <random>
 

@@ -15,7 +15,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "pymatching/fill_match.h"
+#include "fill_match.h"
 
 int main(int argc, const char** argv) {
     try {
