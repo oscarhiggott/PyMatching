@@ -33,7 +33,6 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: "10.15"
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
       CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
-      CIBW_BEFORE_BUILD: pip install --upgrade ninja
       CIBW_TEST_REQUIRES: pytest stim~=1.10.dev1666411378
       CIBW_TEST_COMMAND: pytest {project}/tests
     strategy:
@@ -109,8 +108,6 @@ jobs:
         ]
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: true
 
     - name: Install g++
       if: runner.os == 'Linux'
@@ -132,11 +129,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
-      - run: cmake .
-      - run: cmake --build . --target pymatching_perf --config Release
-      - run: Release\pymatching_perf.exe
+      - run: cmake . -B build
+      - run: cmake --build build --target pymatching_perf --config Release
+      - run: build\Release\apps\pymatching_perf.exe
   benchmark:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -149,10 +144,10 @@ jobs:
           submodules: true
       - run: CC=gcc-10 CXX=g++-10 cmake .
         if: matrix.os == 'ubuntu-latest'
-      - run: cmake .
+      - run: cmake . -B build
         if: matrix.os == 'macos-latest'
-      - run: make pymatching_perf
-      - run: ./pymatching_perf
+      - run: cmake --build build --target pymatching_perf
+      - run: ./build/apps/benchmarks/pymatching_perf
   gtest:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -165,10 +160,10 @@ jobs:
           submodules: true
       - run: CC=gcc-10 CXX=g++-10 cmake .
         if: matrix.os == 'ubuntu-latest'
-      - run: cmake .
+      - run: cmake . -B build
         if: matrix.os == 'macos-latest'
-      - run: make pymatching_tests
-      - run: ./pymatching_tests
+      - run: cmake --build build --target pymatching_tests
+      - run: ./build/tests/cpp/pymatching_tests
   pip_install:
     strategy:
       fail-fast: false
@@ -188,16 +183,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Add requirements
-        run: python -m pip install --upgrade cmake>=3.12 ninja==1.10.2.4 pytest flake8 pytest-cov
+        run: python -m pip install --upgrade pytest flake8 pytest-cov
 
       - name: Build and install
-        run: pip install --verbose -e .
+        run: pip install --verbose -e .[test]
 
       - name: Test without stim
         run: python -m pytest tests
-
-      - name: Add stim
-        run: python -m pip install stim~=1.10.dev1666411378
 
       - name: Test with stim using coverage
         run: python -m pytest tests --cov=./src/pymatching --cov-report term
@@ -239,9 +231,9 @@ jobs:
         with:
           python-version: '3.10'
       - name: Add requirements
-        run: python -m pip install --upgrade cmake>=3.12 ninja==1.10.2.4 pytest flake8 pytest-cov stim~=1.10.dev1666411378
+        run: python -m pip install --upgrade pytest flake8 pytest-cov stim~=1.10.dev1666411378
       - name: Build and install
-        run: pip install --verbose -e .
+        run: pip install --verbose -e .[test]
       - name: Run tests and collect coverage
         run: pytest tests --cov=./src/pymatching --cov-report=xml
       - name: Upload coverage reports to Codecov
