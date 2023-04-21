@@ -1,6 +1,7 @@
 [build-system]
 requires = [
-    "setuptools",
+    "setuptools>=42",
+    "pybind11[global]>=2.10",
     "cmake>=3.12",
     "ninja>=1.10"
 ]
