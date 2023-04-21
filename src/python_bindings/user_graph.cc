@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "blossom/driver/user_graph.pybind.h"
+#include "python_bindings/user_graph.h"
 
 #include "pybind11/pybind11.h"
 #include "blossom/driver/mwpm_decoding.h"

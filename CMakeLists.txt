@@ -11,23 +11,9 @@ include_directories(include)
 
 add_subdirectory(src/blossom)
 add_subdirectory(src/benchmark)
+add_subdirectory(src/python_bindings)
 
 add_subdirectory(apps/pymatching)
 add_subdirectory(apps/benchmarks)
 
 add_subdirectory(tests/cpp)
-
-
-set(PYTHON_API_FILES
-    src/blossom/driver/user_graph.pybind.cc
-    src/pymatching/rand/rand_gen.pybind.cc
-    src/pymatching/pymatching.pybind.cc
-)
-add_subdirectory(pybind11)
-pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES})
-target_link_libraries(_cpp_pymatching PRIVATE libblossom)
-target_compile_options(_cpp_pymatching PRIVATE ${ARCH_OPT})
-# EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
-# define (VERSION_INFO) here.
-#target_compile_definitions(_cpp_pymatching
-#        PRIVATE VERSION_INFO=${PYMATCHING_VERSION_INFO})
