@@ -13,7 +13,7 @@ else ()
     target_compile_options(libstim PRIVATE -fPIC ${ARCH_OPT})
 endif ()
 
-add_library(libblossom
+add_library(blossom
     driver/namespaced_main.cc
     driver/io.cc
     driver/mwpm_decoding.cc
@@ -37,4 +37,4 @@ add_library(libblossom
     # Will remove when random generation is a separate library
     ../../src/pymatching/rand/rand_gen.cc
 )
-target_link_libraries(libblossom libstim)
+target_link_libraries(blossom libstim)

@@ -8,7 +8,7 @@ endif ()
 
 add_executable(pymatching_perf main.cc)
 
-target_link_libraries(pymatching_perf libbenchmark libblossom)
+target_link_libraries(pymatching_perf benchmark blossom)
 target_compile_options(pymatching_perf PRIVATE ${ARCH_OPT})
 if (NOT (MSVC))
     target_link_options(pymatching_perf PRIVATE -pthread -O3)

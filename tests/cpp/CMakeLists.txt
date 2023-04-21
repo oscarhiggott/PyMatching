@@ -39,7 +39,7 @@ if (NOT (MSVC))
 else ()
     target_link_options(pymatching_tests PRIVATE -fsanitize=address -fsanitize=undefined -coverage)
 endif ()
-target_link_libraries(pymatching_tests libblossom GTest::gtest_main GTest::gmock_main)
+target_link_libraries(pymatching_tests blossom GTest::gtest_main GTest::gmock_main)
 
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)

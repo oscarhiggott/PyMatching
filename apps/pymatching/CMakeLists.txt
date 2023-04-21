@@ -7,7 +7,7 @@ else ()
 endif ()
 
 add_executable(pymatching main.cc)
-target_link_libraries(pymatching libblossom)
+target_link_libraries(pymatching blossom)
 
 target_compile_options(pymatching PRIVATE ${ARCH_OPT})
 if (NOT (MSVC))
