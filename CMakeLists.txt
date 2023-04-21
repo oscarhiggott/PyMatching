@@ -11,7 +11,9 @@ include_directories(include)
 
 add_subdirectory(src/blossom)
 add_subdirectory(src/benchmark)
-add_subdirectory(src/python_bindings)
+if (IS_DIRECTORY ${pybind11_DIR})
+    add_subdirectory(src/python_bindings)
+endif()
 
 add_subdirectory(apps/pymatching)
 add_subdirectory(apps/benchmarks)
