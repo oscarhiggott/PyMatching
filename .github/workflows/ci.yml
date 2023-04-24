@@ -13,8 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        submodules: true
 
     - name: Build SDist
       run: pipx run build --sdist
@@ -140,8 +138,6 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
       - run: CC=gcc-10 CXX=g++-10 cmake .
         if: matrix.os == 'ubuntu-latest'
       - run: cmake . -B build
@@ -156,8 +152,6 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
       - run: CC=gcc-10 CXX=g++-10 cmake .
         if: matrix.os == 'ubuntu-latest'
       - run: cmake . -B build
@@ -175,8 +169,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
 
       - uses: actions/setup-python@v4
         with:
@@ -201,8 +193,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
 
       - uses: actions/setup-python@v4
         with:
@@ -225,8 +215,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
