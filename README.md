@@ -62,7 +62,7 @@ for the data and stim circuits, as well as additional benchmarks.
 
 
 Sparse blossom is conceptually similar to the approach described in [this paper](https://arxiv.org/abs/1307.1740) 
-by Austin Fowler, although our approach differs in many of the details (which will be explained in our upcoming paper).
+by Austin Fowler, although our approach differs in many of the details (as explained in our [paper](https://arxiv.org/abs/2303.15933)).
 There are even more similarities with the very nice independent work by Yue Wu, who recently released the 
 [fusion-blossom](https://pypi.org/project/fusion-blossom/) library.
 One of the differences with our approach is that fusion-blossom grows the exploratory regions of alternating trees 
