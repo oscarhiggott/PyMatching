@@ -23,7 +23,6 @@
 #include "pymatching/sparse_blossom/driver/io.h"
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 #include "stim.h"
-#include "stim/simulators/detection_simulator.h"
 
 int main_predict(int argc, const char **argv) {
     stim::check_for_unknown_arguments(
@@ -54,7 +53,7 @@ int main_predict(int argc, const char **argv) {
 
     size_t num_obs = dem.count_observables();
     auto reader =
-        stim::MeasureRecordReader::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
+        stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
     auto writer = stim::MeasureRecordWriter::make(predictions_out, predictions_out_format.id);
     writer->begin_result_type('L');
 
@@ -118,12 +117,12 @@ int main_count_mistakes(int argc, const char **argv) {
     fclose(dem_file);
 
     size_t num_obs = dem.count_observables();
-    std::unique_ptr<stim::MeasureRecordReader> obs_reader;
+    std::unique_ptr<stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>> obs_reader;
     if (obs_in != stdin) {
-        obs_reader = stim::MeasureRecordReader::make(obs_in, obs_in_format.id, 0, 0, num_obs);
+        obs_reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(obs_in, obs_in_format.id, 0, 0, num_obs);
     }
     auto reader =
-        stim::MeasureRecordReader::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
+        stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
     pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
@@ -142,7 +141,7 @@ int main_count_mistakes(int argc, const char **argv) {
             }
         }
         auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
-        if (obs_shot.obs_mask != res.obs_mask) {
+        if (obs_shot.obs_mask_as_u64() != res.obs_mask) {
             num_mistakes++;
         }
         sparse_shot.clear();
