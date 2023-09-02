@@ -133,7 +133,7 @@ target_link_libraries(libpymatching libstim)
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
 
-IF(EXISTS pybind11/CMakeLists.txt)
+IF(EXISTS ${CMAKE_CURRENT_LIST_DIR}/pybind11/CMakeLists.txt)
     add_subdirectory(pybind11)
     pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
     target_link_libraries(_cpp_pymatching PRIVATE libstim)
