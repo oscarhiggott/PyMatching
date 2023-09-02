@@ -34,12 +34,12 @@ namespace pm {
 class DetectorNode {
    public:
     DetectorNode()
-        : observables_crossed_from_source(0),
-          reached_from_source(nullptr),
-          radius_of_arrival(0),
-          region_that_arrived(nullptr),
+        : region_that_arrived(nullptr),
           region_that_arrived_top(nullptr),
-          wrapped_radius_cached(0) {
+          wrapped_radius_cached(0),
+          reached_from_source(nullptr),
+          observables_crossed_from_source(0),
+          radius_of_arrival(0) {
     }
 
     /// == Ephemeral fields used to track algorithmic state during matching. ==

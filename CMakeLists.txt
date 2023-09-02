@@ -121,12 +121,27 @@ if (NOT (MSVC))
 endif ()
 target_link_libraries(pymatching_perf libstim)
 
+add_library(libpymatching ${SOURCE_FILES_NO_MAIN})
+set_target_properties(libpymatching PROPERTIES PREFIX "")
+target_include_directories(libpymatching PUBLIC src)
+target_compile_options(libpymatching PRIVATE ${ARCH_OPT})
+if(NOT(MSVC))
+    target_link_options(libpymatching PRIVATE -pthread -O3)
+endif()
+target_link_libraries(libpymatching libstim)
+
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
-add_subdirectory(pybind11)
-pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
-target_link_libraries(_cpp_pymatching PRIVATE libstim)
-target_compile_options(_cpp_pymatching PRIVATE ${ARCH_OPT})
+
+IF(EXISTS pybind11/CMakeLists.txt)
+    add_subdirectory(pybind11)
+    pybind11_add_module(_cpp_pymatching ${PYTHON_API_FILES} ${SOURCE_FILES_NO_MAIN})
+    target_link_libraries(_cpp_pymatching PRIVATE libstim)
+    target_compile_options(_cpp_pymatching PRIVATE ${ARCH_OPT})
+else()
+    message("WARNING: Skipped the pybind11 module _cpp_pymatching because the `pybind11` git submodule isn't present. To fix, run `git submodule update --init --recursive`")
+endif()
+
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
 #target_compile_definitions(_cpp_pymatching
