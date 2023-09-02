@@ -104,8 +104,8 @@ MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
     : nodes(std::move(graph.nodes)),
       negative_weight_detection_events_set(std::move(graph.negative_weight_detection_events_set)),
       negative_weight_observables_set(std::move(graph.negative_weight_observables_set)),
-      is_user_graph_boundary_node(std::move(graph.is_user_graph_boundary_node)),
       negative_weight_sum(graph.negative_weight_sum),
+      is_user_graph_boundary_node(std::move(graph.is_user_graph_boundary_node)),
       num_nodes(graph.num_nodes),
       num_observables(graph.num_observables),
       normalising_constant(graph.normalising_constant) {

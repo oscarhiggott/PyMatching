@@ -99,8 +99,9 @@ TEST(SearchFlooder, RepCodeSourceToDestPath) {
         std::vector<size_t> node_indices;
         for (size_t i = 0; i < edges.size(); i++) {
             node_indices.push_back(edges[i].detector_node - &flooder.graph.nodes[0]);
-            if (i + 1 < edges.size())
+            if (i + 1 < edges.size()) {
                 ASSERT_EQ(edges[i].detector_node->neighbors[edges[i].neighbor_index], edges[i + 1].detector_node);
+            }
         }
         std::vector<size_t> expected_node_indices;
         for (size_t i = i_start; i < i_end; i++)

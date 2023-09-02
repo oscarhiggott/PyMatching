@@ -222,7 +222,6 @@ std::vector<uint64_t> get_syndrome_from_edges(const std::vector<int64_t>& edges)
 
 uint64_t get_observables_from_edges(const std::vector<int64_t>& edges, pm::Mwpm& mwpm) {
     uint64_t obs_mask = 0;
-    pm::total_weight_int tot_weight = 0;
     for (size_t i = 0; i < edges.size() / 2; i++) {
         int64_t u = edges[2 * i];
         int64_t v = edges[2 * i + 1];
