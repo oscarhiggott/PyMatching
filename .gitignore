@@ -26,3 +26,6 @@ docs/DOCS_ENV
 docs/sphinx_docs/build
 data/DATA_ENV
 build
+build.ninja
+.ninja_deps
+.ninja_log

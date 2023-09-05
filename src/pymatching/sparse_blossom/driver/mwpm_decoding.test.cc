@@ -42,7 +42,7 @@ struct DecodingTestCase {
     std::vector<int> expected_weights;
     std::vector<int> expected_obs_masks;
     stim::DetectorErrorModel detector_error_model;
-    std::unique_ptr<stim::MeasureRecordReader> reader;
+    std::unique_ptr<stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>> reader;
 };
 
 DecodingTestCase load_test_case(
@@ -55,7 +55,7 @@ DecodingTestCase load_test_case(
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
 
-    auto reader = stim::MeasureRecordReader::make(
+    auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     std::ifstream is(find_test_data_file(weights_fn).c_str());
@@ -106,7 +106,7 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
             if (num_shots > max_shots)
                 break;
             auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
-            if (sparse_shot.obs_mask != res.obs_mask) {
+            if (sparse_shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
             EXPECT_EQ(res.weight, test_case.expected_weights[num_shots]);
@@ -143,7 +143,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
                 if (num_shots > max_shots)
                     break;
                 pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
-                if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+                if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                     num_mistakes++;
                 }
                 EXPECT_EQ(res.weight, test_case.expected_weights[num_shots]);
@@ -222,7 +222,6 @@ std::vector<uint64_t> get_syndrome_from_edges(const std::vector<int64_t>& edges)
 
 uint64_t get_observables_from_edges(const std::vector<int64_t>& edges, pm::Mwpm& mwpm) {
     uint64_t obs_mask = 0;
-    pm::total_weight_int tot_weight = 0;
     for (size_t i = 0; i < edges.size() / 2; i++) {
         int64_t u = edges[2 * i];
         int64_t v = edges[2 * i + 1];
@@ -314,7 +313,7 @@ TEST(MwpmDecoding, CompareSolutionObsWithMaxNumBuckets) {
             if (num_shots > max_shots)
                 break;
             pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
-            if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+            if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
             ASSERT_EQ(res.obs_crossed[0], test_case.expected_obs_masks[num_shots]);
@@ -441,7 +440,7 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStim) {
     fclose(dem_file);
     size_t num_distinct_weights = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
-    auto reader = stim::MeasureRecordReader::make(
+    auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;
@@ -453,7 +452,7 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStim) {
         if (num_shots > max_shots)
             break;
         pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
-        if (sparse_shot.obs_mask != res.obs_crossed[0]) {
+        if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
             num_mistakes++;
         }
         sparse_shot.clear();
@@ -474,7 +473,7 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStimDecodeToEdges) {
     fclose(dem_file);
     size_t num_distinct_weights = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights, true);
-    auto reader = stim::MeasureRecordReader::make(
+    auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;
@@ -490,7 +489,7 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStimDecodeToEdges) {
         auto syndrome = get_syndrome_from_edges(edges);
         auto obs = get_observables_from_edges(edges, mwpm);
         ASSERT_EQ(syndrome, sparse_shot.hits);
-        if (sparse_shot.obs_mask != obs) {
+        if (sparse_shot.obs_mask_as_u64() != obs) {
             num_mistakes++;
         }
         sparse_shot.clear();
@@ -520,7 +519,7 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
     fclose(dem_file);
     size_t num_distinct_weights = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
-    auto reader = stim::MeasureRecordReader::make(
+    auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
         shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;

@@ -60,7 +60,7 @@ int pm::main_animation(int argc, const char **argv) {
     }
 
     auto dem = stim::DetectorErrorModel::from_file(dem_file);
-    auto dets_reader = stim::MeasureRecordReader::make(
+    auto dets_reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
         dets_file, dets_in_format.id, 0, dem.count_detectors(), dem.count_observables() * dets_includes_obs);
     stim::SparseShot shot;
     if (!dets_reader->start_and_read_entire_record(shot)) {
