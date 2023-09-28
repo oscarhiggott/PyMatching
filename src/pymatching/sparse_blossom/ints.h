@@ -16,6 +16,7 @@
 #define PYMATCHING_INTS_H
 
 #include <cstddef>
+#include <cstdint>
 
 #include "pymatching/sparse_blossom/tracker/cyclic.h"
 
