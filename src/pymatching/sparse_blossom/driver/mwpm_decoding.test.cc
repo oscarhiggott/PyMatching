@@ -56,7 +56,7 @@ DecodingTestCase load_test_case(
     fclose(dem_file);
 
     auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
-        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+        shots_in, stim::SampleFormat::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     std::ifstream is(find_test_data_file(weights_fn).c_str());
     std::istream_iterator<int> start(is), end;
@@ -441,7 +441,7 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStim) {
     size_t num_distinct_weights = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
     auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
-        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+        shots_in, stim::SampleFormat::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;
     size_t num_mistakes = 0;
@@ -474,7 +474,7 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStimDecodeToEdges) {
     size_t num_distinct_weights = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights, true);
     auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
-        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+        shots_in, stim::SampleFormat::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;
     size_t num_mistakes = 0;
@@ -520,7 +520,7 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
     size_t num_distinct_weights = 1000;
     auto mwpm = pm::detector_error_model_to_mwpm(dem, num_distinct_weights);
     auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
-        shots_in, stim::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
+        shots_in, stim::SampleFormat::SAMPLE_FORMAT_B8, 0, dem.count_detectors(), dem.count_observables());
 
     stim::SparseShot sparse_shot;
     size_t num_shots = 0;
