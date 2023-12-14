@@ -19,9 +19,9 @@
 
 namespace pm {
 
-struct DetectorNode;
+class DetectorNode;
 struct GraphFillRegion;
-struct SearchDetectorNode;
+class SearchDetectorNode;
 
 enum FloodCheckEventType : uint8_t {
     /// A placeholder value indicating there was no event.

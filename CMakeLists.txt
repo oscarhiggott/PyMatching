@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(googletest)
 
 FetchContent_Declare(stim
         GIT_REPOSITORY https://github.com/quantumlib/stim.git
-        GIT_TAG c135a6129963031b5c05f974e9c5e8def83f8316)
+        GIT_TAG 3e38d12d0a0fb3022646b694137b733a4700d300)
 FetchContent_MakeAvailable(stim)
 if (NOT (MSVC))
     target_compile_options(libstim PRIVATE -fno-strict-aliasing -fPIC ${ARCH_OPT})

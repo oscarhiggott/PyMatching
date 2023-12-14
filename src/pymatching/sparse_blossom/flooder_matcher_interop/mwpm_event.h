@@ -20,7 +20,7 @@
 
 namespace pm {
 
-struct DetectorNode;
+class DetectorNode;
 struct GraphFillRegion;
 
 struct RegionHitRegionEventData {

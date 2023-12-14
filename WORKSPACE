@@ -3,7 +3,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "stim",
-    commit = "c135a6129963031b5c05f974e9c5e8def83f8316",
+    commit = "3e38d12d0a0fb3022646b694137b733a4700d300",
     remote = "https://github.com/quantumlib/stim.git",
 )
 
@@ -37,7 +37,9 @@ http_archive(
 )
 
 load("@rules_python//python:repositories.bzl", "py_repositories")
+
 py_repositories()
 
 load("@pybind11_bazel//:python_configure.bzl", "python_configure")
+
 python_configure(name = "local_config_python")

@@ -25,7 +25,7 @@
 
 namespace pm {
 
-class GraphFillRegion;
+struct GraphFillRegion;
 
 /// A collection of detector nodes. It's expected that all detector nodes in the graph
 /// will only refer to other detector nodes within the same graph.

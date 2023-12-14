@@ -21,7 +21,7 @@
 
 namespace pm {
 
-class GraphFillRegion;
+struct GraphFillRegion;
 
 struct RegionEdge {
     GraphFillRegion* region;

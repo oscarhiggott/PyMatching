@@ -21,7 +21,7 @@
 
 namespace pm {
 
-struct AltTreeNode;
+class AltTreeNode;
 
 struct MatchingResult {
     pm::obs_int obs_mask;
