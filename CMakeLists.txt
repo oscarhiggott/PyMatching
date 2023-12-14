@@ -102,6 +102,7 @@ if (NOT (MSVC))
     target_link_options(pymatching PRIVATE -pthread ${ARCH_OPT})
 endif ()
 target_link_libraries(pymatching libstim)
+install(TARGETS pymatching RUNTIME DESTINATION bin)
 
 enable_testing()
 
@@ -129,6 +130,8 @@ if(NOT(MSVC))
     target_link_options(libpymatching PRIVATE -pthread -O3)
 endif()
 target_link_libraries(libpymatching libstim)
+install(TARGETS libpymatching LIBRARY DESTINATION)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/" DESTINATION "include" FILES_MATCHING PATTERN "*.h" PATTERN "*.inl")
 
 include(GoogleTest)
 gtest_discover_tests(pymatching_tests)
