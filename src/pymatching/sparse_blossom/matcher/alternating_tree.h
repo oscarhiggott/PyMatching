@@ -23,7 +23,7 @@
 namespace pm {
 
 class AltTreeNode;
-class GraphFillRegion;
+struct GraphFillRegion;
 
 struct AltTreeEdge {
     AltTreeNode* alt_tree_node;

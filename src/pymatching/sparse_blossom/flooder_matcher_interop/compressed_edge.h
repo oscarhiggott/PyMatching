@@ -19,7 +19,7 @@
 
 namespace pm {
 
-struct DetectorNode;
+class DetectorNode;
 
 /// A compressed edge is a summary of a path between two detection events.
 /// Specifically, it tracks which observables the path has crossed.

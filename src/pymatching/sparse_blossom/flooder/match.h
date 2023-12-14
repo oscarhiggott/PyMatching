@@ -21,7 +21,7 @@
 
 namespace pm {
 
-class GraphFillRegion;
+struct GraphFillRegion;
 
 /// A Match is a partnered graph fill region.
 ///
