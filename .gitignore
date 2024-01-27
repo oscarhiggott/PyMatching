@@ -8,6 +8,7 @@ Testing/
 _deps/
 *.cmake
 ENV
+env
 circuits
 notes
 dist
