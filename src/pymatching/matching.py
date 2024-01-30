@@ -17,7 +17,7 @@ import warnings
 
 import numpy as np
 import networkx as nx
-import retworkx as rx
+import rustworkx as rx
 import pymatching
 from scipy.sparse import csc_matrix, spmatrix
 import matplotlib.cbook
@@ -33,7 +33,7 @@ class Matching:
     A class for constructing matching graphs and decoding using the minimum-weight perfect matching decoder.
     The matching graph can be constructed using the `Matching.add_edge` and `Matching.add_boundary_edge`
     methods. Alternatively, it can be loaded from a parity check matrix (a `scipy.sparse` matrix or `numpy.ndarray`
-    with one or two non-zero elements in each column), a NetworkX or retworkx graph, or from
+    with one or two non-zero elements in each column), a NetworkX or rustworkx graph, or from
     a `stim.DetectorErrorModel`.
     """
 
@@ -54,8 +54,8 @@ class Matching:
         graph : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` or `stim.DetectorErrorModel`, optional
             The matching graph to be decoded with minimum-weight perfect
             matching, given either as a binary parity check matrix (scipy sparse
-            matrix or numpy.ndarray), a NetworkX or retworkx graph, or a Stim DetectorErrorModel.
-            Each edge in the NetworkX or retworkx graph can have optional
+            matrix or numpy.ndarray), a NetworkX or rustworkx graph, or a Stim DetectorErrorModel.
+            Each edge in the NetworkX or rustworkx graph can have optional
             attributes ``fault_ids``, ``weight`` and ``error_probability``.
             ``fault_ids`` should be an int or a set of ints.
             Each fault id corresponds to a self-inverse fault that is flipped when the
@@ -139,7 +139,7 @@ class Matching:
         if isinstance(graph, nx.Graph):
             self.load_from_networkx(graph)
         elif isinstance(graph, rx.PyGraph):
-            self.load_from_retworkx(graph)
+            self.load_from_rustworkx(graph)
         elif type(graph).__name__ == "DetectorErrorModel":
             self._load_from_detector_error_model(graph)
         else:
@@ -147,7 +147,7 @@ class Matching:
                 graph = csc_matrix(graph)
             except TypeError:
                 raise TypeError("The type of the input graph is not recognised. `graph` must be "
-                                "a scipy.sparse or numpy matrix, networkx or retworkx graph, or "
+                                "a scipy.sparse or numpy matrix, networkx or rustworkx graph, or "
                                 "stim.DetectorErrorModel.")
             self.load_from_check_matrix(graph, weights, error_probabilities,
                                         repetitions, timelike_weights, measurement_error_probabilities,
@@ -1476,12 +1476,21 @@ class Matching:
 
     def load_from_retworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
         r"""
-        Load a matching graph from a retworkX graph
+        Load a matching graph from a retworkX graph. This method is deprecated since the retworkx package has been 
+        renamed to rustworkx. Please use `pymatching.Matching.load_from_rustworkx` instead.
+        """
+        warnings.warn("`pymatching.Matching.load_from_retworkx` is now deprecated since the `retworkx` library has been "
+                      "renamed to `rustworkx`. Please use `pymatching.Matching.load_from_rustworkx` instead.", DeprecationWarning, stacklevel=2)
+        self.load_from_rustworkx(graph=graph, min_num_fault_ids=min_num_fault_ids)
+
+    def load_from_rustworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
+        r"""
+        Load a matching graph from a rustworkX graph
 
         Parameters
         ----------
-        graph : retworkx.PyGraph
-            Each edge in the retworkx graph can have dictionary payload with keys
+        graph : rustworkx.PyGraph
+            Each edge in the rustworkx graph can have dictionary payload with keys
             ``fault_ids``, ``weight`` and ``error_probability``. ``fault_ids`` should be
             an int or a set of ints. Each fault id corresponds to a self-inverse fault
             that is flipped when the corresponding edge is flipped. These self-inverse
@@ -1504,7 +1513,7 @@ class Matching:
         Examples
         --------
         >>> import pymatching
-        >>> import retworkx as rx
+        >>> import rustworkx as rx
         >>> import math
         >>> g = rx.PyGraph()
         >>> matching = g.add_nodes_from([{} for _ in range(3)])
@@ -1517,7 +1526,7 @@ class Matching:
         <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
         """
         if not isinstance(graph, rx.PyGraph):
-            raise TypeError("G must be a retworkx graph")
+            raise TypeError("G must be a rustworkx graph")
         boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
         num_nodes = len(graph)
         num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
@@ -1546,7 +1555,7 @@ class Matching:
                         " (or convertible to a set), not {}".format(fault_ids))
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
-            # Note: retworkx graphs do not support parallel edges (merge strategy is redundant)
+            # Note: rustworkx graphs do not support parallel edges (merge strategy is redundant)
             g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
         self._matching_graph = g
 
@@ -1577,18 +1586,27 @@ class Matching:
         if has_virtual_boundary:
             graph.nodes[num_nodes]['is_boundary'] = True
         return graph
-
+    
     def to_retworkx(self) -> rx.PyGraph:
-        """Convert to retworkx graph
-        Returns a retworkx graph object corresponding to the matching graph. Each edge
+        """Deprecated, use `pymatching.Matching.to_rustworkx` instead (since the `retworkx` package has been renamed to `rustworkx`).
+        This method just calls `pymatching.Matching.to_rustworkx` and returns a `rustworkx.PyGraph`, which is now just the preferred name for `retworkx.PyGraph`.
+        Note that in the future, only the `rustworkx` package name will be supported, see: https://pypi.org/project/retworkx/.
+        """
+        warnings.warn("`pymatching.Matching.to_retworkx` is now deprecated since the `retworkx` library has been "
+                      "renamed to `rustworkx`. Please use `pymatching.Matching.to_rustworkx` instead.", DeprecationWarning, stacklevel=2)
+        return self.to_rustworkx()
+
+    def to_rustworkx(self) -> rx.PyGraph:
+        """Convert to rustworkx graph
+        Returns a rustworkx graph object corresponding to the matching graph. Each edge
         payload is a ``dict`` with keys `fault_ids`, `weight` and `error_probability` and
         each node has a ``dict`` payload with the key ``is_boundary`` and the value is
         a boolean.
 
         Returns
         -------
-        retworkx.PyGraph
-            retworkx graph corresponding to the matching graph
+        rustworkx.PyGraph
+            rustworkx graph corresponding to the matching graph
         """
         graph = rx.PyGraph(multigraph=False)
         num_nodes = self.num_nodes

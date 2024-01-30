@@ -1,3 +1,4 @@
+cov.xml
 .coverage
 *.ipynb_checkpoints
 .idea
@@ -31,3 +32,4 @@ build.ninja
 .ninja_deps
 .ninja_log
 .clwb
+.vscode

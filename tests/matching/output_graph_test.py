@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import networkx as nx
-import retworkx as rx
+import rustworkx as rx
 
 from pymatching import Matching
 
@@ -59,7 +59,7 @@ def test_matching_to_networkx():
     assert list(g.nodes(data=True)) == [(0, {"is_boundary": False}), (1, {"is_boundary": False})]
 
 
-def test_matching_to_retworkx():
+def test_matching_to_rustworkx():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(4)])
     g.add_edge(0, 1, dict(fault_ids={0}, weight=1.1, error_probability=0.1))
@@ -76,7 +76,7 @@ def test_matching_to_retworkx():
     g[1]['is_boundary'] = False
     g[2]['is_boundary'] = False
 
-    g2 = m.to_retworkx()
+    g2 = m.to_rustworkx()
 
     assert g.node_indices() == g2.node_indices()
     gedges = [({s, t}, d) for (s, t, d) in g.weighted_edge_list()]
@@ -87,7 +87,7 @@ def test_matching_to_retworkx():
     m.add_boundary_edge(0, weight=2)
     m.add_edge(0, 1, weight=3)
     m.add_edge(1, 2, weight=4)
-    g = m.to_retworkx()
+    g = m.to_rustworkx()
     es = list(g.weighted_edge_list())
     assert es == [(0, 3, {"weight": 2.0, "error_probability": -1, "fault_ids": set()}),
                   (0, 1, {"weight": 3.0, "error_probability": -1, "fault_ids": set()}),
@@ -97,7 +97,7 @@ def test_matching_to_retworkx():
 
     m = Matching()
     m.add_edge(0, 1)
-    g = m.to_retworkx()
+    g = m.to_rustworkx()
     assert list(g.weighted_edge_list()) == [(0, 1, {"weight": 1.0, "error_probability": -1, "fault_ids": set()})]
     assert list(g.nodes()) == [{"is_boundary": False}, {"is_boundary": False}]
 

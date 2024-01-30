@@ -13,14 +13,14 @@
 # limitations under the License.
 
 import numpy as np
-import retworkx as rx
+import rustworkx as rx
 import pytest
 
 from pymatching import Matching
 from pymatching._cpp_pymatching import MatchingGraph
 
 
-def test_boundary_from_retworkx():
+def test_boundary_from_rustworkx():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(5)])
     g.add_edge(4, 0, dict(fault_ids=0))
@@ -37,7 +37,7 @@ def test_boundary_from_retworkx():
     assert np.array_equal(m.decode(np.array([0, 0, 1, 0])), np.array([0, 0, 0, 1, 1]))
 
 
-def test_boundaries_from_retworkx():
+def test_boundaries_from_rustworkx():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(6)])
     g.add_edge(0, 1, dict(fault_ids=0))
@@ -56,7 +56,7 @@ def test_boundaries_from_retworkx():
     assert np.array_equal(m.decode(np.array([0, 0, 0, 1, 0])), np.array([0, 0, 0, 1, 1]))
 
 
-def test_unweighted_stabiliser_graph_from_retworkx():
+def test_unweighted_stabiliser_graph_from_rustworkx():
     w = rx.PyGraph()
     w.add_nodes_from([{} for _ in range(6)])
     w.add_edge(0, 1, dict(fault_ids=0, weight=7.0))
@@ -89,7 +89,7 @@ def test_unweighted_stabiliser_graph_from_retworkx():
     )
 
 
-def test_mwpm_from_retworkx():
+def test_mwpm_from_rustworkx():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(3)])
     g.add_edge(0, 1, dict(fault_ids=0))
@@ -121,7 +121,7 @@ def test_mwpm_from_retworkx():
     assert (m.num_fault_ids == 0)
 
 
-def test_matching_edges_from_retworkx():
+def test_matching_edges_from_rustworkx():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(4)])
     g.add_edge(0, 1, dict(fault_ids=0, weight=1.1, error_probability=0.1))
@@ -142,7 +142,7 @@ def test_matching_edges_from_retworkx():
     assert es == expected_edges
 
 
-def test_qubit_id_accepted_via_retworkx():
+def test_qubit_id_accepted_via_rustworkx():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(4)])
     g.add_edge(0, 1, dict(qubit_id=0, weight=1.1, error_probability=0.1))
@@ -162,29 +162,29 @@ def test_qubit_id_accepted_via_retworkx():
     assert es == expected_edges
 
 
-def test_load_from_retworkx_raises_value_error_if_qubit_id_and_fault_ids_both_supplied():
+def test_load_from_rustworkx_raises_value_error_if_qubit_id_and_fault_ids_both_supplied():
     with pytest.raises(ValueError):
         g = rx.PyGraph()
         g.add_nodes_from([{} for _ in range(3)])
         g.add_edge(0, 1, dict(qubit_id=0, fault_ids=0))
         g.add_edge(1, 2, dict(qubit_id=1, fault_ids=1))
         m = Matching()
-        m.load_from_retworkx(g)
+        m.load_from_rustworkx(g)
 
 
-def test_load_from_retworkx_type_errors_raised():
+def test_load_from_rustworkx_type_errors_raised():
     with pytest.raises(TypeError):
         m = Matching()
-        m.load_from_retworkx("A")
+        m.load_from_rustworkx("A")
     with pytest.raises(TypeError):
         g = rx.PyGraph()
         g.add_nodes_from([{} for _ in range(2)])
         g.add_edge(0, 1, dict(fault_ids={0, "a"}))
         m = Matching()
-        m.load_from_retworkx(g)
+        m.load_from_rustworkx(g)
     with pytest.raises(TypeError):
         g = rx.PyGraph()
         g.add_nodes_from([{} for _ in range(2)])
         g.add_edge(0, 1, dict(fault_ids=[[0], [2]]))
         m = Matching()
-        m.load_from_retworkx(g)
+        m.load_from_rustworkx(g)
