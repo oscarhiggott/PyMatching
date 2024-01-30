@@ -6,6 +6,9 @@
 - [Run C++ unit tests using cmake](#cmake-test)
 - [Run C++ performance benchmarks tests using cmake](#cmake-perf)
 - [Build and install development version of pymatching python package](#pip-install)
+- [Linking to pymatching with cmake](#cmake-linking)
+- [Linking to pymatching with bazel](#bazel-linking)
+- [Build the sphinx documentation](#sphinx)
 
 # <a name="build-cmake"></a>Build the pymatching command line tool with cmake
 
@@ -146,6 +149,46 @@ Use `--only=prefix*` to only run benchmarks beginning with a prefix.
 pip install -e .
 ```
 
+# <a name="cmake-linking"></a>Linking from CMake
+
+To use pymatching as a cmake dependency, fetch it using `FetchContent` in the CMakeLists.txt file:
+
+```
+FetchContent_Declare(pymatching
+        GIT_REPOSITORY https://github.com/oscarhiggott/pymatching.git
+        GIT_TAG eea3501a1c1e2dc2b6d34221c6f1eb51edb06e1e)
+FetchContent_GetProperties(pymatching)
+if(NOT pymatching_POPULATED)
+  FetchContent_Populate(pymatching)
+  add_subdirectory(${pymatching_SOURCE_DIR})
+endif()
+```
+
+Replace this commit SHA with another commit or version tag as needed.
+
+You can then link to it:
+
+```
+[...]
+target_link_libraries(YOURLIBRARY libpymatching)
+[...]
+```
+
+# <a name="bazel-linking"></a>Linking from Bazel
+
+In your `WORKSPACE` file, include the pymatching git repo using `git_repository`:
+
+```
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+git_repository(
+    name = "pymatching",
+    commit = "eea3501a1c1e2dc2b6d34221c6f1eb51edb06e1e",
+    remote = "https://github.com/oscarhiggott/pymatching.git",
+)
+```
+
+Replace this commit with another commit SHA or version tag as needed.
+
 # <a name="sphinx"></a>Build the Sphinx documentation
 
 First install the sphinx requirements:
@@ -163,4 +206,3 @@ make html
 ```
 
 and view `docs/sphinx_docs/build/html/index.html` in a browser.
-
