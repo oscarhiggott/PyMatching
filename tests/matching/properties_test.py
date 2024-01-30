@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import networkx as nx
-import retworkx as rx
+import rustworkx as rx
 
 from pymatching.matching import Matching
 
@@ -51,12 +51,12 @@ def test_set_min_num_fault_ids():
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(2)])
     g.add_edge(0, 1, dict(fault_ids=3))
-    m.load_from_retworkx(g)
+    m.load_from_rustworkx(g)
     assert m.num_fault_ids == 4
     assert m.decode([1, 1]).shape[0] == 4
-    m.load_from_retworkx(g, min_num_fault_ids=7)
+    m.load_from_rustworkx(g, min_num_fault_ids=7)
     assert m.num_fault_ids == 7
     assert m.decode([1, 1]).shape[0] == 7
-    m.load_from_retworkx(g, min_num_fault_ids=2)
+    m.load_from_rustworkx(g, min_num_fault_ids=2)
     assert m.num_fault_ids == 4
     assert m.decode([1, 1]).shape[0] == 4

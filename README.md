@@ -83,7 +83,7 @@ pip install pymatching --upgrade
 ## Usage
 
 PyMatching can load matching graphs from a check matrix, a `stim.DetectorErrorModel`, a `networkx.Graph`, a 
-`retworkx.PyGraph` or by adding edges individually with `pymatching.Matching.add_edge` and 
+`rustworkx.PyGraph` or by adding edges individually with `pymatching.Matching.add_edge` and 
 `pymatching.Matching.add_boundary_edge`.
 
 ### Decoding Stim circuits
@@ -287,7 +287,7 @@ Instead of using a check matrix, the Matching object can also be constructed usi
 the [`Matching.add_edge`](https://pymatching.readthedocs.io/en/stable/api.html#pymatching.matching.Matching.add_edge)
 and 
 [`Matching.add_boundary_edge`](https://pymatching.readthedocs.io/en/stable/api.html#pymatching.matching.Matching.add_boundary_edge) 
-methods, or by loading from a NetworkX or retworkx graph. 
+methods, or by loading from a NetworkX or rustworkx graph. 
 
 For more details on how to use PyMatching,
 see [the documentation](https://pymatching.readthedocs.io).

@@ -41,32 +41,36 @@ jobs:
       matrix:
         os_dist: [
           # macosx x86_64
-          {os: macos-latest, dist: cp36-macosx_x86_64},
+          # {os: macos-latest, dist: cp36-macosx_x86_64},
           {os: macos-latest, dist: cp37-macosx_x86_64},
           {os: macos-latest, dist: cp38-macosx_x86_64},
           {os: macos-latest, dist: cp39-macosx_x86_64},
           {os: macos-latest, dist: cp310-macosx_x86_64},
           {os: macos-latest, dist: cp311-macosx_x86_64},
+          {os: macos-latest, dist: cp312-macosx_x86_64},
           # macosx arm64
           {os: macos-latest, dist: cp38-macosx_arm64},
           {os: macos-latest, dist: cp39-macosx_arm64},
           {os: macos-latest, dist: cp310-macosx_arm64},
           {os: macos-latest, dist: cp311-macosx_arm64},
+          {os: macos-latest, dist: cp312-macosx_arm64},
           # macosx universal2
           {os: macos-latest, dist: cp38-macosx_universal2},
           {os: macos-latest, dist: cp39-macosx_universal2},
           {os: macos-latest, dist: cp310-macosx_universal2},
           {os: macos-latest, dist: cp311-macosx_universal2},
+          {os: macos-latest, dist: cp312-macosx_universal2},
 
           # windows amd64
-          {os: windows-latest, dist: cp36-win_amd64},
+          # {os: windows-latest, dist: cp36-win_amd64},
           {os: windows-latest, dist: cp37-win_amd64},
           {os: windows-latest, dist: cp38-win_amd64},
           {os: windows-latest, dist: cp39-win_amd64},
           {os: windows-latest, dist: cp310-win_amd64},
           {os: windows-latest, dist: cp311-win_amd64},
+          {os: windows-latest, dist: cp312-win_amd64},
           # windows win32
-          {os: windows-latest, dist: cp36-win32},
+          # {os: windows-latest, dist: cp36-win32},
           {os: windows-latest, dist: cp37-win32},
           # scipy install fails
 #          {os: windows-latest, dist: cp38-win32},
@@ -79,14 +83,15 @@ jobs:
 #          {os: windows-latest, dist: cp311-win_arm64},
 
           # ubuntu x86_64
-          {os: ubuntu-latest, dist: cp36-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp36-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp37-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
           # ubuntu i686
-          {os: ubuntu-latest, dist: cp36-manylinux_i686},
+          # {os: ubuntu-latest, dist: cp36-manylinux_i686},
           {os: ubuntu-latest, dist: cp37-manylinux_i686},
           # scipy built distribution not available and build fails on manylinux_i686 for python 3.8 up
 #          {os: ubuntu-latest, dist: cp38-manylinux_i686},
@@ -118,7 +123,7 @@ jobs:
         sudo apt update
         sudo apt install gcc-10 g++-10
 
-    - uses: pypa/cibuildwheel@v2.11.1
+    - uses: pypa/cibuildwheel@v2.16.4
 
     - name: Verify clean directory
       run: git diff --exit-code
