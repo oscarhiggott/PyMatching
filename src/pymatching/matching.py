@@ -1476,8 +1476,8 @@ class Matching:
 
     def load_from_retworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
         r"""
-        Load a matching graph from a retworkX graph. This method is deprecated since the retworkx package has been 
-        renamed to rustworkx. Please use `pymatching.Matching.load_from_rustworkx` instead.
+        Load a matching graph from a retworkX graph. This method is deprecated since the retworkx package has been
+         renamed to rustworkx. Please use `pymatching.Matching.load_from_rustworkx` instead.
         """
         warnings.warn("`pymatching.Matching.load_from_retworkx` is now deprecated since the `retworkx` library has been "
                       "renamed to `rustworkx`. Please use `pymatching.Matching.load_from_rustworkx` instead.", DeprecationWarning, stacklevel=2)
@@ -1586,11 +1586,12 @@ class Matching:
         if has_virtual_boundary:
             graph.nodes[num_nodes]['is_boundary'] = True
         return graph
-    
+
     def to_retworkx(self) -> rx.PyGraph:
         """Deprecated, use `pymatching.Matching.to_rustworkx` instead (since the `retworkx` package has been renamed to `rustworkx`).
-        This method just calls `pymatching.Matching.to_rustworkx` and returns a `rustworkx.PyGraph`, which is now just the preferred name for `retworkx.PyGraph`.
-        Note that in the future, only the `rustworkx` package name will be supported, see: https://pypi.org/project/retworkx/.
+        This method just calls `pymatching.Matching.to_rustworkx` and returns a `rustworkx.PyGraph`, which is now just the preferred name for
+         `retworkx.PyGraph`. Note that in the future, only the `rustworkx` package name will be supported, 
+         see: https://pypi.org/project/retworkx/.
         """
         warnings.warn("`pymatching.Matching.to_retworkx` is now deprecated since the `retworkx` library has been "
                       "renamed to `rustworkx`. Please use `pymatching.Matching.to_rustworkx` instead.", DeprecationWarning, stacklevel=2)
