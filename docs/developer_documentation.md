@@ -189,6 +189,18 @@ git_repository(
 
 Replace this commit with another commit SHA or version tag as needed.
 
+In your `BUILD` file, add:
+
+```
+cc_binary(
+    name = "your_project",
+    ...
+    deps = [
+        "@pymatching//:libpymatching",
+    ],
+)
+```
+
 # <a name="sphinx"></a>Build the Sphinx documentation
 
 First install the sphinx requirements:
