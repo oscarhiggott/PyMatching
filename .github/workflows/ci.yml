@@ -30,7 +30,6 @@ jobs:
   build_wheels:
     runs-on: ${{ matrix.os_dist.os }}
     env:
-      MACOSX_DEPLOYMENT_TARGET: "10.15"
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
       CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
       CIBW_BEFORE_BUILD: pip install --upgrade ninja
@@ -125,7 +124,7 @@ jobs:
         sudo apt update
         sudo apt install gcc-10 g++-10
 
-    - uses: pypa/cibuildwheel@v2.16.4
+    - uses: pypa/cibuildwheel@v2.16.5
 
     - name: Verify clean directory
       run: git diff --exit-code
@@ -181,7 +180,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.10"]
+        python-version: ["3.11"]
 
     runs-on: ${{ matrix.platform }}
 
