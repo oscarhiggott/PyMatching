@@ -189,8 +189,6 @@ jobs:
           submodules: true
 
       - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
 
       - name: Add requirements
         run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov
@@ -218,8 +216,6 @@ jobs:
           submodules: true
 
       - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
 
       - name: Install pandoc
         run: |
