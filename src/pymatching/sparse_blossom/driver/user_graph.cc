@@ -245,18 +245,33 @@ double pm::UserGraph::max_abs_weight() {
 
 pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
+
+    // Use vectors to store boundary edges initially before adding them to matching_graph, so
+    // that parallel boundary edges with negative edge weights can be handled correctly
+    std::vector<bool> has_boundary_edge(nodes.size(), false);
+    std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
+    std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
+
     double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
         [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
             matching_graph.add_edge(u, v, weight, observables);
         },
         [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            // Only add the boundary edge if it already isn't present. Ideally parallel edges should already have been
-            // merged, however we are implicitly merging all boundary nodes in this step, which could give rise to new
-            // parallel edges.
-            if (matching_graph.nodes[u].neighbors.empty() || matching_graph.nodes[u].neighbors[0])
-                matching_graph.add_boundary_edge(u, weight, observables);
+            // For parallel boundary edges, keep the boundary edge with the smaller weight
+            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight){
+                boundary_edge_weights[u] = weight;
+                boundary_edge_observables[u] = observables;
+                has_boundary_edge[u] = true;
+            }
         });
+    
+    // Now add boundary edges to matching_graph
+    for (size_t i = 0; i < has_boundary_edge.size(); i++) {
+        if (has_boundary_edge[i])
+            matching_graph.add_boundary_edge(i, boundary_edge_weights[i], boundary_edge_observables[i]);
+    }
+
     matching_graph.normalising_constant = normalising_constant;
     if (boundary_nodes.size() > 0) {
         matching_graph.is_user_graph_boundary_node.clear();

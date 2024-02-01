@@ -276,3 +276,21 @@ def test_decode_to_edges():
         m.add_edge(i, i + 1)
     edges = m.decode_to_edges_array([0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0])
     assert np.array_equal(edges, np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64))
+
+
+def test_parallel_boundary_edges_decoding():
+    m = Matching()
+    m.set_boundary_nodes({0, 2})
+    m.add_edge(0, 1, fault_ids=0, weight=3.5)
+    m.add_edge(1, 2, fault_ids=1, weight=2.5)
+    assert np.array_equal(m.decode([0, 1]), np.array([0, 1], dtype=np.uint8))
+
+    m = Matching()
+    m.add_edge(0, 1, fault_ids=0, weight=-1)
+    m.add_edge(0, 2, fault_ids=1, weight=3)
+    m.add_boundary_edge(0, fault_ids=2, weight=-0.5)
+    m.add_edge(0, 3, fault_ids=3, weight=-3)
+    m.add_edge(0, 4, fault_ids=4, weight=-2)
+    assert np.array_equal(m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 1, 0, 0], dtype=np.uint8))
+    m.set_boundary_nodes({1, 2, 3, 4})
+    assert np.array_equal(m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0], dtype=np.uint8))
