@@ -116,6 +116,8 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
+    
+    - uses: actions/setup-python@v4
 
     - name: Install g++
       if: runner.os == 'Linux'
@@ -191,10 +193,10 @@ jobs:
       - uses: actions/setup-python@v4
 
       - name: Add requirements
-        run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov
+        run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov setuptools
 
       - name: Build and install
-        run: pip install --verbose -e .
+        run: python -m pip install --verbose -e .
 
       - name: Test without stim
         run: python -m pytest tests
