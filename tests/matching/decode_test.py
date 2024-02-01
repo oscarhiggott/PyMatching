@@ -284,6 +284,9 @@ def test_parallel_boundary_edges_decoding():
     m.add_edge(0, 1, fault_ids=0, weight=3.5)
     m.add_edge(1, 2, fault_ids=1, weight=2.5)
     assert np.array_equal(m.decode([0, 1]), np.array([0, 1], dtype=np.uint8))
+    m.add_boundary_edge(1, fault_ids=100, weight=100)
+    # Test pm::SearchGraph
+    assert np.array_equal(np.nonzero(m.decode([0, 1]))[0], np.array([1], dtype=int))
 
     m = Matching()
     m.add_edge(0, 1, fault_ids=0, weight=-1)
