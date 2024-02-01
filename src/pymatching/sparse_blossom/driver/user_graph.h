@@ -99,6 +99,11 @@ class UserGraph {
         pm::weight_int num_distinct_weights,
         const EdgeCallable& edge_func,
         const BoundaryEdgeCallable& boundary_edge_func);
+    template <typename EdgeCallable, typename BoundaryEdgeCallable>
+    double to_matching_or_search_graph_helper(
+        pm::weight_int num_distinct_weights,
+        const EdgeCallable& edge_func,
+        const BoundaryEdgeCallable& boundary_edge_func);
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
     pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_graph_included);
@@ -120,7 +125,6 @@ inline double UserGraph::iter_discretized_edges(
     pm::weight_int num_distinct_weights,
     const EdgeCallable& edge_func,
     const BoundaryEdgeCallable& boundary_edge_func) {
-    pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
     double normalising_constant = get_edge_weight_normalising_constant(num_distinct_weights);
 
     for (auto& e : edges) {
@@ -139,6 +143,38 @@ inline double UserGraph::iter_discretized_edges(
         }
     }
     return normalising_constant * 2;
+}
+
+template <typename EdgeCallable, typename BoundaryEdgeCallable>
+inline double UserGraph::to_matching_or_search_graph_helper(
+        pm::weight_int num_distinct_weights,
+    const EdgeCallable& edge_func,
+    const BoundaryEdgeCallable& boundary_edge_func) {
+    
+    // Use vectors to store boundary edges initially before adding them to the graph, so
+    // that parallel boundary edges with negative edge weights can be handled correctly
+    std::vector<bool> has_boundary_edge(nodes.size(), false);
+    std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
+    std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
+
+    double normalising_constant = iter_discretized_edges(
+        num_distinct_weights,
+        edge_func,
+        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+            // For parallel boundary edges, keep the boundary edge with the smaller weight
+            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight){
+                boundary_edge_weights[u] = weight;
+                boundary_edge_observables[u] = observables;
+                has_boundary_edge[u] = true;
+            }
+        });
+    
+    // Now add boundary edges to the graph
+    for (size_t i = 0; i < has_boundary_edge.size(); i++) {
+        if (has_boundary_edge[i])
+            boundary_edge_func(i, boundary_edge_weights[i], boundary_edge_observables[i]);
+    }
+    return normalising_constant;
 }
 
 UserGraph detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model);

@@ -246,31 +246,15 @@ double pm::UserGraph::max_abs_weight() {
 pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
 
-    // Use vectors to store boundary edges initially before adding them to matching_graph, so
-    // that parallel boundary edges with negative edge weights can be handled correctly
-    std::vector<bool> has_boundary_edge(nodes.size(), false);
-    std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
-    std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
-
-    double normalising_constant = iter_discretized_edges(
+    double normalising_constant = to_matching_or_search_graph_helper(
         num_distinct_weights,
         [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
             matching_graph.add_edge(u, v, weight, observables);
         },
         [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            // For parallel boundary edges, keep the boundary edge with the smaller weight
-            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight){
-                boundary_edge_weights[u] = weight;
-                boundary_edge_observables[u] = observables;
-                has_boundary_edge[u] = true;
-            }
-        });
-    
-    // Now add boundary edges to matching_graph
-    for (size_t i = 0; i < has_boundary_edge.size(); i++) {
-        if (has_boundary_edge[i])
-            matching_graph.add_boundary_edge(i, boundary_edge_weights[i], boundary_edge_observables[i]);
-    }
+            matching_graph.add_boundary_edge(u, weight, observables);
+        }
+    );
 
     matching_graph.normalising_constant = normalising_constant;
     if (boundary_nodes.size() > 0) {
@@ -286,31 +270,15 @@ pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weigh
     /// Identical to to_matching_graph but for constructing a pm::SearchGraph
     pm::SearchGraph search_graph(nodes.size());
 
-    // Use vectors to store boundary edges initially before adding them to search_graph, so
-    // that parallel boundary edges with negative edge weights can be handled correctly
-    std::vector<bool> has_boundary_edge(nodes.size(), false);
-    std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
-    std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
-
-    double normalising_constant = iter_discretized_edges(
+    to_matching_or_search_graph_helper(
         num_distinct_weights,
         [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
             search_graph.add_edge(u, v, weight, observables);
         },
         [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            // For parallel boundary edges, keep the boundary edge with the smaller weight
-            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight){
-                boundary_edge_weights[u] = weight;
-                boundary_edge_observables[u] = observables;
-                has_boundary_edge[u] = true;
-            }
-        });
-    
-    // Now add boundary edges to search_graph
-    for (size_t i = 0; i < has_boundary_edge.size(); i++) {
-        if (has_boundary_edge[i])
-            search_graph.add_boundary_edge(i, boundary_edge_weights[i], boundary_edge_observables[i]);
-    }
+            search_graph.add_boundary_edge(u, weight, observables);
+        }
+    );
     return search_graph;
 }
 
