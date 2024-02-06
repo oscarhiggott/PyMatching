@@ -15,5 +15,6 @@
 from pymatching._cpp_pymatching import (randomize, set_seed, rand_float)  # noqa
 from pymatching._cpp_pymatching import main as cli  # noqa
 from pymatching.matching import Matching  # noqa
+from pymatching._version import __version__
 
 randomize()  # Set random seed using std::random_device
