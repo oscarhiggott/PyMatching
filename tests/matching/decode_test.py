@@ -276,6 +276,8 @@ def test_decode_to_edges():
         m.add_edge(i, i + 1)
     edges = m.decode_to_edges_array([0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0])
     assert np.array_equal(edges, np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64))
+    edges = m.decode_to_edges_array([False, True, False, True, False, False, True, False, True, True, False])
+    assert np.array_equal(edges, np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64))
 
 
 def test_parallel_boundary_edges_decoding():

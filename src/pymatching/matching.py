@@ -190,7 +190,7 @@ class Matching:
         return detection_events
 
     def decode(self,
-               z: Union[np.ndarray, List[int]],
+               z: Union[np.ndarray, List[bool], List[int]],
                _legacy_num_neighbours: int = None,
                _legacy_return_weight: bool = None,
                *,
@@ -423,7 +423,7 @@ class Matching:
             return predictions
 
     def decode_to_edges_array(self,
-                              syndrome: Union[np.ndarray, List[int]]
+                              syndrome: Union[np.ndarray, List[bool], List[int]]
                               ) -> np.ndarray:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the edges in the
@@ -472,7 +472,7 @@ class Matching:
         return self._matching_graph.decode_to_edges_array(detection_events)
 
     def decode_to_matched_dets_array(self,
-                                     syndrome: Union[np.ndarray, List[int]]
+                                     syndrome: Union[np.ndarray, List[bool], List[int]]
                                      ) -> np.ndarray:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
@@ -523,7 +523,7 @@ class Matching:
         return self._matching_graph.decode_to_matched_detection_events_array(detection_events)
 
     def decode_to_matched_dets_dict(self,
-                                    syndrome: Union[np.ndarray, List[int]]
+                                    syndrome: Union[np.ndarray, List[bool], List[int]]
                                     ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning a dictionary
