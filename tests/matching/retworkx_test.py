@@ -1,10 +1,10 @@
 import pytest
 
 from pymatching import Matching
-import rustworkx as rx
 
 
 def test_load_from_retworkx_deprecated():
+    rx = pytest.importorskip("rustworkx")
     with pytest.deprecated_call():
         g = rx.PyGraph()
         g.add_nodes_from([{} for _ in range(3)])
@@ -16,6 +16,7 @@ def test_load_from_retworkx_deprecated():
 
 
 def test_to_retworkx_deprecated():
+    _ = pytest.importorskip("rustworkx")
     with pytest.deprecated_call():
         m = Matching()
         m.add_edge(0, 1, {0})

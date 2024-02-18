@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import networkx as nx
-import rustworkx as rx
+import pytest
 
 from pymatching.matching import Matching
 
@@ -48,9 +48,13 @@ def test_set_min_num_fault_ids():
     assert m.num_fault_ids == 4
     assert m.decode([1, 1]).shape[0] == 4
 
+
+def test_set_min_num_fault_ids_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(2)])
     g.add_edge(0, 1, dict(fault_ids=3))
+    m = Matching()
     m.load_from_rustworkx(g)
     assert m.num_fault_ids == 4
     assert m.decode([1, 1]).shape[0] == 4
