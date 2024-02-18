@@ -20,6 +20,7 @@ import pytest
 
 def test_matching_docstrings():
     pytest.importorskip("stim")
+    pytest.importorskip("rustworkx")
     doctest.testmod(pymatching.matching, raise_on_error=True)
 
 
