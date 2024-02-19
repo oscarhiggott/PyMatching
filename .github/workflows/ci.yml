@@ -200,13 +200,13 @@ jobs:
       - name: Build and install
         run: python -m pip install --verbose -e .
 
-      - name: Test without stim
+      - name: Test without stim or rustworkx
         run: python -m pytest tests
 
-      - name: Add stim
-        run: python -m pip install stim
+      - name: Install stim and rustworkx
+        run: python -m pip install stim rustworkx
 
-      - name: Test with stim using coverage
+      - name: Test with stim and rustworkx using coverage
         run: python -m pytest tests --cov=./src/pymatching --cov-report term
 
       - name: flake8
@@ -244,7 +244,7 @@ jobs:
         with:
           python-version: '3.10'
       - name: Add requirements
-        run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov stim
+        run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov stim rustworkx
       - name: Build and install
         run: pip install --verbose -e .
       - name: Run tests and collect coverage

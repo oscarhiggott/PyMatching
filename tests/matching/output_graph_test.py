@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import networkx as nx
-import rustworkx as rx
+import pytest
 
 from pymatching import Matching
 
@@ -60,6 +60,7 @@ def test_matching_to_networkx():
 
 
 def test_matching_to_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(4)])
     g.add_edge(0, 1, dict(fault_ids={0}, weight=1.1, error_probability=0.1))

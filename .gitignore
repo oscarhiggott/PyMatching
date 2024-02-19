@@ -1,4 +1,5 @@
 cov.xml
+coverage.xml
 .coverage
 *.ipynb_checkpoints
 .idea

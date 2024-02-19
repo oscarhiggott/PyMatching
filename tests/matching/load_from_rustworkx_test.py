@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-import rustworkx as rx
 import pytest
 
 from pymatching import Matching
@@ -21,6 +20,7 @@ from pymatching._cpp_pymatching import MatchingGraph
 
 
 def test_boundary_from_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(5)])
     g.add_edge(4, 0, dict(fault_ids=0))
@@ -38,6 +38,7 @@ def test_boundary_from_rustworkx():
 
 
 def test_boundaries_from_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(6)])
     g.add_edge(0, 1, dict(fault_ids=0))
@@ -57,6 +58,7 @@ def test_boundaries_from_rustworkx():
 
 
 def test_unweighted_stabiliser_graph_from_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     w = rx.PyGraph()
     w.add_nodes_from([{} for _ in range(6)])
     w.add_edge(0, 1, dict(fault_ids=0, weight=7.0))
@@ -90,6 +92,7 @@ def test_unweighted_stabiliser_graph_from_rustworkx():
 
 
 def test_mwpm_from_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(3)])
     g.add_edge(0, 1, dict(fault_ids=0))
@@ -122,6 +125,7 @@ def test_mwpm_from_rustworkx():
 
 
 def test_matching_edges_from_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(4)])
     g.add_edge(0, 1, dict(fault_ids=0, weight=1.1, error_probability=0.1))
@@ -143,6 +147,7 @@ def test_matching_edges_from_rustworkx():
 
 
 def test_qubit_id_accepted_via_rustworkx():
+    rx = pytest.importorskip("rustworkx")
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(4)])
     g.add_edge(0, 1, dict(qubit_id=0, weight=1.1, error_probability=0.1))
@@ -163,6 +168,7 @@ def test_qubit_id_accepted_via_rustworkx():
 
 
 def test_load_from_rustworkx_raises_value_error_if_qubit_id_and_fault_ids_both_supplied():
+    rx = pytest.importorskip("rustworkx")
     with pytest.raises(ValueError):
         g = rx.PyGraph()
         g.add_nodes_from([{} for _ in range(3)])
@@ -173,6 +179,7 @@ def test_load_from_rustworkx_raises_value_error_if_qubit_id_and_fault_ids_both_s
 
 
 def test_load_from_rustworkx_type_errors_raised():
+    rx = pytest.importorskip("rustworkx")
     with pytest.raises(TypeError):
         m = Matching()
         m.load_from_rustworkx("A")
@@ -188,3 +195,11 @@ def test_load_from_rustworkx_type_errors_raised():
         g.add_edge(0, 1, dict(fault_ids=[[0], [2]]))
         m = Matching()
         m.load_from_rustworkx(g)
+
+
+def test_load_from_rustworkx_without_rustworkx_raises_type_error():
+    try:
+        import rustworkx  # noqa
+    except ImportError:
+        with pytest.raises(TypeError):
+            Matching.load_from_rustworkx("test")

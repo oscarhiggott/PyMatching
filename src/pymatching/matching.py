@@ -16,14 +16,14 @@ from typing import Union, List, TYPE_CHECKING, Tuple, Set, Dict, Optional
 import warnings
 
 import numpy as np
-import networkx as nx
-import rustworkx as rx
 import pymatching
+import networkx as nx
 from scipy.sparse import csc_matrix, spmatrix
 import matplotlib.cbook
 
 if TYPE_CHECKING:
     import stim  # pragma: no cover
+    import rustworkx as rx  # pragma: no cover
 
 import pymatching._cpp_pymatching as _cpp_pm
 
@@ -38,7 +38,7 @@ class Matching:
     """
 
     def __init__(self,
-                 graph: Union[csc_matrix, np.ndarray, rx.PyGraph, nx.Graph, List[
+                 graph: Union[csc_matrix, np.ndarray, "rx.PyGraph", nx.Graph, List[
                      List[int]], 'stim.DetectorErrorModel', spmatrix] = None,
                  weights: Union[float, np.ndarray, List[float]] = None,
                  error_probabilities: Union[float, np.ndarray, List[float]] = None,
@@ -136,22 +136,36 @@ class Matching:
             if graph is None:
                 return
             del kwargs["H"]
+        # Networkx graph
         if isinstance(graph, nx.Graph):
             self.load_from_networkx(graph)
-        elif isinstance(graph, rx.PyGraph):
-            self.load_from_rustworkx(graph)
-        elif type(graph).__name__ == "DetectorErrorModel":
-            self._load_from_detector_error_model(graph)
-        else:
-            try:
-                graph = csc_matrix(graph)
-            except TypeError:
-                raise TypeError("The type of the input graph is not recognised. `graph` must be "
-                                "a scipy.sparse or numpy matrix, networkx or rustworkx graph, or "
-                                "stim.DetectorErrorModel.")
-            self.load_from_check_matrix(graph, weights, error_probabilities,
-                                        repetitions, timelike_weights, measurement_error_probabilities,
-                                        **kwargs)
+            return
+        # Rustworkx PyGraph
+        try:
+            import rustworkx as rx
+            if isinstance(graph, rx.PyGraph):
+                self.load_from_rustworkx(graph)
+                return
+        except ImportError:  # pragma no cover
+            pass
+        # stim.DetectorErrorModel
+        try:
+            import stim
+            if isinstance(graph, stim.DetectorErrorModel):
+                self._load_from_detector_error_model(graph)
+                return
+        except ImportError:  # pragma no cover
+            pass
+        # scipy.csc_matrix
+        try:
+            graph = csc_matrix(graph)
+        except TypeError:
+            raise TypeError("The type of the input graph is not recognised. `graph` must be "
+                            "a scipy.sparse or numpy matrix, networkx or rustworkx graph, or "
+                            "stim.DetectorErrorModel.")
+        self.load_from_check_matrix(graph, weights, error_probabilities,
+                                    repetitions, timelike_weights, measurement_error_probabilities,
+                                    **kwargs)
 
     def add_noise(self) -> Union[Tuple[np.ndarray, np.ndarray], None]:
         """Add noise by flipping edges in the matching graph with
@@ -210,16 +224,6 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
-        _legacy_num_neighbours: int
-            The `num_neighbours` argument available in PyMatching versions 0.x.x is not
-            available in PyMatching v2.0.0 or later, since it introduced an approximation
-            that is not relevant or required in the new version 2 implementation.
-            Providing num_neighbours as this second positional argument will raise an exception in a
-            future version of PyMatching.
-        _legacy_return_weight: bool
-            ``return_weight`` used to be available as this third positional argument, but should now
-            be set as a keyword argument. In a future version of PyMatching, it will only be possible
-            to provide `return_weight` as a keyword argument.
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
@@ -314,7 +318,7 @@ class Matching:
         if _legacy_return_weight is not None:
             warnings.warn("The ``return_weights`` argument was provided as a positional argument, but in a future "
                           "version of PyMatching, it will be required to provide ``return_weights`` as a keyword "
-                          "argument.")
+                          "argument.", DeprecationWarning, stacklevel=2)
             return_weight = _legacy_return_weight
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(detection_events)
@@ -1474,7 +1478,7 @@ class Matching:
             g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
         self._matching_graph = g
 
-    def load_from_retworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
+    def load_from_retworkx(self, graph: "rx.PyGraph", *, min_num_fault_ids: int = None) -> None:
         r"""
         Load a matching graph from a retworkX graph. This method is deprecated since the retworkx package has been
         renamed to rustworkx. Please use ``pymatching.Matching.load_from_rustworkx`` instead.
@@ -1483,7 +1487,7 @@ class Matching:
                       "renamed to `rustworkx`. Please use `pymatching.Matching.load_from_rustworkx` instead.", DeprecationWarning, stacklevel=2)
         self.load_from_rustworkx(graph=graph, min_num_fault_ids=min_num_fault_ids)
 
-    def load_from_rustworkx(self, graph: rx.PyGraph, *, min_num_fault_ids: int = None) -> None:
+    def load_from_rustworkx(self, graph: "rx.PyGraph", *, min_num_fault_ids: int = None) -> None:
         r"""
         Load a matching graph from a rustworkX graph
 
@@ -1525,6 +1529,10 @@ class Matching:
         >>> m
         <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
         """
+        try:
+            import rustworkx as rx
+        except ImportError:  # pragma no cover
+            raise ImportError("rustworkx must be installed to use Matching.load_from_rustworkx")
         if not isinstance(graph, rx.PyGraph):
             raise TypeError("G must be a rustworkx graph")
         boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
@@ -1587,7 +1595,7 @@ class Matching:
             graph.nodes[num_nodes]['is_boundary'] = True
         return graph
 
-    def to_retworkx(self) -> rx.PyGraph:
+    def to_retworkx(self) -> "rx.PyGraph":
         """Deprecated, use ``pymatching.Matching.to_rustworkx`` instead (since the `retworkx` package has been renamed to `rustworkx`).
         This method just calls ``pymatching.Matching.to_rustworkx`` and returns a ``rustworkx.PyGraph``, which is now just the preferred name for
          ``retworkx.PyGraph``. Note that in the future, only the `rustworkx` package name will be supported,
@@ -1597,7 +1605,7 @@ class Matching:
                       "renamed to `rustworkx`. Please use `pymatching.Matching.to_rustworkx` instead.", DeprecationWarning, stacklevel=2)
         return self.to_rustworkx()
 
-    def to_rustworkx(self) -> rx.PyGraph:
+    def to_rustworkx(self) -> "rx.PyGraph":
         """Convert to rustworkx graph
         Returns a rustworkx graph object corresponding to the matching graph. Each edge
         payload is a ``dict`` with keys `fault_ids`, `weight` and `error_probability` and
@@ -1609,6 +1617,11 @@ class Matching:
         rustworkx.PyGraph
             rustworkx graph corresponding to the matching graph
         """
+        try:
+            import rustworkx as rx
+        except ImportError:  # pragma no cover
+            raise ImportError("rustworkx must be installed to use Matching.to_rustworkx.")
+
         graph = rx.PyGraph(multigraph=False)
         num_nodes = self.num_nodes
         has_virtual_boundary = False
