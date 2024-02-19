@@ -23,7 +23,7 @@ import matplotlib.cbook
 
 if TYPE_CHECKING:
     import stim  # pragma: no cover
-    import rustworkx as rx
+    import rustworkx as rx  # pragma: no cover
 
 import pymatching._cpp_pymatching as _cpp_pm
 
@@ -146,7 +146,7 @@ class Matching:
             if isinstance(graph, rx.PyGraph):
                 self.load_from_rustworkx(graph)
                 return
-        except ImportError:
+        except ImportError:  # pragma no cover
             pass
         # stim.DetectorErrorModel
         try:
@@ -154,7 +154,7 @@ class Matching:
             if isinstance(graph, stim.DetectorErrorModel):
                 self._load_from_detector_error_model(graph)
                 return
-        except ImportError:
+        except ImportError:  # pragma no cover
             pass
         # scipy.csc_matrix
         try:
@@ -1531,7 +1531,7 @@ class Matching:
         """
         try:
             import rustworkx as rx
-        except ImportError:
+        except ImportError:  # pragma no cover
             raise ImportError("rustworkx must be installed to use Matching.load_from_rustworkx")
         if not isinstance(graph, rx.PyGraph):
             raise TypeError("G must be a rustworkx graph")
@@ -1619,7 +1619,7 @@ class Matching:
         """
         try:
             import rustworkx as rx
-        except ImportError:
+        except ImportError:  # pragma no cover
             raise ImportError("rustworkx must be installed to use Matching.to_rustworkx.")
 
         graph = rx.PyGraph(multigraph=False)
