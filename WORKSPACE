@@ -3,7 +3,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "stim",
-    commit = "3e38d12d0a0fb3022646b694137b733a4700d300",
+    commit = "fd8c95520941627d82b6453d9654d9c4dfb06020",
     remote = "https://github.com/quantumlib/stim.git",
 )
 
