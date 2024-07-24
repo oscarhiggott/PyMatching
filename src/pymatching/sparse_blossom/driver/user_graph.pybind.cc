@@ -228,7 +228,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             std::cout << std::endl;
             std::cout << "mwpm.flooder.negative_weight_sum: " << mwpm.flooder.negative_weight_sum << std::endl;
             if (mwpm.flooder.negative_weight_sum != 0) {
-                throw std::invalid_argument(
+                throw py::value_error(
             "Decoding to matched detection events not supported for graphs containing edges with negative weights.");
             }
             pm::decode_detection_events_to_match_edges(mwpm, detection_events_vec);
