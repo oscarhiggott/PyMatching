@@ -211,9 +211,11 @@ void pm::decode_detection_events(
 }
 
 void pm::decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
-    if (mwpm.flooder.negative_weight_sum != 0)
+    if (mwpm.flooder.negative_weight_sum != 0) {
+        std::cout << "mwpm.flooder.negative_weight_sum = " << mwpm.flooder.negative_weight_sum << " != 0" << std::endl;
         throw std::invalid_argument(
             "Decoding to matched detection events not supported for graphs containing edges with negative weights.");
+    }
     process_timeline_until_completion(mwpm, detection_events);
     mwpm.flooder.match_edges.clear();
     shatter_blossoms_for_all_detection_events_and_extract_match_edges(mwpm, detection_events);
