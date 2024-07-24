@@ -58,9 +58,10 @@ struct Arena {
     }
 
     ~Arena() {
+        std::cout << "Arena0" << std::endl;
         std::vector<T *> to_free = std::move(allocated);
         std::vector<T *> not_in_use = std::move(available);
-
+        std::cout << "Arena1" << std::endl;
         // Destruct the objects that were still in use.
         std::sort(to_free.begin(), to_free.end());
         std::sort(not_in_use.begin(), not_in_use.end());
@@ -75,11 +76,12 @@ struct Arena {
                 kf++;
             }
         }
-
+        std::cout << "Arena2" << std::endl;
         // Free all allocated memory.
         for (T *v : to_free) {
             free(v);
         }
+        std::cout << "Arena3" << std::endl;
     }
 };
 }  // namespace pm
