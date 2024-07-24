@@ -220,6 +220,12 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
             std::cout << "B2" << std::endl;
+            std::cout << "detection_events_vec.size(): " << detection_events_vec.size()
+            << "\nentries: ";
+            for (auto& i : detection_events_vec) {
+                std::cout << i << " ";
+            }
+            std::cout << std::endl;
             pm::decode_detection_events_to_match_edges(mwpm, detection_events_vec);
             std::cout << "B3" << std::endl;
             py::ssize_t num_edges = (py::ssize_t)(mwpm.flooder.match_edges.size());
