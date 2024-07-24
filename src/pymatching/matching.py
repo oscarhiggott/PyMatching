@@ -569,7 +569,9 @@ class Matching:
         >>> d
         {0: None, 3: 4, 4: 3}
         """
+        print(f"syndrome: {syndrome}", flush=True)
         detection_events = self._syndrome_array_to_detection_events(syndrome)
+        print(f"detection_events: {detection_events}", flush=True)
         return self._matching_graph.decode_to_matched_detection_events_dict(detection_events)
 
     def draw(self) -> None:
