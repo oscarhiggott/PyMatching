@@ -214,14 +214,21 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     g.def(
         "decode_to_matched_detection_events_array",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
+            std::cout << "B0" << std::endl;
             auto &mwpm = self.get_mwpm();
+            std::cout << "B1" << std::endl;
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
+            std::cout << "B2" << std::endl;
             pm::decode_detection_events_to_match_edges(mwpm, detection_events_vec);
+            std::cout << "B3" << std::endl;
             py::ssize_t num_edges = (py::ssize_t)(mwpm.flooder.match_edges.size());
+            std::cout << "B4" << std::endl;
             py::array_t<int64_t> match_edges = py::array_t<int64_t>(num_edges * 2);
+            std::cout << "B5" << std::endl;
             py::buffer_info buff = match_edges.request();
             int64_t *ptr = (int64_t *)buff.ptr;
+            std::cout << "B6" << std::endl;
 
             // Convert match edges to a vector of int64_t
             for (size_t i = 0; i < mwpm.flooder.match_edges.size(); i++) {
@@ -233,8 +240,10 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                     ptr[2 * i + 1] = -1;
                 }
             }
+            std::cout << "B7" << std::endl;
             // Reshape the array
             match_edges.resize({(py::ssize_t)num_edges, (py::ssize_t)2});
+            std::cout << "B8" << std::endl;
             return match_edges;
         },
         "detection_events"_a);
