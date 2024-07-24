@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include <stdexcept>
 
 pm::ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
 }
