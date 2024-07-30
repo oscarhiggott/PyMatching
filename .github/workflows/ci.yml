@@ -264,4 +264,6 @@ jobs:
   #         # unpacks all CIBW artifacts into dist/
   #         pattern: cibw-*
   #         path: dist
+  #         merge-multiple: true
+  #
   #     - uses: pypa/gh-action-pypi-publish@release/v1
