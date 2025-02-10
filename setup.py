@@ -135,6 +135,12 @@ with open("src/pymatching/_version.py") as fp:
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
+setup_requires = []
+if which("cmake") is None:
+    setup_requires += ["cmake>=3.12"]
+if which("ninja") is None:
+    setup_requires += ["ninja>=1.10"]
+
 setup(
     name="PyMatching",
     version=version['__version__'],
@@ -153,6 +159,7 @@ setup(
         'console_scripts': ['pymatching=pymatching._cli_argv:cli_argv'],
     },
     python_requires=">=3.7",
+    setup_requires=setup_requires,
     install_requires=['scipy', 'numpy==1.*', 'networkx', 'matplotlib'],
     # Needed on Windows to avoid the default `build` colliding with Bazel's `BUILD`.
     options={'build': {'build_base': 'python_build_stim'}},
