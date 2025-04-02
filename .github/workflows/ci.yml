@@ -24,7 +24,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: sdist
+        name: dist-sdist
         path: dist/*.tar.gz
 
 
@@ -139,8 +139,17 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ matrix.os_dist.dist }}
+        name: dist-${{ matrix.os_dist.dist }}
         path: wheelhouse/*.whl
+  merge_upload_artifacts:
+    needs: ["build_sdist", "build_wheels"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: dist
+          pattern: dist-*
   benchmark_windows:
     runs-on: windows-latest
     steps:
