@@ -24,6 +24,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
+        name: sdist
         path: dist/*.tar.gz
 
 
@@ -134,6 +135,7 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
+        name: wheels-${{ matrix.os_dist.dist }}
         path: wheelhouse/*.whl
   benchmark_windows:
     runs-on: windows-latest
