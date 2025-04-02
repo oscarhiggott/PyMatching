@@ -1,4 +1,4 @@
-sphinx>=8.2.3
+sphinx>=8.1
 sphinx-rtd-theme>=3.0.2
 numpydoc>=1.8.0
 nbsphinx>=0.9.7
