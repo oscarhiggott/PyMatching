@@ -123,7 +123,8 @@ jobs:
         submodules: true
     
     - uses: actions/setup-python@v5
-
+      with:
+        python-version: '3.x'
     - name: Install g++
       if: runner.os == 'Linux'
       run: |
@@ -206,7 +207,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.11"]
+        python-version: ["3.13"]
 
     runs-on: ${{ matrix.platform }}
 
@@ -245,6 +246,8 @@ jobs:
           submodules: true
 
       - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
       - name: Install pandoc
         run: |
@@ -267,7 +270,7 @@ jobs:
           submodules: true
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.x'
       - name: Add requirements
         run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov stim rustworkx
       - name: Build and install
