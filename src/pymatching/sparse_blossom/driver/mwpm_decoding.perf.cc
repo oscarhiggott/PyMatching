@@ -243,7 +243,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     auto data = generate_data(21, rounds, 0.01, 8);
     auto &dem = data.first;
     // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
-    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128), "");
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
@@ -336,7 +336,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
     auto data = generate_data(21, rounds, 0.001, 256);
     auto &dem = data.first;
     // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
-    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128), "");
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
@@ -430,7 +430,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     auto data = generate_data(21, rounds, 0.0001, 512);
     auto &dem = data.first;
     // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
-    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128), "");
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
@@ -524,7 +524,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     auto data = generate_data(21, rounds, 0.00001, 512);
     auto &dem = data.first;
     // Add fake observable > 64 to trigger general decoder with Dijkstra post-processing
-    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+    dem.append_logical_observable_instruction(stim::DemTarget::observable_id(128), "");
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;

@@ -12,7 +12,7 @@ jobs:
     name: Build SDist
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -22,15 +22,16 @@ jobs:
     - name: Check metadata
       run: pipx run twine check dist/*
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
+        name: dist-sdist
         path: dist/*.tar.gz
 
 
   build_wheels:
     runs-on: ${{ matrix.os_dist.os }}
     env:
-      MACOSX_DEPLOYMENT_TARGET: "10.15"
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
       CIBW_BUILD: "${{ matrix.os_dist.dist }}"
       CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
       CIBW_BEFORE_BUILD: pip install --upgrade ninja
@@ -42,18 +43,20 @@ jobs:
         os_dist: [
           # macosx x86_64
           # {os: macos-latest, dist: cp36-macosx_x86_64},
-          {os: macos-latest, dist: cp37-macosx_x86_64},
+          # {os: macos-latest, dist: cp37-macosx_x86_64},
           {os: macos-latest, dist: cp38-macosx_x86_64},
           {os: macos-latest, dist: cp39-macosx_x86_64},
           {os: macos-latest, dist: cp310-macosx_x86_64},
           {os: macos-latest, dist: cp311-macosx_x86_64},
           {os: macos-latest, dist: cp312-macosx_x86_64},
+          {os: macos-latest, dist: cp313-macosx_x86_64},
           # macosx arm64
           {os: macos-latest, dist: cp38-macosx_arm64},
           {os: macos-latest, dist: cp39-macosx_arm64},
           {os: macos-latest, dist: cp310-macosx_arm64},
           {os: macos-latest, dist: cp311-macosx_arm64},
           {os: macos-latest, dist: cp312-macosx_arm64},
+          {os: macos-latest, dist: cp313-macosx_arm64},
           # macosx universal2
           # {os: macos-latest, dist: cp38-macosx_universal2},
           # {os: macos-latest, dist: cp39-macosx_universal2},
@@ -69,6 +72,7 @@ jobs:
           {os: windows-latest, dist: cp310-win_amd64},
           {os: windows-latest, dist: cp311-win_amd64},
           {os: windows-latest, dist: cp312-win_amd64},
+          {os: windows-latest, dist: cp313-win_amd64},
           # windows win32
           # {os: windows-latest, dist: cp36-win32},
           {os: windows-latest, dist: cp37-win32},
@@ -90,6 +94,7 @@ jobs:
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp311-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp312-manylinux_x86_64},
+          {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
           # ubuntu i686
           # {os: ubuntu-latest, dist: cp36-manylinux_i686},
           {os: ubuntu-latest, dist: cp37-manylinux_i686},
@@ -113,32 +118,43 @@ jobs:
 #          {os: ubuntu-latest, dist: cp311-musllinux_i686},
         ]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
     
-    - uses: actions/setup-python@v4
-
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
     - name: Install g++
       if: runner.os == 'Linux'
       run: |
         sudo apt update
-        sudo apt install gcc-10 g++-10
+        sudo apt install gcc-11 g++-11
 
-    - uses: pypa/cibuildwheel@v2.16.5
+    - uses: pypa/cibuildwheel@v2.23.2
 
     - name: Verify clean directory
       run: git diff --exit-code
       shell: bash
 
     - name: Upload wheels
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
+        name: dist-${{ matrix.os_dist.dist }}
         path: wheelhouse/*.whl
+  merge_upload_artifacts:
+    needs: ["build_sdist", "build_wheels"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge Artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: dist
+          pattern: dist-*
   benchmark_windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - run: cmake .
@@ -151,10 +167,15 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - run: CC=gcc-10 CXX=g++-10 cmake .
+      - name: Install g++-11 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq gcc-11 g++-11
+      - run: CC=gcc-11 CXX=g++-11 cmake .
         if: matrix.os == 'ubuntu-latest'
       - run: cmake .
         if: matrix.os == 'macos-latest'
@@ -167,10 +188,15 @@ jobs:
       matrix:
         os: [macos-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - run: CC=gcc-10 CXX=g++-10 cmake .
+      - name: Install g++-11 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update -y -qq
+          sudo apt-get install -y -qq gcc-11 g++-11
+      - run: CC=gcc-11 CXX=g++-11 cmake .
         if: matrix.os == 'ubuntu-latest'
       - run: cmake .
         if: matrix.os == 'macos-latest'
@@ -181,16 +207,16 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, macos-latest, ubuntu-latest]
-        python-version: ["3.11"]
+        python-version: ["3.13"]
 
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -215,11 +241,13 @@ jobs:
   build_docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
       - name: Install pandoc
         run: |
@@ -237,12 +265,12 @@ jobs:
   codecov:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.x'
       - name: Add requirements
         run: python -m pip install --upgrade cmake>=3.12 ninja pytest flake8 pytest-cov stim rustworkx
       - name: Build and install

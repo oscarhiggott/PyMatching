@@ -14,6 +14,7 @@
 
 from typing import Union, List, TYPE_CHECKING, Tuple, Set, Dict, Optional
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pymatching
@@ -1241,7 +1242,7 @@ class Matching:
         return m
 
     @staticmethod
-    def from_detector_error_model_file(dem_path: str) -> 'pymatching.Matching':
+    def from_detector_error_model_file(dem_path: Union[str, Path]) -> 'pymatching.Matching':
         """
         Construct a `pymatching.Matching` by loading from a stim DetectorErrorModel file path.
 
@@ -1256,6 +1257,8 @@ class Matching:
             A `pymatching.Matching` object representing the graphlike error mechanisms in the stim DetectorErrorModel
             in the file `dem_path`
         """
+        if isinstance(dem_path, Path):
+            dem_path = str(dem_path)
         m = Matching()
         m._matching_graph = _cpp_pm.detector_error_model_file_to_matching_graph(dem_path)
         return m
@@ -1308,7 +1311,7 @@ class Matching:
         return m
 
     @staticmethod
-    def from_stim_circuit_file(stim_circuit_path: str) -> 'pymatching.Matching':
+    def from_stim_circuit_file(stim_circuit_path: Union[str, Path]) -> 'pymatching.Matching':
         """
         Construct a `pymatching.Matching` by loading from a stim circuit file path.
 
@@ -1324,6 +1327,8 @@ class Matching:
             in the file `stim_circuit_path`, with any hyperedge error mechanisms decomposed into graphlike error
             mechanisms. Parallel edges are merged using `merge_strategy="independent"`.
         """
+        if isinstance(stim_circuit_path, Path):
+            stim_circuit_path = str(stim_circuit_path)
         m = Matching()
         m._matching_graph = _cpp_pm.stim_circuit_file_to_matching_graph(stim_circuit_path)
         return m
