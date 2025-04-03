@@ -1,0 +1,16 @@
+module(name = "pymatching", version = "2.2.dev2")
+
+bazel_dep(name = "rules_python", version = "1.3.0")
+bazel_dep(name = "pybind11_bazel", version = "2.13.6")
+
+bazel_dep(name = "googletest", version = "1.16.0")
+
+git = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+git(
+    name = "stim",
+    commit = "1320ad7eac7de34d2e9c70daa44fbc6d84174450",
+    remote = "https://github.com/quantumlib/stim.git",
+)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.11")
