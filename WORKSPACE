@@ -3,7 +3,7 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
     name = "stim",
-    commit = "3e38d12d0a0fb3022646b694137b733a4700d300",
+    commit = "1320ad7eac7de34d2e9c70daa44fbc6d84174450",
     remote = "https://github.com/quantumlib/stim.git",
 )
 
@@ -15,31 +15,29 @@ http_archive(
 )
 
 http_archive(
-    name = "pybind11",
-    build_file = "@pybind11_bazel//:pybind11.BUILD",
-    sha256 = "832e2f309c57da9c1e6d4542dedd34b24e4192ecb4d62f6f4866a737454c9970",
-    strip_prefix = "pybind11-2.10.4",
-    urls = ["https://github.com/pybind/pybind11/archive/v2.10.4.tar.gz"],
+  name = "pybind11_bazel",
+  sha256 = "9df284330336958c837fb70dc34c0a6254dac52a5c983b3373a8c2bbb79ac35e",
+  strip_prefix = "pybind11_bazel-2.13.6",
+  urls = ["https://github.com/pybind/pybind11_bazel/archive/v2.13.6.zip"],
 )
 
 http_archive(
-    name = "pybind11_bazel",
-    sha256 = "b72c5b44135b90d1ffaba51e08240be0b91707ac60bea08bb4d84b47316211bb",
-    strip_prefix = "pybind11_bazel-b162c7c88a253e3f6b673df0c621aca27596ce6b",
-    urls = ["https://github.com/pybind/pybind11_bazel/archive/b162c7c88a253e3f6b673df0c621aca27596ce6b.zip"],
+  name = "pybind11",
+  sha256 = "d0a116e91f64a4a2d8fb7590c34242df92258a61ec644b79127951e821b47be6",
+  build_file = "@pybind11_bazel//:pybind11-BUILD.bazel",
+  strip_prefix = "pybind11-2.13.6",
+  urls = ["https://github.com/pybind/pybind11/archive/v2.13.6.zip"],
 )
 
 http_archive(
     name = "rules_python",
-    sha256 = "84aec9e21cc56fbc7f1335035a71c850d1b9b5cc6ff497306f84cced9a769841",
-    strip_prefix = "rules_python-0.23.1",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.23.1/rules_python-0.23.1.tar.gz",
+    sha256 = "2cc26bbd53854ceb76dd42a834b1002cd4ba7f8df35440cf03482e045affc244",
+    strip_prefix = "rules_python-1.3.0",
+    url = "https://github.com/bazel-contrib/rules_python/releases/download/1.3.0/rules_python-1.3.0.tar.gz",
 )
 
 load("@rules_python//python:repositories.bzl", "py_repositories")
 
 py_repositories()
 
-load("@pybind11_bazel//:python_configure.bzl", "python_configure")
-
-python_configure(name = "local_config_python")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
