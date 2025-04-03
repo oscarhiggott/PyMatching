@@ -54,7 +54,7 @@ cc_test(
     copts = [
         "-std=c++20",
     ],
-    data = glob(["testdata/**"]),
+    data = glob(["data/**"]),
     includes = ["src/"],
     deps = [
         "@gtest",
