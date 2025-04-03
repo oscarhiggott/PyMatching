@@ -57,8 +57,8 @@ cc_test(
     data = glob(["data/**"]),
     includes = ["src/"],
     deps = [
-        "@gtest",
-        "@gtest//:gtest_main",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
         "@stim//:stim_lib",
     ],
 )
