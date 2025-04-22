@@ -108,9 +108,9 @@ class CMakeBuild(build_ext):
                 if arch:
                     cmake_args += [f"-DCMAKE_OSX_ARCHITECTURES={platform.machine()}"]
 
-        if sys.platform.startswith('linux') and which("gcc-10") is not None and which("g++-10") is not None:
-            os.environ["CC"] = "gcc-10"
-            os.environ["CXX"] = "g++-10"
+        if sys.platform.startswith('linux') and which("gcc-11") is not None and which("g++-11") is not None:
+            os.environ["CC"] = "gcc-11"
+            os.environ["CXX"] = "g++-11"
 
         # Set CMAKE_BUILD_PARALLEL_LEVEL to control the parallel build level
         # across all generators.
@@ -153,7 +153,7 @@ setup(
         'console_scripts': ['pymatching=pymatching._cli_argv:cli_argv'],
     },
     python_requires=">=3.7",
-    install_requires=['scipy', 'numpy==1.*', 'networkx', 'matplotlib'],
+    install_requires=['scipy', 'numpy', 'networkx', 'matplotlib'],
     # Needed on Windows to avoid the default `build` colliding with Bazel's `BUILD`.
     options={'build': {'build_base': 'python_build_stim'}},
 )

@@ -131,7 +131,7 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
             pm::weight_int num_distinct_weights = 10001;
             if (i == 1)
                 test_case.detector_error_model.append_logical_observable_instruction(
-                    stim::DemTarget::observable_id(128));
+                    stim::DemTarget::observable_id(128), "");
             auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
 
             stim::SparseShot sparse_shot;
@@ -301,7 +301,7 @@ TEST(MwpmDecoding, CompareSolutionObsWithMaxNumBuckets) {
         auto test_case = load_surface_code_d13_p100_test_case();
         pm::weight_int num_distinct_weights = 1 << (sizeof(pm::weight_int) * 8 - 4);
         if (i == 1)
-            test_case.detector_error_model.append_logical_observable_instruction(stim::DemTarget::observable_id(128));
+            test_case.detector_error_model.append_logical_observable_instruction(stim::DemTarget::observable_id(128), "");
         auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
 
         stim::SparseShot sparse_shot;

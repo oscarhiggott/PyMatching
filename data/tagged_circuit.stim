@@ -1,0 +1,4 @@
+R[test1] 0
+X_ERROR[test2](0.25) 0
+M[test3](0.25) 0
+DETECTOR[test4](1, 2) rec[-1]

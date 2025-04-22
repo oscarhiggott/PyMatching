@@ -78,3 +78,11 @@ def test_load_from_dem_without_stim_raises_type_error():
             Matching.from_detector_error_model("test")
         with pytest.raises(TypeError):
             Matching.from_stim_circuit("test")
+
+
+def test_load_from_tagged_stim_circuit(data_dir: Path):
+    Matching.from_stim_circuit_file(data_dir / "tagged_circuit.stim")
+
+
+def test_load_from_tagged_detector_error_model(data_dir: Path):
+    Matching.from_detector_error_model_file(data_dir / "tagged_dem.dem")
