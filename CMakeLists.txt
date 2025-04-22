@@ -40,7 +40,6 @@ set(SOURCE_FILES_NO_MAIN
         src/pymatching/sparse_blossom/driver/namespaced_main.cc
         src/pymatching/sparse_blossom/driver/io.cc
         src/pymatching/sparse_blossom/driver/io_helpers.cc
-        src/pymatching/sparse_blossom/driver/detector_edge_id.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.cc
         src/pymatching/sparse_blossom/flooder/graph.cc
         src/pymatching/sparse_blossom/flooder/detector_node.cc

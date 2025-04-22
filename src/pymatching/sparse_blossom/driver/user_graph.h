@@ -31,7 +31,7 @@
 namespace pm {
 
 struct UserNeighbor {
-    std::list<UserEdge>::iterator edge_it;
+    std::list<DetectorEdgeData>::iterator edge_it;
     uint8_t pos{};  // The position of the neighboring node in the edge (either 0 if node1, or 1 if node2)
 };
 
@@ -50,7 +50,7 @@ enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORI
 class UserGraph {
    public:
     // std::vector<UserNode> nodes;
-    std::map<DetectorEdgeNodes, UserEdge> edge_map;
+    std::map<DetectorEdgeId, DetectorEdgeData> edge_map;
     // std::list<UserEdge> edges;
     std::set<size_t> boundary_nodes;
 
@@ -110,11 +110,11 @@ class UserGraph {
     void update_mwpm();
     Mwpm& get_mwpm();
     Mwpm& get_mwpm_with_search_graph();
-    void handle_dem_instruction(double p, const DetectorEdgeNodes& nodes, const std::vector<size_t>& observables);
+    void handle_dem_instruction(double p, const DetectorEdgeId& nodes, const std::vector<size_t>& observables);
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
     std::optional<std::pair<size_t, size_t>> get_edge_nodes(size_t node1, size_t node2);
-    std::optional<UserEdge> get_edge_data(size_t node1, size_t node2);
+    std::optional<DetectorEdgeData> get_edge_data(size_t node1, size_t node2);
     bool contains(size_t node1, size_t node2);
     void set_num_nodes(const size_t n);
 
@@ -134,8 +134,8 @@ inline double UserGraph::iter_discretized_edges(
     double normalising_constant = get_edge_weight_normalising_constant(num_distinct_weights);
 
     for (auto& edgeIDAndData : edge_map) {
-        pm::DetectorEdgeNodes e = edgeIDAndData.first;
-        pm::UserEdge d = edgeIDAndData.second;
+        pm::DetectorEdgeId e = edgeIDAndData.first;
+        pm::DetectorEdgeData d = edgeIDAndData.second;
         d.implied_weights_for_other_edges.clear();
         pm::signed_weight_int w = (pm::signed_weight_int)round(d.weight * normalising_constant);
         // Extremely important!
