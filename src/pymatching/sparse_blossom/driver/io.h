@@ -15,9 +15,7 @@
 #ifndef PYMATCHING2_IO_H
 #define PYMATCHING2_IO_H
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
-#include "pymatching/sparse_blossom/matcher/mwpm.h"
-#include "pymatching/sparse_blossom/search/search_graph.h"
+#include "pymatching/sparse_blossom/driver/io_helpers.h"
 #include "stim.h"
 
 namespace pm {
@@ -68,79 +66,97 @@ void iter_detector_error_model_edges(
     });
 }
 
-struct Neighbor {
-    std::vector<Neighbor> *node;
-    bool operator==(const Neighbor &rhs) const;
-    bool operator!=(const Neighbor &rhs) const;
-    double weight;
-    std::vector<size_t> observables;
-};
-
-class IntermediateWeightedGraph {
-   public:
-    std::vector<std::vector<Neighbor>> nodes;
-    size_t num_nodes;
-    size_t num_observables;
-
-    explicit IntermediateWeightedGraph(size_t num_nodes, size_t num_observables)
-        : num_nodes(num_nodes), num_observables(num_observables) {
-        nodes.resize(num_nodes);
-    };
-
-    void add_or_merge_edge(size_t u, size_t v, double weight, const std::vector<size_t> &observables);
-
-    void add_or_merge_boundary_edge(size_t u, double weight, const std::vector<size_t> &observables);
-
-    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, const std::vector<size_t> &observables);
-
-    template <typename EdgeCallable, typename BoundaryEdgeCallable>
-    double iter_discretized_edges(
-        pm::weight_int num_distinct_weights,
-        const EdgeCallable &edge_func,
-        const BoundaryEdgeCallable &boundary_edge_func);
-
-    pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
-
-    pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
-
-    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_flooder_included = false);
-
-    double max_abs_weight();
-};
-
-template <typename EdgeCallable, typename BoundaryEdgeCallable>
-inline double IntermediateWeightedGraph::iter_discretized_edges(
-    pm::weight_int num_distinct_weights,
-    const EdgeCallable &edge_func,
-    const BoundaryEdgeCallable &boundary_edge_func) {
-    double max_weight = max_abs_weight();
-    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
-    double normalising_constant = (double)max_half_edge_weight / max_weight;
-    for (auto &node : nodes) {
-        for (auto &neighbor : node) {
-            auto i = &node - &nodes[0];
-            pm::signed_weight_int w = (pm::signed_weight_int)round(neighbor.weight * normalising_constant);
-
-            // Extremely important!
-            // If all edge weights are even integers, then all collision events occur at integer times.
-            w *= 2;
-
-            if (!neighbor.node) {
-                boundary_edge_func(i, w, neighbor.observables);
-            } else {
-                auto j = neighbor.node - &nodes[0];
-                if (j > i)
-                    edge_func(i, j, w, neighbor.observables);
+template <typename Handler>
+void iter_dem_instructions_include_correlations(
+    const stim::DetectorErrorModel &detector_error_model,
+    const Handler &handle_dem_error,
+    std::map<DetectorEdgeNodes, std::map<DetectorEdgeNodes, double>> &conditional_groups,
+    size_t &max_detector_index_seen) {
+    max_detector_index_seen = 0;
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction &instruction) {
+        double p = instruction.arg_data[0];
+        pm::DecomposedDemError decomposed_err;
+        decomposed_err.probability = p;
+        decomposed_err.components = {};
+        decomposed_err.components.push_back({});
+        UserEdge *component = &decomposed_err.components.back();
+        size_t num_translated_relative_detectors = 0;
+        for (auto &target : instruction.target_data) {
+            // Decompose error
+            // Add error to conditional groups.
+            if (target.is_relative_detector_id()) {
+                num_translated_relative_detectors++;
+                if (num_translated_relative_detectors == 1) {
+                    const size_t &d1 = target.raw_id();
+                    if (d1 > max_detector_index_seen) {
+                        max_detector_index_seen = d1;
+                    }
+                    component->detectors = {d1};
+                } else if (num_translated_relative_detectors == 2) {
+                    const size_t &d2 = target.raw_id();
+                    if (d2 > max_detector_index_seen) {
+                        max_detector_index_seen = d2;
+                    }
+                    component->detectors = {component->detectors.d1, target.raw_id()};
+                } else {
+                    component->detectors = {SIZE_MAX, SIZE_MAX};
+                }
+            } else if (target.is_observable_id()) {
+                component->observables.push_back(target.val());
+            } else if (target.is_separator()) {
+                if (num_translated_relative_detectors == 0) {
+                    throw std::invalid_argument("An error component had no symptoms. ");
+                }
+                if (decomposed_err.components.back().detectors == DetectorEdgeNodes(SIZE_MAX, SIZE_MAX)) {
+                    decomposed_err.components.pop_back();
+                }
+                if (p > 0) {
+                    handle_dem_error(p, component->detectors, component->observables);
+                }
+                decomposed_err.components.push_back({});
+                component = &decomposed_err.components.back();
+                num_translated_relative_detectors = 0;
             }
         }
-    }
-    return normalising_constant * 2;
+        if (decomposed_err.components.back().detectors == DetectorEdgeNodes(SIZE_MAX, SIZE_MAX)) {
+            decomposed_err.components.pop_back();
+        }
+        add_decomposed_error_to_conditional_groups(decomposed_err, conditional_groups);
+        if (p > 0) {
+            handle_dem_error(p, component->detectors, component->observables);
+        }
+    });
 }
 
-IntermediateWeightedGraph detector_error_model_to_weighted_graph(const stim::DetectorErrorModel &detector_error_model);
+template <typename Handler>
+void iter_detector_error_model_instructions(
+    const stim::DetectorErrorModel &detector_error_model, const Handler &handle_dem_error) {
+    // Add conditional groups here.
 
-MatchingGraph detector_error_model_to_matching_graph(
-    const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction &instruction) {
+        std::vector<size_t> dets;
+        std::vector<size_t> observables;
+        double p = instruction.arg_data[0];
+        for (auto &target : instruction.target_data) {
+            // Decompose error
+            // Add error to conditional groups.
+            if (target.is_relative_detector_id()) {
+                dets.push_back(target.val());
+            } else if (target.is_observable_id()) {
+                observables.push_back(target.val());
+            } else if (target.is_separator()) {
+                if (p > 0) {
+                    handle_dem_error(p, dets, observables);
+                    observables.clear();
+                    dets.clear();
+                }
+            }
+        }
+        if (p > 0) {
+            handle_dem_error(p, dets, observables);
+        }
+    });
+}
 
 }  // namespace pm
 

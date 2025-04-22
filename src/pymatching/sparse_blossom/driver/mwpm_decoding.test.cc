@@ -342,7 +342,7 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
         auto& g = mwpm.flooder.graph;
         for (size_t i = 0; i < num_nodes; i++)
-            g.add_edge(i, (i + 1) % num_nodes, -2, {i});
+            g.add_edge(i, (i + 1) % num_nodes, -2, {i}, /*implied_weights_unconverted=*/{});
 
         if (num_nodes > sizeof(pm::obs_int) * 8) {
             for (size_t i = 0; i < num_nodes; i++)
@@ -383,12 +383,12 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
 
         auto& g = mwpm.flooder.graph;
-        g.add_boundary_edge(0, -4, {max_obs});
+        g.add_boundary_edge(0, -4, {max_obs}, /*implied_weights_unconverted=*/{});
         for (size_t i = 0; i < 7; i += 2)
-            g.add_edge(i, i + 1, 2, {i + 1});
+            g.add_edge(i, i + 1, 2, {i + 1}, /*implied_weights_unconverted=*/{});
         for (size_t i = 1; i < 7; i += 2)
-            g.add_edge(i, i + 1, -4, {i + 1});
-        g.add_boundary_edge(7, 2, {num_nodes});
+            g.add_edge(i, i + 1, -4, {i + 1}, /*implied_weights_unconverted=*/{});
+        g.add_boundary_edge(7, 2, {num_nodes}, /*implied_weights_unconverted=*/{});
 
         if (max_obs > sizeof(pm::obs_int) * 8) {
             auto& h = mwpm.search_flooder.graph;
@@ -503,10 +503,10 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)));
     auto& g = mwpm.flooder.graph;
     for (size_t i = 0; i < num_nodes; i++)
-        g.add_edge(i, (i + 1) % num_nodes, 2, {i});
+        g.add_edge(i, (i + 1) % num_nodes, 2, {i}, /*implied_weights_unconverted=*/{});
     pm::ExtendedMatchingResult res(num_nodes);
-    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);
-                 , std::invalid_argument);
+    EXPECT_THROW(
+        pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::invalid_argument);
 }
 
 TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
@@ -535,8 +535,8 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
         } else if (!detection_events.empty() && detection_events[0] == 0) {
             detection_events.erase(detection_events.begin());
         }
-        EXPECT_THROW(pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);
-                     , std::invalid_argument);
+        EXPECT_THROW(
+            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);, std::invalid_argument);
         sparse_shot.clear();
         num_shots++;
     }

@@ -19,7 +19,12 @@
 
 namespace pm {
 
-void MatchingGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t>& observables) {
+void MatchingGraph::add_edge(
+    size_t u,
+    size_t v,
+    signed_weight_int weight,
+    const std::vector<size_t>& observables,
+    const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
@@ -51,13 +56,21 @@ void MatchingGraph::add_edge(size_t u, size_t v, signed_weight_int weight, const
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observables.push_back(obs_mask);
+    nodes[u].neighbor_implied_weights.push_back({});
+    nodes[u].neighbor_implied_weights_unconverted.push_back(implied_weights_unconverted);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observables.push_back(obs_mask);
+    nodes[v].neighbor_implied_weights.push_back({});
+    nodes[v].neighbor_implied_weights_unconverted.push_back(implied_weights_unconverted);
 }
 
-void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t>& observables) {
+void MatchingGraph::add_boundary_edge(
+    size_t u,
+    signed_weight_int weight,
+    const std::vector<size_t>& observables,
+    const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
     if (u >= nodes.size()) {
         throw std::invalid_argument(
             "Node " + std::to_string(u) +
@@ -85,6 +98,9 @@ void MatchingGraph::add_boundary_edge(size_t u, signed_weight_int weight, const 
     n.neighbors.insert(n.neighbors.begin(), 1, nullptr);
     n.neighbor_weights.insert(n.neighbor_weights.begin(), 1, std::abs(weight));
     n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, obs_mask);
+    n.neighbor_implied_weights.insert(n.neighbor_implied_weights.begin(), 1, {});
+    n.neighbor_implied_weights_unconverted.insert(
+        n.neighbor_implied_weights_unconverted.begin(), 1, implied_weights_unconverted);
 }
 
 MatchingGraph::MatchingGraph(size_t num_nodes, size_t num_observables)
@@ -131,6 +147,30 @@ void MatchingGraph::update_negative_weight_detection_events(size_t node_id) {
         negative_weight_detection_events_set.insert(node_id);
     } else {
         negative_weight_detection_events_set.erase(it);
+    }
+}
+
+ImpliedWeight convert_rule(std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule) {
+    const int64_t& i = rule.edge0_index;
+    const int64_t& j = rule.edge1_index;
+    const weight_int& w = rule.new_weight;
+    weight_int* weight_pointer_i =
+        &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == -1 ? nullptr : &nodes[j])];
+    weight_int* weight_pointer_j =
+        j == -1 ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
+    return ImpliedWeight(weight_pointer_i, weight_pointer_j, w);
+}
+
+void MatchingGraph::convert_implied_weights() {
+    // Iterate over all edges and convert their reweight rules.
+    for (size_t u = 0; u < nodes.size(); ++u) {
+        for (size_t z = 0; z < nodes[u].neighbors.size(); ++z) {
+            for (const auto& rule : nodes[u].neighbor_implied_weights_unconverted[z]) {
+                auto converted = convert_rule(nodes, rule);
+                nodes[u].neighbor_implied_weights[z].push_back(converted);
+            }
+            nodes[u].neighbor_implied_weights_unconverted[z].resize(0);
+        }
     }
 }
 

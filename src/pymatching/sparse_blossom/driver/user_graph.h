@@ -17,22 +17,18 @@
 
 #include <cmath>
 #include <list>
+#include <pymatching/sparse_blossom/driver/io_helpers.h>
+#include <pymatching/sparse_blossom/flooder/detector_node.h>
 #include <set>
 #include <vector>
 
-#include "pymatching/rand/rand_gen.h"
 #include "pymatching/sparse_blossom/driver/io.h"
+#include "pymatching/sparse_blossom/flooder/graph.h"
 #include "pymatching/sparse_blossom/ints.h"
+#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "pymatching/sparse_blossom/search/search_graph.h"
 
 namespace pm {
-
-struct UserEdge {
-    size_t node1;
-    size_t node2;
-    std::vector<size_t> observable_indices;  /// The indices of the observables crossed along this edge
-    double weight;                           /// The weight of the edge to this neighboring node
-    double error_probability;                /// The error probability associated with this node
-};
 
 struct UserNeighbor {
     std::list<UserEdge>::iterator edge_it;
@@ -53,8 +49,9 @@ enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORI
 
 class UserGraph {
    public:
-    std::vector<UserNode> nodes;
-    std::list<UserEdge> edges;
+    // std::vector<UserNode> nodes;
+    std::map<DetectorEdgeNodes, UserEdge> edge_map;
+    // std::list<UserEdge> edges;
     std::set<size_t> boundary_nodes;
 
     UserGraph();
@@ -64,14 +61,16 @@ class UserGraph {
         size_t node,
         size_t neighbor_index,
         const std::vector<size_t>& parallel_observables,
-        double parallel_weight,
-        double parallel_error_probability,
+        double cur_edge_weight,
+        double new_edge_weight,
+        double cur_edge_probability,
+        double new_edge_probability,
         MERGE_STRATEGY merge_strategy = DISALLOW);
     void add_or_merge_edge(
         size_t node1,
         size_t node2,
         const std::vector<size_t>& observables,
-        double weight,
+        double new_edge_weight,
         double error_probability,
         MERGE_STRATEGY merge_strategy = DISALLOW);
     void add_or_merge_boundary_edge(
@@ -106,18 +105,25 @@ class UserGraph {
         const BoundaryEdgeCallable& boundary_edge_func);
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
+    pm::MatchingGraph to_matching_graph_with_unconverted_weights(pm::weight_int num_distinct_weights);
     pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_graph_included);
     void update_mwpm();
     Mwpm& get_mwpm();
     Mwpm& get_mwpm_with_search_graph();
+    void handle_dem_instruction(double p, const DetectorEdgeNodes& nodes, const std::vector<size_t>& observables);
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
+    std::optional<std::pair<size_t, size_t>> get_edge_nodes(size_t node1, size_t node2);
+    std::optional<UserEdge> get_edge_data(size_t node1, size_t node2);
+    bool contains(size_t node1, size_t node2);
+    void set_num_nodes(const size_t n);
 
    private:
     pm::Mwpm _mwpm;
     size_t _num_observables;
     bool _mwpm_needs_updating;
     bool _all_edges_have_error_probabilities;
+    size_t num_nodes;
 };
 
 template <typename EdgeCallable, typename BoundaryEdgeCallable>
@@ -127,19 +133,22 @@ inline double UserGraph::iter_discretized_edges(
     const BoundaryEdgeCallable& boundary_edge_func) {
     double normalising_constant = get_edge_weight_normalising_constant(num_distinct_weights);
 
-    for (auto& e : edges) {
-        pm::signed_weight_int w = (pm::signed_weight_int)round(e.weight * normalising_constant);
+    for (auto& edgeIDAndData : edge_map) {
+        pm::DetectorEdgeNodes e = edgeIDAndData.first;
+        pm::UserEdge d = edgeIDAndData.second;
+        d.implied_weights_for_other_edges.clear();
+        pm::signed_weight_int w = (pm::signed_weight_int)round(d.weight * normalising_constant);
         // Extremely important!
         // If all edge weights are even integers, then all collision events occur at integer times.
         w *= 2;
-        bool node1_boundary = is_boundary_node(e.node1);
-        bool node2_boundary = is_boundary_node(e.node2);
+        bool node1_boundary = is_boundary_node(e.d1);
+        bool node2_boundary = is_boundary_node(e.d2);
         if (node2_boundary && !node1_boundary) {
-            boundary_edge_func(e.node1, w, e.observable_indices);
+            boundary_edge_func(e.d1, w, d.observables, d.implied_weights_for_other_edges);
         } else if (node1_boundary && !node2_boundary) {
-            boundary_edge_func(e.node2, w, e.observable_indices);
+            boundary_edge_func(e.d2, w, d.observables, d.implied_weights_for_other_edges);
         } else if (!node1_boundary) {
-            edge_func(e.node1, e.node2, w, e.observable_indices);
+            edge_func(e.d1, e.d2, w, d.observables, d.implied_weights_for_other_edges);
         }
     }
     return normalising_constant * 2;
@@ -147,37 +156,49 @@ inline double UserGraph::iter_discretized_edges(
 
 template <typename EdgeCallable, typename BoundaryEdgeCallable>
 inline double UserGraph::to_matching_or_search_graph_helper(
-        pm::weight_int num_distinct_weights,
+    pm::weight_int num_distinct_weights,
     const EdgeCallable& edge_func,
     const BoundaryEdgeCallable& boundary_edge_func) {
-    
     // Use vectors to store boundary edges initially before adding them to the graph, so
     // that parallel boundary edges with negative edge weights can be handled correctly
-    std::vector<bool> has_boundary_edge(nodes.size(), false);
-    std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
-    std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
+    size_t num_nodes = get_num_nodes();
+    std::vector<bool> has_boundary_edge(num_nodes, false);
+    std::vector<pm::signed_weight_int> boundary_edge_weights(num_nodes);
+    std::vector<std::vector<size_t>> boundary_edge_observables(num_nodes);
+    std::vector<std::vector<ImpliedWeightUnconverted>> boundary_edge_implied_weights_unconverted(num_nodes);
 
     double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
         edge_func,
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
-            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight){
+            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
                 boundary_edge_observables[u] = observables;
+                boundary_edge_implied_weights_unconverted[u] = implied_weights_unconverted;
                 has_boundary_edge[u] = true;
             }
         });
-    
+
     // Now add boundary edges to the graph
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
-        if (has_boundary_edge[i])
-            boundary_edge_func(i, boundary_edge_weights[i], boundary_edge_observables[i]);
+        if (has_boundary_edge[i]) {
+            boundary_edge_func(
+                i,
+                boundary_edge_weights[i],
+                boundary_edge_observables[i],
+                boundary_edge_implied_weights_unconverted[i]);
+        }
     }
     return normalising_constant;
 }
 
 UserGraph detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model);
+UserGraph detector_error_model_to_user_graph_2(const stim::DetectorErrorModel& detector_error_model);
+weight_int convert_probability_to_weight(double p);
 
 }  // namespace pm
 

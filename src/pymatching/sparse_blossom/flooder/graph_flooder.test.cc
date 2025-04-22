@@ -25,12 +25,12 @@ using namespace pm;
 TEST(GraphFlooder, PriorityQueue) {
     GraphFlooder flooder(MatchingGraph(10, 64));
     auto &graph = flooder.graph;
-    graph.add_edge(0, 1, 10, {});
-    graph.add_edge(1, 2, 10, {});
-    graph.add_edge(2, 3, 10, {});
-    graph.add_edge(3, 4, 10, {});
-    graph.add_edge(4, 5, 10, {});
-    graph.add_edge(5, 0, 10, {});
+    graph.add_edge(0, 1, 10, {}, /*implied_weights_unconverted=*/{});
+    graph.add_edge(1, 2, 10, {}, /*implied_weights_unconverted=*/{});
+    graph.add_edge(2, 3, 10, {}, /*implied_weights_unconverted=*/{});
+    graph.add_edge(3, 4, 10, {}, /*implied_weights_unconverted=*/{});
+    graph.add_edge(4, 5, 10, {}, /*implied_weights_unconverted=*/{});
+    graph.add_edge(5, 0, 10, {}, /*implied_weights_unconverted=*/{});
 
     auto qn = [&](int i, int t) {
         graph.nodes[i].node_event_tracker.set_desired_event({&graph.nodes[i], cyclic_time_int{t}}, flooder.queue);

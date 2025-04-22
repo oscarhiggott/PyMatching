@@ -24,6 +24,26 @@
 
 namespace pm {
 
+struct ImpliedWeight {
+    weight_int* edge0_ptr;
+    weight_int* edge1_ptr;
+    weight_int new_weight;
+
+    bool operator==(const ImpliedWeight& other) const {
+        return edge0_ptr == other.edge0_ptr && edge1_ptr == other.edge1_ptr && new_weight == other.new_weight;
+    }
+};
+
+struct ImpliedWeightUnconverted {
+    size_t edge0_index;
+    size_t edge1_index;
+    weight_int new_weight;
+
+    bool operator==(const ImpliedWeightUnconverted& other) const {
+        return edge0_index == other.edge0_index && edge1_index == other.edge1_index && new_weight == other.new_weight;
+    }
+};
+
 /// A detector node is a location where a detection event might occur.
 ///
 /// It corresponds to a potential symptom that could be seen, and can
@@ -65,6 +85,9 @@ class DetectorNode {
     std::vector<DetectorNode*> neighbors;       /// The node's neighbors.
     std::vector<weight_int> neighbor_weights;   /// Distance crossed by the edge to each neighbor.
     std::vector<obs_int> neighbor_observables;  /// Observables crossed by the edge to each neighbor.
+
+    std::vector<std::vector<ImpliedWeight>> neighbor_implied_weights;
+    std::vector<std::vector<ImpliedWeightUnconverted>> neighbor_implied_weights_unconverted;
 
     /// After it reached this node, how much further did the owning search region grow? Also is it currently growing?
     inline VaryingCT local_radius() const {

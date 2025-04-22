@@ -53,10 +53,20 @@ class MatchingGraph {
     MatchingGraph(size_t num_nodes, size_t num_observables);
     MatchingGraph(size_t num_nodes, size_t num_observables, double normalising_constant);
     MatchingGraph(MatchingGraph&& graph) noexcept;
-    void add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t>& observables);
-    void add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t>& observables);
+    void add_edge(
+        size_t u,
+        size_t v,
+        signed_weight_int weight,
+        const std::vector<size_t>& observables,
+        const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted);
+    void add_boundary_edge(
+        size_t u,
+        signed_weight_int weight,
+        const std::vector<size_t>& observables,
+        const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted);
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
+    void convert_implied_weights();
 };
 
 }  // namespace pm

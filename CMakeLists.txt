@@ -39,6 +39,8 @@ endif ()
 set(SOURCE_FILES_NO_MAIN
         src/pymatching/sparse_blossom/driver/namespaced_main.cc
         src/pymatching/sparse_blossom/driver/io.cc
+        src/pymatching/sparse_blossom/driver/io_helpers.cc
+        src/pymatching/sparse_blossom/driver/detector_edge_id.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.cc
         src/pymatching/sparse_blossom/flooder/graph.cc
         src/pymatching/sparse_blossom/flooder/detector_node.cc
@@ -101,7 +103,9 @@ set(PYTHON_API_FILES
 
 add_executable(pymatching src/main.cc ${SOURCE_FILES_NO_MAIN})
 
-target_compile_options(pymatching PRIVATE ${ARCH_OPT})
+# target_compile_options(pymatching PRIVATE ${ARCH_OPT})
+target_compile_options(pymatching PRIVATE ${ARCH_OPT} -g -fno-omit-frame-pointer)
+
 if (NOT (MSVC))
     target_link_options(pymatching PRIVATE -pthread ${ARCH_OPT})
 endif ()

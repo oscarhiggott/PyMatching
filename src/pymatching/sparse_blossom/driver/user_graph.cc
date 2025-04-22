@@ -14,15 +14,60 @@
 
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
+#include <cstdint>
+#include <pymatching/sparse_blossom/driver/io_helpers.h>
+#include <pymatching/sparse_blossom/flooder/detector_node.h>
+
+#include "pymatching/rand/rand_gen.h"
+#include "pymatching/sparse_blossom/flooder/graph.h"
+#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "pymatching/sparse_blossom/search/search_graph.h"
+
 pm::UserNode::UserNode() : is_boundary(false) {
+}
+
+bool pm::UserGraph::contains(size_t node1, size_t node2) {
+    if (edge_map.count({node1, node2})) {
+        return true;
+    }
+
+    return false;
+}
+
+std::optional<std::pair<size_t, size_t>> pm::UserGraph::get_edge_nodes(size_t node1, size_t node2) {
+    DetectorEdgeNodes search_node1{node1, node2};
+    if (edge_map.count(search_node1)) {
+        return std::make_pair(node1, node2);
+    }
+
+    DetectorEdgeNodes search_node2{node2, node1};
+    if (edge_map.count(search_node2)) {
+        return std::make_pair(node2, node1);
+    }
+
+    return std::nullopt;  // Return nothing if neither combination exists
+}
+
+std::optional<pm::UserEdge> pm::UserGraph::get_edge_data(size_t node1, size_t node2) {
+    DetectorEdgeNodes search_node1{node1, node2};
+    if (edge_map.count(search_node1)) {
+        return edge_map[search_node1];
+    }
+
+    DetectorEdgeNodes search_node2{node2, node1};
+    if (edge_map.count(search_node2)) {
+        return edge_map[search_node2];
+    }
+
+    return std::nullopt;  // Return nothing if neither combination exists
 }
 
 size_t pm::UserNode::index_of_neighbor(size_t node) const {
     auto it = std::find_if(neighbors.begin(), neighbors.end(), [&](const UserNeighbor& neighbor) {
         if (neighbor.pos == 0) {
-            return neighbor.edge_it->node1 == node;
+            return neighbor.edge_it->detectors.d1 == node;
         } else if (neighbor.pos == 1) {
-            return neighbor.edge_it->node2 == node;
+            return neighbor.edge_it->detectors.d2 == node;
         } else {
             throw std::runtime_error("`neighbor.pos` should be 0 or 1, but got: " + std::to_string(neighbor.pos));
         }
@@ -38,47 +83,48 @@ bool is_valid_probability(double p) {
 }
 
 void pm::UserGraph::merge_edge_or_boundary_edge(
-    size_t node,
-    size_t neighbor_index,
-    const std::vector<size_t>& parallel_observables,
-    double parallel_weight,
-    double parallel_error_probability,
+    size_t node1,
+    size_t node2,
+    const std::vector<size_t>& new_observables,
+    double cur_edge_weight,
+    double new_edge_weight,
+    double cur_edge_probability,
+    double new_edge_probability,
     pm::MERGE_STRATEGY merge_strategy) {
-    auto& neighbor = nodes[node].neighbors[neighbor_index];
+    // auto& neighbor = nodes[node].neighbors[neighbor_index];
     if (merge_strategy == DISALLOW) {
         throw std::invalid_argument(
-            "Edge (" + std::to_string(neighbor.edge_it->node1) + ", " + std::to_string(neighbor.edge_it->node2) +
+            "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) +
             ") already exists in the graph. "
             "Parallel edges not permitted with the provided `disallow` `merge_strategy`. Please provide a "
             "different `merge_strategy`.");
     } else if (
-        merge_strategy == KEEP_ORIGINAL ||
-        (merge_strategy == SMALLEST_WEIGHT && parallel_weight >= neighbor.edge_it->weight)) {
+        merge_strategy == KEEP_ORIGINAL || (merge_strategy == SMALLEST_WEIGHT && new_edge_weight >= cur_edge_weight)) {
         return;
     } else {
         double new_weight, new_error_probability;
         bool use_new_observables;
         if (merge_strategy == REPLACE || merge_strategy == SMALLEST_WEIGHT) {
-            new_weight = parallel_weight;
-            new_error_probability = parallel_error_probability;
+            new_weight = new_edge_weight;
+            new_error_probability = new_edge_probability;
             use_new_observables = true;
         } else if (merge_strategy == INDEPENDENT) {
-            new_weight = pm::merge_weights(parallel_weight, neighbor.edge_it->weight);
+            new_weight = pm::merge_weights(cur_edge_weight, new_edge_weight);
             new_error_probability = -1;
-            if (is_valid_probability(neighbor.edge_it->error_probability) &&
-                is_valid_probability(parallel_error_probability))
-                new_error_probability = parallel_error_probability * (1 - neighbor.edge_it->error_probability) +
-                                        neighbor.edge_it->error_probability * (1 - parallel_error_probability);
+            if (is_valid_probability(cur_edge_probability) && is_valid_probability(new_edge_probability))
+                new_error_probability = new_edge_probability * (1 - cur_edge_probability) +
+                                        cur_edge_probability * (1 - new_edge_probability);
             // We do not need to update the observables. If they do not match up, then the code has distance 2.
             use_new_observables = false;
         } else {
             throw std::invalid_argument("Merge strategy not recognised.");
         }
         // Update the existing edge weight and probability in the adjacency list of `node`
-        neighbor.edge_it->weight = new_weight;
-        neighbor.edge_it->error_probability = new_error_probability;
-        if (use_new_observables)
-            neighbor.edge_it->observable_indices = parallel_observables;
+        edge_map[{node1, node2}].error_probability = new_error_probability;
+        edge_map[{node1, node2}].weight = new_weight;
+        if (use_new_observables) {
+            edge_map[{node1, node2}].observables = new_observables;
+        }
 
         _mwpm_needs_updating = true;
         if (new_error_probability < 0 || new_error_probability > 1)
@@ -90,59 +136,87 @@ void pm::UserGraph::add_or_merge_edge(
     size_t node1,
     size_t node2,
     const std::vector<size_t>& observables,
-    double weight,
-    double error_probability,
+    double new_weight,
+    double new_error_probability,
     MERGE_STRATEGY merge_strategy) {
     auto max_id = std::max(node1, node2);
-    if (max_id + 1 > nodes.size())
-        nodes.resize(max_id + 1);
+    if (max_id + 1 > num_nodes) {
+        num_nodes = max_id + 1;
+    }
 
-    size_t idx = nodes[node1].index_of_neighbor(node2);
+    // size_t idx = nodes[node1].index_of_neighbor(node2);
+    auto existing_pair = get_edge_nodes(node1, node2);
 
-    if (idx == SIZE_MAX) {
-        pm::UserEdge edge = {node1, node2, observables, weight, error_probability};
-        edges.push_back(edge);
-        nodes[node1].neighbors.push_back({std::prev(edges.end()), 1});
-        if (node1 != node2)
-            nodes[node2].neighbors.push_back({std::prev(edges.end()), 0});
-
+    if (!existing_pair.has_value()) {
+        pm::UserEdge edge = {
+            {node1, node2},
+            observables,
+            new_weight,
+            new_error_probability,
+            /*correlated_proabilities_sum=*/0,
+            /*implied_probabilities_for_other_edges=*/{}};
+        edge_map[{node1, node2}] = edge;
         for (auto& obs : observables) {
             if (obs + 1 > _num_observables)
                 _num_observables = obs + 1;
         }
         _mwpm_needs_updating = true;
-        if (error_probability < 0 || error_probability > 1)
+        if (new_error_probability < 0 || new_error_probability > 1)
             _all_edges_have_error_probabilities = false;
     } else {
-        merge_edge_or_boundary_edge(node1, idx, observables, weight, error_probability, merge_strategy);
+        UserEdge& edge = edge_map[{node1, node2}];
+        merge_edge_or_boundary_edge(
+            existing_pair.value().first,
+            existing_pair.value().second,
+            observables,
+            edge.weight,
+            new_weight,
+            edge.error_probability,
+            new_error_probability,
+            merge_strategy);
     }
 }
 
 void pm::UserGraph::add_or_merge_boundary_edge(
     size_t node,
     const std::vector<size_t>& observables,
-    double weight,
-    double error_probability,
+    double new_weight,
+    double new_error_probability,
     MERGE_STRATEGY merge_strategy) {
-    if (node + 1 > nodes.size())
-        nodes.resize(node + 1);
+    if (node + 1 > num_nodes) {
+        num_nodes = node + 1;
+    }
 
-    size_t idx = nodes[node].index_of_neighbor(SIZE_MAX);
+    auto existing_pair = get_edge_nodes(node, SIZE_MAX);
 
-    if (idx == SIZE_MAX) {
-        pm::UserEdge edge = {node, SIZE_MAX, observables, weight, error_probability};
-        edges.push_back(edge);
-        nodes[node].neighbors.push_back({std::prev(edges.end()), 1});
+    if (!existing_pair.has_value()) {
+        pm::UserEdge edge = {{node, SIZE_MAX}, observables, new_weight, new_error_probability};
+        edge_map[{node, SIZE_MAX}] = {
+            {node, SIZE_MAX},
+            observables,
+            new_weight,
+            new_error_probability,
+            /*correlated_proabilities_sum=*/0,
+            /*implied_probabilities_for_other_edges=*/{}};
 
         for (auto& obs : observables) {
             if (obs + 1 > _num_observables)
                 _num_observables = obs + 1;
         }
         _mwpm_needs_updating = true;
-        if (error_probability < 0 || error_probability > 1)
+        if (new_error_probability < 0 || new_error_probability > 1)
             _all_edges_have_error_probabilities = false;
     } else {
-        merge_edge_or_boundary_edge(node, idx, observables, weight, error_probability, merge_strategy);
+        UserEdge& edge = edge_map[{node, SIZE_MAX}];
+        merge_edge_or_boundary_edge(
+            node,
+            SIZE_MAX,
+            observables,
+            edge.weight,
+            new_weight,
+            edge.error_probability,
+            new_error_probability,
+            merge_strategy);
     }
 }
 
@@ -151,23 +225,21 @@ pm::UserGraph::UserGraph()
 }
 
 pm::UserGraph::UserGraph(size_t num_nodes)
-    : _num_observables(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
-    nodes.resize(num_nodes);
+    : _num_observables(0), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true), num_nodes(num_nodes) {
 }
 
 pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables)
-    : _num_observables(num_observables), _mwpm_needs_updating(true), _all_edges_have_error_probabilities(true) {
-    nodes.resize(num_nodes);
+    : _num_observables(num_observables),
+      _mwpm_needs_updating(true),
+      _all_edges_have_error_probabilities(true),
+      num_nodes(num_nodes) {
 }
 
 void pm::UserGraph::set_boundary(const std::set<size_t>& boundary) {
-    for (auto& n : boundary_nodes)
-        nodes[n].is_boundary = false;
     boundary_nodes = boundary;
     for (auto& n : boundary_nodes) {
-        if (n >= nodes.size())
-            nodes.resize(n + 1);
-        nodes[n].is_boundary = true;
+        if (n >= num_nodes)
+            num_nodes = n;
     }
     _mwpm_needs_updating = true;
 }
@@ -181,15 +253,15 @@ size_t pm::UserGraph::get_num_observables() {
 }
 
 size_t pm::UserGraph::get_num_nodes() {
-    return nodes.size();
+    return num_nodes;
 }
 
 size_t pm::UserGraph::get_num_detectors() {
     return get_num_nodes() - boundary_nodes.size();
 }
 
-bool pm::UserGraph::is_boundary_node(size_t node_id) {
-    return (node_id == SIZE_MAX) || nodes[node_id].is_boundary;
+bool pm::UserGraph::is_boundary_node(size_t node) {
+    return (node == SIZE_MAX) || boundary_nodes.contains(node);
 }
 
 void pm::UserGraph::update_mwpm() {
@@ -207,17 +279,17 @@ void pm::UserGraph::add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const {
     if (!_all_edges_have_error_probabilities)
         return;
 
-    for (auto& e : edges) {
-        auto p = e.error_probability;
+    for (auto& edgeIDandData : edge_map) {
+        auto p = edgeIDandData.second.error_probability;
         if (rand_float(0.0, 1.0) < p) {
             // Flip the observables
-            for (auto& obs : e.observable_indices) {
+            for (auto& obs : edgeIDandData.second.observables) {
                 *(error_arr + obs) ^= 1;
             }
             // Flip the syndrome bits
-            *(syndrome_arr + e.node1) ^= 1;
-            if (e.node2 != SIZE_MAX)
-                *(syndrome_arr + e.node2) ^= 1;
+            *(syndrome_arr + edgeIDandData.first.d1) ^= 1;
+            if (edgeIDandData.first.d2 != SIZE_MAX)
+                *(syndrome_arr + edgeIDandData.first.d2) ^= 1;
         }
     }
 
@@ -226,7 +298,7 @@ void pm::UserGraph::add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const {
 }
 
 size_t pm::UserGraph::get_num_edges() {
-    return edges.size();
+    return edge_map.size();
 }
 
 bool pm::UserGraph::all_edges_have_error_probabilities() {
@@ -235,50 +307,95 @@ bool pm::UserGraph::all_edges_have_error_probabilities() {
 
 double pm::UserGraph::max_abs_weight() {
     double max_abs_weight = 0;
-    for (auto& e : edges) {
-        if (std::abs(e.weight) > max_abs_weight) {
-            max_abs_weight = std::abs(e.weight);
+    for (auto& edgeIdAndData : edge_map) {
+        if (std::abs(edgeIdAndData.second.weight) > max_abs_weight) {
+            max_abs_weight = std::abs(edgeIdAndData.second.weight);
         }
     }
     return max_abs_weight;
 }
 
-pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
-    pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
+// pm::MatchingGraph pm::UserGraph::to_matching_graph_with_unconverted_weights(pm::weight_int num_distinct_weights) {
+// pm::MatchingGraph matching_graph(get_num_nodes(), _num_observables);
 
+// double normalising_constant = to_matching_or_search_graph_helper(
+// num_distinct_weights,
+//[&](size_t u,
+// size_t v,
+// pm::signed_weight_int weight,
+// const std::vector<size_t>& observables,
+// const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
+// matching_graph.add_edge(u, v, weight, observables, implied_weights_unconverted);
+//},
+//[&](size_t u,
+// pm::signed_weight_int weight,
+// const std::vector<size_t>& observables,
+// const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
+// matching_graph.add_boundary_edge(u, weight, observables, implied_weights_unconverted);
+//});
+
+// matching_graph.normalising_constant = normalising_constant;
+// if (boundary_nodes.size() > 0) {
+// matching_graph.is_user_graph_boundary_node.clear();
+// matching_graph.is_user_graph_boundary_node.resize(get_num_nodes(), false);
+// for (auto& i : boundary_nodes)
+// matching_graph.is_user_graph_boundary_node[i] = true;
+//}
+// return matching_graph;
+//}
+
+pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
+    pm::MatchingGraph matching_graph(get_num_nodes(), _num_observables);
+
+    size_t num_edges = 0;
     double normalising_constant = to_matching_or_search_graph_helper(
         num_distinct_weights,
-        [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            matching_graph.add_edge(u, v, weight, observables);
+        [&](size_t u,
+            size_t v,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
+            num_edges++;
+            matching_graph.add_edge(u, v, weight, observables, implied_weights_unconverted);
         },
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            matching_graph.add_boundary_edge(u, weight, observables);
-        }
-    );
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
+            num_edges++;
+            matching_graph.add_boundary_edge(u, weight, observables, implied_weights_unconverted);
+        });
 
     matching_graph.normalising_constant = normalising_constant;
     if (boundary_nodes.size() > 0) {
         matching_graph.is_user_graph_boundary_node.clear();
-        matching_graph.is_user_graph_boundary_node.resize(nodes.size(), false);
+        matching_graph.is_user_graph_boundary_node.resize(get_num_nodes(), false);
         for (auto& i : boundary_nodes)
             matching_graph.is_user_graph_boundary_node[i] = true;
     }
+    matching_graph.convert_implied_weights();
     return matching_graph;
 }
 
 pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weights) {
     /// Identical to to_matching_graph but for constructing a pm::SearchGraph
-    pm::SearchGraph search_graph(nodes.size());
+    pm::SearchGraph search_graph(get_num_nodes());
 
     to_matching_or_search_graph_helper(
         num_distinct_weights,
-        [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            size_t v,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
             search_graph.add_edge(u, v, weight, observables);
         },
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_unconverted) {
             search_graph.add_boundary_edge(u, weight, observables);
-        }
-    );
+        });
     return search_graph;
 }
 
@@ -307,11 +424,20 @@ pm::Mwpm& pm::UserGraph::get_mwpm_with_search_graph() {
 }
 
 void pm::UserGraph::handle_dem_instruction(
+    double p, const DetectorEdgeNodes& nodes, const std::vector<size_t>& observables) {
+    if (nodes.is_boundary()) {
+        add_or_merge_boundary_edge(nodes.d1, observables, convert_probability_to_weight(p), p, INDEPENDENT);
+    } else {
+        add_or_merge_edge(nodes.d1, nodes.d2, observables, convert_probability_to_weight(p), p, INDEPENDENT);
+    }
+}
+
+void pm::UserGraph::handle_dem_instruction(
     double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables) {
     if (detectors.size() == 2) {
-        add_or_merge_edge(detectors[0], detectors[1], observables, std::log((1 - p) / p), p, INDEPENDENT);
+        add_or_merge_edge(detectors[0], detectors[1], observables, convert_probability_to_weight(p), p, INDEPENDENT);
     } else if (detectors.size() == 1) {
-        add_or_merge_boundary_edge(detectors[0], observables, std::log((1 - p) / p), p, INDEPENDENT);
+        add_or_merge_boundary_edge(detectors[0], observables, convert_probability_to_weight(p), p, INDEPENDENT);
     }
 }
 
@@ -319,9 +445,9 @@ void pm::UserGraph::get_nodes_on_shortest_path_from_source(size_t src, size_t ds
     auto& mwpm = get_mwpm_with_search_graph();
     bool src_is_boundary = is_boundary_node(src);
     bool dst_is_boundary = is_boundary_node(dst);
-    if (src != SIZE_MAX && src >= nodes.size())
+    if (src != SIZE_MAX && src >= get_num_nodes())
         throw std::invalid_argument("node " + std::to_string(src) + " is not in the graph");
-    if (dst != SIZE_MAX && dst >= nodes.size())
+    if (dst != SIZE_MAX && dst >= get_num_nodes())
         throw std::invalid_argument("node " + std::to_string(dst) + " is not in the graph");
     if (!src_is_boundary) {
         size_t dst_tmp = dst_is_boundary ? SIZE_MAX : dst;
@@ -342,15 +468,15 @@ void pm::UserGraph::get_nodes_on_shortest_path_from_source(size_t src, size_t ds
 }
 
 bool pm::UserGraph::has_edge(size_t node1, size_t node2) {
-    if (node1 >= nodes.size())
+    if (node1 >= get_num_nodes())
         return false;
-    return nodes[node1].index_of_neighbor(node2) != SIZE_MAX;
+    return contains(node1, node2);
 }
 
 bool pm::UserGraph::has_boundary_edge(size_t node) {
-    if (node >= nodes.size())
+    if (node >= get_num_nodes())
         return false;
-    return nodes[node].index_of_neighbor(SIZE_MAX) != SIZE_MAX;
+    return contains(node, SIZE_MAX);
 }
 
 void pm::UserGraph::set_min_num_observables(size_t num_observables) {
@@ -361,7 +487,8 @@ void pm::UserGraph::set_min_num_observables(size_t num_observables) {
 double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distinct_weights) {
     double max_abs_weight = 0;
     bool all_integral_weight = true;
-    for (auto& e : edges) {
+    for (auto& edgeIdAndData : edge_map) {
+        UserEdge& e = edgeIdAndData.second;
         if (std::abs(e.weight) > max_abs_weight)
             max_abs_weight = std::abs(e.weight);
 
@@ -381,11 +508,50 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
     }
 }
 
+pm::weight_int pm::convert_probability_to_weight(double p) {
+    return std::log((1 - p) / p);
+}
+
 pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
-    pm::iter_detector_error_model_edges(
-        detector_error_model, [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
-            user_graph.handle_dem_instruction(p, detectors, observables);
-        });
+    size_t max_detector_index_seen;
+    std::map<pm::DetectorEdgeNodes, std::map<pm::DetectorEdgeNodes, double>> conditional_groups;
+    size_t handle_dem_instruction_calls = 0;
+
+    // Create initial user graph. Also calculate conditional_groups.
+    pm::iter_dem_instructions_include_correlations(
+        detector_error_model,
+        [&](double p, const DetectorEdgeNodes& nodes, std::vector<size_t>& observables) {
+            handle_dem_instruction_calls++;
+            user_graph.handle_dem_instruction(p, nodes, observables);
+        },
+        conditional_groups,
+        max_detector_index_seen);
+    user_graph.set_num_nodes(max_detector_index_seen + 1);
+
+    // Include reweighting information in the user graph.
+    for (const auto& pf : conditional_groups) {
+        auto causal_edge = pf.first;
+        double summed_probabilities = 0;
+        for (const auto& affected_edge_and_probability : pf.second) {
+            summed_probabilities += affected_edge_and_probability.second;
+        }
+        user_graph.edge_map[causal_edge].correlated_proabilities_sum = summed_probabilities;
+        for (const auto& affected_edge_and_probability : pf.second) {
+            pm::DetectorEdgeNodes affected_edge = affected_edge_and_probability.first;
+            if (affected_edge != causal_edge) {
+                double implied_probability_for_other_edge =
+                    std::min(0.9, affected_edge_and_probability.second / summed_probabilities);
+                weight_int implied_weight_for_other_edge =
+                    convert_probability_to_weight(implied_probability_for_other_edge);
+                ImpliedWeightUnconverted iwu{affected_edge.d1, affected_edge.d2, implied_weight_for_other_edge};
+                user_graph.edge_map[causal_edge].implied_weights_for_other_edges.emplace_back(iwu);
+            }
+        }
+    }
     return user_graph;
+}
+
+void pm::UserGraph::set_num_nodes(const size_t n) {
+    num_nodes = n;
 }
