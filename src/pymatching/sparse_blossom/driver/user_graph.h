@@ -16,8 +16,6 @@
 #define PYMATCHING2_USER_GRAPH_H
 
 #include <cmath>
-#include <list>
-#include <pymatching/sparse_blossom/driver/io_helpers.h>
 #include <pymatching/sparse_blossom/flooder/detector_node.h>
 #include <set>
 #include <vector>
@@ -30,28 +28,13 @@
 
 namespace pm {
 
-struct UserNeighbor {
-    std::list<DetectorEdgeData>::iterator edge_it;
-    uint8_t pos{};  // The position of the neighboring node in the edge (either 0 if node1, or 1 if node2)
-};
-
-class UserNode {
-   public:
-    UserNode();
-    size_t index_of_neighbor(size_t node) const;
-    std::vector<UserNeighbor> neighbors;  /// The node's neighbors.
-    bool is_boundary;
-};
-
 const pm::weight_int MAX_USER_EDGE_WEIGHT = NUM_DISTINCT_WEIGHTS - 1;
 
 enum MERGE_STRATEGY : uint8_t { DISALLOW, INDEPENDENT, SMALLEST_WEIGHT, KEEP_ORIGINAL, REPLACE };
 
 class UserGraph {
    public:
-    // std::vector<UserNode> nodes;
     std::map<DetectorEdgeId, DetectorEdgeData> edge_map;
-    // std::list<UserEdge> edges;
     std::set<size_t> boundary_nodes;
 
     UserGraph();
@@ -105,15 +88,12 @@ class UserGraph {
         const BoundaryEdgeCallable& boundary_edge_func);
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
-    pm::MatchingGraph to_matching_graph_with_unconverted_weights(pm::weight_int num_distinct_weights);
     pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_graph_included);
     void update_mwpm();
     Mwpm& get_mwpm();
     Mwpm& get_mwpm_with_search_graph();
-    void handle_dem_instruction(double p, const DetectorEdgeId& nodes, const std::vector<size_t>& observables);
-    void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
+    void handle_dem_instruction(double p, const DetectorEdgeId& edge, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
-    std::optional<std::pair<size_t, size_t>> get_edge_nodes(size_t node1, size_t node2);
     std::optional<DetectorEdgeData> get_edge_data(size_t node1, size_t node2);
     bool contains(size_t node1, size_t node2);
     void set_num_nodes(const size_t n);
@@ -197,7 +177,6 @@ inline double UserGraph::to_matching_or_search_graph_helper(
 }
 
 UserGraph detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model);
-UserGraph detector_error_model_to_user_graph_2(const stim::DetectorErrorModel& detector_error_model);
 weight_int convert_probability_to_weight(double p);
 
 }  // namespace pm

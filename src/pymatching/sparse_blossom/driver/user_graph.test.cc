@@ -36,36 +36,26 @@ TEST(UserGraph, ConstructGraph) {
 
     // Graph should contain a boundary edge with node 0.
     ASSERT_TRUE(graph.contains(0, SIZE_MAX));
-    // ASSERT_EQ(graph.nodes[0].neighbors[0].edge_it->detectors.d2, SIZE_MAX);
 
     // Assertions for boundary edge {0, SIZE_MAX}
     std::optional<pm::DetectorEdgeData> edge_data_0_boundary = graph.get_edge_data(0, SIZE_MAX);
     ASSERT_TRUE(edge_data_0_boundary.has_value());
     ASSERT_EQ(edge_data_0_boundary->weight, pm::merge_weights(4.1, 1.0));
-    // ASSERT_EQ(graph.nodes[0].neighbors[0].edge_it->weight, pm::merge_weights(4.1, 1.0));
     ASSERT_EQ(edge_data_0_boundary->error_probability, 0.1 * (1 - 0.46) + 0.46 * (1 - 0.1));
-    // ASSERT_EQ(graph.nodes[0].neighbors[0].edge_it->error_probability, 0.1 * (1 - 0.46) + 0.46 * (1 - 0.1));
 
     // Assertions for {0,1}
     ASSERT_TRUE(graph.contains(0, 1));
-    // ASSERT_EQ(graph.nodes[0].neighbors[1].edge_it->detectors.d2, 1);
     std::optional<pm::DetectorEdgeData> edge_data_0_1 = graph.get_edge_data(0, 1);
     ASSERT_TRUE(edge_data_0_1.has_value());
     ASSERT_EQ(edge_data_0_1->weight, pm::merge_weights(2.5, 2.1));
-    // ASSERT_EQ(graph.nodes[0].neighbors[1].edge_it->weight, pm::merge_weights(2.5, 2.1));
     ASSERT_EQ(edge_data_0_1->error_probability, 0.4 * (1 - 0.45) + 0.45 * (1 - 0.4));
-    // ASSERT_EQ(graph.nodes[0].neighbors[1].edge_it->error_probability, 0.4 * (1 - 0.45) + 0.45 * (1 - 0.4));
     //
     //  Assertions for {1,0}
     ASSERT_TRUE(graph.contains(0, 1));
-    // ASSERT_EQ(graph.nodes[1].neighbors[0].edge_it->detectors.d1, 0);
-    //  ASSERT_EQ(graph.nodes[0].neighbors[1].edge_it->detectors.d2, 1);
     std::optional<pm::DetectorEdgeData> edge_data_1_0 = graph.get_edge_data(1, 0);
     ASSERT_TRUE(edge_data_1_0.has_value());
     ASSERT_EQ(edge_data_1_0->weight, pm::merge_weights(2.5, 2.1));
-    // ASSERT_EQ(graph.nodes[1].neighbors[0].edge_it->weight, pm::merge_weights(2.5, 2.1));
     ASSERT_EQ(edge_data_1_0->error_probability, 0.4 * (1 - 0.45) + 0.45 * (1 - 0.4));
-    // ASSERT_EQ(graph.nodes[1].neighbors[0].edge_it->error_probability, 0.4 * (1 - 0.45) + 0.45 * (1 - 0.4));
 
     //  Assertions for {1,2}
     ASSERT_TRUE(graph.contains(1, 2));
@@ -73,15 +63,12 @@ TEST(UserGraph, ConstructGraph) {
     std::optional<pm::DetectorEdgeData> edge_data_1_2 = graph.get_edge_data(1, 2);
     ASSERT_TRUE(edge_data_1_2.has_value());
     ASSERT_EQ(edge_data_1_2->weight, -3.5);
-    // ASSERT_EQ(graph.nodes[1].neighbors[1].edge_it->weight, -3.5);
 
     ASSERT_TRUE(graph.contains(2, 1));
-    // ASSERT_EQ(graph.nodes[2].neighbors[0].edge_it->detectors.d1, 1);
     ASSERT_TRUE(graph.contains(2, 3));
-    // ASSERT_EQ(graph.nodes[2].neighbors[1].edge_it->detectors.d2, 3);
-    // ASSERT_EQ(graph.nodes[0].index_of_neighbor(1), 1);
-    // ASSERT_EQ(graph.nodes[0].index_of_neighbor(SIZE_MAX), 0);
-    // ASSERT_EQ(graph.nodes[0].index_of_neighbor(3), SIZE_MAX);
+
+    // Assert that a non-inserted edge isn't marked as contained.
+    ASSERT_FALSE(graph.contains(100, 100));
 
     auto& mwpm = graph.get_mwpm();
     auto& g2 = mwpm.flooder.graph;

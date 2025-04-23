@@ -15,7 +15,6 @@
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
 #include <cstdint>
-#include <pymatching/sparse_blossom/driver/io_helpers.h>
 #include <pymatching/sparse_blossom/flooder/detector_node.h>
 
 #include "pymatching/rand/rand_gen.h"
@@ -23,59 +22,19 @@
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
 #include "pymatching/sparse_blossom/search/search_graph.h"
 
-pm::UserNode::UserNode() : is_boundary(false) {
-}
-
 bool pm::UserGraph::contains(size_t node1, size_t node2) {
     if (edge_map.count({node1, node2})) {
         return true;
     }
-
     return false;
 }
 
-std::optional<std::pair<size_t, size_t>> pm::UserGraph::get_edge_nodes(size_t node1, size_t node2) {
-    DetectorEdgeId search_node1{node1, node2};
-    if (edge_map.count(search_node1)) {
-        return std::make_pair(node1, node2);
-    }
-
-    DetectorEdgeId search_node2{node2, node1};
-    if (edge_map.count(search_node2)) {
-        return std::make_pair(node2, node1);
-    }
-
-    return std::nullopt;  // Return nothing if neither combination exists
-}
-
 std::optional<pm::DetectorEdgeData> pm::UserGraph::get_edge_data(size_t node1, size_t node2) {
-    DetectorEdgeId search_node1{node1, node2};
-    if (edge_map.count(search_node1)) {
-        return edge_map[search_node1];
+    DetectorEdgeId search_node{node1, node2};
+    if (contains(node1, node2)) {
+        return edge_map[search_node];
     }
-
-    DetectorEdgeId search_node2{node2, node1};
-    if (edge_map.count(search_node2)) {
-        return edge_map[search_node2];
-    }
-
-    return std::nullopt;  // Return nothing if neither combination exists
-}
-
-size_t pm::UserNode::index_of_neighbor(size_t node) const {
-    auto it = std::find_if(neighbors.begin(), neighbors.end(), [&](const UserNeighbor& neighbor) {
-        if (neighbor.pos == 0) {
-            return neighbor.edge_it->detectors.d1 == node;
-        } else if (neighbor.pos == 1) {
-            return neighbor.edge_it->detectors.d2 == node;
-        } else {
-            throw std::runtime_error("`neighbor.pos` should be 0 or 1, but got: " + std::to_string(neighbor.pos));
-        }
-    });
-    if (it == neighbors.end())
-        return SIZE_MAX;
-
-    return it - neighbors.begin();
+    return std::nullopt;
 }
 
 bool is_valid_probability(double p) {
@@ -87,43 +46,44 @@ void pm::UserGraph::merge_edge_or_boundary_edge(
     size_t node2,
     const std::vector<size_t>& new_observables,
     double cur_edge_weight,
-    double new_edge_weight,
+    double parallel_edge_weight,
     double cur_edge_probability,
-    double new_edge_probability,
+    double parallel_edge_probability,
     pm::MERGE_STRATEGY merge_strategy) {
-    // auto& neighbor = nodes[node].neighbors[neighbor_index];
+    DetectorEdgeId existing_edge{node1, node2};
     if (merge_strategy == DISALLOW) {
         throw std::invalid_argument(
-            "Edge (" + std::to_string(node1) + ", " + std::to_string(node2) +
+            "Edge (" + std::to_string(existing_edge.d1) + ", " + std::to_string(existing_edge.d2) +
             ") already exists in the graph. "
             "Parallel edges not permitted with the provided `disallow` `merge_strategy`. Please provide a "
             "different `merge_strategy`.");
     } else if (
-        merge_strategy == KEEP_ORIGINAL || (merge_strategy == SMALLEST_WEIGHT && new_edge_weight >= cur_edge_weight)) {
+        merge_strategy == KEEP_ORIGINAL ||
+        (merge_strategy == SMALLEST_WEIGHT && parallel_edge_weight >= cur_edge_weight)) {
         return;
     } else {
         double new_weight, new_error_probability;
         bool use_new_observables;
         if (merge_strategy == REPLACE || merge_strategy == SMALLEST_WEIGHT) {
-            new_weight = new_edge_weight;
-            new_error_probability = new_edge_probability;
+            new_weight = parallel_edge_weight;
+            new_error_probability = parallel_edge_probability;
             use_new_observables = true;
         } else if (merge_strategy == INDEPENDENT) {
-            new_weight = pm::merge_weights(cur_edge_weight, new_edge_weight);
+            new_weight = pm::merge_weights(cur_edge_weight, parallel_edge_weight);
             new_error_probability = -1;
-            if (is_valid_probability(cur_edge_probability) && is_valid_probability(new_edge_probability))
-                new_error_probability = new_edge_probability * (1 - cur_edge_probability) +
-                                        cur_edge_probability * (1 - new_edge_probability);
+            if (is_valid_probability(cur_edge_probability) && is_valid_probability(parallel_edge_probability))
+                new_error_probability = parallel_edge_probability * (1 - cur_edge_probability) +
+                                        cur_edge_probability * (1 - parallel_edge_probability);
             // We do not need to update the observables. If they do not match up, then the code has distance 2.
             use_new_observables = false;
         } else {
             throw std::invalid_argument("Merge strategy not recognised.");
         }
         // Update the existing edge weight and probability in the adjacency list of `node`
-        edge_map[{node1, node2}].error_probability = new_error_probability;
-        edge_map[{node1, node2}].weight = new_weight;
+        edge_map[existing_edge].error_probability = new_error_probability;
+        edge_map[existing_edge].weight = new_weight;
         if (use_new_observables) {
-            edge_map[{node1, node2}].observables = new_observables;
+            edge_map[existing_edge].observables = new_observables;
         }
 
         _mwpm_needs_updating = true;
@@ -144,17 +104,16 @@ void pm::UserGraph::add_or_merge_edge(
         num_nodes = max_id + 1;
     }
 
-    // size_t idx = nodes[node1].index_of_neighbor(node2);
-    auto existing_pair = get_edge_nodes(node1, node2);
+    bool edge_exists = contains(node1, node2);
 
-    if (!existing_pair.has_value()) {
+    if (!edge_exists) {
         pm::DetectorEdgeData edge = {
-            {node1, node2},
-            observables,
-            new_weight,
-            new_error_probability,
-            /*correlated_proabilities_sum=*/0,
-            /*implied_probabilities_for_other_edges=*/{}};
+            .detectors = {node1, node2},
+            .observables = observables,
+            .weight = new_weight,
+            .error_probability = new_error_probability,
+            .correlated_proabilities_sum = 0,
+            .implied_weights_for_other_edges = {}};
         edge_map[{node1, node2}] = edge;
         for (auto& obs : observables) {
             if (obs + 1 > _num_observables)
@@ -166,8 +125,8 @@ void pm::UserGraph::add_or_merge_edge(
     } else {
         DetectorEdgeData& edge = edge_map[{node1, node2}];
         merge_edge_or_boundary_edge(
-            existing_pair.value().first,
-            existing_pair.value().second,
+            node1,
+            node2,
             observables,
             edge.weight,
             new_weight,
@@ -187,17 +146,17 @@ void pm::UserGraph::add_or_merge_boundary_edge(
         num_nodes = node + 1;
     }
 
-    auto existing_pair = get_edge_nodes(node, SIZE_MAX);
+    bool edge_exists = contains(node, SIZE_MAX);
 
-    if (!existing_pair.has_value()) {
+    if (!edge_exists) {
         pm::DetectorEdgeData edge = {{node, SIZE_MAX}, observables, new_weight, new_error_probability};
         edge_map[{node, SIZE_MAX}] = {
-            {node, SIZE_MAX},
-            observables,
-            new_weight,
-            new_error_probability,
-            /*correlated_proabilities_sum=*/0,
-            /*implied_probabilities_for_other_edges=*/{}};
+            .detectors = {node, SIZE_MAX},
+            .observables = observables,
+            .weight = new_weight,
+            .error_probability = new_error_probability,
+            .correlated_proabilities_sum = 0,
+            .implied_weights_for_other_edges = {}};
 
         for (auto& obs : observables) {
             if (obs + 1 > _num_observables)
@@ -236,7 +195,7 @@ pm::UserGraph::UserGraph(size_t num_nodes, size_t num_observables)
 }
 
 void pm::UserGraph::set_boundary(const std::set<size_t>& boundary) {
-    boundary_nodes = boundary;
+    boundary_nodes = std::move(boundary);
     for (auto& n : boundary_nodes) {
         if (n >= num_nodes)
             num_nodes = n;
@@ -395,11 +354,13 @@ pm::Mwpm& pm::UserGraph::get_mwpm_with_search_graph() {
 }
 
 void pm::UserGraph::handle_dem_instruction(
-    double p, const DetectorEdgeId& nodes, const std::vector<size_t>& observables) {
-    if (nodes.is_boundary()) {
-        add_or_merge_boundary_edge(nodes.d1, observables, std::log((1 - p) / p), p, INDEPENDENT);
-    } else {
-        add_or_merge_edge(nodes.d1, nodes.d2, observables, std::log((1 - p) / p), p, INDEPENDENT);
+    double p, const DetectorEdgeId& edge, const std::vector<size_t>& observables) {
+    if (edge.is_valid_edge()) {
+        if (edge.is_boundary()) {
+            add_or_merge_boundary_edge(edge.d1, observables, std::log((1 - p) / p), p, INDEPENDENT);
+        } else {
+            add_or_merge_edge(edge.d1, edge.d2, observables, std::log((1 - p) / p), p, INDEPENDENT);
+        }
     }
 }
 
@@ -476,7 +437,6 @@ pm::weight_int pm::convert_probability_to_weight(double p) {
 
 pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
-    size_t max_detector_index_seen;
     std::map<pm::DetectorEdgeId, std::map<pm::DetectorEdgeId, double>> conditional_groups;
 
     // Create initial user graph. Also calculate conditional_groups.
@@ -485,9 +445,7 @@ pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorMo
         [&](double p, const DetectorEdgeId& nodes, std::vector<size_t>& observables) {
             user_graph.handle_dem_instruction(p, nodes, observables);
         },
-        conditional_groups,
-        max_detector_index_seen);
-    user_graph.set_num_nodes(max_detector_index_seen + 1);
+        conditional_groups);
 
     // Include reweighting information in the user graph.
     for (const auto& pf : conditional_groups) {

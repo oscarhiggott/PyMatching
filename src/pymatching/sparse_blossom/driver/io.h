@@ -15,7 +15,6 @@
 #ifndef PYMATCHING2_IO_H
 #define PYMATCHING2_IO_H
 
-#include "pymatching/sparse_blossom/driver/io_helpers.h"
 #include "pymatching/sparse_blossom/flooder/graph.h"
 #include "stim.h"
 
@@ -40,6 +39,51 @@ const pm::weight_int NUM_DISTINCT_WEIGHTS = 1 << (sizeof(pm::weight_int) * 8 - 8
 /// the implementation used here instead. See Equation (6) of https://ieeexplore.ieee.org/document/1495850 for more
 /// details.
 double merge_weights(double a, double b);
+
+// Identifies an edge defined by two detectors (d1, d2) in a detector graph.
+// d1 <= d2 for convenience is guaranteed for convenience.
+//
+// If d2 is `SIZE_MAX` and d1 < SIZE_MAX, then the edge ID is considered to be that of a boundary edge.
+struct DetectorEdgeId {
+    size_t d1;
+    size_t d2;
+
+    DetectorEdgeId();
+    DetectorEdgeId(const size_t d);
+    DetectorEdgeId(const size_t d1, const size_t d2);
+
+    bool operator==(const DetectorEdgeId &other) const;
+    bool operator!=(const DetectorEdgeId &other) const;
+    bool operator<(const DetectorEdgeId &other) const;
+
+    // Checks whether edge had any detectors assigned to it at all.
+    bool is_valid_edge() const;
+    bool is_boundary() const;
+};
+
+struct DetectorEdgeData {
+    DetectorEdgeId detectors;
+    std::vector<size_t> observables;     /// The observables crossed along this edge
+    double weight;                       /// The weight of the edge to this neighboring node
+    double error_probability;            /// The error probability associated with this node
+    double correlated_proabilities_sum;  /// The error probability associated with this node
+    std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges{};
+    bool operator==(const DetectorEdgeData &other) const;
+    bool operator!=(const DetectorEdgeData &other) const;
+};
+
+struct DecomposedDemError {
+    /// The probability of this error occurring.
+    double probability;
+    /// Effects of the error.
+    stim::FixedCapVector<DetectorEdgeData, 8> components;
+
+    bool operator==(const DecomposedDemError &other) const;
+    bool operator!=(const DecomposedDemError &other) const;
+};
+
+void add_decomposed_error_to_conditional_groups(
+    pm::DecomposedDemError &error, std::map<DetectorEdgeId, std::map<DetectorEdgeId, double>> &conditional_groups);
 
 template <typename Handler>
 void iter_detector_error_model_edges(
@@ -71,9 +115,7 @@ template <typename Handler>
 void iter_dem_instructions_include_correlations(
     const stim::DetectorErrorModel &detector_error_model,
     const Handler &handle_dem_error,
-    std::map<DetectorEdgeId, std::map<DetectorEdgeId, double>> &conditional_groups,
-    size_t &max_detector_index_seen) {
-    max_detector_index_seen = 0;
+    std::map<DetectorEdgeId, std::map<DetectorEdgeId, double>> &conditional_groups) {
     detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction &instruction) {
         double p = instruction.arg_data[0];
         pm::DecomposedDemError decomposed_err;
@@ -84,20 +126,12 @@ void iter_dem_instructions_include_correlations(
         size_t num_translated_relative_detectors = 0;
         for (auto &target : instruction.target_data) {
             // Decompose error
-            // Add error to conditional groups.
             if (target.is_relative_detector_id()) {
                 num_translated_relative_detectors++;
                 if (num_translated_relative_detectors == 1) {
                     const size_t &d1 = target.raw_id();
-                    if (d1 > max_detector_index_seen) {
-                        max_detector_index_seen = d1;
-                    }
                     component->detectors = {d1};
                 } else if (num_translated_relative_detectors == 2) {
-                    const size_t &d2 = target.raw_id();
-                    if (d2 > max_detector_index_seen) {
-                        max_detector_index_seen = d2;
-                    }
                     component->detectors = {component->detectors.d1, target.raw_id()};
                 } else {
                     // We mark errors which have more than 3 detectors as a special boundary-to-boundary edge.
@@ -106,14 +140,10 @@ void iter_dem_instructions_include_correlations(
             } else if (target.is_observable_id()) {
                 component->observables.push_back(target.val());
             } else if (target.is_separator()) {
-                if (num_translated_relative_detectors == 0) {
-                    throw std::invalid_argument("An error component had no symptoms.");
-                }
                 // If the previous error in the decomposition had more than 3 components, we ignore it.
-                if (decomposed_err.components.back().detectors == DetectorEdgeId(SIZE_MAX, SIZE_MAX)) {
+                if (!decomposed_err.components.back().detectors.is_valid_edge()) {
                     decomposed_err.components.pop_back();
-                }
-                if (p > 0) {
+                } else if (p > 0) {
                     handle_dem_error(p, component->detectors, component->observables);
                 }
                 decomposed_err.components.push_back({});
@@ -122,13 +152,14 @@ void iter_dem_instructions_include_correlations(
             }
         }
         // If the final error in the decomposition had more than 3 components, we ignore it.
-        if (decomposed_err.components.back().detectors == DetectorEdgeId(SIZE_MAX, SIZE_MAX)) {
+        if (!decomposed_err.components.back().detectors.is_valid_edge()) {
             decomposed_err.components.pop_back();
-        }
-        add_decomposed_error_to_conditional_groups(decomposed_err, conditional_groups);
-        if (p > 0) {
+        } else if (p > 0) {
             handle_dem_error(p, component->detectors, component->observables);
         }
+
+        // Add error to conditional groups.
+        add_decomposed_error_to_conditional_groups(decomposed_err, conditional_groups);
     });
 }
 
