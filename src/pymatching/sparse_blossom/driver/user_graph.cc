@@ -112,7 +112,7 @@ void pm::UserGraph::add_or_merge_edge(
             .observables = observables,
             .weight = new_weight,
             .error_probability = new_error_probability,
-            .correlated_proabilities_sum = 0,
+            .correlated_probabilities_sum = 0,
             .implied_weights_for_other_edges = {}};
         edge_map[{node1, node2}] = edge;
         for (auto& obs : observables) {
@@ -155,7 +155,7 @@ void pm::UserGraph::add_or_merge_boundary_edge(
             .observables = observables,
             .weight = new_weight,
             .error_probability = new_error_probability,
-            .correlated_proabilities_sum = 0,
+            .correlated_probabilities_sum = 0,
             .implied_weights_for_other_edges = {}};
 
         for (auto& obs : observables) {
@@ -435,6 +435,29 @@ pm::weight_int pm::convert_probability_to_weight(double p) {
     return std::log((1 - p) / p);
 }
 
+void pm::UserGraph::populate_implied_edge_weights(
+    const std::map<pm::DetectorEdgeId, std::map<pm::DetectorEdgeId, double>> conditional_groups) {
+    for (const auto& pf : conditional_groups) {
+        auto causal_edge = pf.first;
+        double summed_probabilities = 0;
+        for (const auto& affected_edge_and_probability : pf.second) {
+            summed_probabilities += affected_edge_and_probability.second;
+        }
+        edge_map[causal_edge].correlated_probabilities_sum = summed_probabilities;
+        for (const auto& affected_edge_and_probability : pf.second) {
+            pm::DetectorEdgeId affected_edge = affected_edge_and_probability.first;
+            if (affected_edge != causal_edge) {
+                double implied_probability_for_other_edge =
+                    std::min(0.9, affected_edge_and_probability.second / summed_probabilities);
+                weight_int implied_weight_for_other_edge =
+                    convert_probability_to_weight(implied_probability_for_other_edge);
+                ImpliedWeightUnconverted iwu{affected_edge.d1, affected_edge.d2, implied_weight_for_other_edge};
+                edge_map[causal_edge].implied_weights_for_other_edges.emplace_back(iwu);
+            }
+        }
+    }
+}
+
 pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
     std::map<pm::DetectorEdgeId, std::map<pm::DetectorEdgeId, double>> conditional_groups;
@@ -448,25 +471,7 @@ pm::UserGraph pm::detector_error_model_to_user_graph(const stim::DetectorErrorMo
         conditional_groups);
 
     // Include reweighting information in the user graph.
-    for (const auto& pf : conditional_groups) {
-        auto causal_edge = pf.first;
-        double summed_probabilities = 0;
-        for (const auto& affected_edge_and_probability : pf.second) {
-            summed_probabilities += affected_edge_and_probability.second;
-        }
-        user_graph.edge_map[causal_edge].correlated_proabilities_sum = summed_probabilities;
-        for (const auto& affected_edge_and_probability : pf.second) {
-            pm::DetectorEdgeId affected_edge = affected_edge_and_probability.first;
-            if (affected_edge != causal_edge) {
-                double implied_probability_for_other_edge =
-                    std::min(0.9, affected_edge_and_probability.second / summed_probabilities);
-                weight_int implied_weight_for_other_edge =
-                    convert_probability_to_weight(implied_probability_for_other_edge);
-                ImpliedWeightUnconverted iwu{affected_edge.d1, affected_edge.d2, implied_weight_for_other_edge};
-                user_graph.edge_map[causal_edge].implied_weights_for_other_edges.emplace_back(iwu);
-            }
-        }
-    }
+    user_graph.populate_implied_edge_weights(conditional_groups);
     return user_graph;
 }
 

@@ -20,6 +20,10 @@
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
+double convert_p_to_double_weight(double p) {
+    return std::log((1 - p) / p);
+};
+
 TEST(UserGraph, ConstructGraph) {
     pm::UserGraph graph;
     graph.add_or_merge_boundary_edge(0, {2}, 4.1, 0.1);
@@ -188,4 +192,211 @@ TEST(UserGraph, DecodeUserGraphDetectionEventOnBoundaryNode) {
         pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
         pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight);
     }
+}
+
+TEST(ConvertProbabilityToWeightSingleTest, AllCases) {
+    EXPECT_EQ(0u, pm::convert_probability_to_weight(0.5));
+    EXPECT_EQ(1u, pm::convert_probability_to_weight(0.25));
+    EXPECT_EQ(UINT32_MAX, pm::convert_probability_to_weight(0.75));
+    EXPECT_EQ(11u, pm::convert_probability_to_weight(0.00001));
+    EXPECT_EQ(UINT32_MAX - 10, pm::convert_probability_to_weight(0.99999));
+    EXPECT_EQ(0u, pm::convert_probability_to_weight(0.0));
+    EXPECT_EQ(0u, pm::convert_probability_to_weight(1.0));
+    EXPECT_EQ(0u, pm::convert_probability_to_weight(2.0));
+    EXPECT_EQ(0u, pm::convert_probability_to_weight(-1.0));
+    EXPECT_EQ(0u, pm::convert_probability_to_weight(std::numeric_limits<double>::quiet_NaN()));
+}
+
+TEST(UserGraphFromDem, EmptyDEM) {
+    stim::DetectorErrorModel dem;  // Empty model
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+    ASSERT_EQ(graph.get_num_nodes(), 0);
+    ASSERT_EQ(graph.get_num_edges(), 0);
+}
+
+TEST(DetectorErrorModelToUserGraph, SingleDetectorError) {
+    stim::DetectorErrorModel dem("error(0.1) D0");
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+
+    pm::DetectorEdgeId d0(0);
+
+    ASSERT_EQ(graph.edge_map.size(), 1);
+    ASSERT_TRUE(graph.edge_map.count(d0));
+
+    const auto& data = graph.edge_map.at(d0);
+    EXPECT_EQ(data.detectors, d0);
+    EXPECT_TRUE(data.observables.empty());
+    EXPECT_DOUBLE_EQ(data.error_probability, 0.1);  // bernoulli_xor(0, 0.1)
+    EXPECT_DOUBLE_EQ(data.weight, convert_p_to_double_weight(0.1));
+
+    // From populate_implied_edge_weights
+    // conditional_groups[d0][d0] = 0.1
+    EXPECT_DOUBLE_EQ(data.correlated_probabilities_sum, 0.1);
+    EXPECT_TRUE(data.implied_weights_for_other_edges.empty());
+}
+
+TEST(DetectorErrorModelToUserGraph, TwoDetectorError) {
+    stim::DetectorErrorModel dem("error(0.2) D1 D3");
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+
+    pm::DetectorEdgeId d13(1, 3);
+
+    ASSERT_EQ(graph.edge_map.size(), 1);
+    ASSERT_TRUE(graph.edge_map.count(d13));
+
+    const auto& data = graph.edge_map.at(d13);
+    EXPECT_EQ(data.detectors, d13);
+    EXPECT_TRUE(data.observables.empty());
+    EXPECT_DOUBLE_EQ(data.error_probability, 0.2);
+    EXPECT_DOUBLE_EQ(data.weight, convert_p_to_double_weight(0.2));
+
+    // conditional_groups[d13][d13] = 0.2
+    EXPECT_DOUBLE_EQ(data.correlated_probabilities_sum, 0.2);
+    EXPECT_TRUE(data.implied_weights_for_other_edges.empty());
+}
+
+TEST(DetectorErrorModelToUserGraph, ThreeDetectorErrorIsIgnored) {
+    stim::DetectorErrorModel dem("error(0.3) D0 D1 D2");
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+
+    EXPECT_TRUE(graph.edge_map.empty());
+}
+
+TEST(DetectorErrorModelToUserGraph, CorrelatedErrorSimple) {
+    stim::DetectorErrorModel dem("error(0.6) D0 ^ D1 L0");
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+
+    pm::DetectorEdgeId d0(0);
+    pm::DetectorEdgeId d1(1);
+
+    ASSERT_EQ(graph.edge_map.size(), 2);  // Edges D0 and D1
+
+    // Check D0
+    ASSERT_TRUE(graph.edge_map.count(d0));
+    const auto& data_d0 = graph.edge_map.at(d0);
+    EXPECT_EQ(data_d0.detectors, d0);
+    EXPECT_TRUE(data_d0.observables.empty());
+    EXPECT_DOUBLE_EQ(data_d0.error_probability, 0.6);
+    EXPECT_DOUBLE_EQ(data_d0.weight, convert_p_to_double_weight(0.6));
+    EXPECT_DOUBLE_EQ(data_d0.correlated_probabilities_sum, 0.6);
+    ASSERT_EQ(data_d0.implied_weights_for_other_edges.size(), 1);
+    pm::ImpliedWeightUnconverted expected_iwu_d0_to_d1 = {d1.d1, d1.d2, pm::convert_probability_to_weight(0.9)};
+    EXPECT_EQ(data_d0.implied_weights_for_other_edges[0], expected_iwu_d0_to_d1);
+
+    // Check D1
+    ASSERT_TRUE(graph.edge_map.count(d1));
+    const auto& data_d1 = graph.edge_map.at(d1);
+    EXPECT_EQ(data_d1.detectors, d1);
+    EXPECT_EQ(data_d1.observables, std::vector<size_t>{0});
+    EXPECT_DOUBLE_EQ(data_d1.error_probability, 0.6);
+    EXPECT_DOUBLE_EQ(data_d1.weight, convert_p_to_double_weight(0.6));
+    ASSERT_EQ(data_d1.implied_weights_for_other_edges.size(), 1);
+    pm::ImpliedWeightUnconverted expected_iwu_d1_to_d0 = {d0.d1, d0.d2, pm::convert_probability_to_weight(0.9)};
+    EXPECT_EQ(data_d1.implied_weights_for_other_edges[0], expected_iwu_d1_to_d0);
+}
+
+TEST(DetectorErrorModelToUserGraph, ErrorWithNoDetectorsInComponent) {
+    stim::DetectorErrorModel dem("error(0.1) L0 ^ D1");
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+
+    pm::DetectorEdgeId d1(1);
+    ASSERT_EQ(graph.edge_map.size(), 1);  // Only D1 edge
+
+    // Check D1
+    ASSERT_TRUE(graph.edge_map.count(d1));
+    const auto& data_d1 = graph.edge_map.at(d1);
+    EXPECT_EQ(data_d1.detectors, d1);
+    EXPECT_TRUE(data_d1.observables.empty());
+    EXPECT_DOUBLE_EQ(data_d1.error_probability, 0.1);
+    EXPECT_DOUBLE_EQ(data_d1.weight, convert_p_to_double_weight(0.1));
+    EXPECT_DOUBLE_EQ(data_d1.correlated_probabilities_sum, 0.1);
+    EXPECT_TRUE(data_d1.implied_weights_for_other_edges.empty());
+}
+
+TEST(DetectorErrorModelToUserGraph, ComplexInteractingCorrelatedErrors) {
+    const char* dem_text = R"DEM(
+        error(0.1) L0 D0 D1 ^ D2        #I1
+        error(0.2) D0 D1 ^ D2 ^ D3   #I2
+        error(0.15) D3 ^ D0 D1       #I3
+    )DEM";
+    stim::DetectorErrorModel dem(dem_text);
+    pm::UserGraph graph = pm::detector_error_model_to_user_graph(dem);
+
+    pm::DetectorEdgeId d01(0, 1);
+    pm::DetectorEdgeId d2(2);
+    pm::DetectorEdgeId d3(3);
+
+    ASSERT_EQ(graph.edge_map.size(), 3);  // D(0,1), D(2), D(3)
+
+    // --- Expected error_probability and weight (from handle_dem_instruction calls) ---
+    // D(0,1): Calls with p=0.1 (I1), p=0.2 (I2), p=0.15 (I3)
+    // ep_d01_i1 = 0.1
+    // ep_d01_i2 = bernoulli_xor(0.1, 0.2) = 0.26
+    // ep_d01_i3 = bernoulli_xor(0.26, 0.15) = 0.26*0.85 + 0.15*0.74 = 0.221 + 0.111 = 0.332
+    double ep_d01 = 0.332;
+
+    // D(2): Calls with p=0.1 (I1), p=0.2 (I2)
+    // ep_d2_i1 = 0.1
+    // ep_d2_i2 = bernoulli_xor(0.1, 0.2) = 0.26
+    double ep_d2 = 0.26;
+
+    // D(3): Calls with p=0.2 (I2), p=0.15 (I3)
+    // ep_d3_i1 = 0.2 // (from I2)
+    // ep_d3_i2 = bernoulli_xor(0.2, 0.15) = 0.2*0.85 + 0.15*0.8 = 0.17 + 0.12 = 0.29
+    double ep_d3 = 0.29;
+
+    // --- Expected conditional_groups ---
+    // cg = { d01:{d2:0.26, d3:0.29}, d2:{d01:0.26, d3:0.2}, d3:{d01:0.29, d2:0.2} }
+
+    // --- Check D(0,1) ---
+    ASSERT_TRUE(graph.edge_map.count(d01));
+    const auto& data_d01 = graph.edge_map.at(d01);
+    EXPECT_EQ(data_d01.detectors, d01);
+    EXPECT_EQ(data_d01.observables.size(), 1);
+    EXPECT_EQ(data_d01.observables[0], 0);
+    EXPECT_DOUBLE_EQ(data_d01.error_probability, ep_d01);
+    EXPECT_DOUBLE_EQ(data_d01.weight, convert_p_to_double_weight(ep_d01));
+    // Causal d01: sum_prob = cg[d01][d2] + cg[d01][d3] = 0.26 + 0.29 = 0.55
+    EXPECT_DOUBLE_EQ(data_d01.correlated_probabilities_sum, 0.55);
+    ASSERT_EQ(data_d01.implied_weights_for_other_edges.size(), 2);
+    // d01->d2: impl_p=min(0.9, 0.26/0.55) approx 0.472727
+    // d01->d3: impl_p=min(0.9, 0.29/0.55) approx 0.527272
+    pm::ImpliedWeightUnconverted expected_d01_to_d2 = {d2.d1, d2.d2, pm::convert_probability_to_weight(0.26 / 0.55)};
+    pm::ImpliedWeightUnconverted expected_d01_to_d3 = {d3.d1, d3.d2, pm::convert_probability_to_weight(0.29 / 0.55)};
+    EXPECT_EQ(data_d01.implied_weights_for_other_edges[0], expected_d01_to_d2);  // d2 < d3
+    EXPECT_EQ(data_d01.implied_weights_for_other_edges[1], expected_d01_to_d3);
+
+    // --- Check D(2) ---
+    ASSERT_TRUE(graph.edge_map.count(d2));
+    const auto& data_d2 = graph.edge_map.at(d2);
+    EXPECT_EQ(data_d2.detectors, d2);
+    EXPECT_TRUE(data_d2.observables.empty());
+    EXPECT_DOUBLE_EQ(data_d2.error_probability, ep_d2);
+    EXPECT_DOUBLE_EQ(data_d2.weight, convert_p_to_double_weight(ep_d2));
+    // Causal d2: sum_prob = cg[d2][d01] + cg[d2][d3] = 0.26 + 0.2 = 0.46
+    EXPECT_DOUBLE_EQ(data_d2.correlated_probabilities_sum, 0.46);
+    ASSERT_EQ(data_d2.implied_weights_for_other_edges.size(), 2);
+    // d2->d01: impl_p=min(0.9, 0.26/0.46) approx 0.565217
+    // d2->d3:  impl_p=min(0.9, 0.2/0.46) approx 0.434782
+    pm::ImpliedWeightUnconverted expected_d2_to_d01 = {d01.d1, d01.d2, pm::convert_probability_to_weight(0.26 / 0.46)};
+    pm::ImpliedWeightUnconverted expected_d2_to_d3 = {d3.d1, d3.d2, pm::convert_probability_to_weight(0.2 / 0.46)};
+    EXPECT_EQ(data_d2.implied_weights_for_other_edges[0], expected_d2_to_d01);  // d01 < d3
+    EXPECT_EQ(data_d2.implied_weights_for_other_edges[1], expected_d2_to_d3);
+
+    // --- Check D(3) ---
+    ASSERT_TRUE(graph.edge_map.count(d3));
+    const auto& data_d3 = graph.edge_map.at(d3);
+    EXPECT_EQ(data_d3.detectors, d3);
+    EXPECT_TRUE(data_d3.observables.empty());
+    EXPECT_DOUBLE_EQ(data_d3.error_probability, ep_d3);
+    EXPECT_DOUBLE_EQ(data_d3.weight, convert_p_to_double_weight(ep_d3));
+    // Causal d3: sum_prob = cg[d3][d01] + cg[d3][d2] = 0.29 + 0.2 = 0.49
+    EXPECT_DOUBLE_EQ(data_d3.correlated_probabilities_sum, 0.49);
+    ASSERT_EQ(data_d3.implied_weights_for_other_edges.size(), 2);
+    // d3->d01: impl_p=min(0.9, 0.29/0.49) approx 0.591836
+    // d3->d2:  impl_p=min(0.9, 0.2/0.49) approx 0.408163
+    pm::ImpliedWeightUnconverted expected_d3_to_d01 = {d01.d1, d01.d2, pm::convert_probability_to_weight(0.29 / 0.49)};
+    pm::ImpliedWeightUnconverted expected_d3_to_d2 = {d2.d1, d2.d2, pm::convert_probability_to_weight(0.2 / 0.49)};
+    EXPECT_EQ(data_d3.implied_weights_for_other_edges[0], expected_d3_to_d01);  // d01 < d2
+    EXPECT_EQ(data_d3.implied_weights_for_other_edges[1], expected_d3_to_d2);
 }

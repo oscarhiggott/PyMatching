@@ -44,6 +44,8 @@ double merge_weights(double a, double b);
 // d1 <= d2 for convenience is guaranteed for convenience.
 //
 // If d2 is `SIZE_MAX` and d1 < SIZE_MAX, then the edge ID is considered to be that of a boundary edge.
+//
+// An edge is considered a valid edge if it has at least one detector assigned to it.
 struct DetectorEdgeId {
     size_t d1;
     size_t d2;
@@ -56,17 +58,16 @@ struct DetectorEdgeId {
     bool operator!=(const DetectorEdgeId &other) const;
     bool operator<(const DetectorEdgeId &other) const;
 
-    // Checks whether edge had any detectors assigned to it at all.
     bool is_valid_edge() const;
     bool is_boundary() const;
 };
 
 struct DetectorEdgeData {
     DetectorEdgeId detectors;
-    std::vector<size_t> observables;     /// The observables crossed along this edge
-    double weight;                       /// The weight of the edge to this neighboring node
-    double error_probability;            /// The error probability associated with this node
-    double correlated_proabilities_sum;  /// The error probability associated with this node
+    std::vector<size_t> observables;      /// The observables crossed along this edge
+    double weight;                        /// The weight of the edge to this neighboring node
+    double error_probability;             /// The error probability associated with this node
+    double correlated_probabilities_sum;  /// The error probability associated with this node
     std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges{};
     bool operator==(const DetectorEdgeData &other) const;
     bool operator!=(const DetectorEdgeData &other) const;

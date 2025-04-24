@@ -49,7 +49,7 @@ bool pm::DetectorEdgeId::operator<(const DetectorEdgeId &other) const {
 }
 
 bool pm::DetectorEdgeId::is_boundary() const {
-    return d2 == SIZE_MAX;
+    return d1 < SIZE_MAX && d2 == SIZE_MAX;
 }
 
 bool pm::DetectorEdgeId::is_valid_edge() const {

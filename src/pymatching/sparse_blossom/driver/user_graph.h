@@ -40,6 +40,8 @@ class UserGraph {
     UserGraph();
     explicit UserGraph(size_t num_nodes);
     UserGraph(size_t num_nodes, size_t num_observables);
+
+    /// Updaters
     void merge_edge_or_boundary_edge(
         size_t node,
         size_t neighbor_index,
@@ -62,26 +64,45 @@ class UserGraph {
         double weight,
         double error_probability,
         MERGE_STRATEGY merge_strategy = DISALLOW);
-    bool has_edge(size_t node1, size_t node2);
-    bool has_boundary_edge(size_t node);
-    void set_boundary(const std::set<size_t>& boundary);
-    std::set<size_t> get_boundary();
-    size_t get_num_observables();
-    void set_min_num_observables(size_t num_observables);
+    void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
+    void handle_dem_instruction(double p, const DetectorEdgeId& edge, const std::vector<size_t>& observables);
+    void populate_implied_edge_weights(
+        const std::map<pm::DetectorEdgeId, std::map<pm::DetectorEdgeId, double>> conditional_groups);
+    void update_mwpm();
+
+    /// Getters
     size_t get_num_nodes();
     size_t get_num_detectors();
     size_t get_num_edges();
-    bool is_boundary_node(size_t node_id);
-    void add_noise(uint8_t* error_arr, uint8_t* syndrome_arr) const;
-    bool all_edges_have_error_probabilities();
-    double max_abs_weight();
+    size_t get_num_observables();
+    std::set<size_t> get_boundary();
     double get_edge_weight_normalising_constant(size_t max_num_distinct_weights);
+    Mwpm& get_mwpm();
+    Mwpm& get_mwpm_with_search_graph();
+    std::optional<DetectorEdgeData> get_edge_data(size_t node1, size_t node2);
+
+    /// Setters
+    void set_boundary(const std::set<size_t>& boundary);
+    void set_min_num_observables(size_t num_observables);
+    void set_num_nodes(const size_t n);
+
+    /// Checkers
+    bool all_edges_have_error_probabilities();
+    bool contains(size_t node1, size_t node2);
+    bool has_edge(size_t node1, size_t node2);
+    bool has_boundary_edge(size_t node);
+    bool is_boundary_node(size_t node_id);
+    double max_abs_weight();
+
+    /// Iterators
     template <typename EdgeCallable, typename BoundaryEdgeCallable>
     double iter_discretized_edges(
         pm::weight_int num_distinct_weights,
         const EdgeCallable& edge_func,
         const BoundaryEdgeCallable& boundary_edge_func);
     template <typename EdgeCallable, typename BoundaryEdgeCallable>
+
+    /// Converters
     double to_matching_or_search_graph_helper(
         pm::weight_int num_distinct_weights,
         const EdgeCallable& edge_func,
@@ -89,14 +110,8 @@ class UserGraph {
     pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
     pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
     pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_graph_included);
-    void update_mwpm();
-    Mwpm& get_mwpm();
-    Mwpm& get_mwpm_with_search_graph();
-    void handle_dem_instruction(double p, const DetectorEdgeId& edge, const std::vector<size_t>& observables);
+
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
-    std::optional<DetectorEdgeData> get_edge_data(size_t node1, size_t node2);
-    bool contains(size_t node1, size_t node2);
-    void set_num_nodes(const size_t n);
 
    private:
     pm::Mwpm _mwpm;
