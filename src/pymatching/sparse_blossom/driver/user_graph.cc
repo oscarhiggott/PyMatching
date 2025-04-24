@@ -303,7 +303,7 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
         for (auto& i : boundary_nodes)
             matching_graph.is_user_graph_boundary_node[i] = true;
     }
-    // matching_graph.convert_implied_weights();
+    matching_graph.convert_implied_weights();
     return matching_graph;
 }
 
