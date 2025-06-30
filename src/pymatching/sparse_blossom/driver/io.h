@@ -15,9 +15,7 @@
 #ifndef PYMATCHING2_IO_H
 #define PYMATCHING2_IO_H
 
-#include "pymatching/sparse_blossom/flooder/graph.h"
-#include "pymatching/sparse_blossom/matcher/mwpm.h"
-#include "pymatching/sparse_blossom/search/search_graph.h"
+#include "pymatching/sparse_blossom/ints.h"
 #include "stim.h"
 
 namespace pm {
@@ -67,80 +65,6 @@ void iter_detector_error_model_edges(
         }
     });
 }
-
-struct Neighbor {
-    std::vector<Neighbor> *node;
-    bool operator==(const Neighbor &rhs) const;
-    bool operator!=(const Neighbor &rhs) const;
-    double weight;
-    std::vector<size_t> observables;
-};
-
-class IntermediateWeightedGraph {
-   public:
-    std::vector<std::vector<Neighbor>> nodes;
-    size_t num_nodes;
-    size_t num_observables;
-
-    explicit IntermediateWeightedGraph(size_t num_nodes, size_t num_observables)
-        : num_nodes(num_nodes), num_observables(num_observables) {
-        nodes.resize(num_nodes);
-    };
-
-    void add_or_merge_edge(size_t u, size_t v, double weight, const std::vector<size_t> &observables);
-
-    void add_or_merge_boundary_edge(size_t u, double weight, const std::vector<size_t> &observables);
-
-    void handle_dem_instruction(double p, const std::vector<size_t> &detectors, const std::vector<size_t> &observables);
-
-    template <typename EdgeCallable, typename BoundaryEdgeCallable>
-    double iter_discretized_edges(
-        pm::weight_int num_distinct_weights,
-        const EdgeCallable &edge_func,
-        const BoundaryEdgeCallable &boundary_edge_func);
-
-    pm::MatchingGraph to_matching_graph(pm::weight_int num_distinct_weights);
-
-    pm::SearchGraph to_search_graph(pm::weight_int num_distinct_weights);
-
-    pm::Mwpm to_mwpm(pm::weight_int num_distinct_weights, bool ensure_search_flooder_included = false);
-
-    double max_abs_weight();
-};
-
-template <typename EdgeCallable, typename BoundaryEdgeCallable>
-inline double IntermediateWeightedGraph::iter_discretized_edges(
-    pm::weight_int num_distinct_weights,
-    const EdgeCallable &edge_func,
-    const BoundaryEdgeCallable &boundary_edge_func) {
-    double max_weight = max_abs_weight();
-    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
-    double normalising_constant = (double)max_half_edge_weight / max_weight;
-    for (auto &node : nodes) {
-        for (auto &neighbor : node) {
-            auto i = &node - &nodes[0];
-            pm::signed_weight_int w = (pm::signed_weight_int)round(neighbor.weight * normalising_constant);
-
-            // Extremely important!
-            // If all edge weights are even integers, then all collision events occur at integer times.
-            w *= 2;
-
-            if (!neighbor.node) {
-                boundary_edge_func(i, w, neighbor.observables);
-            } else {
-                auto j = neighbor.node - &nodes[0];
-                if (j > i)
-                    edge_func(i, j, w, neighbor.observables);
-            }
-        }
-    }
-    return normalising_constant * 2;
-}
-
-IntermediateWeightedGraph detector_error_model_to_weighted_graph(const stim::DetectorErrorModel &detector_error_model);
-
-MatchingGraph detector_error_model_to_matching_graph(
-    const stim::DetectorErrorModel &detector_error_model, pm::weight_int num_distinct_weights);
 
 }  // namespace pm
 

@@ -22,7 +22,10 @@
 
 #include "pymatching/rand/rand_gen.h"
 #include "pymatching/sparse_blossom/driver/io.h"
+#include "pymatching/sparse_blossom/flooder/graph.h"
 #include "pymatching/sparse_blossom/ints.h"
+#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "pymatching/sparse_blossom/search/search_graph.h"
 
 namespace pm {
 

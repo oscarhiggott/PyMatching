@@ -13,10 +13,11 @@
 // limitations under the License.
 
 #include "pymatching/sparse_blossom/driver/user_graph.h"
-#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
 #include <cmath>
 #include <gtest/gtest.h>
+
+#include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
 TEST(UserGraph, ConstructGraph) {
     pm::UserGraph graph;
@@ -49,7 +50,6 @@ TEST(UserGraph, ConstructGraph) {
     auto& mwpm = graph.get_mwpm();
     auto& g2 = mwpm.flooder.graph;
     ASSERT_EQ(g2.nodes.size(), 5);
-    pm::Neighbor n = {nullptr, 4.1, {2}};
     ASSERT_EQ(g2.nodes[0].neighbors[0], nullptr);
     ASSERT_EQ(
         g2.nodes[0].neighbor_weights[0],
