@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.4...3.18)
 project(PyMatching2)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include_directories(src)
 set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ version selection")
