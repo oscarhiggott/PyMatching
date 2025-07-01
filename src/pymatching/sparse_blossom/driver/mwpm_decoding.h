@@ -50,8 +50,8 @@ obs_int bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector);
 Mwpm detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model,
     pm::weight_int num_distinct_weights,
-    bool enable_correlations,
-    bool ensure_search_flooder_included = false);
+    bool ensure_search_flooder_included = false,
+    bool enable_correlations = false);
 
 MatchingResult decode_detection_events_for_up_to_64_observables(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);

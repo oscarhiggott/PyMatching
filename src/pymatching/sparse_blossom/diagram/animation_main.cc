@@ -70,7 +70,7 @@ int pm::main_animation(int argc, const char **argv) {
     fclose(dets_file);
 
     auto coords = pm::pick_coords_for_drawing_from_dem(dem, pixels_per_unit_length);
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, 1000, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, 1000);
 
     if (!std::filesystem::exists(out_dir)) {
         std::filesystem::create_directory(out_dir);

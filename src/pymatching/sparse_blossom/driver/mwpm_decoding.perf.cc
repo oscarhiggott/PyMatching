@@ -53,7 +53,7 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -85,7 +85,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -117,7 +117,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -149,7 +149,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -181,7 +181,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -213,7 +213,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -247,7 +247,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -280,7 +280,8 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -306,7 +307,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -340,7 +341,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -374,7 +375,8 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -400,7 +402,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -434,7 +436,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -468,7 +470,8 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -494,7 +497,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -528,7 +531,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -562,7 +565,8 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*enable_correlations=*/false, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
