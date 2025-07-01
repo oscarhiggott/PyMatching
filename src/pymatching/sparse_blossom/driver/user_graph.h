@@ -22,7 +22,10 @@
 
 #include "pymatching/rand/rand_gen.h"
 #include "pymatching/sparse_blossom/driver/io.h"
+#include "pymatching/sparse_blossom/flooder/graph.h"
 #include "pymatching/sparse_blossom/ints.h"
+#include "pymatching/sparse_blossom/matcher/mwpm.h"
+#include "pymatching/sparse_blossom/search/search_graph.h"
 
 namespace pm {
 
@@ -147,10 +150,9 @@ inline double UserGraph::iter_discretized_edges(
 
 template <typename EdgeCallable, typename BoundaryEdgeCallable>
 inline double UserGraph::to_matching_or_search_graph_helper(
-        pm::weight_int num_distinct_weights,
+    pm::weight_int num_distinct_weights,
     const EdgeCallable& edge_func,
     const BoundaryEdgeCallable& boundary_edge_func) {
-    
     // Use vectors to store boundary edges initially before adding them to the graph, so
     // that parallel boundary edges with negative edge weights can be handled correctly
     std::vector<bool> has_boundary_edge(nodes.size(), false);
@@ -162,13 +164,13 @@ inline double UserGraph::to_matching_or_search_graph_helper(
         edge_func,
         [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
-            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight){
+            if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
                 boundary_edge_observables[u] = observables;
                 has_boundary_edge[u] = true;
             }
         });
-    
+
     // Now add boundary edges to the graph
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
         if (has_boundary_edge[i])

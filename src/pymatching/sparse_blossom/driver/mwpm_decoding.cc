@@ -14,6 +14,8 @@
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
+#include "pymatching/sparse_blossom/driver/user_graph.h"
+
 pm::ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
 }
 
@@ -71,8 +73,8 @@ pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model,
     pm::weight_int num_distinct_weights,
     bool ensure_search_flooder_included) {
-    auto weighted_graph = pm::detector_error_model_to_weighted_graph(detector_error_model);
-    return weighted_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
+    auto user_graph = pm::detector_error_model_to_user_graph(detector_error_model);
+    return user_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
 }
 
 void process_timeline_until_completion(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
