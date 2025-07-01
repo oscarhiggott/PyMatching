@@ -301,7 +301,8 @@ TEST(MwpmDecoding, CompareSolutionObsWithMaxNumBuckets) {
         auto test_case = load_surface_code_d13_p100_test_case();
         pm::weight_int num_distinct_weights = 1 << (sizeof(pm::weight_int) * 8 - 4);
         if (i == 1)
-            test_case.detector_error_model.append_logical_observable_instruction(stim::DemTarget::observable_id(128), "");
+            test_case.detector_error_model.append_logical_observable_instruction(
+                stim::DemTarget::observable_id(128), "");
         auto mwpm = pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights);
 
         stim::SparseShot sparse_shot;
@@ -505,8 +506,8 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     for (size_t i = 0; i < num_nodes; i++)
         g.add_edge(i, (i + 1) % num_nodes, 2, {i});
     pm::ExtendedMatchingResult res(num_nodes);
-    EXPECT_THROW(pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);
-                 , std::invalid_argument);
+    EXPECT_THROW(
+        pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::invalid_argument);
 }
 
 TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
@@ -535,8 +536,8 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
         } else if (!detection_events.empty() && detection_events[0] == 0) {
             detection_events.erase(detection_events.begin());
         }
-        EXPECT_THROW(pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);
-                     , std::invalid_argument);
+        EXPECT_THROW(
+            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);, std::invalid_argument);
         sparse_shot.clear();
         num_shots++;
     }

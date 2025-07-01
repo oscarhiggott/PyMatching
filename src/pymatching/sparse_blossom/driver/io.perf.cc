@@ -53,3 +53,31 @@ BENCHMARK(Load_dem_r21_d21_p100) {
         .goal_millis(280)
         .show_rate("loads", (double)num_loads);
 }
+
+BENCHMARK(Load_dem_r11_d11_p100_correlations) {
+    auto dem = generate_dem(11, 11, 0.01);
+    size_t num_buckets = 1024;
+    size_t num_loads = 10;
+    benchmark_go([&]() {
+        for (size_t i = 0; i < num_loads; i++) {
+            auto mwpm = pm::detector_error_model_to_mwpm(
+                dem, num_buckets, /*ensure_search_flooder_included=*/false, /*enable_correlations=*/true);
+        }
+    })
+        .goal_millis(35)
+        .show_rate("loads", (double)num_loads);
+}
+
+BENCHMARK(Load_dem_r21_d21_p100_correlations) {
+    auto dem = generate_dem(21, 21, 0.01);
+    size_t num_buckets = 1024;
+    size_t num_loads = 10;
+    benchmark_go([&]() {
+        for (size_t i = 0; i < num_loads; i++) {
+            auto mwpm = pm::detector_error_model_to_mwpm(
+                dem, num_buckets, /*ensure_search_flooder_included=*/false, /*enable_correlations=*/true);
+        }
+    })
+        .goal_millis(280)
+        .show_rate("loads", (double)num_loads);
+}

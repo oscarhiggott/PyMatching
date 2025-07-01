@@ -33,6 +33,7 @@ int main_predict(int argc, const char **argv) {
             "--out",
             "--out_format",
             "--dem",
+            "--enable_correlations",
         },
         {},
         "predict",
@@ -47,18 +48,19 @@ int main_predict(int argc, const char **argv) {
     stim::FileFormatData predictions_out_format =
         stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
+    bool enable_correlations = stim::find_bool_argument("--correlated_matching", argc, argv);
 
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
 
     size_t num_obs = dem.count_observables();
-    auto reader =
-        stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
+    auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
+        shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
     auto writer = stim::MeasureRecordWriter::make(predictions_out, predictions_out_format.id);
     writer->begin_result_type('L');
 
     pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, enable_correlations);
 
     stim::SparseShot sparse_shot;
     sparse_shot.clear();
@@ -93,6 +95,7 @@ int main_count_mistakes(int argc, const char **argv) {
             "--out",
             "--dem",
             "--time",
+            "--enable_correlations",
         },
         {},
         "count_mistakes",
@@ -108,6 +111,8 @@ int main_count_mistakes(int argc, const char **argv) {
     stim::FileFormatData obs_in_format =
         stim::find_enum_argument("--obs_in_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
+    bool enable_correlations = stim::find_bool_argument("--correlated_matching", argc, argv);
+
     bool time = stim::find_bool_argument("--time", argc, argv);
     if (!append_obs && obs_in == nullptr) {
         throw std::invalid_argument("Must specify --in_includes_appended_observables or --obs_in.");
@@ -121,11 +126,11 @@ int main_count_mistakes(int argc, const char **argv) {
     if (obs_in != stdin) {
         obs_reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(obs_in, obs_in_format.id, 0, 0, num_obs);
     }
-    auto reader =
-        stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
+    auto reader = stim::MeasureRecordReader<stim::MAX_BITWORD_WIDTH>::make(
+        shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
     pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, enable_correlations);
 
     stim::SparseShot sparse_shot;
     stim::SparseShot obs_shot;
