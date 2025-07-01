@@ -72,8 +72,9 @@ pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector) {
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model,
     pm::weight_int num_distinct_weights,
+    bool enable_correlations,
     bool ensure_search_flooder_included) {
-    auto user_graph = pm::detector_error_model_to_user_graph(detector_error_model);
+    auto user_graph = pm::detector_error_model_to_user_graph(detector_error_model, enable_correlations);
     return user_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
 }
 

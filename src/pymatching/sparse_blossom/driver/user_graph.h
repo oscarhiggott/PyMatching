@@ -179,7 +179,8 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     return normalising_constant;
 }
 
-UserGraph detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model);
+UserGraph detector_error_model_to_user_graph(
+    const stim::DetectorErrorModel& detector_error_model, bool enable_correlations);
 
 }  // namespace pm
 
