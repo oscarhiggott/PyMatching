@@ -381,13 +381,20 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
 
 pm::UserGraph pm::detector_error_model_to_user_graph(
     const stim::DetectorErrorModel& detector_error_model, const bool enable_correlations) {
-    if (enable_correlations) {
-        throw std::invalid_argument("correlated matching is unimplemented");
-    }
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
-    pm::iter_detector_error_model_edges(
-        detector_error_model, [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
-            user_graph.handle_dem_instruction(p, detectors, observables);
-        });
+    if (enable_correlations) {
+        // TODO: Support correlated matching.
+        pm::iter_detector_error_model_edges(
+            detector_error_model,
+            [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
+                user_graph.handle_dem_instruction(p, detectors, observables);
+            });
+    } else {
+        pm::iter_detector_error_model_edges(
+            detector_error_model,
+            [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
+                user_graph.handle_dem_instruction(p, detectors, observables);
+            });
+    }
     return user_graph;
 }
