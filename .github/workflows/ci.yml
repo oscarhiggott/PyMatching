@@ -66,7 +66,7 @@ jobs:
 
           # windows amd64
           # {os: windows-latest, dist: cp36-win_amd64},
-          {os: windows-latest, dist: cp37-win_amd64},
+          # {os: windows-latest, dist: cp37-win_amd64},
           {os: windows-latest, dist: cp38-win_amd64},
           {os: windows-latest, dist: cp39-win_amd64},
           {os: windows-latest, dist: cp310-win_amd64},
@@ -75,7 +75,7 @@ jobs:
           {os: windows-latest, dist: cp313-win_amd64},
           # windows win32
           # {os: windows-latest, dist: cp36-win32},
-          {os: windows-latest, dist: cp37-win32},
+          # {os: windows-latest, dist: cp37-win32},
           # scipy install fails
 #          {os: windows-latest, dist: cp38-win32},
 #          {os: windows-latest, dist: cp39-win32},
@@ -88,7 +88,7 @@ jobs:
 
           # ubuntu x86_64
           # {os: ubuntu-latest, dist: cp36-manylinux_x86_64},
-          {os: ubuntu-latest, dist: cp37-manylinux_x86_64},
+          # {os: ubuntu-latest, dist: cp37-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp38-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp39-manylinux_x86_64},
           {os: ubuntu-latest, dist: cp310-manylinux_x86_64},
@@ -97,7 +97,7 @@ jobs:
           {os: ubuntu-latest, dist: cp313-manylinux_x86_64},
           # ubuntu i686
           # {os: ubuntu-latest, dist: cp36-manylinux_i686},
-          {os: ubuntu-latest, dist: cp37-manylinux_i686},
+          # {os: ubuntu-latest, dist: cp37-manylinux_i686},
           # scipy built distribution not available and build fails on manylinux_i686 for python 3.8 up
 #          {os: ubuntu-latest, dist: cp38-manylinux_i686},
 #          {os: ubuntu-latest, dist: cp39-manylinux_i686},
