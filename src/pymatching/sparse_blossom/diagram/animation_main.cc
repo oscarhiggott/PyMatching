@@ -17,7 +17,6 @@
 #include <filesystem>
 
 #include "pymatching/sparse_blossom/diagram/mwpm_diagram.h"
-#include "pymatching/sparse_blossom/driver/io.h"
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
 #include "stim.h"

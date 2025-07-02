@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "pymatching/sparse_blossom/diagram/animation_main.h"
-#include "pymatching/sparse_blossom/driver/io.h"
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include "pymatching/sparse_blossom/driver/user_graph.h"
 #include "stim.h"
 
 int main_predict(int argc, const char **argv) {

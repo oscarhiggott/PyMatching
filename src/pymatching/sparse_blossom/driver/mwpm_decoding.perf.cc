@@ -15,6 +15,7 @@
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
 #include "pymatching/perf/util.perf.h"
+#include "pymatching/sparse_blossom/driver/user_graph.h"
 #include "stim.h"
 
 std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data(
