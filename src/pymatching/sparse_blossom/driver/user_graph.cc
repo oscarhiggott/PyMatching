@@ -390,10 +390,10 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
     if (enable_correlations) {
         // TODO: Support correlated matching.
-        pm::iter_detector_error_model_edges(
+        pm::iter_dem_instructions_include_correlations(
             detector_error_model,
             [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
-                user_graph.handle_dem_instruction(p, detectors, observables);
+                return;
             });
     } else {
         pm::iter_detector_error_model_edges(

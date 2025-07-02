@@ -87,6 +87,7 @@ set(PERF_FILES
         src/pymatching/perf/main.perf.cc
         src/pymatching/perf/util.perf.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.perf.cc
+        src/pymatching/sparse_blossom/driver/user_graph.perf.cc
         src/pymatching/sparse_blossom/flooder_matcher_interop/varying.perf.cc
         src/pymatching/sparse_blossom/tracker/radix_heap_queue.perf.cc
         )
