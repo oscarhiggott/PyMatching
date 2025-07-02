@@ -290,7 +290,7 @@ void iter_dem_instructions_include_correlations(
             handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
         }
 
-        // TODO: Add error to conditional groups.
+        // TODO: Capture information from decomposed_error into correlation data structure here.
     });
 }
 

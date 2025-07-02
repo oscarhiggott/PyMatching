@@ -277,7 +277,6 @@ TEST(IterDemInstructionsTest, DecomposedError) {
     pm::iter_dem_instructions_include_correlations(dem, handler);
     ASSERT_EQ(handler.handled_errors.size(), 3);
 
-    // std::vector<HandledError> expected = {{0.1, 0, 1, {}}, {0.1, 2, 3, {0}}, {0.1, 4, SIZE_MAX, {}}};
     EXPECT_EQ(handler.handled_errors[0], (HandledError{0.1, 0, 1, {}}));
     EXPECT_EQ(handler.handled_errors[1], (HandledError{0.1, 2, 3, {0}}));
     EXPECT_EQ(handler.handled_errors[2], (HandledError{0.1, 4, SIZE_MAX, {}}));
@@ -321,7 +320,5 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
         {0.4, 8, SIZE_MAX, {}},
         {0.4, 9, SIZE_MAX, {1}}};
 
-    // stim's iter_flatten_error_instructions processes instructions sequentially,
-    // so the order of handled errors should be deterministic.
     EXPECT_EQ(handler.handled_errors, expected);
 }
