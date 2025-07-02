@@ -39,7 +39,6 @@ endif ()
 
 set(SOURCE_FILES_NO_MAIN
         src/pymatching/sparse_blossom/driver/namespaced_main.cc
-        src/pymatching/sparse_blossom/driver/io.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.cc
         src/pymatching/sparse_blossom/flooder/graph.cc
         src/pymatching/sparse_blossom/flooder/detector_node.cc
@@ -63,7 +62,6 @@ set(SOURCE_FILES_NO_MAIN
 
 set(TEST_FILES
         src/pymatching/sparse_blossom/driver/namespaced_main.test.cc
-        src/pymatching/sparse_blossom/driver/io.test.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.test.cc
         src/pymatching/sparse_blossom/flooder_matcher_interop/varying.test.cc
         src/pymatching/sparse_blossom/flooder/graph.test.cc
@@ -89,7 +87,6 @@ set(PERF_FILES
         src/pymatching/perf/main.perf.cc
         src/pymatching/perf/util.perf.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.perf.cc
-        src/pymatching/sparse_blossom/driver/io.perf.cc
         src/pymatching/sparse_blossom/flooder_matcher_interop/varying.perf.cc
         src/pymatching/sparse_blossom/tracker/radix_heap_queue.perf.cc
         )

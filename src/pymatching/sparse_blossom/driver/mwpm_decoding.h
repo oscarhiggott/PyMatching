@@ -15,7 +15,6 @@
 #ifndef PYMATCHING2_MWPM_DECODING_H
 #define PYMATCHING2_MWPM_DECODING_H
 
-#include "pymatching/sparse_blossom/driver/io.h"
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
 #include "stim.h"
 
