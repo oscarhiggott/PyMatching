@@ -409,7 +409,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "node"_a);
     m.def("detector_error_model_to_matching_graph", [](const char *dem_string) {
         auto dem = stim::DetectorErrorModel(dem_string);
-        return pm::detector_error_model_to_user_graph(dem);
+        return pm::detector_error_model_to_user_graph(dem, /*enable_correlations=*/false);
     });
     m.def("detector_error_model_file_to_matching_graph", [](const char *dem_path) {
         FILE *file = fopen(dem_path, "r");
@@ -420,7 +420,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         }
         auto dem = stim::DetectorErrorModel::from_file(file);
         fclose(file);
-        return pm::detector_error_model_to_user_graph(dem);
+        return pm::detector_error_model_to_user_graph(dem, /*enable_correlations=*/false);
     });
     m.def("stim_circuit_file_to_matching_graph", [](const char *stim_circuit_path) {
         FILE *file = fopen(stim_circuit_path, "r");
@@ -432,7 +432,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         auto circuit = stim::Circuit::from_file(file);
         fclose(file);
         auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, true, true, false, 0, false, false);
-        return pm::detector_error_model_to_user_graph(dem);
+        return pm::detector_error_model_to_user_graph(dem, /*enable_correlations=*/false);
     });
     m.def(
         "sparse_column_check_matrix_to_matching_graph",
