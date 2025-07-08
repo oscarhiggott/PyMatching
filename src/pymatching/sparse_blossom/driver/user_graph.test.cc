@@ -215,81 +215,129 @@ struct TestHandler {
 TEST(IterDemInstructionsTest, EmptyDem) {
     stim::DetectorErrorModel dem;
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
     ASSERT_TRUE(handler.handled_errors.empty());
+    ASSERT_TRUE(joint_probabilities.empty());
 }
 
 // Test a simple error involving one detector, which is an error on the boundary.
 TEST(IterDemInstructionsTest, SingleDetectorErrorToBoundary) {
     stim::DetectorErrorModel dem("error(0.1) D0");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
+    // Check handler calls
     ASSERT_EQ(handler.handled_errors.size(), 1);
     EXPECT_EQ(handler.handled_errors[0], (HandledError{0.1, 0, SIZE_MAX, {}}));
+
+    // Check joint probabilities (marginal probability in this case)
+    std::pair<size_t, size_t> key = {0, SIZE_MAX};
+    ASSERT_EQ(joint_probabilities.size(), 1);
+    ASSERT_EQ(joint_probabilities[key].size(), 1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key][key], 0.1);
 }
 
 // Test a standard error between two detectors.
 TEST(IterDemInstructionsTest, TwoDetectorError) {
     stim::DetectorErrorModel dem("error(0.25) D5 D10");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
     ASSERT_EQ(handler.handled_errors.size(), 1);
     EXPECT_EQ(handler.handled_errors[0], (HandledError{0.25, 5, 10, {}}));
+
+    std::pair<size_t, size_t> key = {5, 10};
+    EXPECT_DOUBLE_EQ(joint_probabilities[key][key], 0.25);
 }
 
 // Test an error that also flips a logical observable.
 TEST(IterDemInstructionsTest, ErrorWithOneObservable) {
     stim::DetectorErrorModel dem("error(0.125) D1 D2 L0");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
     ASSERT_EQ(handler.handled_errors.size(), 1);
     EXPECT_EQ(handler.handled_errors[0], (HandledError{0.125, 1, 2, {0}}));
+
+    std::pair<size_t, size_t> key = {1, 2};
+    EXPECT_DOUBLE_EQ(joint_probabilities[key][key], 0.125);
 }
 
-// Test an error that flips multiple logical observables.
 TEST(IterDemInstructionsTest, ErrorWithMultipleObservables) {
     stim::DetectorErrorModel dem("error(0.3) D3 D4 L1 L3");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
     ASSERT_EQ(handler.handled_errors.size(), 1);
     EXPECT_EQ(handler.handled_errors[0], (HandledError{0.3, 3, 4, {1, 3}}));
+
+    std::pair<size_t, size_t> key = {3, 4};
+    EXPECT_DOUBLE_EQ(joint_probabilities[key][key], 0.3);
 }
 
-// Test an error with probability 0. It should be ignored.
 TEST(IterDemInstructionsTest, ZeroProbabilityError) {
     stim::DetectorErrorModel dem("error(0.0) D0 D1");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
     ASSERT_TRUE(handler.handled_errors.empty());
+    ASSERT_TRUE(joint_probabilities.empty());
 }
 
-// Test an error involving more than two detectors (a hyperedge). This should be ignored.
 TEST(IterDemInstructionsTest, ThreeDetectorErrorIsIgnored) {
     stim::DetectorErrorModel dem("error(0.1) D0 D1 D2");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
     ASSERT_TRUE(handler.handled_errors.empty());
+    ASSERT_TRUE(joint_probabilities.empty());
 }
 
 // Test a decomposed error instruction. The handler should be called for each component.
 TEST(IterDemInstructionsTest, DecomposedError) {
     stim::DetectorErrorModel dem("error(0.1) D0 D1 ^ D2 D3 L0 ^ D4");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
-    ASSERT_EQ(handler.handled_errors.size(), 3);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
-    EXPECT_EQ(handler.handled_errors[0], (HandledError{0.1, 0, 1, {}}));
-    EXPECT_EQ(handler.handled_errors[1], (HandledError{0.1, 2, 3, {0}}));
-    EXPECT_EQ(handler.handled_errors[2], (HandledError{0.1, 4, SIZE_MAX, {}}));
+    // Check handler calls
+    ASSERT_EQ(handler.handled_errors.size(), 3);
+    std::vector<HandledError> expected_handled = {{0.1, 0, 1, {}}, {0.1, 2, 3, {0}}, {0.1, 4, SIZE_MAX, {}}};
+    EXPECT_EQ(handler.handled_errors, expected_handled);
+
+    // Check joint probabilities
+    std::pair<size_t, size_t> key01 = {0, 1};
+    std::pair<size_t, size_t> key23 = {2, 3};
+    std::pair<size_t, size_t> key4B = {4, SIZE_MAX};
+
+    // Marginal probabilities
+    EXPECT_DOUBLE_EQ(joint_probabilities[key01][key01], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key23][key23], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key4B][key4B], 0.1);
+
+    // Joint probabilities between components
+    EXPECT_DOUBLE_EQ(joint_probabilities[key01][key23], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key23][key01], 0.1);  // Symmetric
+    EXPECT_DOUBLE_EQ(joint_probabilities[key01][key4B], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key4B][key01], 0.1);  // Symmetric
+    EXPECT_DOUBLE_EQ(joint_probabilities[key23][key4B], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key4B][key23], 0.1);  // Symmetric
 }
 
 // Test that a decomposed error with a hyperedge component throws an exception.
 TEST(IterDemInstructionsTest, DecomposedErrorWithHyperedgeThrows) {
     stim::DetectorErrorModel dem("error(0.15) D0 D1 ^ D2 D3 D4 ^ D5 D6 L2");
     TestHandler handler;
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
 
     // Assert that the function throws std::invalid_argument when processing the DEM.
-    ASSERT_THROW(pm::iter_dem_instructions_include_correlations(dem, handler), std::invalid_argument);
+    ASSERT_THROW(
+        pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
 }
 
 // Test a complex DEM with multiple instruction types and edge cases combined.
@@ -302,19 +350,87 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
         error(0.4) D8 ^ D9 L1    # Instruction 5: Decomposed
     )DEM");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
     ASSERT_EQ(handler.handled_errors.size(), 4);
 
     std::vector<HandledError> expected = {
         {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
-
     EXPECT_EQ(handler.handled_errors, expected);
+
+    // Check joint probabilities
+    std::pair<size_t, size_t> key0B = {0, SIZE_MAX};
+    std::pair<size_t, size_t> key12 = {1, 2};
+    std::pair<size_t, size_t> key8B = {8, SIZE_MAX};
+    std::pair<size_t, size_t> key9B = {9, SIZE_MAX};
+
+    // Marginal probabilities from each instruction
+    EXPECT_DOUBLE_EQ(joint_probabilities[key0B][key0B], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key12][key12], 0.2);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key8B][key8B], 0.4);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key9B][key9B], 0.4);
+
+    // Joint probability from the last instruction
+    EXPECT_DOUBLE_EQ(joint_probabilities[key8B][key9B], 0.4);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key9B][key8B], 0.4);
+
+    // Check that there are no other joint probabilities
+    EXPECT_EQ(joint_probabilities[key0B].count(key12), 0);
+}
+
+double bernoulli_xor(double p1, double p2) {
+    return p1 * (1 - p2) + p2 * (1 - p1);
+}
+
+// Tests that multiple error instructions on the same edge correctly combine their probabilities.
+TEST(IterDemInstructionsTest, MultipleErrorsOnSameEdgeCombine) {
+    stim::DetectorErrorModel dem("error(0.1) D0 D1\n error(0.2) D0 D1");
+    TestHandler handler;
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
+    // Expected probability = 0.1*(1-0.2) + 0.2*(1-0.1) = 0.08 + 0.18 = 0.26
+    double expected_p = bernoulli_xor(0.1, 0.2);
+
+    std::pair<size_t, size_t> key = {0, 1};
+    EXPECT_DOUBLE_EQ(joint_probabilities[key][key], expected_p);
+}
+
+// Tests how marginal and joint probabilities are combined across different decomposed error instructions.
+TEST(IterDemInstructionsTest, ComplexCombinationOfErrors) {
+    stim::DetectorErrorModel dem(R"DEM(
+        error(0.1) D0 ^ D1
+        error(0.2) D0 ^ D2
+    )DEM");
+    TestHandler handler;
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
+    std::pair<size_t, size_t> k0 = {0, SIZE_MAX};
+    std::pair<size_t, size_t> k1 = {1, SIZE_MAX};
+    std::pair<size_t, size_t> k2 = {2, SIZE_MAX};
+
+    // Marginal probabilities
+    EXPECT_DOUBLE_EQ(joint_probabilities[k0][k0], bernoulli_xor(0.1, 0.2));  // 0.26
+    EXPECT_DOUBLE_EQ(joint_probabilities[k1][k1], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[k2][k2], 0.2);
+
+    // Joint probabilities
+    EXPECT_DOUBLE_EQ(joint_probabilities[k0][k1], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[k1][k0], 0.1);
+    EXPECT_DOUBLE_EQ(joint_probabilities[k0][k2], 0.2);
+    EXPECT_DOUBLE_EQ(joint_probabilities[k2][k0], 0.2);
+
+    // No instruction connects D1 and D2, so their joint probability should be 0.
+    EXPECT_DOUBLE_EQ(joint_probabilities[k1][k2], 0.0);
 }
 
 // Test that an error greater than 0.5 results in a throw.
 TEST(IterDemInstructionsTest, ProbabilityGreaterThanHalfThrows) {
     stim::DetectorErrorModel dem("error(0.51) D0 D2");
     TestHandler handler;
-    ASSERT_THROW(pm::iter_dem_instructions_include_correlations(dem, handler), std::invalid_argument);
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    ASSERT_THROW(
+        pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
 }

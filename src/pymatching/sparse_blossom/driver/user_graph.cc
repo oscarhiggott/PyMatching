@@ -385,16 +385,48 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
     }
 }
 
+namespace {
+
+double bernoulli_xor(double p1, double p2) {
+    return p1 * (1 - p2) + p2 * (1 - p1);
+}
+
+}  // namespace
+
+void pm::add_decomposed_error_to_joint_probabilities(
+    DecomposedDemError& error,
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
+    if (error.components.size() > 1) {
+        for (size_t k0 = 0; k0 < error.components.size(); k0++) {
+            for (size_t k1 = k0 + 1; k1 < error.components.size(); k1++) {
+                auto& c0 = error.components[k0];
+                auto& c1 = error.components[k1];
+                double& p01 = joint_probabilites[{c0.node1, c0.node2}][{c1.node1, c1.node2}];
+                double& p10 = joint_probabilites[{c1.node1, c1.node2}][{c0.node1, c0.node2}];
+                p01 = bernoulli_xor(p01, error.probability);
+                p10 = bernoulli_xor(p10, error.probability);
+            }
+        }
+    }
+
+    for (auto& e : error.components) {
+        double& p = joint_probabilites[{e.node1, e.node2}][{e.node1, e.node2}];
+        p = bernoulli_xor(p, error.probability);
+    }
+};
+
 pm::UserGraph pm::detector_error_model_to_user_graph(
     const stim::DetectorErrorModel& detector_error_model, const bool enable_correlations) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilites;
     if (enable_correlations) {
-        // TODO: Support correlated matching.
         pm::iter_dem_instructions_include_correlations(
             detector_error_model,
             [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
                 return;
-            });
+            },
+            joint_probabilites);
+        // TODO: Support correlated matching. Add implied edge weights to the User Graph here.
     } else {
         pm::iter_detector_error_model_edges(
             detector_error_model,
@@ -402,5 +434,6 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
                 user_graph.handle_dem_instruction(p, detectors, observables);
             });
     }
+
     return user_graph;
 }
