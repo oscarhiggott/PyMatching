@@ -434,6 +434,5 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
                 user_graph.handle_dem_instruction(p, detectors, observables);
             });
     }
-
     return user_graph;
 }
