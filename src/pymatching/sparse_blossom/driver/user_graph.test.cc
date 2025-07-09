@@ -282,15 +282,13 @@ TEST(IterDemInstructionsTest, DecomposedError) {
     EXPECT_EQ(handler.handled_errors[2], (HandledError{0.1, 4, SIZE_MAX, {}}));
 }
 
-// Test a decomposed error where one of the components is a hyperedge and should be ignored.
-TEST(IterDemInstructionsTest, DecomposedErrorWithIgnoredComponent) {
+// Test that a decomposed error with a hyperedge component throws an exception.
+TEST(IterDemInstructionsTest, DecomposedErrorWithHyperedgeThrows) {
     stim::DetectorErrorModel dem("error(0.15) D0 D1 ^ D2 D3 D4 ^ D5 D6 L2");
     TestHandler handler;
-    pm::iter_dem_instructions_include_correlations(dem, handler);
-    ASSERT_EQ(handler.handled_errors.size(), 2);
 
-    std::vector<HandledError> expected = {{0.15, 0, 1, {}}, {0.15, 5, 6, {2}}};
-    EXPECT_EQ(handler.handled_errors, expected);
+    // Assert that the function throws std::invalid_argument when processing the DEM.
+    ASSERT_THROW(pm::iter_dem_instructions_include_correlations(dem, handler), std::invalid_argument);
 }
 
 // Test a complex DEM with multiple instruction types and edge cases combined.
@@ -298,21 +296,17 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
     stim::DetectorErrorModel dem(R"DEM(
         error(0.1) D0            # Instruction 1: Simple
         error(0.2) D1 D2 L0      # Instruction 2: Two detectors, one observable
-        error(0.3) D3 D4 D5 ^ D6 # Instruction 3: Hyperedge ignored, second component handled
+        error(0.3) D3 D4 D5      # Instruction 3: Hyperedge ignored, second component handled
         error(0.0) D7            # Instruction 4: Zero probability, ignored
         error(0.4) D8 ^ D9 L1    # Instruction 5: Decomposed
     )DEM");
     TestHandler handler;
     pm::iter_dem_instructions_include_correlations(dem, handler);
 
-    ASSERT_EQ(handler.handled_errors.size(), 5);
+    ASSERT_EQ(handler.handled_errors.size(), 4);
 
     std::vector<HandledError> expected = {
-        {0.1, 0, SIZE_MAX, {}},
-        {0.2, 1, 2, {0}},
-        {0.3, 6, SIZE_MAX, {}},
-        {0.4, 8, SIZE_MAX, {}},
-        {0.4, 9, SIZE_MAX, {1}}};
+        {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
 
     EXPECT_EQ(handler.handled_errors, expected);
 }
