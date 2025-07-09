@@ -18,6 +18,7 @@
 #include <cmath>
 #include <list>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 #include "pymatching/rand/rand_gen.h"
@@ -246,6 +247,10 @@ void iter_dem_instructions_include_correlations(
         double p = instruction.arg_data[0];
         pm::DecomposedDemError decomposed_err;
         decomposed_err.probability = p;
+        if (p > 0.5) {
+            throw ::std::invalid_argument(
+                "Errors with probability greater than 0.5 are not supported with correlations enabled");
+        }
         decomposed_err.components = {};
         decomposed_err.components.push_back({});
         UserEdge* component = &decomposed_err.components.back();
@@ -272,7 +277,9 @@ void iter_dem_instructions_include_correlations(
             } else if (target.is_separator()) {
                 // If the previous error in the decomposition had 3 or more components, we ignore it.
                 if (component->node1 == SIZE_MAX) {
-                    decomposed_err.components.pop_back();
+                    throw std::invalid_argument(
+                        "Encountered a decomposed error instruction with a hyperedge component (3 or more detectors). "
+                        "This is not supported.");
                 } else if (p > 0) {
                     handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
                 }
