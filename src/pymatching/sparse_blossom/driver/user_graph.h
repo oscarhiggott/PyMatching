@@ -18,6 +18,7 @@
 #include <cmath>
 #include <list>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
 #include "pymatching/rand/rand_gen.h"
@@ -246,6 +247,10 @@ void iter_dem_instructions_include_correlations(
         double p = instruction.arg_data[0];
         pm::DecomposedDemError decomposed_err;
         decomposed_err.probability = p;
+        if (p > 0.5) {
+            throw ::std::invalid_argument(
+                "Errors with probability greater than 0.5 are not supported with correlations enabled");
+        }
         decomposed_err.components = {};
         decomposed_err.components.push_back({});
         UserEdge* component = &decomposed_err.components.back();

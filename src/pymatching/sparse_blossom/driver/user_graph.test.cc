@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
@@ -309,4 +310,11 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
         {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
 
     EXPECT_EQ(handler.handled_errors, expected);
+}
+
+// Test that an error greater than 0.5 results in a throw.
+TEST(IterDemInstructionsTest, ProbabilityGreaterThanHalfThrows) {
+    stim::DetectorErrorModel dem("error(0.51) D0 D2");
+    TestHandler handler;
+    ASSERT_THROW(pm::iter_dem_instructions_include_correlations(dem, handler), std::invalid_argument);
 }
