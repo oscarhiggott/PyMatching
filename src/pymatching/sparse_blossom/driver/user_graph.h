@@ -228,6 +228,72 @@ void iter_detector_error_model_edges(
     });
 }
 
+struct DecomposedDemError {
+    /// The probability of this error occurring.
+    double probability;
+    /// Effects of the error.
+    stim::FixedCapVector<UserEdge, 8> components;
+
+    bool operator==(const DecomposedDemError& other) const;
+    bool operator!=(const DecomposedDemError& other) const;
+};
+
+// TODO: Capture information about correlations.
+template <typename Handler>
+void iter_dem_instructions_include_correlations(
+    const stim::DetectorErrorModel& detector_error_model, const Handler& handle_dem_error) {
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction& instruction) {
+        double p = instruction.arg_data[0];
+        pm::DecomposedDemError decomposed_err;
+        decomposed_err.probability = p;
+        decomposed_err.components = {};
+        decomposed_err.components.push_back({});
+        UserEdge* component = &decomposed_err.components.back();
+        // Mark component as empty to begin with.
+        component->node1 = SIZE_MAX;
+        component->node2 = SIZE_MAX;
+        size_t num_component_detectors = 0;
+        for (auto& target : instruction.target_data) {
+            // Decompose error
+            if (target.is_relative_detector_id()) {
+                num_component_detectors++;
+                if (num_component_detectors == 1) {
+                    const size_t& d1 = target.raw_id();
+                    component->node1 = d1;
+                } else if (num_component_detectors == 2) {
+                    component->node2 = target.raw_id();
+                } else {
+                    // We mark errors which have 3 or more detectors as a special boundary-to-boundary edge.
+                    component->node1 = SIZE_MAX;
+                    component->node2 = SIZE_MAX;
+                }
+            } else if (target.is_observable_id()) {
+                component->observable_indices.push_back(target.val());
+            } else if (target.is_separator()) {
+                // If the previous error in the decomposition had 3 or more components, we ignore it.
+                if (component->node1 == SIZE_MAX) {
+                    decomposed_err.components.pop_back();
+                } else if (p > 0) {
+                    handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                }
+                decomposed_err.components.push_back({});
+                component = &decomposed_err.components.back();
+                component->node1 = SIZE_MAX;
+                component->node2 = SIZE_MAX;
+                num_component_detectors = 0;
+            }
+        }
+        // If the final error in the decomposition had 3 or more components, we ignore it.
+        if (component->node1 == SIZE_MAX) {
+            decomposed_err.components.pop_back();
+        } else if (p > 0) {
+            handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+        }
+
+        // TODO: Capture information from decomposed_error into correlation data structure here.
+    });
+}
+
 }  // namespace pm
 
 #endif  // PYMATCHING2_USER_GRAPH_H
