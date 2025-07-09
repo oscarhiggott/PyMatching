@@ -305,12 +305,6 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
     TestHandler handler;
     pm::iter_dem_instructions_include_correlations(dem, handler);
 
-    // We expect 5 errors to be handled from this model.
-    // 1. {0.1, 0, MAX, {}} from "error(0.1) D0"
-    // 2. {0.2, 1, 2, {0}} from "error(0.2) D1 D2 L0"
-    // 3. {0.3, 6, MAX, {}} from the second part of "error(0.3) D3 D4 D5 ^ D6" (first part is ignored)
-    // 4. {0.4, 8, MAX, {}} from the first part of "error(0.4) D8 ^ D9 L1"
-    // 5. {0.4, 9, MAX, {1}} from the second part of "error(0.4) D8 ^ D9 L1"
     ASSERT_EQ(handler.handled_errors.size(), 5);
 
     std::vector<HandledError> expected = {

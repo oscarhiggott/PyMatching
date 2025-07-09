@@ -252,15 +252,15 @@ void iter_dem_instructions_include_correlations(
         // Mark component as empty to begin with.
         component->node1 = SIZE_MAX;
         component->node2 = SIZE_MAX;
-        size_t num_translated_relative_detectors = 0;
+        size_t num_component_detectors = 0;
         for (auto& target : instruction.target_data) {
             // Decompose error
             if (target.is_relative_detector_id()) {
-                num_translated_relative_detectors++;
-                if (num_translated_relative_detectors == 1) {
+                num_component_detectors++;
+                if (num_component_detectors == 1) {
                     const size_t& d1 = target.raw_id();
                     component->node1 = d1;
-                } else if (num_translated_relative_detectors == 2) {
+                } else if (num_component_detectors == 2) {
                     component->node2 = target.raw_id();
                 } else {
                     // We mark errors which have 3 or more detectors as a special boundary-to-boundary edge.
@@ -280,7 +280,7 @@ void iter_dem_instructions_include_correlations(
                 component = &decomposed_err.components.back();
                 component->node1 = SIZE_MAX;
                 component->node2 = SIZE_MAX;
-                num_translated_relative_detectors = 0;
+                num_component_detectors = 0;
             }
         }
         // If the final error in the decomposition had 3 or more components, we ignore it.
