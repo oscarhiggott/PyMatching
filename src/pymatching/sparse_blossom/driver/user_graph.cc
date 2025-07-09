@@ -401,8 +401,10 @@ void pm::add_decomposed_error_to_joint_probabilities(
             for (size_t k1 = k0 + 1; k1 < error.components.size(); k1++) {
                 auto& c0 = error.components[k0];
                 auto& c1 = error.components[k1];
-                double& p01 = joint_probabilites[{c0.node1, c0.node2}][{c1.node1, c1.node2}];
-                double& p10 = joint_probabilites[{c1.node1, c1.node2}][{c0.node1, c0.node2}];
+                std::pair<size_t, size_t> e0 = std::minmax(c0.node1, c0.node2);
+                std::pair<size_t, size_t> e1 = std::minmax(c1.node1, c1.node2);
+                double& p01 = joint_probabilites[e0][e1];
+                double& p10 = joint_probabilites[e1][e0];
                 p01 = bernoulli_xor(p01, error.probability);
                 p10 = bernoulli_xor(p10, error.probability);
             }
@@ -410,7 +412,7 @@ void pm::add_decomposed_error_to_joint_probabilities(
     }
 
     for (auto& e : error.components) {
-        double& p = joint_probabilites[{e.node1, e.node2}][{e.node1, e.node2}];
+        double& p = joint_probabilites[std::minmax(e.node1, e.node2)][std::minmax(e.node1, e.node2)];
         p = bernoulli_xor(p, error.probability);
     }
 };

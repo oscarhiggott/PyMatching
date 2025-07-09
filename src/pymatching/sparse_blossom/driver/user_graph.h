@@ -275,7 +275,13 @@ void iter_dem_instructions_include_correlations(
                     const size_t& d1 = target.raw_id();
                     component->node1 = d1;
                 } else if (num_component_detectors == 2) {
-                    component->node2 = target.raw_id();
+                    // Maintain invariant that node1 <= node2.
+                    if (component->node1 <= target.raw_id()) {
+                        component->node2 = target.raw_id();
+                    } else {
+                        component->node2 = component->node1;
+                        component->node1 = target.raw_id();
+                    }
                 } else {
                     // We mark errors which have 3 or more detectors as a special boundary-to-boundary edge.
                     component->node1 = SIZE_MAX;

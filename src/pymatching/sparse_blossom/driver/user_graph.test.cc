@@ -253,6 +253,20 @@ TEST(IterDemInstructionsTest, TwoDetectorError) {
     EXPECT_DOUBLE_EQ(joint_probabilities[key][key], 0.25);
 }
 
+// Test a standard error between two detectors where they are not sorted in the DEM.
+TEST(IterDemInstructionsTest, TwoDetectorErrorNotSorted) {
+    stim::DetectorErrorModel dem("error(0.25) D10 D5");
+    TestHandler handler;
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+
+    ASSERT_EQ(handler.handled_errors.size(), 1);
+    EXPECT_EQ(handler.handled_errors[0], (HandledError{0.25, 5, 10, {}}));
+
+    std::pair<size_t, size_t> key = {5, 10};
+    EXPECT_DOUBLE_EQ(joint_probabilities[key][key], 0.25);
+}
+
 // Test an error that also flips a logical observable.
 TEST(IterDemInstructionsTest, ErrorWithOneObservable) {
     stim::DetectorErrorModel dem("error(0.125) D1 D2 L0");
