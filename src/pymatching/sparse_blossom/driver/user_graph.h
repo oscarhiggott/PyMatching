@@ -239,10 +239,15 @@ struct DecomposedDemError {
     bool operator!=(const DecomposedDemError& other) const;
 };
 
-// TODO: Capture information about correlations.
+void add_decomposed_error_to_joint_probabilities(
+    DecomposedDemError& error,
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
+
 template <typename Handler>
 void iter_dem_instructions_include_correlations(
-    const stim::DetectorErrorModel& detector_error_model, const Handler& handle_dem_error) {
+    const stim::DetectorErrorModel& detector_error_model,
+    const Handler& handle_dem_error,
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
     detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction& instruction) {
         double p = instruction.arg_data[0];
         pm::DecomposedDemError decomposed_err;
@@ -250,6 +255,10 @@ void iter_dem_instructions_include_correlations(
         if (p > 0.5) {
             throw ::std::invalid_argument(
                 "Errors with probability greater than 0.5 are not supported with correlations enabled");
+        }
+        if (p == 0) {
+            // Ignore errors with no error probability.
+            return;
         }
         decomposed_err.components = {};
         decomposed_err.components.push_back({});
@@ -266,7 +275,13 @@ void iter_dem_instructions_include_correlations(
                     const size_t& d1 = target.raw_id();
                     component->node1 = d1;
                 } else if (num_component_detectors == 2) {
-                    component->node2 = target.raw_id();
+                    // Maintain invariant that node1 <= node2.
+                    if (component->node1 <= target.raw_id()) {
+                        component->node2 = target.raw_id();
+                    } else {
+                        component->node2 = component->node1;
+                        component->node1 = target.raw_id();
+                    }
                 } else {
                     // We mark errors which have 3 or more detectors as a special boundary-to-boundary edge.
                     component->node1 = SIZE_MAX;
@@ -297,7 +312,7 @@ void iter_dem_instructions_include_correlations(
             handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
         }
 
-        // TODO: Capture information from decomposed_error into correlation data structure here.
+        add_decomposed_error_to_joint_probabilities(decomposed_err, joint_probabilites);
     });
 }
 
