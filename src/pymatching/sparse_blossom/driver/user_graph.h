@@ -32,6 +32,12 @@ namespace pm {
 
 const pm::weight_int NUM_DISTINCT_WEIGHTS = 1 << (sizeof(pm::weight_int) * 8 - 8);
 
+struct ImpliedWeightUnconverted {
+    size_t node1;
+    size_t node2;
+    weight_int new_weight;
+};
+
 struct UserEdge {
     size_t node1;
     size_t node2;
@@ -118,6 +124,8 @@ class UserGraph {
     Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
+    void populate_implied_edge_weights(
+        std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
 
    private:
     pm::Mwpm _mwpm;
@@ -184,6 +192,7 @@ inline double UserGraph::to_matching_or_search_graph_helper(
 
 UserGraph detector_error_model_to_user_graph(
     const stim::DetectorErrorModel& detector_error_model, bool enable_correlations);
+weight_int convert_probability_to_weight(double p);
 
 /// Computes the weight of an edge resulting from merging edges with weight `a' and weight `b', assuming each edge
 /// weight is a log-likelihood ratio log((1-p)/p) associated with the probability p of an error occurring on the
