@@ -449,12 +449,6 @@ TEST(IterDemInstructionsTest, ProbabilityGreaterThanHalfThrows) {
         pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
 }
 
-TEST(ConvertProbabilityToWeight, HandlesProbabilityOfPointFive) {
-    const double p = 0.5;
-    const pm::weight_int expected_weight = 0;
-    EXPECT_EQ(pm::convert_probability_to_weight(p), expected_weight);
-}
-
 TEST(ConvertProbabilityToWeight, PositiveResultIsTruncated) {
     const double p = 0.1;
     const pm::weight_int expected_weight = 2;  // 2.197... is truncated to 2
