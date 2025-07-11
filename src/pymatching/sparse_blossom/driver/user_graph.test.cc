@@ -460,3 +460,39 @@ TEST(ConvertProbabilityToWeight, SmallPositiveResultTruncatesToZero) {
     const pm::weight_int expected_weight = 0;
     EXPECT_EQ(pm::convert_probability_to_weight(p), expected_weight);
 }
+
+TEST(UserGraph, PopulateImpliedEdgeWeights) {
+    pm::UserGraph graph;
+    graph.add_or_merge_edge(0, 1, {}, 0.0, 0.26);
+    graph.add_or_merge_edge(2, 3, {}, 0.0, 0.1);
+
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    joint_probabilities[{0, 1}][{0, 1}] = 0.26;
+    joint_probabilities[{0, 1}][{2, 3}] = 0.1;
+    joint_probabilities[{2, 3}][{0, 1}] = 0.1;
+    joint_probabilities[{2, 3}][{2, 3}] = 0.1;
+
+    graph.populate_implied_edge_weights(joint_probabilities);
+
+    auto it_01 = std::find_if(graph.edges.begin(), graph.edges.end(), [](const pm::UserEdge& edge) {
+        return edge.node1 == 0 && edge.node2 == 1;
+    });
+    ASSERT_NE(it_01, graph.edges.end());
+    ASSERT_EQ(it_01->implied_weights_for_other_edges.size(), 1);
+    const auto& implied_01 = it_01->implied_weights_for_other_edges[0];
+    ASSERT_EQ(implied_01.node1, 2);
+    ASSERT_EQ(implied_01.node2, 3);
+    double expected_weight_01 = pm::convert_probability_to_weight(0.1 / 0.26);
+    ASSERT_FLOAT_EQ(implied_01.new_weight, expected_weight_01);
+
+    auto it_23 = std::find_if(graph.edges.begin(), graph.edges.end(), [](const pm::UserEdge& edge) {
+        return edge.node1 == 2 && edge.node2 == 3;
+    });
+    ASSERT_NE(it_23, graph.edges.end());
+    ASSERT_EQ(it_23->implied_weights_for_other_edges.size(), 1);
+    const auto& implied_23 = it_23->implied_weights_for_other_edges[0];
+    ASSERT_EQ(implied_23.node1, 0);
+    ASSERT_EQ(implied_23.node2, 1);
+    double expected_weight_23 = pm::convert_probability_to_weight(std::min(0.5, 0.1 / 0.1));
+    ASSERT_FLOAT_EQ(implied_23.new_weight, expected_weight_23);
+}
