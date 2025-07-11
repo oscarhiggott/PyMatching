@@ -44,6 +44,7 @@ struct UserEdge {
     std::vector<size_t> observable_indices;  /// The indices of the observables crossed along this edge
     double weight;                           /// The weight of the edge to this neighboring node
     double error_probability;                /// The error probability associated with this node
+    std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges;
 };
 
 struct UserNeighbor {

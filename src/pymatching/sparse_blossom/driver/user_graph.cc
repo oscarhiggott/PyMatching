@@ -445,22 +445,30 @@ pm::weight_int pm::convert_probability_to_weight(double p) {
 
 void pm::UserGraph::populate_implied_edge_weights(
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
-    for (const auto& pf : joint_probabilites) {
-        std::pair<size_t, size_t> causal_edge = pf.first;
-        double marginal_probability = pf.second.at(causal_edge);
-        for (const auto& affected_edge_and_probability : pf.second) {
-            std::pair<size_t, size_t> affected_edge = affected_edge_and_probability.first;
-            if (affected_edge != causal_edge) {
-                // Since edge weights are computed as std::log((1-p)/p), a probability of more than 0.5 for an error,
-                // would lead to a negatively weighted error. We do not support this (yet), and use a minimum of 0.5 as
-                // an implied probability for an edge to be reweighted.
-                double implied_probability_for_other_edge =
-                    std::min(0.5, affected_edge_and_probability.second / marginal_probability);
-                ImpliedWeightUnconverted implied{
-                    affected_edge.first,
-                    affected_edge.second,
-                    convert_probability_to_weight(implied_probability_for_other_edge)};
-                // TODO: Actually add conditioned edge weights to edges.
+    for (auto& edge : edges) {
+        std::pair<size_t, size_t> current_edge_nodes = std::minmax(edge.node1, edge.node2);
+        auto it = joint_probabilites.find(current_edge_nodes);
+        if (it != joint_probabilites.end()) {
+            const auto& pf = *it;
+            std::pair<size_t, size_t> causal_edge = pf.first;
+            double marginal_probability = pf.second.at(causal_edge);
+            if (marginal_probability == 0)
+                continue;
+
+            for (const auto& affected_edge_and_probability : pf.second) {
+                std::pair<size_t, size_t> affected_edge = affected_edge_and_probability.first;
+                if (affected_edge != causal_edge) {
+                    // Since edge weights are computed as std::log((1-p)/p), a probability of more than 0.5 for an
+                    // error, would lead to a negatively weighted error. We do not support this (yet), and use a
+                    // minimum of 0.5 as an implied probability for an edge to be reweighted.
+                    double implied_probability_for_other_edge =
+                        std::min(0.5, affected_edge_and_probability.second / marginal_probability);
+                    ImpliedWeightUnconverted implied{
+                        affected_edge.first,
+                        affected_edge.second,
+                        convert_probability_to_weight(implied_probability_for_other_edge)};
+                    edge.implied_weights_for_other_edges.push_back(implied);
+                }
             }
         }
     }
