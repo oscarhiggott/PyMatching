@@ -14,6 +14,8 @@
 
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
+#include "pymatching/rand/rand_gen.h"
+
 double pm::merge_weights(double a, double b) {
     auto sgn = std::copysign(1, a) * std::copysign(1, b);
     auto signed_min = sgn * std::min(std::abs(a), std::abs(b));
@@ -251,14 +253,24 @@ double pm::UserGraph::max_abs_weight() {
 
 pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
 
     double normalising_constant = to_matching_or_search_graph_helper(
         num_distinct_weights,
-        [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            matching_graph.add_edge(u, v, weight, observables);
+        [&](size_t u,
+            size_t v,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            matching_graph.add_edge(
+                u, v, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         },
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            matching_graph.add_boundary_edge(u, weight, observables);
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            matching_graph.add_boundary_edge(
+                u, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         });
 
     matching_graph.normalising_constant = normalising_constant;
@@ -268,6 +280,7 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
         for (auto& i : boundary_nodes)
             matching_graph.is_user_graph_boundary_node[i] = true;
     }
+
     return matching_graph;
 }
 
@@ -277,10 +290,17 @@ pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weigh
 
     to_matching_or_search_graph_helper(
         num_distinct_weights,
-        [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            size_t v,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>&) {
             search_graph.add_edge(u, v, weight, observables);
         },
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>&) {
             search_graph.add_boundary_edge(u, weight, observables);
         });
     return search_graph;

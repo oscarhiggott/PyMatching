@@ -15,9 +15,11 @@
 #ifndef PYMATCHING2_GRAPH_H
 #define PYMATCHING2_GRAPH_H
 
+#include <map>
 #include <set>
 #include <vector>
 
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/detector_node.h"
 #include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
 #include "pymatching/sparse_blossom/tracker/flood_check_event.h"
@@ -53,8 +55,19 @@ class MatchingGraph {
     MatchingGraph(size_t num_nodes, size_t num_observables);
     MatchingGraph(size_t num_nodes, size_t num_observables, double normalising_constant);
     MatchingGraph(MatchingGraph&& graph) noexcept;
-    void add_edge(size_t u, size_t v, signed_weight_int weight, const std::vector<size_t>& observables);
-    void add_boundary_edge(size_t u, signed_weight_int weight, const std::vector<size_t>& observables);
+    void add_edge(
+        size_t u,
+        size_t v,
+        signed_weight_int weight,
+        const std::vector<size_t>& observables,
+        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges,
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
+    void add_boundary_edge(
+        size_t u,
+        signed_weight_int weight,
+        const std::vector<size_t>& observables,
+        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges,
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
 };

@@ -342,8 +342,9 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
         auto mwpm = pm::Mwpm(
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
         auto& g = mwpm.flooder.graph;
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
         for (size_t i = 0; i < num_nodes; i++)
-            g.add_edge(i, (i + 1) % num_nodes, -2, {i});
+            g.add_edge(i, (i + 1) % num_nodes, -2, {i}, {}, edges_to_implied_weights_unconverted);
 
         if (num_nodes > sizeof(pm::obs_int) * 8) {
             for (size_t i = 0; i < num_nodes; i++)
@@ -384,12 +385,13 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
 
         auto& g = mwpm.flooder.graph;
-        g.add_boundary_edge(0, -4, {max_obs});
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+        g.add_boundary_edge(0, -4, {max_obs}, {}, edges_to_implied_weights_unconverted);
         for (size_t i = 0; i < 7; i += 2)
-            g.add_edge(i, i + 1, 2, {i + 1});
+            g.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);
         for (size_t i = 1; i < 7; i += 2)
-            g.add_edge(i, i + 1, -4, {i + 1});
-        g.add_boundary_edge(7, 2, {num_nodes});
+            g.add_edge(i, i + 1, -4, {i + 1}, {}, edges_to_implied_weights_unconverted);
+        g.add_boundary_edge(7, 2, {num_nodes}, {}, edges_to_implied_weights_unconverted);
 
         if (max_obs > sizeof(pm::obs_int) * 8) {
             auto& h = mwpm.search_flooder.graph;
@@ -503,8 +505,9 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     size_t num_nodes = 5;
     auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)));
     auto& g = mwpm.flooder.graph;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     for (size_t i = 0; i < num_nodes; i++)
-        g.add_edge(i, (i + 1) % num_nodes, 2, {i});
+        g.add_edge(i, (i + 1) % num_nodes, 2, {i}, {}, edges_to_implied_weights_unconverted);
     pm::ExtendedMatchingResult res(num_nodes);
     EXPECT_THROW(
         pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::invalid_argument);

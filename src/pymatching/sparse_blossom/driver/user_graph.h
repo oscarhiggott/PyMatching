@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "pymatching/rand/rand_gen.h"
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/graph.h"
 #include "pymatching/sparse_blossom/ints.h"
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
@@ -31,12 +31,6 @@
 namespace pm {
 
 const pm::weight_int NUM_DISTINCT_WEIGHTS = 1 << (sizeof(pm::weight_int) * 8 - 8);
-
-struct ImpliedWeightUnconverted {
-    size_t node1;
-    size_t node2;
-    weight_int new_weight;
-};
 
 struct UserEdge {
     size_t node1;
@@ -150,11 +144,11 @@ inline double UserGraph::iter_discretized_edges(
         bool node1_boundary = is_boundary_node(e.node1);
         bool node2_boundary = is_boundary_node(e.node2);
         if (node2_boundary && !node1_boundary) {
-            boundary_edge_func(e.node1, w, e.observable_indices);
+            boundary_edge_func(e.node1, w, e.observable_indices, e.implied_weights_for_other_edges);
         } else if (node1_boundary && !node2_boundary) {
-            boundary_edge_func(e.node2, w, e.observable_indices);
+            boundary_edge_func(e.node2, w, e.observable_indices, e.implied_weights_for_other_edges);
         } else if (!node1_boundary) {
-            edge_func(e.node1, e.node2, w, e.observable_indices);
+            edge_func(e.node1, e.node2, w, e.observable_indices, e.implied_weights_for_other_edges);
         }
     }
     return normalising_constant * 2;
@@ -170,23 +164,29 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     std::vector<bool> has_boundary_edge(nodes.size(), false);
     std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
     std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
+    std::vector<std::vector<ImpliedWeightUnconverted>> boundary_edge_implied_weights_uncoverted(nodes.size());
 
     double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
         edge_func,
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
             if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
                 boundary_edge_observables[u] = observables;
                 has_boundary_edge[u] = true;
+                boundary_edge_implied_weights_uncoverted[u] = implied_weights_for_other_edges;
             }
         });
 
     // Now add boundary edges to the graph
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
         if (has_boundary_edge[i])
-            boundary_edge_func(i, boundary_edge_weights[i], boundary_edge_observables[i]);
+            boundary_edge_func(
+                i, boundary_edge_weights[i], boundary_edge_observables[i], boundary_edge_implied_weights_uncoverted[i]);
     }
     return normalising_constant;
 }
