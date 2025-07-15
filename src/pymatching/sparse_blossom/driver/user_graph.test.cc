@@ -496,3 +496,82 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     double expected_weight_23 = pm::convert_probability_to_weight(std::min(0.5, 0.1 / 0.1));
     ASSERT_FLOAT_EQ(implied_23.new_weight, expected_weight_23);
 }
+
+TEST(UserGraph, ConvertImpliedWeights) {
+    pm::UserGraph user_graph;
+    user_graph.add_or_merge_edge(0, 1, {}, 1.0, 0.1);
+    user_graph.add_or_merge_edge(2, 3, {}, 1.0, 0.1);
+    user_graph.add_or_merge_boundary_edge(4, {}, 1.0, 0.1);
+
+    auto& edge1 = *std::find_if(
+        user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) { return e.node1 == 0; });
+    edge1.implied_weights_for_other_edges.push_back({2, 3, 5});
+    edge1.implied_weights_for_other_edges.push_back({4, SIZE_MAX, 7});
+
+    pm::MatchingGraph matching_graph = user_graph.to_matching_graph(100);
+
+    auto& node0_neighbors = matching_graph.nodes[0].neighbors;
+    auto it0 = std::find(node0_neighbors.begin(), node0_neighbors.end(), &matching_graph.nodes[1]);
+    size_t index_of_1_in_0 = std::distance(node0_neighbors.begin(), it0);
+
+    auto& node1_neighbors = matching_graph.nodes[1].neighbors;
+    auto it1 = std::find(node1_neighbors.begin(), node1_neighbors.end(), &matching_graph.nodes[0]);
+    size_t index_of_0_in_1 = std::distance(node1_neighbors.begin(), it1);
+
+    auto& node2_neighbors = matching_graph.nodes[2].neighbors;
+    auto it2 = std::find(node2_neighbors.begin(), node2_neighbors.end(), &matching_graph.nodes[3]);
+    size_t index_of_3_in_2 = std::distance(node2_neighbors.begin(), it2);
+
+    auto& node3_neighbors = matching_graph.nodes[3].neighbors;
+    auto it3 = std::find(node3_neighbors.begin(), node3_neighbors.end(), &matching_graph.nodes[2]);
+    size_t index_of_2_in_3 = std::distance(node3_neighbors.begin(), it3);
+
+    auto& node4_neighbors = matching_graph.nodes[4].neighbors;
+    auto it4 = std::find(node4_neighbors.begin(), node4_neighbors.end(), nullptr);
+    size_t index_of_boundary_in_4 = std::distance(node4_neighbors.begin(), it4);
+
+    auto& implied_weights = matching_graph.nodes[0].neighbor_implied_weights[index_of_1_in_0];
+    ASSERT_EQ(implied_weights.size(), 2);
+    ASSERT_EQ(implied_weights[0].edge0_ptr, &matching_graph.nodes[2].neighbor_weights[index_of_3_in_2]);
+    ASSERT_EQ(implied_weights[0].edge1_ptr, &matching_graph.nodes[3].neighbor_weights[index_of_2_in_3]);
+    ASSERT_EQ(implied_weights[0].new_weight, 5);
+    ASSERT_EQ(implied_weights[1].edge0_ptr, &matching_graph.nodes[4].neighbor_weights[index_of_boundary_in_4]);
+    ASSERT_EQ(implied_weights[1].edge1_ptr, nullptr);
+    ASSERT_EQ(implied_weights[1].new_weight, 7);
+
+    auto& implied_weights_rev = matching_graph.nodes[1].neighbor_implied_weights[index_of_0_in_1];
+    ASSERT_EQ(implied_weights_rev.size(), 2);
+}
+
+TEST(UserGraph, ConvertImpliedWeights_NoRules) {
+    pm::UserGraph user_graph;
+    user_graph.add_or_merge_edge(0, 1, {}, 1.0, 0.1);
+    user_graph.add_or_merge_edge(2, 3, {}, 1.0, 0.1);
+    user_graph.add_or_merge_boundary_edge(4, {}, 1.0, 0.1);
+
+    pm::MatchingGraph matching_graph = user_graph.to_matching_graph(100);
+
+    for (const auto& node : matching_graph.nodes) {
+        for (const auto& implied_weights_vec : node.neighbor_implied_weights) {
+            ASSERT_TRUE(implied_weights_vec.empty());
+        }
+    }
+}
+
+TEST(UserGraph, ConvertImpliedWeights_EmptyRules) {
+    pm::UserGraph user_graph;
+    user_graph.add_or_merge_edge(0, 1, {}, 1.0, 0.1);
+    user_graph.add_or_merge_edge(2, 3, {}, 1.0, 0.1);
+
+    auto& edge = *std::find_if(
+        user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) { return e.node1 == 0; });
+    edge.implied_weights_for_other_edges = {};
+
+    pm::MatchingGraph matching_graph = user_graph.to_matching_graph(100);
+
+    for (const auto& node : matching_graph.nodes) {
+        for (const auto& implied_weights_vec : node.neighbor_implied_weights) {
+            ASSERT_TRUE(implied_weights_vec.empty());
+        }
+    }
+}

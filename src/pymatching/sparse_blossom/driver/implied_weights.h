@@ -25,6 +25,12 @@ struct ImpliedWeightUnconverted {
     weight_int new_weight;
 };
 
+struct ImpliedWeight {
+    weight_int* edge0_ptr;
+    weight_int* edge1_ptr;
+    weight_int new_weight;
+};
+
 }  // namespace pm
 
 #endif  // PYMATCHING2_IMPLIED_WEIGHT_UNCONVERTED_H

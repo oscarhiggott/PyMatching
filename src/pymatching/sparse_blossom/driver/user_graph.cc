@@ -281,6 +281,7 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
             matching_graph.is_user_graph_boundary_node[i] = true;
     }
 
+    matching_graph.convert_implied_weights(edges_to_implied_weights_unconverted);
     return matching_graph;
 }
 

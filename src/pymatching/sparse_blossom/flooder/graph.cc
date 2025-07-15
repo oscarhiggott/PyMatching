@@ -16,6 +16,7 @@
 
 #include <map>
 
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
 #include "pymatching/sparse_blossom/flooder_matcher_interop/mwpm_event.h"
 
@@ -62,11 +63,13 @@ void MatchingGraph::add_edge(
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observables.push_back(obs_mask);
+    nodes[u].neighbor_implied_weights.push_back({});
     all_edges_to_implied_weights_unconverted[u].emplace_back(implied_weights_for_other_edges);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observables.push_back(obs_mask);
+    nodes[v].neighbor_implied_weights.push_back({});
     all_edges_to_implied_weights_unconverted[v].emplace_back(implied_weights_for_other_edges);
 }
 
@@ -103,6 +106,7 @@ void MatchingGraph::add_boundary_edge(
     n.neighbors.insert(n.neighbors.begin(), 1, nullptr);
     n.neighbor_weights.insert(n.neighbor_weights.begin(), 1, std::abs(weight));
     n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, obs_mask);
+    n.neighbor_implied_weights.insert(n.neighbor_implied_weights.begin(), 1, {});
     all_edges_to_implied_weights_unconverted[u].insert(
         all_edges_to_implied_weights_unconverted[u].begin(), 1, implied_weights_for_other_edges);
 }
@@ -151,6 +155,35 @@ void MatchingGraph::update_negative_weight_detection_events(size_t node_id) {
         negative_weight_detection_events_set.insert(node_id);
     } else {
         negative_weight_detection_events_set.erase(it);
+    }
+}
+
+namespace {
+
+ImpliedWeight convert_rule(std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule) {
+    const int64_t& i = rule.node1;
+    const int64_t& j = rule.node2;
+    const weight_int& w = rule.new_weight;
+    weight_int* weight_pointer_i =
+        &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == -1 ? nullptr : &nodes[j])];
+    weight_int* weight_pointer_j =
+        j == -1 ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
+    return ImpliedWeight{weight_pointer_i, weight_pointer_j, w};
+}
+
+}  // namespace
+
+void MatchingGraph::convert_implied_weights(
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted) {
+    for (size_t u = 0; u < nodes.size(); u++) {
+        const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
+            edges_to_implied_weights_unconverted[u];
+        for (size_t v = 0; v < nodes[u].neighbors.size(); v++) {
+            for (const auto& rule : rules_for_node[v]) {
+                ImpliedWeight converted = convert_rule(nodes, rule);
+                nodes[u].neighbor_implied_weights[v].push_back(converted);
+            }
+        }
     }
 }
 

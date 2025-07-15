@@ -70,6 +70,8 @@ class MatchingGraph {
         std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
+    void convert_implied_weights(
+        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
 };
 
 }  // namespace pm
