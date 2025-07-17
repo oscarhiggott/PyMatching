@@ -14,6 +14,7 @@
 
 #include "pymatching/sparse_blossom/flooder/graph.h"
 
+#include <cassert>
 #include <map>
 
 #include "pymatching/sparse_blossom/driver/implied_weights.h"
@@ -185,6 +186,21 @@ void MatchingGraph::convert_implied_weights(
             }
         }
     }
+}
+
+std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> MatchingGraph::build_weight_location_map() const {
+    std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> weight_location_map;
+    weight_location_map.reserve(num_nodes * 4);
+    weight_location_map[nullptr] = {-1, -1};
+    assert(nodes.size() <= INT32_MAX);
+    for (int32_t node_idx = 0; node_idx < (int32_t)nodes.size(); node_idx++) {
+        const auto& node = nodes[node_idx];
+        assert(node.neighbor_weights.size() <= INT32_MAX);
+        for (int32_t neighbor_idx = 0; neighbor_idx < (int32_t)node.neighbor_weights.size(); neighbor_idx++) {
+            weight_location_map[&node.neighbor_weights[neighbor_idx]] = {node_idx, neighbor_idx};
+        }
+    }
+    return weight_location_map;
 }
 
 }  // namespace pm
