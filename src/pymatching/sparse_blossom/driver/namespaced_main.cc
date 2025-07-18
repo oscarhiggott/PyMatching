@@ -48,7 +48,7 @@ int main_predict(int argc, const char **argv) {
     stim::FileFormatData predictions_out_format =
         stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
-    bool enable_correlations = stim::find_bool_argument("--correlated_matching", argc, argv);
+    bool enable_correlations = stim::find_bool_argument("--enable_correlations", argc, argv);
 
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
@@ -145,7 +145,7 @@ int main_count_mistakes(int argc, const char **argv) {
                 throw std::invalid_argument("Obs data ended before shot data ended.");
             }
         }
-        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
+        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits, enable_correlations);
         if (obs_shot.obs_mask_as_u64() != res.obs_mask) {
             num_mistakes++;
         }

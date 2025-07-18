@@ -53,7 +53,7 @@ Mwpm detector_error_model_to_mwpm(
     bool enable_correlations = false);
 
 MatchingResult decode_detection_events_for_up_to_64_observables(
-    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, bool edge_correlations);
 
 /// Used to decode detection events for an existing Mwpm object `mwpm', and a vector of
 /// detection event indices `detection_events'. The predicted observables are XOR-ed into an
@@ -77,6 +77,12 @@ void decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vector<ui
 /// instead by `decode_detection_events_to_match_edges`).
 void decode_detection_events_to_edges(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges);
+
+void decode_detection_events_to_edges_with_edge_correlations(
+    pm::Mwpm& mwpm,
+    const std::vector<uint64_t>& detection_events,
+    std::vector<int64_t>& edges,
+    const std::unordered_map<const ::pm::weight_int*, std::pair<int32_t, int32_t>>& flooder_neighbor_weights_map);
 
 }  // namespace pm
 

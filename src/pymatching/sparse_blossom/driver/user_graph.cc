@@ -446,7 +446,7 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
         pm::iter_dem_instructions_include_correlations(
             detector_error_model,
             [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
-                return;
+                user_graph.handle_dem_instruction(p, detectors, observables);
             },
             joint_probabilites);
         user_graph.populate_implied_edge_weights(joint_probabilites);

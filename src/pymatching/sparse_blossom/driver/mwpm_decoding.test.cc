@@ -105,7 +105,8 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
         while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
             if (num_shots > max_shots)
                 break;
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
+            auto res = pm::decode_detection_events_for_up_to_64_observables(
+                mwpm, sparse_shot.hits, /*edge_correlations=*/false);
             if (sparse_shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -366,7 +367,8 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
         ASSERT_EQ(res, res_expected);
 
         if (num_nodes <= sizeof(pm::obs_int) * 8) {
-            auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {10, 20});
+            auto res2 =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, {10, 20}, /*edge_correlations=*/false);
             ASSERT_EQ(res2.weight, res_expected.weight);
             pm::obs_int expected_obs_mask = 0;
             for (size_t i = 0; i < res_expected.obs_crossed.size(); i++) {
@@ -418,7 +420,8 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
         ASSERT_EQ(res, res_expected);
 
         if (max_obs + 1 <= sizeof(pm::obs_int) * 8) {
-            auto res2 = pm::decode_detection_events_for_up_to_64_observables(mwpm, {0, 1, 2, 5, 6, 7});
+            auto res2 = pm::decode_detection_events_for_up_to_64_observables(
+                mwpm, {0, 1, 2, 5, 6, 7}, /*edge_correlations=*/false);
             ASSERT_EQ(res2.weight, res_expected.weight);
             pm::obs_int expected_obs_mask = 0;
             for (size_t i = 0; i < res_expected.obs_crossed.size(); i++) {
@@ -540,7 +543,8 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
             detection_events.erase(detection_events.begin());
         }
         EXPECT_THROW(
-            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events);, std::invalid_argument);
+            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events, /*edge_correlations=*/false);
+            , std::invalid_argument);
         sparse_shot.clear();
         num_shots++;
     }

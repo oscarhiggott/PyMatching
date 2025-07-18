@@ -188,6 +188,21 @@ void MatchingGraph::convert_implied_weights(
     }
 }
 
+// Reweight assuming an error has occurred on a single edge u, v. When v == -1, assumes an edge from
+// u to the boundary.
+void MatchingGraph::reweight_for_edge(const int64_t& u, const int64_t& v) {
+    size_t z = nodes[u].index_of_neighbor(v == -1 ? nullptr : &nodes[v]);
+    reweight(nodes[u].neighbor_implied_weights[z]);
+}
+
+void MatchingGraph::reweight_for_edges(const std::vector<int64_t>& edges) {
+    for (size_t i = 0; i < edges.size() >> 1; ++i) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+        reweight_for_edge(u, v);
+    }
+}
+
 std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> MatchingGraph::build_weight_location_map() const {
     std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> weight_location_map;
     weight_location_map.reserve(num_nodes * 4);
@@ -201,6 +216,18 @@ std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> MatchingGraph
         }
     }
     return weight_location_map;
+}
+
+void MatchingGraph::undo_reweights() {
+    // We iterate backward over the previous weights, since some edges
+    // may have been reweighted more than once. Alternatively,
+    // we could iterate forward and only undo a reweight if the
+    // previous weight is larger.
+    for (auto it = previous_weights.rbegin(); it != previous_weights.rend(); ++it) {
+        pm::PreviousWeight& prev = *it;
+        *prev.ptr = prev.val;
+    }
+    previous_weights.clear();
 }
 
 }  // namespace pm

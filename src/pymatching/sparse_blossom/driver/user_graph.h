@@ -319,7 +319,11 @@ void iter_dem_instructions_include_correlations(
         if (component->node1 == SIZE_MAX) {
             decomposed_err.components.pop_back();
         } else if (p > 0) {
-            handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+            if (component->node2 == SIZE_MAX) {
+                handle_dem_error(p, {component->node1}, component->observable_indices);
+            } else {
+                handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+            }
         }
 
         add_decomposed_error_to_joint_probabilities(decomposed_err, joint_probabilites);
