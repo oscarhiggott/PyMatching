@@ -307,7 +307,7 @@ void pm::decode_detection_events_to_edges_with_edge_correlations(
     const std::unordered_map<const ::pm::weight_int*, std::pair<int32_t, int32_t>>& flooder_neighbor_weights_map) {
     decode_detection_events_to_edges(mwpm, detection_events, edges);
     mwpm.flooder.graph.reweight_for_edges(edges);
-    mwpm.search_flooder.graph.reweight_for_edges(edges, mwpm.flooder.graph, flooder_neighbor_weights_map);
+    mwpm.search_flooder.graph.reweight_for_edges(edges);
     edges.clear();
 
     decode_detection_events_to_edges(mwpm, detection_events, edges);

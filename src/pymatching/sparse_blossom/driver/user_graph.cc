@@ -288,6 +288,7 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
 pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weights) {
     /// Identical to to_matching_graph but for constructing a pm::SearchGraph
     pm::SearchGraph search_graph(nodes.size());
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
 
     to_matching_or_search_graph_helper(
         num_distinct_weights,
@@ -295,15 +296,19 @@ pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weigh
             size_t v,
             pm::signed_weight_int weight,
             const std::vector<size_t>& observables,
-            const std::vector<ImpliedWeightUnconverted>&) {
-            search_graph.add_edge(u, v, weight, observables);
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            search_graph.add_edge(
+                u, v, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         },
         [&](size_t u,
             pm::signed_weight_int weight,
             const std::vector<size_t>& observables,
-            const std::vector<ImpliedWeightUnconverted>&) {
-            search_graph.add_boundary_edge(u, weight, observables);
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            search_graph.add_boundary_edge(
+                u, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         });
+
+    search_graph.convert_implied_weights(edges_to_implied_weights_unconverted);
     return search_graph;
 }
 
