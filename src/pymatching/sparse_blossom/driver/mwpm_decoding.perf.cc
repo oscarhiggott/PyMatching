@@ -661,6 +661,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(
         dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
+    auto wlm = mwpm.flooder.graph.build_weight_location_map();
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -670,7 +671,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
     benchmark_go([&]() {
         for (const auto &shot : shots) {
             edges.clear();
-            pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges, wlm);
         }
     })
         .goal_micros(130)
