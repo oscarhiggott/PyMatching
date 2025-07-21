@@ -66,7 +66,7 @@ int main_predict(int argc, const char **argv) {
     sparse_shot.clear();
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     while (reader->start_and_read_entire_record(sparse_shot)) {
-        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight, enable_correlations);
         for (size_t k = 0; k < num_obs; k++) {
             writer->write_bit(res.obs_crossed[k]);
         }

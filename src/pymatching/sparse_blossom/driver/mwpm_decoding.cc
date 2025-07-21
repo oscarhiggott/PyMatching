@@ -189,7 +189,18 @@ void pm::decode_detection_events(
     pm::Mwpm& mwpm,
     const std::vector<uint64_t>& detection_events,
     uint8_t* obs_begin_ptr,
-    pm::total_weight_int& weight) {
+    pm::total_weight_int& weight,
+    bool edge_correlations) {
+    if (edge_correlations) {
+        // Edge correlations might also be called 2-pass matching. This is the slowest and
+        // highest-accuracy reweighting rule for correlated decoding in which we first decode to edges,
+        // and then reweight the associated edges conditioned on the assumption that an error occurred
+        // at that edge.
+        std::vector<int64_t> edges;
+        decode_detection_events_to_edges(mwpm, detection_events, edges);
+        mwpm.flooder.graph.reweight_for_edges(edges);
+    }
+
     size_t num_observables = mwpm.flooder.graph.num_observables;
     process_timeline_until_completion(mwpm, detection_events);
 
@@ -301,10 +312,7 @@ void pm::decode_detection_events_to_edges(
 }
 
 void pm::decode_detection_events_to_edges_with_edge_correlations(
-    pm::Mwpm& mwpm,
-    const std::vector<uint64_t>& detection_events,
-    std::vector<int64_t>& edges,
-    const std::unordered_map<const ::pm::weight_int*, std::pair<int32_t, int32_t>>& flooder_neighbor_weights_map) {
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges) {
     decode_detection_events_to_edges(mwpm, detection_events, edges);
     mwpm.flooder.graph.reweight_for_edges(edges);
     mwpm.search_flooder.graph.reweight_for_edges(edges);

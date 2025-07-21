@@ -264,7 +264,8 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -316,7 +317,6 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges_with_correlations) {
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(
         dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
-    auto wlm = mwpm.flooder.graph.build_weight_location_map();
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -326,7 +326,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges_with_correlations) {
     benchmark_go([&]() {
         for (const auto &shot : shots) {
             edges.clear();
-            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges, wlm);
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_millis(8.2)
@@ -388,7 +388,8 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -440,7 +441,6 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges_with_correlations) {
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(
         dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
-    auto wlm = mwpm.flooder.graph.build_weight_location_map();
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -450,7 +450,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges_with_correlations) {
     benchmark_go([&]() {
         for (const auto &shot : shots) {
             edges.clear();
-            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges, wlm);
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_millis(8.4)
@@ -512,7 +512,8 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -564,7 +565,6 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges_with_correlations) {
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(
         dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
-    auto wlm = mwpm.flooder.graph.build_weight_location_map();
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -574,7 +574,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges_with_correlations) {
     benchmark_go([&]() {
         for (const auto &shot : shots) {
             edges.clear();
-            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges, wlm);
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_millis(1.4)
@@ -636,7 +636,8 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -688,7 +689,6 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges_with_correlations) {
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
     auto mwpm = pm::detector_error_model_to_mwpm(
         dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
-    auto wlm = mwpm.flooder.graph.build_weight_location_map();
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -698,7 +698,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges_with_correlations) {
     benchmark_go([&]() {
         for (const auto &shot : shots) {
             edges.clear();
-            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges, wlm);
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_micros(130)

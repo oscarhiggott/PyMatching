@@ -169,7 +169,7 @@ TEST(UserGraph, DecodeUserGraphDetectionEventOnBoundaryNode) {
         graph.set_boundary({2});
         auto& mwpm = graph.get_mwpm();
         pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
-        pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
     }
 
     {
@@ -179,7 +179,7 @@ TEST(UserGraph, DecodeUserGraphDetectionEventOnBoundaryNode) {
         graph.set_boundary({2});
         auto& mwpm = graph.get_mwpm();
         pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
-        pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(mwpm, {2}, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
     }
 }
 
@@ -503,8 +503,9 @@ TEST(UserGraph, ConvertImpliedWeights) {
     user_graph.add_or_merge_edge(2, 3, {}, 1.0, 0.1);
     user_graph.add_or_merge_boundary_edge(4, {}, 1.0, 0.1);
 
-    auto& edge1 = *std::find_if(
-        user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) { return e.node1 == 0; });
+    auto& edge1 = *std::find_if(user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) {
+        return e.node1 == 0;
+    });
     edge1.implied_weights_for_other_edges.push_back({2, 3, 5});
     edge1.implied_weights_for_other_edges.push_back({4, SIZE_MAX, 7});
 
@@ -563,8 +564,9 @@ TEST(UserGraph, ConvertImpliedWeights_EmptyRules) {
     user_graph.add_or_merge_edge(0, 1, {}, 1.0, 0.1);
     user_graph.add_or_merge_edge(2, 3, {}, 1.0, 0.1);
 
-    auto& edge = *std::find_if(
-        user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) { return e.node1 == 0; });
+    auto& edge = *std::find_if(user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) {
+        return e.node1 == 0;
+    });
     edge.implied_weights_for_other_edges = {};
 
     pm::MatchingGraph matching_graph = user_graph.to_matching_graph(100);
