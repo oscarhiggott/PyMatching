@@ -183,7 +183,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             auto &mwpm = self.get_mwpm();
             auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
             pm::total_weight_int weight = 0;
-            pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight);
+            pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight, false);
             double rescaled_weight = (double)weight / mwpm.flooder.graph.normalising_constant;
 
             auto err_capsule = py::capsule(obs_crossed, [](void *x) {
@@ -303,7 +303,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 pm::total_weight_int solution_weight = 0;
                 if (bit_packed_predictions) {
                     std::fill(temp_predictions.begin(), temp_predictions.end(), 0);
-                    pm::decode_detection_events(mwpm, detection_events, temp_predictions.data(), solution_weight);
+                    pm::decode_detection_events(mwpm, detection_events, temp_predictions.data(), solution_weight, false);
                     // bitpack the predictions
                     for (size_t k = 0; k < temp_predictions.size(); k++) {
                         size_t arr_idx = k >> 3;
@@ -311,7 +311,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                     }
                 } else {
                     pm::decode_detection_events(
-                        mwpm, detection_events, predictions_ptr + (num_observable_bytes * i), solution_weight);
+                        mwpm, detection_events, predictions_ptr + (num_observable_bytes * i), solution_weight, false);
                 }
                 ws(i) = (double)solution_weight / mwpm.flooder.graph.normalising_constant;
                 detection_events.clear();
