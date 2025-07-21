@@ -348,8 +348,10 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
             g.add_edge(i, (i + 1) % num_nodes, -2, {i}, {}, edges_to_implied_weights_unconverted);
 
         if (num_nodes > sizeof(pm::obs_int) * 8) {
-            for (size_t i = 0; i < num_nodes; i++)
-                mwpm.search_flooder.graph.add_edge(i, (i + 1) % num_nodes, -2, {i});
+            std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+        for (size_t i = 0; i < num_nodes; i++)
+            mwpm.search_flooder.graph.add_edge(
+                i, (i + 1) % num_nodes, -2, {i}, {}, edges_to_implied_weights_unconverted);
         }
 
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
@@ -397,12 +399,14 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
 
         if (max_obs > sizeof(pm::obs_int) * 8) {
             auto& h = mwpm.search_flooder.graph;
-            h.add_boundary_edge(0, -4, {max_obs});
+            std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
+                edges_to_implied_weights_unconverted;
+            h.add_boundary_edge(0, -4, {max_obs}, {}, edges_to_implied_weights_unconverted);
             for (size_t i = 0; i < 7; i += 2)
-                h.add_edge(i, i + 1, 2, {i + 1});
+                h.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);
             for (size_t i = 1; i < 7; i += 2)
-                h.add_edge(i, i + 1, -4, {i + 1});
-            h.add_boundary_edge(7, 2, {num_nodes});
+                h.add_edge(i, i + 1, -4, {i + 1}, {}, edges_to_implied_weights_unconverted);
+            h.add_boundary_edge(7, 2, {num_nodes}, {}, edges_to_implied_weights_unconverted);
         }
 
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
