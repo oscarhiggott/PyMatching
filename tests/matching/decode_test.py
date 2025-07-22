@@ -193,6 +193,11 @@ def test_surface_code_solution_weights(data_dir: Path):
     assert np.array_equal(bitpacked_batch_predictions_from_bitpacked, expected_observables_arr)
     assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
 
+    # Test correlated decoding
+    m_corr = Matching.from_detector_error_model(dem, enable_correlations=True)
+    m_corr.decode_batch(shots[:, 0:-m.num_fault_ids], enable_edge_correlations=True)
+    # TODO: Add analysis of correlated decoding results
+
 
 def test_decode_batch_to_bitpacked_predictions():
     m = pymatching.Matching()
