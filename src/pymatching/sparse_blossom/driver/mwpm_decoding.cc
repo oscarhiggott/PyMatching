@@ -173,6 +173,7 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
         std::vector<int64_t> edges;
         decode_detection_events_to_edges(mwpm, detection_events, edges);
         mwpm.flooder.graph.reweight_for_edges(edges);
+        mwpm.search_flooder.graph.reweight_for_edges(edges);
     }
 
     process_timeline_until_completion(mwpm, detection_events);
@@ -182,6 +183,12 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
             mwpm, mwpm.flooder.negative_weight_detection_events);
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
     res.weight += mwpm.flooder.negative_weight_sum;
+
+    if (edge_correlations) {
+        mwpm.flooder.graph.undo_reweights();
+        mwpm.search_flooder.graph.undo_reweights();
+    }
+
     return res;
 }
 
@@ -199,6 +206,7 @@ void pm::decode_detection_events(
         std::vector<int64_t> edges;
         decode_detection_events_to_edges(mwpm, detection_events, edges);
         mwpm.flooder.graph.reweight_for_edges(edges);
+        mwpm.search_flooder.graph.reweight_for_edges(edges);
     }
 
     size_t num_observables = mwpm.flooder.graph.num_observables;
@@ -230,6 +238,11 @@ void pm::decode_detection_events(
         fill_bit_vector_from_obs_mask(bit_packed_res.obs_mask, obs_begin_ptr, num_observables);
         // Add negative weight sum to blossom solution weight
         weight = bit_packed_res.weight + mwpm.flooder.negative_weight_sum;
+    }
+
+    if (edge_correlations) {
+        mwpm.flooder.graph.undo_reweights();
+        mwpm.search_flooder.graph.undo_reweights();
     }
 }
 
