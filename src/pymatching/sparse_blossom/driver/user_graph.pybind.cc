@@ -16,6 +16,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include "pymatching/sparse_blossom/driver/user_graph.h"
 #include "stim.h"
 
 using namespace py::literals;
@@ -422,7 +423,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "detector_error_model_to_matching_graph",
         [](const char *dem_string, bool enable_correlations) {
             auto dem = stim::DetectorErrorModel(dem_string);
-            return pm::detector_error_model_to_user_graph(dem, enable_correlations);
+            return pm::detector_error_model_to_user_graph(dem, enable_correlations, pm::NUM_DISTINCT_WEIGHTS);
         },
         "dem_string"_a,
         "enable_correlations"_a = false);
@@ -437,7 +438,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             }
             auto dem = stim::DetectorErrorModel::from_file(file);
             fclose(file);
-            return pm::detector_error_model_to_user_graph(dem, enable_correlations);
+            return pm::detector_error_model_to_user_graph(dem, enable_correlations, pm::NUM_DISTINCT_WEIGHTS);
         },
         "dem_path"_a,
         "enable_correlations"_a = false);
@@ -454,7 +455,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             fclose(file);
             auto dem =
                 stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, true, true, false, 0, false, false);
-            return pm::detector_error_model_to_user_graph(dem, enable_correlations);
+            return pm::detector_error_model_to_user_graph(dem, enable_correlations, pm::NUM_DISTINCT_WEIGHTS);
         },
         "stim_circuit_path"_a,
         "enable_correlations"_a = false);

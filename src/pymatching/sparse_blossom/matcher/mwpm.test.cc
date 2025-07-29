@@ -71,7 +71,7 @@ MwpmEvent rhr(std::vector<DetectorNode>& ns, size_t i, size_t j, obs_int obs_mas
 TEST(Mwpm, BlossomCreatedThenShattered) {
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_edge(0, 1, 10, {0}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 4, 20, {1}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(4, 3, 20, {0, 1}, {}, edges_to_implied_weights_unconverted);
@@ -278,7 +278,7 @@ TEST(Mwpm, ShatterBlossomAndExtractMatchesForPair) {
     size_t num_nodes = 20;
     auto mwpm = Mwpm(GraphFlooder(MatchingGraph(num_nodes, 64)));
     auto& g = mwpm.flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, obs_mask_to_set_bits(i), {}, edges_to_implied_weights_unconverted);
     auto& ns = mwpm.flooder.graph.nodes;
@@ -460,7 +460,7 @@ TEST(Mwpm, MatchingResult) {
 TEST(Mwpm, TwoRegionsGrowingThenMatching) {
     Mwpm mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 4, {0, 1}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 1, 100, {0, 2}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, 22, {0, 2}, {}, edges_to_implied_weights_unconverted);
@@ -490,7 +490,7 @@ TEST(Mwpm, TwoRegionsGrowingThenMatching) {
 TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     Mwpm mwpm(GraphFlooder(MatchingGraph(10, 64)));
     auto& g = mwpm.flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 1000, {0, 1}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 1, 8, {0, 2}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, 10, {0, 2}, {}, edges_to_implied_weights_unconverted);
@@ -548,7 +548,7 @@ TEST(Mwpm, RegionHittingMatchFormingBlossomThenMatchingToBoundary) {
     size_t num_nodes = 100;
     Mwpm mwpm{GraphFlooder(MatchingGraph(num_nodes, 64))};
     auto& g = mwpm.flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 2, {0}, {}, edges_to_implied_weights_unconverted);
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, obs_mask_to_set_bits(i), {}, edges_to_implied_weights_unconverted);
@@ -586,7 +586,7 @@ TEST(GraphFlooder, CreateRegion) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(5, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 3, {}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 1, 5, {}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, 11, {}, {}, edges_to_implied_weights_unconverted);
@@ -608,7 +608,7 @@ TEST(GraphFlooder, RegionGrowingToBoundary) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 2, {0, 1}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 1, 10, {0, 2}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, 21, {}, {}, edges_to_implied_weights_unconverted);
@@ -643,7 +643,7 @@ TEST(GraphFlooder, RegionHitRegion) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 2000, {0, 1}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 1, 10, {0, 2}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, 24, {}, {}, edges_to_implied_weights_unconverted);
@@ -665,7 +665,7 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     Mwpm mwpm{GraphFlooder(MatchingGraph(10, 64))};
     auto& flooder = mwpm.flooder;
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 4, {0, 1}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 1, 10, {0, 2}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, 22, {}, {}, edges_to_implied_weights_unconverted);
@@ -676,10 +676,11 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     auto e1 = flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(
         e1,
-        MwpmEvent(RegionHitBoundaryEventData{
-            flooder.graph.nodes[2].region_that_arrived,
-            CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
-        }));
+        MwpmEvent(
+            RegionHitBoundaryEventData{
+                flooder.graph.nodes[2].region_that_arrived,
+                CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
+            }));
     ASSERT_EQ(flooder.queue.cur_time, 36);
     flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);
     auto e2 = flooder.run_until_next_mwpm_notification();

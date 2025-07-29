@@ -78,7 +78,8 @@ class MatchingGraph {
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
     void convert_implied_weights(
-        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
+        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
+        double normalising_constant);
 
     std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> build_weight_location_map() const;
 

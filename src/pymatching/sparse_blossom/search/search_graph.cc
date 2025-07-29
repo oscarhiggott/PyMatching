@@ -15,6 +15,7 @@
 #include "search_graph.h"
 
 #include <cassert>
+#include <cmath>
 
 pm::SearchGraph::SearchGraph() : num_nodes(0) {
 }
@@ -123,27 +124,30 @@ void pm::SearchGraph::undo_reweights() {
 
 namespace {
 
-pm::ImpliedWeight convert_rule(std::vector<pm::SearchDetectorNode>& nodes, const pm::ImpliedWeightUnconverted& rule) {
+pm::ImpliedWeight convert_rule(
+    std::vector<pm::SearchDetectorNode>& nodes,
+    const pm::ImpliedWeightUnconverted& rule,
+    const double normalising_consant) {
     const int64_t& i = rule.node1;
     const int64_t& j = rule.node2;
-    const pm::weight_int& w = rule.new_weight;
     pm::weight_int* weight_pointer_i =
         &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == -1 ? nullptr : &nodes[j])];
     pm::weight_int* weight_pointer_j =
         j == -1 ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
-    return pm::ImpliedWeight{weight_pointer_i, weight_pointer_j, w};
+    return pm::ImpliedWeight{weight_pointer_i, weight_pointer_j, rule.implied_weight};
 }
 
 }  // namespace
 
 void pm::SearchGraph::convert_implied_weights(
-    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted) {
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
+    const double normalising_constant) {
     for (size_t u = 0; u < nodes.size(); u++) {
         const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
             edges_to_implied_weights_unconverted[u];
         for (size_t v = 0; v < nodes[u].neighbors.size(); v++) {
             for (const auto& rule : rules_for_node[v]) {
-                ImpliedWeight converted = convert_rule(nodes, rule);
+                ImpliedWeight converted = convert_rule(nodes, rule, normalising_constant);
                 nodes[u].neighbor_implied_weights[v].push_back(converted);
             }
         }

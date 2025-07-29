@@ -54,7 +54,8 @@ class SearchGraph {
         const std::vector<ImpliedWeightUnconverted>& implied_weights,
         std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
     void convert_implied_weights(
-        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
+        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
+        const double normalizing_consant);
     void reweight(std::vector<ImpliedWeight>& implied_weights);
     void reweight_for_edge(const int64_t& u, const int64_t& v);
     void reweight_for_edges(const std::vector<int64_t>& edges);
