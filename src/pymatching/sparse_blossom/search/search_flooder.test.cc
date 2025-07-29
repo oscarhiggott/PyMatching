@@ -20,7 +20,7 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
     size_t num_nodes = 40;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 2, {0}, {}, edges_to_implied_weights_unconverted);
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);
@@ -59,7 +59,7 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
     size_t num_nodes = 20;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 2, {0}, {}, edges_to_implied_weights_unconverted);
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);
@@ -88,7 +88,7 @@ TEST(SearchFlooder, RepCodeSourceToDestPath) {
     size_t num_nodes = 20;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
     auto& g = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_boundary_edge(0, 2, {0}, {}, edges_to_implied_weights_unconverted);
     for (size_t i = 0; i < num_nodes - 1; i++)
         g.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);

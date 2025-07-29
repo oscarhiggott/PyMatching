@@ -20,7 +20,7 @@
 
 TEST(Graph, AddEdge) {
     pm::MatchingGraph g(4, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_edge(0, 1, -2, {0}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(1, 2, -3, {0, 2}, {}, edges_to_implied_weights_unconverted);
     g.add_edge(0, 3, 10, {1, 3}, {}, edges_to_implied_weights_unconverted);
@@ -40,7 +40,7 @@ TEST(Graph, AddEdge) {
 
 TEST(Graph, AddBoundaryEdge) {
     pm::MatchingGraph g(6, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     g.add_edge(0, 1, 2, {0, 1}, {}, edges_to_implied_weights_unconverted);
     g.add_boundary_edge(0, -7, {2}, {}, edges_to_implied_weights_unconverted);
     g.add_boundary_edge(5, 10, {0, 1, 3}, {}, edges_to_implied_weights_unconverted);
@@ -56,8 +56,8 @@ TEST(Graph, AddBoundaryEdge) {
 
 TEST(Graph, AddEdgeWithImpliedWeights) {
     pm::MatchingGraph g(4, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
-    std::vector<pm::ImpliedProbabilityUnconverted> implied_weights = {{2, 3, 5}};
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::vector<pm::ImpliedWeightUnconverted> implied_weights = {{2, 3, 5}};
     g.add_edge(0, 1, 10, {}, implied_weights, edges_to_implied_weights_unconverted);
 
     ASSERT_EQ(edges_to_implied_weights_unconverted.size(), 2);
@@ -69,19 +69,19 @@ TEST(Graph, AddEdgeWithImpliedWeights) {
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node1, 2);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node2, 3);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].new_weight, 5);
+    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].implied_weight, 5);
 
     ASSERT_EQ(edges_to_implied_weights_unconverted[1].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[1][0].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].node1, 2);
     ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].node2, 3);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].new_weight, 5);
+    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].implied_weight, 5);
 }
 
 TEST(Graph, AddBoundaryEdgeWithImpliedWeights) {
     pm::MatchingGraph g(4, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
-    std::vector<pm::ImpliedProbabilityUnconverted> implied_weights = {{1, 2, 7}};
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    std::vector<pm::ImpliedWeightUnconverted> implied_weights = {{1, 2, 7}};
     g.add_boundary_edge(0, 10, {}, implied_weights, edges_to_implied_weights_unconverted);
 
     ASSERT_EQ(edges_to_implied_weights_unconverted.size(), 1);
@@ -91,5 +91,5 @@ TEST(Graph, AddBoundaryEdgeWithImpliedWeights) {
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node1, 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node2, 2);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].new_weight, 7);
+    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].implied_weight, 7);
 }

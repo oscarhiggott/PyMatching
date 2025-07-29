@@ -25,7 +25,7 @@ using namespace pm;
 TEST(GraphFlooder, PriorityQueue) {
     GraphFlooder flooder(MatchingGraph(10, 64));
     auto &graph = flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     graph.add_edge(0, 1, 10, {}, {}, edges_to_implied_weights_unconverted);
     graph.add_edge(1, 2, 10, {}, {}, edges_to_implied_weights_unconverted);
     graph.add_edge(2, 3, 10, {}, {}, edges_to_implied_weights_unconverted);

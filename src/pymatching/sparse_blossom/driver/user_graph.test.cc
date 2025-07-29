@@ -17,6 +17,7 @@
 #include <cmath>
 #include <gtest/gtest.h>
 #include <stdexcept>
+#include <limits>
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
@@ -474,27 +475,59 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
 
     graph.populate_implied_edge_probabilities(joint_probabilities);
 
+    auto to_weight = [](double p) {
+        if (p == 1.0)
+            return -std::numeric_limits<double>::infinity();
+        if (p == 0.0)
+            return std::numeric_limits<double>::infinity();
+        return std::log((1 - p) / p);
+    };
+
+    double max_abs_weight = 0;
+    for (auto& edge : graph.edges) {
+        double weight = to_weight(edge.error_probability);
+        if (std::abs(weight) > max_abs_weight) {
+            max_abs_weight = std::abs(weight);
+        }
+        for (auto implied : edge.implied_probability_for_other_edges) {
+            double implied_weight = to_weight(implied.implied_probability);
+            if (std::abs(implied_weight) > max_abs_weight) {
+                max_abs_weight = std::abs(implied_weight);
+            }
+        }
+    }
+
+    graph.populate_implied_edge_weights(max_abs_weight, pm::NUM_DISTINCT_WEIGHTS);
+
     auto it_01 = std::find_if(graph.edges.begin(), graph.edges.end(), [](const pm::UserEdge& edge) {
         return edge.node1 == 0 && edge.node2 == 1;
     });
     ASSERT_NE(it_01, graph.edges.end());
-    ASSERT_EQ(it_01->implied_probability_for_other_edges.size(), 1);
-    const auto& implied_01 = it_01->implied_probability_for_other_edges[0];
+    ASSERT_EQ(it_01->implied_weights_for_other_edges.size(), 1);
+    const auto& implied_01 = it_01->implied_weights_for_other_edges[0];
     ASSERT_EQ(implied_01.node1, 2);
     ASSERT_EQ(implied_01.node2, 3);
-    double expected_weight_01 = pm::convert_probability_to_weight(0.1 / 0.26);
-    ASSERT_FLOAT_EQ(implied_01.new_weight, expected_weight_01);
+
+    double half_normalising_constant = (double)(pm::NUM_DISTINCT_WEIGHTS - 1) / max_abs_weight;
+    double p_01 = 0.1 / 0.26;
+    double w_01 = to_weight(p_01);
+    pm::signed_weight_int discrete_w_01 = round(w_01 * half_normalising_constant) * 2;
+    pm::weight_int expected_weight_01 = std::abs(discrete_w_01);
+    ASSERT_EQ(implied_01.implied_weight, expected_weight_01);
 
     auto it_23 = std::find_if(graph.edges.begin(), graph.edges.end(), [](const pm::UserEdge& edge) {
         return edge.node1 == 2 && edge.node2 == 3;
     });
     ASSERT_NE(it_23, graph.edges.end());
-    ASSERT_EQ(it_23->implied_probability_for_other_edges.size(), 1);
-    const auto& implied_23 = it_23->implied_probability_for_other_edges[0];
+    ASSERT_EQ(it_23->implied_weights_for_other_edges.size(), 1);
+    const auto& implied_23 = it_23->implied_weights_for_other_edges[0];
     ASSERT_EQ(implied_23.node1, 0);
     ASSERT_EQ(implied_23.node2, 1);
-    double expected_weight_23 = pm::convert_probability_to_weight(std::min(0.5, 0.1 / 0.1));
-    ASSERT_FLOAT_EQ(implied_23.new_weight, expected_weight_23);
+    double p_23 = std::min(0.9, 1.0);
+    double w_23 = to_weight(p_23);
+    pm::signed_weight_int discrete_w_23 = round(w_23 * half_normalising_constant) * 2;
+    pm::weight_int expected_weight_23 = std::abs(discrete_w_23);
+    ASSERT_EQ(implied_23.implied_weight, expected_weight_23);
 }
 
 TEST(UserGraph, ConvertImpliedWeights) {
@@ -506,8 +539,8 @@ TEST(UserGraph, ConvertImpliedWeights) {
     auto& edge1 = *std::find_if(user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) {
         return e.node1 == 0;
     });
-    edge1.implied_probability_for_other_edges.push_back({2, 3, 5});
-    edge1.implied_probability_for_other_edges.push_back({4, SIZE_MAX, 7});
+    edge1.implied_weights_for_other_edges.push_back({2, 3, 5});
+    edge1.implied_weights_for_other_edges.push_back({4, SIZE_MAX, 7});
 
     pm::MatchingGraph matching_graph = user_graph.to_matching_graph(100);
 
@@ -567,7 +600,7 @@ TEST(UserGraph, ConvertImpliedWeights_EmptyRules) {
     auto& edge = *std::find_if(user_graph.edges.begin(), user_graph.edges.end(), [](const pm::UserEdge& e) {
         return e.node1 == 0;
     });
-    edge.implied_probability_for_other_edges = {};
+    edge.implied_weights_for_other_edges = {};
 
     pm::MatchingGraph matching_graph = user_graph.to_matching_graph(100);
 

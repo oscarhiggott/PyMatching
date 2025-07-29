@@ -345,13 +345,13 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
         auto mwpm = pm::Mwpm(
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
         auto& g = mwpm.flooder.graph;
-        std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>>
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
             edges_to_implied_weights_unconverted;
         for (size_t i = 0; i < num_nodes; i++)
             g.add_edge(i, (i + 1) % num_nodes, -2, {i}, {}, edges_to_implied_weights_unconverted);
 
         if (num_nodes > sizeof(pm::obs_int) * 8) {
-            std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>>
+            std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
                 edges_to_implied_weights_unconverted;
             for (size_t i = 0; i < num_nodes; i++)
                 mwpm.search_flooder.graph.add_edge(
@@ -393,7 +393,7 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
 
         auto& g = mwpm.flooder.graph;
-        std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>>
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
             edges_to_implied_weights_unconverted;
         g.add_boundary_edge(0, -4, {max_obs}, {}, edges_to_implied_weights_unconverted);
         for (size_t i = 0; i < 7; i += 2)
@@ -404,7 +404,7 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
 
         if (max_obs > sizeof(pm::obs_int) * 8) {
             auto& h = mwpm.search_flooder.graph;
-            std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>>
+            std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
                 edges_to_implied_weights_unconverted;
             h.add_boundary_edge(0, -4, {max_obs}, {}, edges_to_implied_weights_unconverted);
             for (size_t i = 0; i < 7; i += 2)
@@ -519,7 +519,7 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
     size_t num_nodes = 5;
     auto mwpm = pm::Mwpm(pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)));
     auto& g = mwpm.flooder.graph;
-    std::map<size_t, std::vector<std::vector<pm::ImpliedProbabilityUnconverted>>> edges_to_implied_weights_unconverted;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     for (size_t i = 0; i < num_nodes; i++)
         g.add_edge(i, (i + 1) % num_nodes, 2, {i}, {}, edges_to_implied_weights_unconverted);
     pm::ExtendedMatchingResult res(num_nodes);
@@ -555,7 +555,7 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
             detection_events.erase(detection_events.begin());
         }
         EXPECT_THROW(
-            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events, /*edge_correlations=*/false);
+            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events, /*enable_correlations=*/false);
             , std::invalid_argument);
         sparse_shot.clear();
         num_shots++;
