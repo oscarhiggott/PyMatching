@@ -1344,7 +1344,7 @@ class Matching:
             )
         if not isinstance(model, stim.DetectorErrorModel):
             raise TypeError(f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}")
-        self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(str(model))
+        self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(str(model.without_tags()))
 
     @staticmethod
     def from_networkx(graph: nx.Graph, *, min_num_fault_ids: int = None) -> 'pymatching.Matching':
