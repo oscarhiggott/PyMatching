@@ -324,7 +324,7 @@ class Matching:
             return_weight = _legacy_return_weight
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(
-            detection_events, enable_edge_correlations=enable_edge_correlations
+            detection_events, enable_correlations=enable_correlations
         )
         if return_weight:
             return correction, weight
