@@ -162,7 +162,7 @@ void MatchingGraph::update_negative_weight_detection_events(size_t node_id) {
 namespace {
 
 ImpliedWeight convert_rule(
-    std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule, const double normalising_consant) {
+    std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule, const double normalising_constant) {
     const int64_t& i = rule.node1;
     const int64_t& j = rule.node2;
     weight_int* weight_pointer_i =
