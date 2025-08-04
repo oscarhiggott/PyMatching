@@ -127,7 +127,7 @@ namespace {
 pm::ImpliedWeight convert_rule(
     std::vector<pm::SearchDetectorNode>& nodes,
     const pm::ImpliedWeightUnconverted& rule,
-    const double normalising_consant) {
+    const double normalising_constant) {
     const int64_t& i = rule.node1;
     const int64_t& j = rule.node2;
     pm::weight_int* weight_pointer_i =
