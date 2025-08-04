@@ -338,7 +338,7 @@ class Matching:
             return_weights: bool = False,
             bit_packed_shots: bool = False,
             bit_packed_predictions: bool = False,
-            enable_edge_correlations: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+            enable_correlations: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Decode from a 2D `shots` array containing a batch of syndrome measurements. A faster
         alternative to using `pymatching.Matching.decode` and iterating over the shots in Python.
