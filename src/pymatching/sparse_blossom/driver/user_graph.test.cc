@@ -505,8 +505,6 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     const auto& implied_23 = it_23->implied_weights_for_other_edges[0];
     ASSERT_EQ(implied_23.node1, 0);
     ASSERT_EQ(implied_23.node2, 1);
-    double p_23 = std::min(0.9, 1.0);
-    double w_23 = to_weight(p_23);
     ASSERT_EQ(implied_23.implied_weight, 0);
 }
 
