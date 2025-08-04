@@ -74,7 +74,8 @@ pm::Mwpm pm::detector_error_model_to_mwpm(
     pm::weight_int num_distinct_weights,
     bool ensure_search_flooder_included,
     bool enable_correlations) {
-    auto user_graph = pm::detector_error_model_to_user_graph(detector_error_model, enable_correlations);
+    auto user_graph =
+        pm::detector_error_model_to_user_graph(detector_error_model, enable_correlations, num_distinct_weights);
     return user_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
 }
 
