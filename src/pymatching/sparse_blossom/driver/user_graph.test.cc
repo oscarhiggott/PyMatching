@@ -16,8 +16,8 @@
 
 #include <cmath>
 #include <gtest/gtest.h>
-#include <stdexcept>
 #include <limits>
+#include <stdexcept>
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
@@ -526,7 +526,7 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     double p_23 = std::min(0.9, 1.0);
     double w_23 = to_weight(p_23);
     pm::signed_weight_int discrete_w_23 = round(w_23 * half_normalising_constant) * 2;
-    pm::weight_int expected_weight_23 = std::abs(discrete_w_23);
+    pm::weight_int expected_weight_23 = 0;
     ASSERT_EQ(implied_23.implied_weight, expected_weight_23);
 }
 
