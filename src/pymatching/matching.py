@@ -210,7 +210,7 @@ class Matching:
                _legacy_return_weight: bool = None,
                *,
                return_weight: bool = False,
-               enable_edge_correlations: bool = False,
+               enable_correlations: bool = False,
                **kwargs
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         r"""
