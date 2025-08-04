@@ -308,7 +308,7 @@ pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weigh
                 u, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         });
 
-    search_graph.convert_implied_weights(edges_to_implied_weights_unconverted, normalizing_consant);
+    search_graph.convert_implied_weights(edges_to_implied_weights_unconverted, normalizing_constant);
     return search_graph;
 }
 
