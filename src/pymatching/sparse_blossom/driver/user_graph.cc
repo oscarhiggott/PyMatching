@@ -537,7 +537,7 @@ void pm::UserGraph::populate_implied_edge_probabilities(
                     // error, would lead to a negatively weighted error. We do not support this (yet), and use a
                     // minimum of 0.5 as an implied probability for an edge to be reweighted.
                     double implied_probability_for_other_edge =
-                        std::min(0.9, affected_edge_and_probability.second / marginal_probability);
+                        std::min(0.5, affected_edge_and_probability.second / marginal_probability);
                     ImpliedProbabilityUnconverted implied{
                         affected_edge.first, affected_edge.second, implied_probability_for_other_edge};
                     edge.implied_probability_for_other_edges.push_back(implied);
