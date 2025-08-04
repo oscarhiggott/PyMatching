@@ -290,7 +290,7 @@ pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weigh
     pm::SearchGraph search_graph(nodes.size());
     std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
 
-    double normalizing_consant = to_matching_or_search_graph_helper(
+    double normalizing_constant = to_matching_or_search_graph_helper(
         num_distinct_weights,
         [&](size_t u,
             size_t v,
