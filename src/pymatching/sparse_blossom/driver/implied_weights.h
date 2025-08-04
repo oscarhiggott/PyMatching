@@ -19,16 +19,10 @@
 
 namespace pm {
 
-struct ImpliedProbabilityUnconverted {
-    size_t node1;
-    size_t node2;
-    double implied_probability;
-};
-
 struct ImpliedWeightUnconverted {
     size_t node1;
     size_t node2;
-    pm::weight_int implied_weight;
+    double implied_weight;
 };
 
 struct ImpliedWeight {

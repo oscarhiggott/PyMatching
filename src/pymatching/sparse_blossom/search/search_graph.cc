@@ -134,7 +134,13 @@ pm::ImpliedWeight convert_rule(
         &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == -1 ? nullptr : &nodes[j])];
     pm::weight_int* weight_pointer_j =
         j == -1 ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
-    return pm::ImpliedWeight{weight_pointer_i, weight_pointer_j, rule.implied_weight};
+
+    double rescaled_normalising_constant = normalising_constant / 2;
+    pm::signed_weight_int w = (pm::signed_weight_int)round(rule.implied_weight * rescaled_normalising_constant);
+    // Extremely important!
+    // If all edge weights are even integers, then all collision events occur at integer times.
+    w *= 2;
+    return pm::ImpliedWeight{weight_pointer_i, weight_pointer_j, static_cast<pm::weight_int>(std::abs(w))};
 }
 
 }  // namespace

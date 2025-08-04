@@ -15,6 +15,7 @@
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
 #include "pymatching/rand/rand_gen.h"
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 
 double pm::merge_weights(double a, double b) {
     auto sgn = std::copysign(1, a) * std::copysign(1, b);
@@ -395,8 +396,19 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
         if (std::abs(e.weight) > max_abs_weight)
             max_abs_weight = std::abs(e.weight);
 
-        if (round(e.weight) != e.weight)
+        if (round(e.weight) != e.weight) {
             all_integral_weight = false;
+        }
+
+        for (auto implied : e.implied_weights_for_other_edges) {
+            if (std::abs(implied.implied_weight) > max_abs_weight) {
+                max_abs_weight = std::abs(implied.implied_weight);
+            }
+
+            if (round(implied.implied_weight) != implied.implied_weight) {
+                all_integral_weight = false;
+            }
+        }
     }
 
     if (max_abs_weight > pm::MAX_USER_EDGE_WEIGHT)
@@ -419,16 +431,6 @@ double bernoulli_xor(double p1, double p2) {
 
 double to_weight(double probability) {
     return std::log((1 - probability) / probability);
-}
-
-pm::signed_weight_int to_discrete_weight(double probability, double half_normalising_constant) {
-    double weight = to_weight(probability);
-    pm::signed_weight_int w = (pm::signed_weight_int)round(weight * half_normalising_constant);
-    // Extremely important!
-    // If all edge weights are even integers, then all collision events occur at integer times. This
-    // is why we remove a factor of 2 from the input normalisation.
-    w *= 2;
-    return w;
 }
 
 }  // namespace
@@ -474,23 +476,7 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
             },
             joint_probabilites);
 
-        user_graph.populate_implied_edge_probabilities(joint_probabilites);
-        double max_abs_weight = 0;
-        for (auto& edge : user_graph.edges) {
-            double weight = to_weight(edge.error_probability);
-            if (std::abs(weight) > max_abs_weight) {
-                max_abs_weight = std::abs(weight);
-            }
-            // Also check all implied weights
-            for (auto implied : edge.implied_probability_for_other_edges) {
-                double implied_weight = to_weight(implied.implied_probability);
-                if (std::abs(implied_weight) > max_abs_weight) {
-                    max_abs_weight = std::abs(implied_weight);
-                }
-            }
-        }
-        user_graph.populate_implied_edge_weights(max_abs_weight, num_distinct_weights);
-
+        user_graph.populate_implied_edge_weights(joint_probabilites);
     } else {
         pm::iter_detector_error_model_edges(
             detector_error_model,
@@ -505,20 +491,7 @@ pm::weight_int pm::convert_probability_to_weight(double p) {
     return std::log((1 - p) / p);
 }
 
-void pm::UserGraph::populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights) {
-    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
-    double half_normalising_constant = (double)max_half_edge_weight / max_abs_weight;
-
-    for (auto& edge : edges) {
-        for (auto& implied : edge.implied_probability_for_other_edges) {
-            pm::signed_weight_int w = to_discrete_weight(implied.implied_probability, half_normalising_constant);
-            edge.implied_weights_for_other_edges.push_back(
-                {implied.node1, implied.node2, static_cast<weight_int>(std::abs(w))});
-        }
-    }
-}
-
-void pm::UserGraph::populate_implied_edge_probabilities(
+void pm::UserGraph::populate_implied_edge_weights(
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
     for (auto& edge : edges) {
         std::pair<size_t, size_t> current_edge_nodes = std::minmax(edge.node1, edge.node2);
@@ -538,9 +511,9 @@ void pm::UserGraph::populate_implied_edge_probabilities(
                     // minimum of 0.5 as an implied probability for an edge to be reweighted.
                     double implied_probability_for_other_edge =
                         std::min(0.5, affected_edge_and_probability.second / marginal_probability);
-                    ImpliedProbabilityUnconverted implied{
-                        affected_edge.first, affected_edge.second, implied_probability_for_other_edge};
-                    edge.implied_probability_for_other_edges.push_back(implied);
+                    double w = to_weight(implied_probability_for_other_edge);
+                    ImpliedWeightUnconverted implied{affected_edge.first, affected_edge.second, w};
+                    edge.implied_weights_for_other_edges.push_back(implied);
                 }
             }
         }
