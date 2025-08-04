@@ -16,6 +16,7 @@
 
 #include "pybind11/pybind11.h"
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
+#include "pymatching/sparse_blossom/driver/user_graph.h"
 #include "stim.h"
 
 using namespace py::literals;
@@ -180,8 +181,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events, bool enable_edge_correlations) {
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
-            auto &mwpm =
-                enable_edge_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
+            auto &mwpm = enable_edge_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
             auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
             pm::total_weight_int weight = 0;
             pm::decode_detection_events(
@@ -199,21 +199,20 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "detection_events"_a,
         "enable_edge_correlations"_a = false);
     g.def(
-         "decode_to_edges_array",
-         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
-             auto &mwpm = self.get_mwpm_with_search_graph();
-             std::vector<uint64_t> detection_events_vec(
-                 detection_events.data(), detection_events.data() + detection_events.size());
-             auto edges = new std::vector<int64_t>();
-             edges->reserve(detection_events_vec.size() / 2);
-             pm::decode_detection_events_to_edges(mwpm, detection_events_vec, *edges);
-             auto num_edges = edges->size() / 2;
-             auto edges_arr = pm_pybind::vec_to_array<int64_t>(edges);
-             edges_arr.resize({(py::ssize_t)num_edges, (py::ssize_t)2});
-             return edges_arr;
-         },
-        "detection_events"_a
-         );
+        "decode_to_edges_array",
+        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
+            auto &mwpm = self.get_mwpm_with_search_graph();
+            std::vector<uint64_t> detection_events_vec(
+                detection_events.data(), detection_events.data() + detection_events.size());
+            auto edges = new std::vector<int64_t>();
+            edges->reserve(detection_events_vec.size() / 2);
+            pm::decode_detection_events_to_edges(mwpm, detection_events_vec, *edges);
+            auto num_edges = edges->size() / 2;
+            auto edges_arr = pm_pybind::vec_to_array<int64_t>(edges);
+            edges_arr.resize({(py::ssize_t)num_edges, (py::ssize_t)2});
+            return edges_arr;
+        },
+        "detection_events"_a);
     g.def(
         "decode_to_matched_detection_events_array",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
@@ -282,8 +281,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             py::array_t<double> weights = py::array_t<double>(shots.shape(0));
             auto ws = weights.mutable_unchecked<1>();
 
-            auto &mwpm =
-                enable_edge_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
+            auto &mwpm = enable_edge_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
             std::vector<uint64_t> detection_events;
 
             // Vector used to extract predicted observables when decoding if bit_packed_predictions is true
@@ -425,7 +423,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "detector_error_model_to_matching_graph",
         [](const char *dem_string, bool enable_correlations) {
             auto dem = stim::DetectorErrorModel(dem_string);
-            return pm::detector_error_model_to_user_graph(dem, enable_correlations);
+            return pm::detector_error_model_to_user_graph(dem, enable_correlations, pm::NUM_DISTINCT_WEIGHTS);
         },
         "dem_string"_a,
         "enable_correlations"_a = false);
@@ -440,7 +438,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             }
             auto dem = stim::DetectorErrorModel::from_file(file);
             fclose(file);
-            return pm::detector_error_model_to_user_graph(dem, enable_correlations);
+            return pm::detector_error_model_to_user_graph(dem, enable_correlations, pm::NUM_DISTINCT_WEIGHTS);
         },
         "dem_path"_a,
         "enable_correlations"_a = false);
@@ -457,7 +455,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             fclose(file);
             auto dem =
                 stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, true, true, false, 0, false, false);
-            return pm::detector_error_model_to_user_graph(dem, enable_correlations);
+            return pm::detector_error_model_to_user_graph(dem, enable_correlations, pm::NUM_DISTINCT_WEIGHTS);
         },
         "stim_circuit_path"_a,
         "enable_correlations"_a = false);
