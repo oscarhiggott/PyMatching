@@ -425,7 +425,7 @@ class Matching:
             shots,
             bit_packed_predictions=bit_packed_predictions,
             bit_packed_shots=bit_packed_shots,
-            enable_edge_correlations=enable_edge_correlations
+            enable_correlations=enable_correlations
         )
         if return_weights:
             return predictions, weights
