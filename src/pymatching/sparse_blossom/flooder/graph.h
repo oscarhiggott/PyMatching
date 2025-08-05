@@ -81,8 +81,6 @@ class MatchingGraph {
         std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
         double normalising_constant);
 
-    std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> build_weight_location_map() const;
-
     void undo_reweights();
     void reweight(std::vector<ImpliedWeight>& implied_weights);
     void reweight_for_edge(const int64_t& u, const int64_t& v);
