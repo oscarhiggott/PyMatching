@@ -180,7 +180,7 @@ inline double UserGraph::to_matching_or_search_graph_helper(
                 boundary_edge_weights[u] = weight;
                 boundary_edge_observables[u] = observables;
                 has_boundary_edge[u] = true;
-                boundary_edge_implied_weights_uncoverted[u] = implied_weights_for_other_edges;
+                boundary_edge_implied_weights_unconverted[u] = implied_weights_for_other_edges;
             }
         });
 
