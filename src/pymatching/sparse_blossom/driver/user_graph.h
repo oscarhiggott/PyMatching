@@ -21,7 +21,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "pymatching/rand/rand_gen.h"
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/graph.h"
 #include "pymatching/sparse_blossom/ints.h"
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
@@ -32,18 +32,13 @@ namespace pm {
 
 const pm::weight_int NUM_DISTINCT_WEIGHTS = 1 << (sizeof(pm::weight_int) * 8 - 8);
 
-struct ImpliedWeightUnconverted {
-    size_t node1;
-    size_t node2;
-    weight_int new_weight;
-};
-
 struct UserEdge {
     size_t node1;
     size_t node2;
     std::vector<size_t> observable_indices;  /// The indices of the observables crossed along this edge
     double weight;                           /// The weight of the edge to this neighboring node
     double error_probability;                /// The error probability associated with this node
+    std::vector<ImpliedProbabilityUnconverted> implied_probability_for_other_edges;
     std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges;
 };
 
@@ -125,8 +120,9 @@ class UserGraph {
     Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
-    void populate_implied_edge_weights(
+    void populate_implied_edge_probabilities(
         std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
+    void populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights);
 
    private:
     pm::Mwpm _mwpm;
@@ -150,11 +146,11 @@ inline double UserGraph::iter_discretized_edges(
         bool node1_boundary = is_boundary_node(e.node1);
         bool node2_boundary = is_boundary_node(e.node2);
         if (node2_boundary && !node1_boundary) {
-            boundary_edge_func(e.node1, w, e.observable_indices);
+            boundary_edge_func(e.node1, w, e.observable_indices, e.implied_weights_for_other_edges);
         } else if (node1_boundary && !node2_boundary) {
-            boundary_edge_func(e.node2, w, e.observable_indices);
+            boundary_edge_func(e.node2, w, e.observable_indices, e.implied_weights_for_other_edges);
         } else if (!node1_boundary) {
-            edge_func(e.node1, e.node2, w, e.observable_indices);
+            edge_func(e.node1, e.node2, w, e.observable_indices, e.implied_weights_for_other_edges);
         }
     }
     return normalising_constant * 2;
@@ -170,29 +166,37 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     std::vector<bool> has_boundary_edge(nodes.size(), false);
     std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
     std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
+    std::vector<std::vector<ImpliedWeightUnconverted>> boundary_edge_implied_weights_unconverted(nodes.size());
 
     double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
         edge_func,
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
             if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
                 boundary_edge_observables[u] = observables;
                 has_boundary_edge[u] = true;
+                boundary_edge_implied_weights_unconverted[u] = implied_weights_for_other_edges;
             }
         });
 
     // Now add boundary edges to the graph
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
         if (has_boundary_edge[i])
-            boundary_edge_func(i, boundary_edge_weights[i], boundary_edge_observables[i]);
+            boundary_edge_func(
+                i, boundary_edge_weights[i], boundary_edge_observables[i], boundary_edge_implied_weights_unconverted[i]);
     }
     return normalising_constant;
 }
 
 UserGraph detector_error_model_to_user_graph(
-    const stim::DetectorErrorModel& detector_error_model, bool enable_correlations);
+    const stim::DetectorErrorModel& detector_error_model,
+    bool enable_correlations,
+    pm::weight_int num_distinct_weights);
 weight_int convert_probability_to_weight(double p);
 
 /// Computes the weight of an edge resulting from merging edges with weight `a' and weight `b', assuming each edge
@@ -319,7 +323,11 @@ void iter_dem_instructions_include_correlations(
         if (component->node1 == SIZE_MAX) {
             decomposed_err.components.pop_back();
         } else if (p > 0) {
-            handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+            if (component->node2 == SIZE_MAX) {
+                handle_dem_error(p, {component->node1}, component->observable_indices);
+            } else {
+                handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+            }
         }
 
         add_decomposed_error_to_joint_probabilities(decomposed_err, joint_probabilites);
