@@ -188,7 +188,7 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
         if (has_boundary_edge[i])
             boundary_edge_func(
-                i, boundary_edge_weights[i], boundary_edge_observables[i], boundary_edge_implied_weights_uncoverted[i]);
+                i, boundary_edge_weights[i], boundary_edge_observables[i], boundary_edge_implied_weights_unconverted[i]);
     }
     return normalising_constant;
 }
