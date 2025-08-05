@@ -15,6 +15,7 @@
 #ifndef PYMATCHING2_SEARCH_DETECTOR_NODE_H
 #define PYMATCHING2_SEARCH_DETECTOR_NODE_H
 
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
 
 namespace pm {
@@ -46,6 +47,8 @@ class SearchDetectorNode {
     std::vector<std::vector<size_t>>
         neighbor_observable_indices;        /// Indices of observables crossed by the edge to each neighbor.
     std::vector<uint8_t> neighbor_markers;  /// Used to mark edges as "seen" when decoding to an edge list.
+
+    std::vector<std::vector<ImpliedWeight>> neighbor_implied_weights;
 
     size_t index_of_neighbor(SearchDetectorNode *target) const;
 

@@ -48,7 +48,7 @@ int main_predict(int argc, const char **argv) {
     stim::FileFormatData predictions_out_format =
         stim::find_enum_argument("--out_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
-    bool enable_correlations = stim::find_bool_argument("--correlated_matching", argc, argv);
+    bool enable_correlations = stim::find_bool_argument("--enable_correlations", argc, argv);
 
     stim::DetectorErrorModel dem = stim::DetectorErrorModel::from_file(dem_file);
     fclose(dem_file);
@@ -66,7 +66,7 @@ int main_predict(int argc, const char **argv) {
     sparse_shot.clear();
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     while (reader->start_and_read_entire_record(sparse_shot)) {
-        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight, enable_correlations);
         for (size_t k = 0; k < num_obs; k++) {
             writer->write_bit(res.obs_crossed[k]);
         }
@@ -111,7 +111,7 @@ int main_count_mistakes(int argc, const char **argv) {
     stim::FileFormatData obs_in_format =
         stim::find_enum_argument("--obs_in_format", "01", stim::format_name_to_enum_map(), argc, argv);
     bool append_obs = stim::find_bool_argument("--in_includes_appended_observables", argc, argv);
-    bool enable_correlations = stim::find_bool_argument("--correlated_matching", argc, argv);
+    bool enable_correlations = stim::find_bool_argument("--enable_correlations", argc, argv);
 
     bool time = stim::find_bool_argument("--time", argc, argv);
     if (!append_obs && obs_in == nullptr) {
@@ -130,7 +130,7 @@ int main_count_mistakes(int argc, const char **argv) {
         shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
     pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, enable_correlations);
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, enable_correlations, enable_correlations);
 
     stim::SparseShot sparse_shot;
     stim::SparseShot obs_shot;
@@ -145,7 +145,7 @@ int main_count_mistakes(int argc, const char **argv) {
                 throw std::invalid_argument("Obs data ended before shot data ended.");
             }
         }
-        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits);
+        auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, sparse_shot.hits, enable_correlations);
         if (obs_shot.obs_mask_as_u64() != res.obs_mask) {
             num_mistakes++;
         }

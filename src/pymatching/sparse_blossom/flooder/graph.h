@@ -56,6 +56,7 @@ class MatchingGraph {
     /// This is the normalising constant that the edge weights were multiplied by when converting from floats to
     /// 16-bit ints.
     double normalising_constant;
+    std::vector<PreviousWeight> previous_weights;
 
     MatchingGraph();
     MatchingGraph(size_t num_nodes, size_t num_observables);
@@ -77,12 +78,15 @@ class MatchingGraph {
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
     void convert_implied_weights(
-        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
-
-    void reweight(std::vector<ImpliedWeight>& implied_weights);
-    std::vector<PreviousWeight> previous_weights;
+        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
+        double normalising_constant);
 
     std::unordered_map<const weight_int*, std::pair<int32_t, int32_t>> build_weight_location_map() const;
+
+    void undo_reweights();
+    void reweight(std::vector<ImpliedWeight>& implied_weights);
+    void reweight_for_edge(const int64_t& u, const int64_t& v);
+    void reweight_for_edges(const std::vector<int64_t>& edges);
 };
 
 void apply_reweights(
