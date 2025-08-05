@@ -166,7 +166,7 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     std::vector<bool> has_boundary_edge(nodes.size(), false);
     std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
     std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
-    std::vector<std::vector<ImpliedWeightUnconverted>> boundary_edge_implied_weights_uncoverted(nodes.size());
+    std::vector<std::vector<ImpliedWeightUnconverted>> boundary_edge_implied_weights_unconverted(nodes.size());
 
     double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
