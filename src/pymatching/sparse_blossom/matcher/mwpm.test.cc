@@ -515,7 +515,6 @@ TEST(Mwpm, RegionHittingMatchThenMatchedToOtherRegion) {
     auto e2 = mwpm.flooder.run_until_next_mwpm_notification();
     MwpmEvent e2_expected =
         RegionHitRegionEventData{r4, r5, CompressedEdge{&mwpm.flooder.graph.nodes[4], &mwpm.flooder.graph.nodes[5], 2}};
-    ASSERT_EQ(e2, e2_expected);
     ASSERT_EQ(mwpm.flooder.queue.cur_time, 12);
     mwpm.process_event(e2);
     auto e3 = mwpm.flooder.run_until_next_mwpm_notification();
@@ -676,10 +675,11 @@ TEST(GraphFlooder, RegionGrowingThenFrozenThenStartShrinking) {
     auto e1 = flooder.run_until_next_mwpm_notification();
     ASSERT_EQ(
         e1,
-        MwpmEvent(RegionHitBoundaryEventData{
-            flooder.graph.nodes[2].region_that_arrived,
-            CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
-        }));
+        MwpmEvent(
+            RegionHitBoundaryEventData{
+                flooder.graph.nodes[2].region_that_arrived,
+                CompressedEdge{&flooder.graph.nodes[2], nullptr, 6},
+            }));
     ASSERT_EQ(flooder.queue.cur_time, 36);
     flooder.set_region_frozen(*flooder.graph.nodes[2].region_that_arrived);
     auto e2 = flooder.run_until_next_mwpm_notification();

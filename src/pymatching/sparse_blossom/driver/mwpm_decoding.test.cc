@@ -143,7 +143,8 @@ TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
             while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
                 if (num_shots > max_shots)
                     break;
-                pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+                pm::decode_detection_events(
+                    mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
                 if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                     num_mistakes++;
                 }
@@ -314,7 +315,8 @@ TEST(MwpmDecoding, CompareSolutionObsWithMaxNumBuckets) {
         while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
             if (num_shots > max_shots)
                 break;
-            pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -343,19 +345,23 @@ TEST(MwpmDecoding, HandleAllNegativeWeights) {
         auto mwpm = pm::Mwpm(
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, num_nodes)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
         auto& g = mwpm.flooder.graph;
-        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
+            edges_to_implied_weights_unconverted;
         for (size_t i = 0; i < num_nodes; i++)
             g.add_edge(i, (i + 1) % num_nodes, -2, {i}, {}, edges_to_implied_weights_unconverted);
 
         if (num_nodes > sizeof(pm::obs_int) * 8) {
+            std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
+                edges_to_implied_weights_unconverted;
             for (size_t i = 0; i < num_nodes; i++)
-                mwpm.search_flooder.graph.add_edge(i, (i + 1) % num_nodes, -2, {i});
+                mwpm.search_flooder.graph.add_edge(
+                    i, (i + 1) % num_nodes, -2, {i}, {}, edges_to_implied_weights_unconverted);
         }
 
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
 
         pm::ExtendedMatchingResult res(num_nodes);
-        pm::decode_detection_events(mwpm, {10, 20}, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(mwpm, {10, 20}, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
 
         pm::ExtendedMatchingResult res_expected(num_nodes);
         for (size_t i = 0; i < num_nodes; i++) {
@@ -387,7 +393,8 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
             pm::GraphFlooder(pm::MatchingGraph(num_nodes, max_obs + 1)), pm::SearchFlooder(pm::SearchGraph(num_nodes)));
 
         auto& g = mwpm.flooder.graph;
-        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
+            edges_to_implied_weights_unconverted;
         g.add_boundary_edge(0, -4, {max_obs}, {}, edges_to_implied_weights_unconverted);
         for (size_t i = 0; i < 7; i += 2)
             g.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);
@@ -397,18 +404,21 @@ TEST(MwpmDecoding, HandleSomeNegativeWeights) {
 
         if (max_obs > sizeof(pm::obs_int) * 8) {
             auto& h = mwpm.search_flooder.graph;
-            h.add_boundary_edge(0, -4, {max_obs});
+            std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>
+                edges_to_implied_weights_unconverted;
+            h.add_boundary_edge(0, -4, {max_obs}, {}, edges_to_implied_weights_unconverted);
             for (size_t i = 0; i < 7; i += 2)
-                h.add_edge(i, i + 1, 2, {i + 1});
+                h.add_edge(i, i + 1, 2, {i + 1}, {}, edges_to_implied_weights_unconverted);
             for (size_t i = 1; i < 7; i += 2)
-                h.add_edge(i, i + 1, -4, {i + 1});
-            h.add_boundary_edge(7, 2, {num_nodes});
+                h.add_edge(i, i + 1, -4, {i + 1}, {}, edges_to_implied_weights_unconverted);
+            h.add_boundary_edge(7, 2, {num_nodes}, {}, edges_to_implied_weights_unconverted);
         }
 
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
 
         pm::ExtendedMatchingResult res(max_obs + 1);
-        pm::decode_detection_events(mwpm, {0, 1, 2, 5, 6, 7}, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(
+            mwpm, {0, 1, 2, 5, 6, 7}, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
 
         pm::ExtendedMatchingResult res_expected(max_obs + 1);
         res_expected.obs_crossed[max_obs] ^= 1;
@@ -457,7 +467,8 @@ TEST(MwpmDecoding, NegativeEdgeWeightFromStim) {
     while (reader->start_and_read_entire_record(sparse_shot)) {
         if (num_shots > max_shots)
             break;
-        pm::decode_detection_events(mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight);
+        pm::decode_detection_events(
+            mwpm, sparse_shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
         if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
             num_mistakes++;
         }
@@ -513,7 +524,8 @@ TEST(MwpmDecoding, NoValidSolutionForLineGraph) {
         g.add_edge(i, (i + 1) % num_nodes, 2, {i}, {}, edges_to_implied_weights_unconverted);
     pm::ExtendedMatchingResult res(num_nodes);
     EXPECT_THROW(
-        pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight);, std::invalid_argument);
+        pm::decode_detection_events(mwpm, {0, 2, 3}, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
+        , std::invalid_argument);
 }
 
 TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
@@ -543,7 +555,7 @@ TEST(MwpmDecoding, InvalidSyndromeForToricCode) {
             detection_events.erase(detection_events.begin());
         }
         EXPECT_THROW(
-            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events, /*edge_correlations=*/false);
+            pm::decode_detection_events_for_up_to_64_observables(mwpm, detection_events, /*enable_correlations=*/false);
             , std::invalid_argument);
         sparse_shot.clear();
         num_shots++;
