@@ -69,13 +69,13 @@ TEST(Graph, AddEdgeWithImpliedWeights) {
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node1, 2);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node2, 3);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].new_weight, 5);
+    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].implied_weight, 5);
 
     ASSERT_EQ(edges_to_implied_weights_unconverted[1].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[1][0].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].node1, 2);
     ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].node2, 3);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].new_weight, 5);
+    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].implied_weight, 5);
 }
 
 TEST(Graph, AddBoundaryEdgeWithImpliedWeights) {
@@ -91,5 +91,5 @@ TEST(Graph, AddBoundaryEdgeWithImpliedWeights) {
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0].size(), 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node1, 1);
     ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node2, 2);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].new_weight, 7);
+    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].implied_weight, 7);
 }

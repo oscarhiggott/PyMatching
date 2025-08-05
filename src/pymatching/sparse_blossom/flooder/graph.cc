@@ -14,10 +14,11 @@
 
 #include "pymatching/sparse_blossom/flooder/graph.h"
 
+#include <cassert>
+#include <cmath>
 #include <map>
 
 #include "pymatching/sparse_blossom/driver/implied_weights.h"
-#include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
 #include "pymatching/sparse_blossom/flooder_matcher_interop/mwpm_event.h"
 
 namespace pm {
@@ -160,31 +161,59 @@ void MatchingGraph::update_negative_weight_detection_events(size_t node_id) {
 
 namespace {
 
-ImpliedWeight convert_rule(std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule) {
+ImpliedWeight convert_rule(
+    std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule, const double normalising_constant) {
     const int64_t& i = rule.node1;
     const int64_t& j = rule.node2;
-    const weight_int& w = rule.new_weight;
     weight_int* weight_pointer_i =
         &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == -1 ? nullptr : &nodes[j])];
     weight_int* weight_pointer_j =
         j == -1 ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
-    return ImpliedWeight{weight_pointer_i, weight_pointer_j, w};
+    return ImpliedWeight{weight_pointer_i, weight_pointer_j, rule.implied_weight};
 }
 
 }  // namespace
 
 void MatchingGraph::convert_implied_weights(
-    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted) {
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
+    double normalising_constant) {
     for (size_t u = 0; u < nodes.size(); u++) {
         const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
             edges_to_implied_weights_unconverted[u];
         for (size_t v = 0; v < nodes[u].neighbors.size(); v++) {
             for (const auto& rule : rules_for_node[v]) {
-                ImpliedWeight converted = convert_rule(nodes, rule);
+                ImpliedWeight converted = convert_rule(nodes, rule, normalising_constant);
                 nodes[u].neighbor_implied_weights[v].push_back(converted);
             }
         }
     }
+}
+
+// Reweight assuming an error has occurred on a single edge u, v. When v == -1, assumes an edge from
+// u to the boundary.
+void MatchingGraph::reweight_for_edge(const int64_t& u, const int64_t& v) {
+    size_t z = nodes[u].index_of_neighbor(v == -1 ? nullptr : &nodes[v]);
+    reweight(nodes[u].neighbor_implied_weights[z]);
+}
+
+void MatchingGraph::reweight_for_edges(const std::vector<int64_t>& edges) {
+    for (size_t i = 0; i < edges.size() >> 1; ++i) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+        reweight_for_edge(u, v);
+    }
+}
+
+void MatchingGraph::undo_reweights() {
+    // We iterate backward over the previous weights, since some edges
+    // may have been reweighted more than once. Alternatively,
+    // we could iterate forward and only undo a reweight if the
+    // previous weight is larger.
+    for (auto it = previous_weights.rbegin(); it != previous_weights.rend(); ++it) {
+        pm::PreviousWeight& prev = *it;
+        *prev.ptr = prev.val;
+    }
+    previous_weights.clear();
 }
 
 }  // namespace pm
