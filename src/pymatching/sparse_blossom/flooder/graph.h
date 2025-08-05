@@ -17,17 +17,23 @@
 
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <vector>
 
 #include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/detector_node.h"
-#include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
 #include "pymatching/sparse_blossom/tracker/flood_check_event.h"
-#include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
 
 namespace pm {
 
 struct GraphFillRegion;
+
+struct PreviousWeight {
+    weight_int* ptr;
+    weight_int val;
+    PreviousWeight(weight_int* ptr, weight_int val) : ptr(ptr), val(val) {
+    }
+};
 
 /// A collection of detector nodes. It's expected that all detector nodes in the graph
 /// will only refer to other detector nodes within the same graph.
@@ -50,6 +56,7 @@ class MatchingGraph {
     /// This is the normalising constant that the edge weights were multiplied by when converting from floats to
     /// 16-bit ints.
     double normalising_constant;
+    std::vector<PreviousWeight> previous_weights;
 
     MatchingGraph();
     MatchingGraph(size_t num_nodes, size_t num_observables);
@@ -70,7 +77,40 @@ class MatchingGraph {
         std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
+    void convert_implied_weights(
+        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
+        double normalising_constant);
+
+    void undo_reweights();
+    void reweight(std::vector<ImpliedWeight>& implied_weights);
+    void reweight_for_edge(const int64_t& u, const int64_t& v);
+    void reweight_for_edges(const std::vector<int64_t>& edges);
 };
+
+void apply_reweights(
+    std::vector<std::tuple<pm::weight_int*, pm::weight_int*, pm::weight_int>>& implied_weights,
+    std::vector<PreviousWeight>& previous_weights);
+
+inline void apply_reweights(
+    std::vector<ImpliedWeight>& implied_weights, std::vector<PreviousWeight>& previous_weights) {
+    for (auto& [edge0_ptr, edge1_ptr, new_weight] : implied_weights) {
+        // Only reweight if the new weight is lower than the current weight
+        if (new_weight < *edge0_ptr) {
+            previous_weights.emplace_back(edge0_ptr, *edge0_ptr);
+            *edge0_ptr = new_weight;
+            if (edge1_ptr != nullptr) {
+                // We already know new_weight < *edge1_ptr, since *edge0_ptr ==
+                // *edge1_ptr
+                previous_weights.emplace_back(edge1_ptr, *edge1_ptr);
+                *edge1_ptr = new_weight;
+            }
+        }
+    }
+}
+
+inline void MatchingGraph::reweight(std::vector<ImpliedWeight>& implied_weights) {
+    apply_reweights(implied_weights, previous_weights);
+}
 
 }  // namespace pm
 
