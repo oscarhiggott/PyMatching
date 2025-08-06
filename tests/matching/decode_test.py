@@ -213,9 +213,32 @@ def test_surface_code_solution_weights(data_dir: Path):
     assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
 
     # Test correlated decoding
+    with open(
+        data_dir
+        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv2.2.2_correlated.txt",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected_corr_weights = [float(w) for w in f.readlines()]
+    with open(
+        data_dir
+        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv2.2.2_correlated.txt",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected_corr_observables = [int(w) for w in f.readlines()]
+
+    expected_corr_observables_arr = np.zeros((shots.shape[0], 1), dtype=np.uint8)
+    expected_corr_observables_arr[:, 0] = np.array(expected_corr_observables)
+
     m_corr = Matching.from_detector_error_model(dem, enable_correlations=True)
-    m_corr.decode_batch(shots[:, 0: -m.num_fault_ids], enable_correlations=True)
-    # TODO: Add analysis of correlated decoding results
+    corr_predictions, corr_weights = m_corr.decode_batch(
+        shots[:, 0: -m.num_fault_ids],
+        return_weights=True,
+        enable_correlations=True,
+    )
+    assert np.array_equal(corr_predictions, expected_corr_observables_arr)
+    assert np.allclose(corr_weights, expected_corr_weights, rtol=1e-8)
 
 
 def test_decode_batch_to_bitpacked_predictions():
