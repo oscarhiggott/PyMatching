@@ -501,10 +501,6 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
     return user_graph;
 }
 
-pm::weight_int pm::convert_probability_to_weight(double p) {
-    return std::log((1 - p) / p);
-}
-
 void pm::UserGraph::populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights) {
     pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
     double half_normalising_constant = (double)max_half_edge_weight / max_abs_weight;

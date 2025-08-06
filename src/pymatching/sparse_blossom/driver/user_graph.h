@@ -188,7 +188,10 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
         if (has_boundary_edge[i])
             boundary_edge_func(
-                i, boundary_edge_weights[i], boundary_edge_observables[i], boundary_edge_implied_weights_unconverted[i]);
+                i,
+                boundary_edge_weights[i],
+                boundary_edge_observables[i],
+                boundary_edge_implied_weights_unconverted[i]);
     }
     return normalising_constant;
 }
@@ -197,7 +200,6 @@ UserGraph detector_error_model_to_user_graph(
     const stim::DetectorErrorModel& detector_error_model,
     bool enable_correlations,
     pm::weight_int num_distinct_weights);
-weight_int convert_probability_to_weight(double p);
 
 /// Computes the weight of an edge resulting from merging edges with weight `a' and weight `b', assuming each edge
 /// weight is a log-likelihood ratio log((1-p)/p) associated with the probability p of an error occurring on the
