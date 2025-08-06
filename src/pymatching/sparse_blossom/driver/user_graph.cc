@@ -384,6 +384,13 @@ bool pm::UserGraph::has_boundary_edge(size_t node) {
     return nodes[node].index_of_neighbor(SIZE_MAX) != SIZE_MAX;
 }
 
+double pm::UserGraph::get_edge_or_boundary_edge_weight(size_t node1, size_t node2) {
+    if (node1 >= nodes.size())
+        return false;
+    size_t neighbor_idx = nodes[node1].index_of_neighbor(node2);
+    return nodes[node1].neighbors[neighbor_idx].edge_it->weight;
+}
+
 void pm::UserGraph::set_min_num_observables(size_t num_observables) {
     if (num_observables > _num_observables)
         _num_observables = num_observables;
@@ -407,6 +414,19 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
 
             if (round(implied.implied_weight) != implied.implied_weight) {
                 all_integral_weight = false;
+            }
+
+            if (!has_edge(implied.node1, implied.node2)) {
+                throw std::invalid_argument(
+                    "Edge rewrite rule refers to non-existent edge (" + std::to_string(implied.node1) + ", " +
+                    std::to_string(implied.node2) + ")");
+            }
+
+            auto current_weight = get_edge_or_boundary_edge_weight(implied.node1, implied.node2);
+            bool same_sign = (current_weight * implied.implied_weight) >= 0.;
+            if (!same_sign) {
+                throw std::invalid_argument(
+                    "Edge weight rewrite rules that change the sign of an edge weight are not currently supported.");
             }
         }
     }

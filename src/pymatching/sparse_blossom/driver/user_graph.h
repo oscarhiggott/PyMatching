@@ -89,6 +89,7 @@ class UserGraph {
         MERGE_STRATEGY merge_strategy = DISALLOW);
     bool has_edge(size_t node1, size_t node2);
     bool has_boundary_edge(size_t node);
+    double get_edge_or_boundary_edge_weight(size_t node1, size_t node2);
     void set_boundary(const std::set<size_t>& boundary);
     std::set<size_t> get_boundary();
     size_t get_num_observables();
