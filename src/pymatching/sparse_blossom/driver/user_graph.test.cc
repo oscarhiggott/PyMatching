@@ -461,7 +461,7 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     joint_probabilities[{2, 3}][{0, 1}] = 0.1;
     joint_probabilities[{2, 3}][{2, 3}] = 0.1;
 
-    graph.populate_implied_edge_probabilities(joint_probabilities);
+    graph.populate_implied_edge_weights(joint_probabilities);
 
     auto to_weight = [](double p) {
         if (p == 1.0)
@@ -470,22 +470,6 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
             return std::numeric_limits<double>::infinity();
         return std::log((1 - p) / p);
     };
-
-    double max_abs_weight = 0;
-    for (auto& edge : graph.edges) {
-        double weight = to_weight(edge.error_probability);
-        if (std::abs(weight) > max_abs_weight) {
-            max_abs_weight = std::abs(weight);
-        }
-        for (auto implied : edge.implied_probability_for_other_edges) {
-            double implied_weight = to_weight(implied.implied_probability);
-            if (std::abs(implied_weight) > max_abs_weight) {
-                max_abs_weight = std::abs(implied_weight);
-            }
-        }
-    }
-
-    graph.populate_implied_edge_weights(max_abs_weight, pm::NUM_DISTINCT_WEIGHTS);
 
     auto it_01 = std::find_if(graph.edges.begin(), graph.edges.end(), [](const pm::UserEdge& edge) {
         return edge.node1 == 0 && edge.node2 == 1;
@@ -496,26 +480,20 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     ASSERT_EQ(implied_01.node1, 2);
     ASSERT_EQ(implied_01.node2, 3);
 
-    double half_normalising_constant = (double)(pm::NUM_DISTINCT_WEIGHTS - 1) / max_abs_weight;
     double p_01 = 0.1 / 0.26;
     double w_01 = to_weight(p_01);
-    pm::signed_weight_int discrete_w_01 = round(w_01 * half_normalising_constant) * 2;
-    pm::weight_int expected_weight_01 = std::abs(discrete_w_01);
-    ASSERT_EQ(implied_01.implied_weight, expected_weight_01);
+    ASSERT_EQ(implied_01.implied_weight, w_01);
 
     auto it_23 = std::find_if(graph.edges.begin(), graph.edges.end(), [](const pm::UserEdge& edge) {
         return edge.node1 == 2 && edge.node2 == 3;
     });
+
     ASSERT_NE(it_23, graph.edges.end());
     ASSERT_EQ(it_23->implied_weights_for_other_edges.size(), 1);
     const auto& implied_23 = it_23->implied_weights_for_other_edges[0];
     ASSERT_EQ(implied_23.node1, 0);
     ASSERT_EQ(implied_23.node2, 1);
-    double p_23 = std::min(0.9, 1.0);
-    double w_23 = to_weight(p_23);
-    pm::signed_weight_int discrete_w_23 = round(w_23 * half_normalising_constant) * 2;
-    pm::weight_int expected_weight_23 = 0;
-    ASSERT_EQ(implied_23.implied_weight, expected_weight_23);
+    ASSERT_EQ(implied_23.implied_weight, 0);
 }
 
 TEST(UserGraph, ConvertImpliedWeights) {
@@ -556,10 +534,10 @@ TEST(UserGraph, ConvertImpliedWeights) {
     ASSERT_EQ(implied_weights.size(), 2);
     ASSERT_EQ(implied_weights[0].edge0_ptr, &matching_graph.nodes[2].neighbor_weights[index_of_3_in_2]);
     ASSERT_EQ(implied_weights[0].edge1_ptr, &matching_graph.nodes[3].neighbor_weights[index_of_2_in_3]);
-    ASSERT_EQ(implied_weights[0].implied_weight, 5);
+    ASSERT_EQ(implied_weights[0].implied_weight, 10);
     ASSERT_EQ(implied_weights[1].edge0_ptr, &matching_graph.nodes[4].neighbor_weights[index_of_boundary_in_4]);
     ASSERT_EQ(implied_weights[1].edge1_ptr, nullptr);
-    ASSERT_EQ(implied_weights[1].implied_weight, 7);
+    ASSERT_EQ(implied_weights[1].implied_weight, 14);
 
     auto& implied_weights_rev = matching_graph.nodes[1].neighbor_implied_weights[index_of_0_in_1];
     ASSERT_EQ(implied_weights_rev.size(), 2);
@@ -597,4 +575,24 @@ TEST(UserGraph, ConvertImpliedWeights_EmptyRules) {
             ASSERT_TRUE(implied_weights_vec.empty());
         }
     }
+}
+
+TEST(UserGraph, GetEdgeOrBoundaryEdgeWeight) {
+    pm::UserGraph user_graph;
+    user_graph.add_or_merge_edge(2, 3, {}, 3.5, 0.1);
+    user_graph.add_or_merge_boundary_edge(5, {}, 5.1, 0.2);
+
+    double edge_weight = 0;
+    bool has_edge = user_graph.get_edge_or_boundary_edge_weight(2, 3, edge_weight);
+    ASSERT_EQ(edge_weight, 3.5);
+    ASSERT_TRUE(has_edge);
+    double boundary_edge_weight = 0;
+    bool has_boundary_edge = user_graph.get_edge_or_boundary_edge_weight(5, SIZE_MAX, boundary_edge_weight);
+    ASSERT_EQ(boundary_edge_weight, 5.1);
+    ASSERT_TRUE(has_boundary_edge);
+    double w;
+    bool has_non_existent_edge = user_graph.get_edge_or_boundary_edge_weight(2, 4, w);
+    ASSERT_FALSE(has_non_existent_edge);
+    bool has_non_existent_edge_2 = user_graph.get_edge_or_boundary_edge_weight(10, 0, w);
+    ASSERT_FALSE(has_non_existent_edge_2);
 }

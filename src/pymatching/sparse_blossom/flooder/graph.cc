@@ -163,13 +163,20 @@ namespace {
 
 ImpliedWeight convert_rule(
     std::vector<DetectorNode>& nodes, const ImpliedWeightUnconverted& rule, const double normalising_constant) {
-    const int64_t& i = rule.node1;
-    const int64_t& j = rule.node2;
+    const size_t& i = rule.node1;
+    const size_t& j = rule.node2;
     weight_int* weight_pointer_i =
-        &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == -1 ? nullptr : &nodes[j])];
+        &nodes[i].neighbor_weights[nodes[i].index_of_neighbor(j == SIZE_MAX ? nullptr : &nodes[j])];
     weight_int* weight_pointer_j =
-        j == -1 ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
-    return ImpliedWeight{weight_pointer_i, weight_pointer_j, rule.implied_weight};
+        j == SIZE_MAX ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
+
+    double rescaled_normalising_constant = normalising_constant / 2;
+    pm::signed_weight_int w = (pm::signed_weight_int)round(rule.implied_weight * rescaled_normalising_constant);
+    // Extremely important!
+    // If all edge weights are even integers, then all collision events occur at integer times.
+    w *= 2;
+
+    return ImpliedWeight{weight_pointer_i, weight_pointer_j, static_cast<pm::weight_int>(std::abs(w))};
 }
 
 }  // namespace
