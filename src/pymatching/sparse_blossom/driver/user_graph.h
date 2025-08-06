@@ -38,7 +38,6 @@ struct UserEdge {
     std::vector<size_t> observable_indices;  /// The indices of the observables crossed along this edge
     double weight;                           /// The weight of the edge to this neighboring node
     double error_probability;                /// The error probability associated with this node
-    std::vector<ImpliedProbabilityUnconverted> implied_probability_for_other_edges;
     std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges;
 };
 
@@ -120,9 +119,8 @@ class UserGraph {
     Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
-    void populate_implied_edge_probabilities(
+    void populate_implied_edge_weights(
         std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
-    void populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights);
 
    private:
     pm::Mwpm _mwpm;
@@ -174,7 +172,7 @@ inline double UserGraph::to_matching_or_search_graph_helper(
         [&](size_t u,
             pm::signed_weight_int weight,
             const std::vector<size_t>& observables,
-            std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges) {
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
             if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
