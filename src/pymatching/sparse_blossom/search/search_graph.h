@@ -46,12 +46,12 @@ class SearchGraph {
         size_t v,
         signed_weight_int weight,
         const std::vector<size_t>& observables,
-        const std::vector<ImpliedWeightUnconverted>& implied_weights);
+        const std::vector<ImpliedWeightUnconverted>& implied_weights = {});
     void add_boundary_edge(
         size_t u,
         signed_weight_int weight,
         const std::vector<size_t>& observables,
-        const std::vector<ImpliedWeightUnconverted>& implied_weights);
+        const std::vector<ImpliedWeightUnconverted>& implied_weights = {});
     void convert_implied_weights(const double normalizing_constant);
     void reweight(std::vector<ImpliedWeight>& implied_weights);
     void reweight_for_edge(const int64_t& u, const int64_t& v);

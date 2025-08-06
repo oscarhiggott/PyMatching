@@ -68,12 +68,12 @@ class MatchingGraph {
         size_t v,
         signed_weight_int weight,
         const std::vector<size_t>& observables,
-        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges);
+        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges = {});
     void add_boundary_edge(
         size_t u,
         signed_weight_int weight,
         const std::vector<size_t>& observables,
-        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges);
+        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges = {});
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
     void convert_implied_weights(double normalising_constant);
