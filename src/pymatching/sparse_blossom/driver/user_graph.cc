@@ -512,10 +512,6 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
     return user_graph;
 }
 
-pm::weight_int pm::convert_probability_to_weight(double p) {
-    return std::log((1 - p) / p);
-}
-
 void pm::UserGraph::populate_implied_edge_weights(
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
     for (auto& edge : edges) {
