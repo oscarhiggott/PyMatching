@@ -20,9 +20,9 @@ TEST(SearchFlooder, RepCodeDetectorSearch) {
     size_t num_nodes = 40;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 2, {0});
+    g.add_boundary_edge(0, 2, {0}, {});
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i + 1, 2, {i + 1});
+        g.add_edge(i, i + 1, 2, {i + 1}, {});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[1], &g.nodes[20]);
     ASSERT_EQ(collision_edge.detector_node, &g.nodes[11]);
@@ -58,9 +58,9 @@ TEST(SearchFlooder, RepCodeBoundarySearch) {
     size_t num_nodes = 20;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 2, {0});
+    g.add_boundary_edge(0, 2, {0}, {});
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i + 1, 2, {i + 1});
+        g.add_edge(i, i + 1, 2, {i + 1}, {});
 
     auto collision_edge = flooder.run_until_collision(&g.nodes[6], nullptr);
     ASSERT_EQ(collision_edge.detector_node, &g.nodes[0]);
@@ -86,9 +86,9 @@ TEST(SearchFlooder, RepCodeSourceToDestPath) {
     size_t num_nodes = 20;
     auto flooder = pm::SearchFlooder(pm::SearchGraph(num_nodes));
     auto& g = flooder.graph;
-    g.add_boundary_edge(0, 2, {0});
+    g.add_boundary_edge(0, 2, {0}, {});
     for (size_t i = 0; i < num_nodes - 1; i++)
-        g.add_edge(i, i + 1, 2, {i + 1});
+        g.add_edge(i, i + 1, 2, {i + 1}, {});
     size_t i_start = 10;
     for (size_t i_end = 14; i_end < 18; i_end++) {
         std::vector<pm::SearchGraphEdge> edges;

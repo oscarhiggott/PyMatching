@@ -18,6 +18,7 @@
 #include <optional>
 #include <vector>
 
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/graph_fill_region.h"
 #include "pymatching/sparse_blossom/flooder_matcher_interop/varying.h"
 #include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
@@ -122,6 +123,8 @@ class DetectorNode {
     ///         edge, or somewhere in between.
     std::optional<float> compute_stitch_radius_at_time_bounded_by_region_towards_neighbor(
         cumulative_time_int time, const GraphFillRegion& bounding_region, size_t neighbor_index) const;
+
+    std::vector<std::vector<ImpliedWeight>> neighbor_implied_weights;
 };
 
 }  // namespace pm
