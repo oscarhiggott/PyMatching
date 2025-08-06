@@ -172,7 +172,7 @@ inline double UserGraph::to_matching_or_search_graph_helper(
         [&](size_t u,
             pm::signed_weight_int weight,
             const std::vector<size_t>& observables,
-            std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges) {
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
             if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
