@@ -19,10 +19,9 @@
 
 TEST(SearchGraph, AddEdge) {
     pm::SearchGraph g(4);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
-    g.add_edge(0, 1, 2, {0}, {}, edges_to_implied_weights_unconverted);
-    g.add_edge(1, 2, 3, {0, 2}, {}, edges_to_implied_weights_unconverted);
-    g.add_edge(0, 3, 10, {1, 3}, {}, edges_to_implied_weights_unconverted);
+    g.add_edge(0, 1, 2, {0}, {});
+    g.add_edge(1, 2, 3, {0, 2}, {});
+    g.add_edge(0, 3, 10, {1, 3}, {});
     ASSERT_EQ(g.nodes[0].neighbors[0], &g.nodes[1]);
     ASSERT_EQ(g.nodes[1].neighbors[0], &g.nodes[0]);
     ASSERT_EQ(g.nodes[3].neighbors[0], &g.nodes[0]);
@@ -37,10 +36,9 @@ TEST(SearchGraph, AddEdge) {
 
 TEST(SearchGraph, AddBoundaryEdge) {
     pm::SearchGraph g(6);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
-    g.add_edge(0, 1, 2, {0, 1}, {}, edges_to_implied_weights_unconverted);
-    g.add_boundary_edge(0, 7, {2}, {}, edges_to_implied_weights_unconverted);
-    g.add_boundary_edge(5, 10, {0, 1, 3}, {}, edges_to_implied_weights_unconverted);
+    g.add_edge(0, 1, 2, {0, 1}, {});
+    g.add_boundary_edge(0, 7, {2}, {});
+    g.add_boundary_edge(5, 10, {0, 1, 3}, {});
     ASSERT_EQ(g.nodes[0].neighbors[0], nullptr);
     ASSERT_EQ(g.nodes[0].neighbors[1], &g.nodes[1]);
     ASSERT_EQ(g.nodes[5].neighbors[0], nullptr);

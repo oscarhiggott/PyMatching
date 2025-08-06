@@ -20,10 +20,9 @@
 
 TEST(Graph, AddEdge) {
     pm::MatchingGraph g(4, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
-    g.add_edge(0, 1, -2, {0}, {}, edges_to_implied_weights_unconverted);
-    g.add_edge(1, 2, -3, {0, 2}, {}, edges_to_implied_weights_unconverted);
-    g.add_edge(0, 3, 10, {1, 3}, {}, edges_to_implied_weights_unconverted);
+    g.add_edge(0, 1, -2, {0}, {});
+    g.add_edge(1, 2, -3, {0, 2}, {});
+    g.add_edge(0, 3, 10, {1, 3}, {});
     ASSERT_EQ(g.nodes[0].neighbors[0], &g.nodes[1]);
     ASSERT_EQ(g.nodes[1].neighbors[0], &g.nodes[0]);
     ASSERT_EQ(g.nodes[3].neighbors[0], &g.nodes[0]);
@@ -40,10 +39,9 @@ TEST(Graph, AddEdge) {
 
 TEST(Graph, AddBoundaryEdge) {
     pm::MatchingGraph g(6, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
-    g.add_edge(0, 1, 2, {0, 1}, {}, edges_to_implied_weights_unconverted);
-    g.add_boundary_edge(0, -7, {2}, {}, edges_to_implied_weights_unconverted);
-    g.add_boundary_edge(5, 10, {0, 1, 3}, {}, edges_to_implied_weights_unconverted);
+    g.add_edge(0, 1, 2, {0, 1}, {});
+    g.add_boundary_edge(0, -7, {2}, {});
+    g.add_boundary_edge(5, 10, {0, 1, 3}, {});
     ASSERT_EQ(g.nodes[0].neighbors[0], nullptr);
     ASSERT_EQ(g.nodes[0].neighbor_weights[0], 7);
     ASSERT_EQ(g.nodes[0].neighbors[1], &g.nodes[1]);
@@ -56,40 +54,38 @@ TEST(Graph, AddBoundaryEdge) {
 
 TEST(Graph, AddEdgeWithImpliedWeights) {
     pm::MatchingGraph g(4, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     std::vector<pm::ImpliedWeightUnconverted> implied_weights = {{2, 3, 5}};
-    g.add_edge(0, 1, 10, {}, implied_weights, edges_to_implied_weights_unconverted);
+    g.add_edge(0, 1, 10, {}, implied_weights);
 
-    ASSERT_EQ(edges_to_implied_weights_unconverted.size(), 2);
-    ASSERT_TRUE(edges_to_implied_weights_unconverted.count(0));
-    ASSERT_TRUE(edges_to_implied_weights_unconverted.count(1));
-    ASSERT_FALSE(edges_to_implied_weights_unconverted.count(2));
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted.size(), 2);
+    ASSERT_TRUE(g.edges_to_implied_weights_unconverted.count(0));
+    ASSERT_TRUE(g.edges_to_implied_weights_unconverted.count(1));
+    ASSERT_FALSE(g.edges_to_implied_weights_unconverted.count(2));
 
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0].size(), 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0].size(), 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node1, 2);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node2, 3);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].implied_weight, 5);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0].size(), 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0].size(), 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].node1, 2);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].node2, 3);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].implied_weight, 5);
 
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1].size(), 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0].size(), 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].node1, 2);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].node2, 3);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[1][0][0].implied_weight, 5);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[1].size(), 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[1][0].size(), 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[1][0][0].node1, 2);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[1][0][0].node2, 3);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[1][0][0].implied_weight, 5);
 }
 
 TEST(Graph, AddBoundaryEdgeWithImpliedWeights) {
     pm::MatchingGraph g(4, 64);
-    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
     std::vector<pm::ImpliedWeightUnconverted> implied_weights = {{1, 2, 7}};
-    g.add_boundary_edge(0, 10, {}, implied_weights, edges_to_implied_weights_unconverted);
+    g.add_boundary_edge(0, 10, {}, implied_weights);
 
-    ASSERT_EQ(edges_to_implied_weights_unconverted.size(), 1);
-    ASSERT_TRUE(edges_to_implied_weights_unconverted.count(0));
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted.size(), 1);
+    ASSERT_TRUE(g.edges_to_implied_weights_unconverted.count(0));
 
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0].size(), 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0].size(), 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node1, 1);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].node2, 2);
-    ASSERT_EQ(edges_to_implied_weights_unconverted[0][0][0].implied_weight, 7);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0].size(), 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0].size(), 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].node1, 1);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].node2, 2);
+    ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].implied_weight, 7);
 }
