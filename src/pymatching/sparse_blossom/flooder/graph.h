@@ -57,6 +57,7 @@ class MatchingGraph {
     /// 16-bit ints.
     double normalising_constant;
     std::vector<PreviousWeight> previous_weights;
+    std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
 
     MatchingGraph();
     MatchingGraph(size_t num_nodes, size_t num_observables);
@@ -67,19 +68,15 @@ class MatchingGraph {
         size_t v,
         signed_weight_int weight,
         const std::vector<size_t>& observables,
-        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges,
-        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
+        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges = {});
     void add_boundary_edge(
         size_t u,
         signed_weight_int weight,
         const std::vector<size_t>& observables,
-        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges,
-        std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted);
+        const std::vector<pm::ImpliedWeightUnconverted>& implied_weights_for_other_edges = {});
     void update_negative_weight_observables(const std::vector<size_t>& observables);
     void update_negative_weight_detection_events(size_t node_id);
-    void convert_implied_weights(
-        std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
-        double normalising_constant);
+    void convert_implied_weights(double normalising_constant);
 
     void undo_reweights();
     void reweight(std::vector<ImpliedWeight>& implied_weights);

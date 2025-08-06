@@ -35,8 +35,7 @@ void pm::SearchGraph::add_edge(
     size_t v,
     signed_weight_int weight,
     const std::vector<size_t>& observables,
-    const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges,
-    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& all_edges_to_implied_weights_unconverted) {
+    const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
@@ -62,22 +61,21 @@ void pm::SearchGraph::add_edge(
     nodes[u].neighbor_observable_indices.push_back(observables);
     nodes[u].neighbor_markers.push_back(weight_sign);
     nodes[u].neighbor_implied_weights.push_back({});
-    all_edges_to_implied_weights_unconverted[u].emplace_back(implied_weights_for_other_edges);
+    edges_to_implied_weights_unconverted[u].emplace_back(implied_weights_for_other_edges);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observable_indices.push_back(observables);
     nodes[v].neighbor_markers.push_back(weight_sign);
     nodes[v].neighbor_implied_weights.push_back({});
-    all_edges_to_implied_weights_unconverted[v].emplace_back(implied_weights_for_other_edges);
+    edges_to_implied_weights_unconverted[v].emplace_back(implied_weights_for_other_edges);
 }
 
 void pm::SearchGraph::add_boundary_edge(
     size_t u,
     signed_weight_int weight,
     const std::vector<size_t>& observables,
-    const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges,
-    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& all_edges_to_implied_weights_unconverted) {
+    const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
     if (u >= nodes.size()) {
         throw std::invalid_argument(
             "Node " + std::to_string(u) +
@@ -97,8 +95,8 @@ void pm::SearchGraph::add_boundary_edge(
     nodes[u].neighbor_observable_indices.insert(nodes[u].neighbor_observable_indices.begin(), 1, observables);
     nodes[u].neighbor_markers.insert(nodes[u].neighbor_markers.begin(), 1, weight_sign);
     nodes[u].neighbor_implied_weights.insert(nodes[u].neighbor_implied_weights.begin(), 1, {});
-    all_edges_to_implied_weights_unconverted[u].insert(
-        all_edges_to_implied_weights_unconverted[u].begin(), 1, implied_weights_for_other_edges);
+    edges_to_implied_weights_unconverted[u].insert(
+        edges_to_implied_weights_unconverted[u].begin(), 1, implied_weights_for_other_edges);
 }
 
 // Reweight assuming an error has occurred on a single edge u, v. When v == -1, assumes an edge from
@@ -145,9 +143,7 @@ pm::ImpliedWeight convert_rule(
 
 }  // namespace
 
-void pm::SearchGraph::convert_implied_weights(
-    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>>& edges_to_implied_weights_unconverted,
-    const double normalising_constant) {
+void pm::SearchGraph::convert_implied_weights(const double normalising_constant) {
     for (size_t u = 0; u < nodes.size(); u++) {
         const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
             edges_to_implied_weights_unconverted[u];
