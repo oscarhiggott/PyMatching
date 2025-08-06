@@ -588,3 +588,23 @@ TEST(UserGraph, ConvertImpliedWeights_EmptyRules) {
         }
     }
 }
+
+TEST(UserGraph, GetEdgeOrBoundaryEdgeWeight) {
+    pm::UserGraph user_graph;
+    user_graph.add_or_merge_edge(2, 3, {}, 3.5, 0.1);
+    user_graph.add_or_merge_boundary_edge(5, {}, 5.1, 0.2);
+
+    double edge_weight = 0;
+    bool has_edge = user_graph.get_edge_or_boundary_edge_weight(2, 3, edge_weight);
+    ASSERT_EQ(edge_weight, 3.5);
+    ASSERT_TRUE(has_edge);
+    double boundary_edge_weight = 0;
+    bool has_boundary_edge = user_graph.get_edge_or_boundary_edge_weight(5, SIZE_MAX, boundary_edge_weight);
+    ASSERT_EQ(boundary_edge_weight, 5.1);
+    ASSERT_TRUE(has_boundary_edge);
+    double w;
+    bool has_non_existent_edge = user_graph.get_edge_or_boundary_edge_weight(2, 4, w);
+    ASSERT_FALSE(has_non_existent_edge);
+    bool has_non_existent_edge_2 = user_graph.get_edge_or_boundary_edge_weight(10, 0, w);
+    ASSERT_FALSE(has_non_existent_edge_2);
+}
