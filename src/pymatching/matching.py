@@ -210,6 +210,7 @@ class Matching:
                _legacy_return_weight: bool = None,
                *,
                return_weight: bool = False,
+               enable_correlations: bool = False,
                **kwargs
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         r"""
@@ -322,7 +323,9 @@ class Matching:
                           "argument.", DeprecationWarning, stacklevel=2)
             return_weight = _legacy_return_weight
         detection_events = self._syndrome_array_to_detection_events(z)
-        correction, weight = self._matching_graph.decode(detection_events)
+        correction, weight = self._matching_graph.decode(
+            detection_events, enable_correlations=enable_correlations
+        )
         if return_weight:
             return correction, weight
         else:
@@ -334,7 +337,8 @@ class Matching:
             *,
             return_weights: bool = False,
             bit_packed_shots: bool = False,
-            bit_packed_predictions: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+            bit_packed_predictions: bool = False,
+            enable_correlations: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Decode from a 2D `shots` array containing a batch of syndrome measurements. A faster
         alternative to using `pymatching.Matching.decode` and iterating over the shots in Python.
@@ -420,7 +424,8 @@ class Matching:
         predictions, weights = self._matching_graph.decode_batch(
             shots,
             bit_packed_predictions=bit_packed_predictions,
-            bit_packed_shots=bit_packed_shots
+            bit_packed_shots=bit_packed_shots,
+            enable_correlations=enable_correlations
         )
         if return_weights:
             return predictions, weights
@@ -1191,7 +1196,9 @@ class Matching:
                                                                                     faults_matrix)
 
     @staticmethod
-    def from_detector_error_model(model: 'stim.DetectorErrorModel') -> 'pymatching.Matching':
+    def from_detector_error_model(
+            model: 'stim.DetectorErrorModel', *, enable_correlations: bool = False
+    ) -> 'pymatching.Matching':
         """
         Constructs a `pymatching.Matching` object by loading from a `stim.DetectorErrorModel`.
 
@@ -1238,7 +1245,7 @@ class Matching:
         <pymatching.Matching object with 120 detectors, 0 boundary nodes, and 502 edges>
         """
         m = Matching()
-        m._load_from_detector_error_model(model)
+        m._load_from_detector_error_model(model, enable_correlations=enable_correlations)
         return m
 
     @staticmethod
@@ -1333,7 +1340,7 @@ class Matching:
         m._matching_graph = _cpp_pm.stim_circuit_file_to_matching_graph(stim_circuit_path)
         return m
 
-    def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel') -> None:
+    def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel', *, enable_correlations: bool = False) -> None:
         try:
             import stim
         except ImportError:  # pragma no cover
@@ -1344,7 +1351,9 @@ class Matching:
             )
         if not isinstance(model, stim.DetectorErrorModel):
             raise TypeError(f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}")
-        self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(str(model))
+        self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(
+            str(model), enable_correlations=enable_correlations
+        )
 
     @staticmethod
     def from_networkx(graph: nx.Graph, *, min_num_fault_ids: int = None) -> 'pymatching.Matching':

@@ -14,6 +14,8 @@
 
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
+#include "pymatching/rand/rand_gen.h"
+
 double pm::merge_weights(double a, double b) {
     auto sgn = std::copysign(1, a) * std::copysign(1, b);
     auto signed_min = sgn * std::min(std::abs(a), std::abs(b));
@@ -251,14 +253,24 @@ double pm::UserGraph::max_abs_weight() {
 
 pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_weights) {
     pm::MatchingGraph matching_graph(nodes.size(), _num_observables);
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
 
     double normalising_constant = to_matching_or_search_graph_helper(
         num_distinct_weights,
-        [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            matching_graph.add_edge(u, v, weight, observables);
+        [&](size_t u,
+            size_t v,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            matching_graph.add_edge(
+                u, v, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         },
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            matching_graph.add_boundary_edge(u, weight, observables);
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            matching_graph.add_boundary_edge(
+                u, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         });
 
     matching_graph.normalising_constant = normalising_constant;
@@ -268,21 +280,35 @@ pm::MatchingGraph pm::UserGraph::to_matching_graph(pm::weight_int num_distinct_w
         for (auto& i : boundary_nodes)
             matching_graph.is_user_graph_boundary_node[i] = true;
     }
+
+    matching_graph.convert_implied_weights(edges_to_implied_weights_unconverted, normalising_constant);
     return matching_graph;
 }
 
 pm::SearchGraph pm::UserGraph::to_search_graph(pm::weight_int num_distinct_weights) {
     /// Identical to to_matching_graph but for constructing a pm::SearchGraph
     pm::SearchGraph search_graph(nodes.size());
+    std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
 
-    to_matching_or_search_graph_helper(
+    double normalizing_constant = to_matching_or_search_graph_helper(
         num_distinct_weights,
-        [&](size_t u, size_t v, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            search_graph.add_edge(u, v, weight, observables);
+        [&](size_t u,
+            size_t v,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            search_graph.add_edge(
+                u, v, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         },
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
-            search_graph.add_boundary_edge(u, weight, observables);
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+            search_graph.add_boundary_edge(
+                u, weight, observables, implied_weights_for_other_edges, edges_to_implied_weights_unconverted);
         });
+
+    search_graph.convert_implied_weights(edges_to_implied_weights_unconverted, normalizing_constant);
     return search_graph;
 }
 
@@ -391,6 +417,23 @@ double bernoulli_xor(double p1, double p2) {
     return p1 * (1 - p2) + p2 * (1 - p1);
 }
 
+double to_weight(double probability) {
+    return std::log((1 - probability) / probability);
+}
+
+pm::signed_weight_int to_discrete_weight(double probability, double half_normalising_constant) {
+    double weight = to_weight(probability);
+    pm::signed_weight_int w = (pm::signed_weight_int)round(weight * half_normalising_constant);
+    // Extremely important!
+    // If all edge weights are even integers, then all collision events occur at integer times. This
+    // is why we remove a factor of 2 from the input normalisation.
+    w *= 2;
+    return w;
+}
+
+}  // namespace
+
+void populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights) {
 }  // namespace
 
 void pm::add_decomposed_error_to_joint_probabilities(
@@ -415,20 +458,39 @@ void pm::add_decomposed_error_to_joint_probabilities(
         double& p = joint_probabilites[std::minmax(e.node1, e.node2)][std::minmax(e.node1, e.node2)];
         p = bernoulli_xor(p, error.probability);
     }
-};
+}
 
 pm::UserGraph pm::detector_error_model_to_user_graph(
-    const stim::DetectorErrorModel& detector_error_model, const bool enable_correlations) {
+    const stim::DetectorErrorModel& detector_error_model,
+    const bool enable_correlations,
+    pm::weight_int num_distinct_weights) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilites;
     if (enable_correlations) {
         pm::iter_dem_instructions_include_correlations(
             detector_error_model,
             [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
-                return;
+                user_graph.handle_dem_instruction(p, detectors, observables);
             },
             joint_probabilites);
-        user_graph.populate_implied_edge_weights(joint_probabilites);
+
+        user_graph.populate_implied_edge_probabilities(joint_probabilites);
+        double max_abs_weight = 0;
+        for (auto& edge : user_graph.edges) {
+            double weight = to_weight(edge.error_probability);
+            if (std::abs(weight) > max_abs_weight) {
+                max_abs_weight = std::abs(weight);
+            }
+            // Also check all implied weights
+            for (auto implied : edge.implied_probability_for_other_edges) {
+                double implied_weight = to_weight(implied.implied_probability);
+                if (std::abs(implied_weight) > max_abs_weight) {
+                    max_abs_weight = std::abs(implied_weight);
+                }
+            }
+        }
+        user_graph.populate_implied_edge_weights(max_abs_weight, num_distinct_weights);
+
     } else {
         pm::iter_detector_error_model_edges(
             detector_error_model,
@@ -443,24 +505,43 @@ pm::weight_int pm::convert_probability_to_weight(double p) {
     return std::log((1 - p) / p);
 }
 
-void pm::UserGraph::populate_implied_edge_weights(
+void pm::UserGraph::populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights) {
+    pm::weight_int max_half_edge_weight = num_distinct_weights - 1;
+    double half_normalising_constant = (double)max_half_edge_weight / max_abs_weight;
+
+    for (auto& edge : edges) {
+        for (auto& implied : edge.implied_probability_for_other_edges) {
+            pm::signed_weight_int w = to_discrete_weight(implied.implied_probability, half_normalising_constant);
+            edge.implied_weights_for_other_edges.push_back(
+                {implied.node1, implied.node2, static_cast<weight_int>(std::abs(w))});
+        }
+    }
+}
+
+void pm::UserGraph::populate_implied_edge_probabilities(
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
-    for (const auto& pf : joint_probabilites) {
-        std::pair<size_t, size_t> causal_edge = pf.first;
-        double marginal_probability = pf.second.at(causal_edge);
-        for (const auto& affected_edge_and_probability : pf.second) {
-            std::pair<size_t, size_t> affected_edge = affected_edge_and_probability.first;
-            if (affected_edge != causal_edge) {
-                // Since edge weights are computed as std::log((1-p)/p), a probability of more than 0.5 for an error,
-                // would lead to a negatively weighted error. We do not support this (yet), and use a minimum of 0.5 as
-                // an implied probability for an edge to be reweighted.
-                double implied_probability_for_other_edge =
-                    std::min(0.5, affected_edge_and_probability.second / marginal_probability);
-                ImpliedWeightUnconverted implied{
-                    affected_edge.first,
-                    affected_edge.second,
-                    convert_probability_to_weight(implied_probability_for_other_edge)};
-                // TODO: Actually add conditioned edge weights to edges.
+    for (auto& edge : edges) {
+        std::pair<size_t, size_t> current_edge_nodes = std::minmax(edge.node1, edge.node2);
+        auto it = joint_probabilites.find(current_edge_nodes);
+        if (it != joint_probabilites.end()) {
+            const auto& pf = *it;
+            std::pair<size_t, size_t> causal_edge = pf.first;
+            double marginal_probability = pf.second.at(causal_edge);
+            if (marginal_probability == 0)
+                continue;
+
+            for (const auto& affected_edge_and_probability : pf.second) {
+                std::pair<size_t, size_t> affected_edge = affected_edge_and_probability.first;
+                if (affected_edge != causal_edge) {
+                    // Since edge weights are computed as std::log((1-p)/p), a probability of more than 0.5 for an
+                    // error, would lead to a negatively weighted error. We do not support this (yet), and use a
+                    // minimum of 0.5 as an implied probability for an edge to be reweighted.
+                    double implied_probability_for_other_edge =
+                        std::min(0.5, affected_edge_and_probability.second / marginal_probability);
+                    ImpliedProbabilityUnconverted implied{
+                        affected_edge.first, affected_edge.second, implied_probability_for_other_edge};
+                    edge.implied_probability_for_other_edges.push_back(implied);
+                }
             }
         }
     }

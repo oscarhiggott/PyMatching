@@ -53,7 +53,7 @@ Mwpm detector_error_model_to_mwpm(
     bool enable_correlations = false);
 
 MatchingResult decode_detection_events_for_up_to_64_observables(
-    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events);
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, bool edge_correlations);
 
 /// Used to decode detection events for an existing Mwpm object `mwpm', and a vector of
 /// detection event indices `detection_events'. The predicted observables are XOR-ed into an
@@ -64,7 +64,8 @@ void decode_detection_events(
     pm::Mwpm& mwpm,
     const std::vector<uint64_t>& detection_events,
     uint8_t* obs_begin_ptr,
-    pm::total_weight_int& weight);
+    pm::total_weight_int& weight,
+    bool edge_correlations);
 
 /// Decode detection events using a Mwpm object and vector of detection event indices
 /// Returns the compressed edges in the matching: the pairs of detection events that are
@@ -76,6 +77,9 @@ void decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vector<ui
 /// matching solution (rather than pairs of detection *events* matched via *paths* as returned
 /// instead by `decode_detection_events_to_match_edges`).
 void decode_detection_events_to_edges(
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges);
+
+void decode_detection_events_to_edges_with_edge_correlations(
     pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges);
 
 }  // namespace pm
