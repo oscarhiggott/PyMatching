@@ -433,7 +433,9 @@ class Matching:
             return predictions
 
     def decode_to_edges_array(self,
-                              syndrome: Union[np.ndarray, List[bool], List[int]]
+                              syndrome: Union[np.ndarray, List[bool], List[int]],
+                              *,
+                              enable_correlations: bool = False
                               ) -> np.ndarray:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the edges in the
@@ -449,6 +451,10 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
+        enable_correlations : bool, optional
+            Whether to use correlation information from the detector error model.
+            This can result in a more accurate solution, but may be slower.
+            Defaults to False.
 
         Returns
         -------
@@ -479,7 +485,9 @@ class Matching:
          [ 5  6]]
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
-        return self._matching_graph.decode_to_edges_array(detection_events)
+        return self._matching_graph.decode_to_edges_array(
+            detection_events, enable_correlations=enable_correlations
+        )
 
     def decode_to_matched_dets_array(self,
                                      syndrome: Union[np.ndarray, List[bool], List[int]]
