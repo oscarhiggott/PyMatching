@@ -369,7 +369,6 @@ def test_parallel_boundary_edges_decoding():
     )
 
 
-
 def test_decode_to_edges_with_correlations():
     stim = pytest.importorskip("stim")
     dem = stim.DetectorErrorModel("""
