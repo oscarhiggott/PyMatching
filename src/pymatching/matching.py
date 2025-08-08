@@ -452,7 +452,7 @@ class Matching:
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
         enable_correlations : bool, optional
-            Whether to use correlation information from the detector error model.
+            Whether to use correlated matching (https://arxiv.org/abs/1310.0863).
             This can result in a more accurate solution, but may be slower.
             Defaults to False.
 
