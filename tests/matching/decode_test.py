@@ -367,3 +367,20 @@ def test_parallel_boundary_edges_decoding():
     assert np.array_equal(
         m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0], dtype=np.uint8)
     )
+
+
+def test_decode_to_edges_with_correlations():
+    stim = pytest.importorskip("stim")
+    dem = stim.DetectorErrorModel("""
+        error(0.1) D0 D1
+        error(0.1) D1 D2
+        error(0.2) D0 D2
+        error(0.3) D0 D1 D2
+    """)
+    m = Matching.from_detector_error_model(dem, enable_correlations=True)
+    syndrome = np.array([1, 0, 1])
+    edges = m.decode_to_edges_array(syndrome, enable_correlations=True)
+    edges.sort(axis=1)
+    edges = edges[np.lexsort((edges[:, 1], edges[:, 0]))]
+    expected_edges = np.array([[0, 2]])
+    assert np.array_equal(edges, expected_edges)
