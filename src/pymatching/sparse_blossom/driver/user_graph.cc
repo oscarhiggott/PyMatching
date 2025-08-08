@@ -454,9 +454,6 @@ double to_weight(double probability) {
 
 }  // namespace
 
-void populate_implied_edge_weights(double max_abs_weight, pm::weight_int num_distinct_weights) {
-}  // namespace
-
 void pm::add_decomposed_error_to_joint_probabilities(
     DecomposedDemError& error,
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
