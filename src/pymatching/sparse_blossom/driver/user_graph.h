@@ -304,7 +304,7 @@ void iter_dem_instructions_include_correlations(
                         "Encountered an undecomposed error instruction with 3 or mode detectors. "
                         "This is not supported when using `enable_correlations=True`. "
                         "Did you forget to set `decompose_errors=True` when "
-                        "using `stim.Circuit.detector_error_model(decompose_error=True)`?");
+                        "converting the stim circuit to a detector error model?");
                 }
             } else if (target.is_observable_id()) {
                 component->observable_indices.push_back(target.val());
