@@ -46,13 +46,15 @@ class Matching:
                  repetitions: int = None,
                  timelike_weights: Union[float, np.ndarray, List[float]] = None,
                  measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+                 *,
+                 enable_correlations: bool = False,
                  **kwargs
                  ):
         r"""Constructor for the Matching class
 
         Parameters
         ----------
-        graph : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` or `stim.DetectorErrorModel`, optional
+        graph : `scipy.spmatrix` or `numpy.ndarray` or `networkx.Graph` or `stim.DetectorErrorModel`, or `stim.Circuit`, optional
             The matching graph to be decoded with minimum-weight perfect
             matching, given either as a binary parity check matrix (scipy sparse
             matrix or numpy.ndarray), a NetworkX or rustworkx graph, or a Stim DetectorErrorModel.
@@ -107,6 +109,11 @@ class Matching:
             errors are set to the same value. If a numpy array of size `(check_matrix.shape[0],)` is given,
             the error probability for each vertical timelike edge associated with the `i`th check
             (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. By default None
+        enable_correlations : bool, optional
+            If `enable_correlations==True`, and if `graph` is a `stim.Circuit` or `stim.DetectorErrorModel`,
+            the circuit or detector error model is converted into an internal representation that allows 
+            correlated matching to be used. Note that you must set `enable_correlations=True` here in order
+            to use `enable_correlations=True` when decoding. By default, False.
         **kwargs
             The remaining keyword arguments are passed to `Matching.load_from_check_matrix` if `graph` is a
             check matrix.
@@ -153,7 +160,11 @@ class Matching:
         try:
             import stim
             if isinstance(graph, stim.DetectorErrorModel):
-                self._load_from_detector_error_model(graph)
+                self._load_from_detector_error_model(graph, enable_correlations=enable_correlations)
+                return
+            elif isinstance(graph, stim.Circuit):
+                self.from_stim_circuit
+                self._load_from_detector_error_model(graph.detector_error_model(decompose_errors=True), enable_correlations=enable_correlations)
                 return
         except ImportError:  # pragma no cover
             pass
@@ -229,6 +240,9 @@ class Matching:
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
+        enable_correlations: bool, optional
+            If `enable_correlations==True`, two-pass correlated matching is used
+            for decoding (see https://arxiv.org/abs/1310.0863).
 
         Returns
         -------
@@ -628,8 +642,8 @@ class Matching:
                "{} detector{}, " \
                "{} boundary node{}, " \
                "and {} edge{}>".format(
-                m, 's' if m != 1 else '', b, 's' if b != 1 else '',
-                e, 's' if e != 1 else '')
+                   m, 's' if m != 1 else '', b, 's' if b != 1 else '',
+                   e, 's' if e != 1 else '')
 
     def add_edge(
             self,
@@ -1233,6 +1247,11 @@ class Matching:
         model : stim.DetectorErrorModel
             A stim DetectorErrorModel, with all error mechanisms either graphlike, or decomposed into graphlike
             error mechanisms
+        enable_correlations : bool, optional
+            If `enable_correlations==True`, the detector error model is converted into an internal
+            representation that allows correlated matching to be used. Note that you must set 
+            `enable_correlations=True` here in order to use `enable_correlations=True` when decoding.
+            By default, False.
 
         Returns
         -------
@@ -1279,7 +1298,7 @@ class Matching:
         return m
 
     @staticmethod
-    def from_stim_circuit(circuit: 'stim.Circuit') -> 'pymatching.Matching':
+    def from_stim_circuit(circuit: 'stim.Circuit', *, enable_correlations=False) -> 'pymatching.Matching':
         """
         Constructs a `pymatching.Matching` object by loading from a `stim.Circuit`
 
@@ -1288,6 +1307,11 @@ class Matching:
         circuit : stim.Circuit
             A stim circuit containing error mechanisms that are all either graphlike, or decomposable into
             graphlike error mechanisms
+        enable_correlations : bool, optional
+            If `enable_correlations==True`, the circuit's detector error model is converted into an internal
+            representation that allows correlated matching to be used. Note that you must set 
+            `enable_correlations=True` here in order to use `enable_correlations=True` when decoding.
+            By default, False.
 
         Returns
         -------
@@ -1321,7 +1345,8 @@ class Matching:
             raise TypeError(f"`circuit` must be a `stim.Circuit`. Instead, got {type(circuit)}")
         m = Matching()
         m._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(
-            str(circuit.detector_error_model(decompose_errors=True))
+            str(circuit.detector_error_model(decompose_errors=True)),
+            enable_correlations=enable_correlations
         )
         return m
 
