@@ -63,6 +63,7 @@ class UserGraph {
     std::vector<UserNode> nodes;
     std::list<UserEdge> edges;
     std::set<size_t> boundary_nodes;
+    bool loaded_from_dem_without_correlations = false;
 
     UserGraph();
     explicit UserGraph(size_t num_nodes);
@@ -298,9 +299,12 @@ void iter_dem_instructions_include_correlations(
                         component->node1 = target.raw_id();
                     }
                 } else {
-                    // We mark errors which have 3 or more detectors as a special boundary-to-boundary edge.
-                    component->node1 = SIZE_MAX;
-                    component->node2 = SIZE_MAX;
+                    // Undecomposed hyperedges are not supported
+                    throw std::invalid_argument(
+                        "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                        "This is not supported when using `enable_correlations=True`. "
+                        "Did you forget to set `decompose_errors=True` when "
+                        "using `stim.Circuit.detector_error_model(decompose_error=True)`?");
                 }
             } else if (target.is_observable_id()) {
                 component->observable_indices.push_back(target.val());

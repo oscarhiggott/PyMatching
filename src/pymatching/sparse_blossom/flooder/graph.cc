@@ -131,7 +131,10 @@ MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
       is_user_graph_boundary_node(std::move(graph.is_user_graph_boundary_node)),
       num_nodes(graph.num_nodes),
       num_observables(graph.num_observables),
-      normalising_constant(graph.normalising_constant) {
+      normalising_constant(graph.normalising_constant),
+      previous_weights(graph.previous_weights),
+      edges_to_implied_weights_unconverted(graph.edges_to_implied_weights_unconverted),
+      loaded_from_dem_without_correlations(graph.loaded_from_dem_without_correlations) {
 }
 
 MatchingGraph::MatchingGraph() : negative_weight_sum(0), num_nodes(0), num_observables(0), normalising_constant(0) {
@@ -200,6 +203,13 @@ void MatchingGraph::reweight_for_edge(const int64_t& u, const int64_t& v) {
 }
 
 void MatchingGraph::reweight_for_edges(const std::vector<int64_t>& edges) {
+    if (loaded_from_dem_without_correlations) {
+        throw std::invalid_argument(
+            "Attempting to decode with `enable_correlations=True`, however the decoder has "
+            "not been configured to decode using correlations. Ensure that you also set "
+            "`enable_correlations=True` when loading the stim circuit or detector error model. "
+            "For example: `matching = pymatching.Matching.from_detector_error_model(enable_correlations=True)`");
+    }
     for (size_t i = 0; i < edges.size() >> 1; ++i) {
         int64_t u = edges[2 * i];
         int64_t v = edges[2 * i + 1];
