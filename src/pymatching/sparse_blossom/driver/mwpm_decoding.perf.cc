@@ -19,7 +19,7 @@
 #include "stim.h"
 
 std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data(
-    size_t distance, size_t rounds, double noise, size_t num_shots) {
+    size_t distance, size_t rounds, double noise, size_t num_shots, bool decompose_errors = false) {
     stim::CircuitGenParameters gen(rounds, distance, "rotated_memory_x");
     gen.after_clifford_depolarization = noise;
     gen.after_reset_flip_probability = noise;
@@ -42,7 +42,8 @@ std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data
         }
     }
 
-    auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, false, true, false, 0, false, false);
+    auto dem =
+        stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, decompose_errors, true, false, 0, false, false);
 
     return {dem, shots};
 }
@@ -310,7 +311,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
 
 BENCHMARK(Decode_surface_r21_d21_p100_to_edges_with_correlations) {
     size_t rounds = 21;
-    auto data = generate_data(21, rounds, 0.01, 8);
+    auto data = generate_data(21, rounds, 0.01, 8, true);
     auto &dem = data.first;
     const auto &shots = data.second;
 
@@ -434,7 +435,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
 
 BENCHMARK(Decode_surface_r21_d21_p1000_to_edges_with_correlations) {
     size_t rounds = 21;
-    auto data = generate_data(21, rounds, 0.001, 256);
+    auto data = generate_data(21, rounds, 0.001, 256, true);
     auto &dem = data.first;
     const auto &shots = data.second;
 
@@ -558,7 +559,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
 
 BENCHMARK(Decode_surface_r21_d21_p10000_to_edges_with_correlations) {
     size_t rounds = 21;
-    auto data = generate_data(21, rounds, 0.0001, 512);
+    auto data = generate_data(21, rounds, 0.0001, 512, true);
     auto &dem = data.first;
     const auto &shots = data.second;
 
@@ -682,7 +683,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
 
 BENCHMARK(Decode_surface_r21_d21_p100000_to_edges_with_correlations) {
     size_t rounds = 21;
-    auto data = generate_data(21, rounds, 0.00001, 512);
+    auto data = generate_data(21, rounds, 0.00001, 512, true);
     auto &dem = data.first;
     const auto &shots = data.second;
 
