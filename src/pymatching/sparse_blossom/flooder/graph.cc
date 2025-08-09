@@ -172,6 +172,7 @@ ImpliedWeight convert_rule(
         j == SIZE_MAX ? nullptr : &nodes[j].neighbor_weights[nodes[j].index_of_neighbor(&nodes[i])];
 
     double rescaled_normalising_constant = normalising_constant / 2;
+    // std::cout << "pm - edge weight normalizing constant is " << rescaled_normalising_constant << std::endl;
     pm::signed_weight_int w = (pm::signed_weight_int)round(rule.implied_weight * rescaled_normalising_constant);
     // Extremely important!
     // If all edge weights are even integers, then all collision events occur at integer times.
@@ -199,6 +200,8 @@ void MatchingGraph::convert_implied_weights(double normalising_constant) {
 // u to the boundary.
 void MatchingGraph::reweight_for_edge(const int64_t& u, const int64_t& v) {
     size_t z = nodes[u].index_of_neighbor(v == -1 ? nullptr : &nodes[v]);
+    std::cout << "size of neighbour implied weights of " << u << " is " << nodes[u].neighbor_implied_weights[z].size()
+              << std::endl;
     reweight(nodes[u].neighbor_implied_weights[z]);
 }
 

@@ -14,6 +14,9 @@
 
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
+#include <iostream>
+#include <string>
+
 #include "pymatching/sparse_blossom/driver/user_graph.h"
 
 pm::ExtendedMatchingResult::ExtendedMatchingResult() : obs_crossed(), weight(0) {
@@ -74,6 +77,7 @@ pm::Mwpm pm::detector_error_model_to_mwpm(
     pm::weight_int num_distinct_weights,
     bool ensure_search_flooder_included,
     bool enable_correlations) {
+    std::cout << "enable correlations is " << enable_correlations << std::endl;
     auto user_graph =
         pm::detector_error_model_to_user_graph(detector_error_model, enable_correlations, num_distinct_weights);
     return user_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
@@ -206,8 +210,53 @@ void pm::decode_detection_events(
         // at that edge.
         std::vector<int64_t> edges;
         decode_detection_events_to_edges(mwpm, detection_events, edges);
+        std::cout << "size of dets: " << detection_events.size() << std::endl;
+        // std::cout << "size of edges: " << edges.size() << std::endl;
+        for (const auto& edge : edges) {
+            std::cout << "edge: " << edge << std::endl;
+        }
+
+        std::cout << "\n--- Weights before reweighting ---\n";
+        std::cout << "--- mwpm.flooder.graph ---\n";
+        for (size_t i = 0; i < mwpm.flooder.graph.nodes.size(); ++i) {
+            const auto& node = mwpm.flooder.graph.nodes[i];
+            std::cout << "Node " << i << " neighbor weights: ";
+            for (const auto& w : node.neighbor_weights) {
+                std::cout << w << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "--- mwpm.search_flooder.graph ---\n";
+        for (size_t i = 0; i < mwpm.search_flooder.graph.nodes.size(); ++i) {
+            const auto& node = mwpm.search_flooder.graph.nodes[i];
+            std::cout << "Node " << i << " neighbor weights: ";
+            for (const auto& w : node.neighbor_weights) {
+                std::cout << w << " ";
+            }
+            std::cout << "\n";
+        }
         mwpm.flooder.graph.reweight_for_edges(edges);
         mwpm.search_flooder.graph.reweight_for_edges(edges);
+        std::cout << "\n--- Weights after reweighting ---\n";
+
+        std::cout << "--- mwpm.flooder.graph ---\n";
+        for (size_t i = 0; i < mwpm.flooder.graph.nodes.size(); ++i) {
+            const auto& node = mwpm.flooder.graph.nodes[i];
+            std::cout << "Node " << i << " neighbor weights: ";
+            for (const auto& w : node.neighbor_weights) {
+                std::cout << w << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "--- mwpm.search_flooder.graph ---\n";
+        for (size_t i = 0; i < mwpm.search_flooder.graph.nodes.size(); ++i) {
+            const auto& node = mwpm.search_flooder.graph.nodes[i];
+            std::cout << "Node " << i << " neighbor weights: ";
+            for (const auto& w : node.neighbor_weights) {
+                std::cout << w << " ";
+            }
+            std::cout << "\n";
+        }
     }
 
     size_t num_observables = mwpm.flooder.graph.num_observables;
@@ -244,6 +293,26 @@ void pm::decode_detection_events(
     if (edge_correlations) {
         mwpm.flooder.graph.undo_reweights();
         mwpm.search_flooder.graph.undo_reweights();
+        std::cout << "\n--- Weights after undoing reweights ---\n";
+        std::cout << "--- mwpm.flooder.graph ---\n";
+        for (size_t i = 0; i < mwpm.flooder.graph.nodes.size(); ++i) {
+            const auto& node = mwpm.flooder.graph.nodes[i];
+            std::cout << "Node " << i << " neighbor weights: ";
+            for (const auto& w : node.neighbor_weights) {
+                std::cout << w << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "--- mwpm.search_flooder.graph ---\n";
+        for (size_t i = 0; i < mwpm.search_flooder.graph.nodes.size(); ++i) {
+            const auto& node = mwpm.search_flooder.graph.nodes[i];
+            std::cout << "Node " << i << " neighbor weights: ";
+            for (const auto& w : node.neighbor_weights) {
+                std::cout << w << " ";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "---------------------------------\n\n";
     }
 }
 

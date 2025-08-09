@@ -137,12 +137,21 @@ inline double UserGraph::iter_discretized_edges(
     const EdgeCallable& edge_func,
     const BoundaryEdgeCallable& boundary_edge_func) {
     double normalising_constant = get_edge_weight_normalising_constant(num_distinct_weights);
+    // std::cout << "In to_matching_or_search_graph_helper -> iter_discretized_edges" << std::endl;
+    // std::cout << "Normalzing constant: " << normalising_constant << std::endl;
 
     for (auto& e : edges) {
+        // std::cout << "-- New edge --" << std::endl;
+        // std::cout << "D0: " << e.node1 << std::endl;
+        // std::cout << "D1: " << e.node2 << std::endl;
+        // std::cout << "W : " << e.weight << std::endl;
+        // std::cout << "P : " << e.error_probability << std::endl;
         pm::signed_weight_int w = (pm::signed_weight_int)round(e.weight * normalising_constant);
         // Extremely important!
         // If all edge weights are even integers, then all collision events occur at integer times.
+
         w *= 2;
+        // std::cout << "NW : " << w << std::endl;
         bool node1_boundary = is_boundary_node(e.node1);
         bool node2_boundary = is_boundary_node(e.node2);
         if (node2_boundary && !node1_boundary) {

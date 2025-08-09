@@ -36,6 +36,7 @@ void pm::SearchGraph::add_edge(
     signed_weight_int weight,
     const std::vector<size_t>& observables,
     const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
+    std::cout << "size of implied_weights_for_other_edges " << implied_weights_for_other_edges.size() << std::endl;
     size_t larger_node = std::max(u, v);
     if (larger_node + 1 > nodes.size()) {
         throw std::invalid_argument(
@@ -144,11 +145,16 @@ pm::ImpliedWeight convert_rule(
 }  // namespace
 
 void pm::SearchGraph::convert_implied_weights(const double normalising_constant) {
+    std::cout << "in convert_implied_weights " << std::endl;
     for (size_t u = 0; u < nodes.size(); u++) {
         const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
             edges_to_implied_weights_unconverted[u];
+        std::cout << "size of nodes rule is: " << rules_for_node.size() << std::endl;
+        std::cout << "neighbour size is: " << nodes[u].neighbors.size() << std::endl;
         for (size_t v = 0; v < nodes[u].neighbors.size(); v++) {
+            std::cout << "rules_for_node[v].size is : " << rules_for_node[v].size() << std::endl;
             for (const auto& rule : rules_for_node[v]) {
+                std::cout << "Converting implied weight" << std::endl;
                 ImpliedWeight converted = convert_rule(nodes, rule, normalising_constant);
                 nodes[u].neighbor_implied_weights[v].push_back(converted);
             }

@@ -54,6 +54,10 @@ void pm::UserGraph::merge_edge_or_boundary_edge(
     double parallel_error_probability,
     pm::MERGE_STRATEGY merge_strategy) {
     auto& neighbor = nodes[node].neighbors[neighbor_index];
+    // std::cout << "--Adding error into graph--" << std::endl;
+    // std::cout << "D0: " << neighbor.edge_it->node1 << std::endl;
+    // std::cout << "D1: " << neighbor.edge_it->node2 << std::endl;
+
     if (merge_strategy == DISALLOW) {
         throw std::invalid_argument(
             "Edge (" + std::to_string(neighbor.edge_it->node1) + ", " + std::to_string(neighbor.edge_it->node2) +
@@ -72,13 +76,18 @@ void pm::UserGraph::merge_edge_or_boundary_edge(
             new_error_probability = parallel_error_probability;
             use_new_observables = true;
         } else if (merge_strategy == INDEPENDENT) {
-            new_weight = pm::merge_weights(parallel_weight, neighbor.edge_it->weight);
+            // new_weight = pm::merge_weights(parallel_weight, neighbor.edge_it->weight);
+            new_weight = neighbor.edge_it->weight;
             new_error_probability = -1;
             if (is_valid_probability(neighbor.edge_it->error_probability) &&
                 is_valid_probability(parallel_error_probability))
-                new_error_probability = parallel_error_probability * (1 - neighbor.edge_it->error_probability) +
-                                        neighbor.edge_it->error_probability * (1 - parallel_error_probability);
-            // We do not need to update the observables. If they do not match up, then the code has distance 2.
+                // std::cout << "Old probability: " << neighbor.edge_it->error_probability << std::endl;
+
+                // new_error_probability = parallel_error_probability * (1 - neighbor.edge_it->error_probability) +
+                // neighbor.edge_it->error_probability * (1 - parallel_error_probability);
+                new_error_probability = neighbor.edge_it->error_probability;
+            // std::cout << "New probability: " << new_error_probability << std::endl;
+            //  We do not need to update the observables. If they do not match up, then the code has distance 2.
             use_new_observables = false;
         } else {
             throw std::invalid_argument("Merge strategy not recognised.");
@@ -333,12 +342,22 @@ pm::Mwpm& pm::UserGraph::get_mwpm_with_search_graph() {
     }
 }
 
+namespace {
+
+double to_weight(double probability) {
+    return -std::log(probability);
+    // return -std::log(probability);
+}
+
+}  // namespace
 void pm::UserGraph::handle_dem_instruction(
     double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables) {
     if (detectors.size() == 2) {
-        add_or_merge_edge(detectors[0], detectors[1], observables, std::log((1 - p) / p), p, INDEPENDENT);
+        // add_or_merge_edge(detectors[0], detectors[1], observables, std::log((1 - p) / p), p, INDEPENDENT);
+        add_or_merge_edge(detectors[0], detectors[1], observables, to_weight(p), p, INDEPENDENT);
     } else if (detectors.size() == 1) {
-        add_or_merge_boundary_edge(detectors[0], observables, std::log((1 - p) / p), p, INDEPENDENT);
+        // add_or_merge_boundary_edge(detectors[0], observables, std::log((1 - p) / p), p, INDEPENDENT);
+        add_or_merge_boundary_edge(detectors[0], observables, to_weight(p), p, INDEPENDENT);
     }
 }
 
@@ -426,8 +445,8 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
             }
             bool same_sign = (current_weight * implied.implied_weight) >= 0.;
             if (!same_sign) {
-                throw std::invalid_argument(
-                    "Edge weight rewrite rules that change the sign of an edge weight are not currently supported.");
+                // throw std::invalid_argument(
+                //"Edge weight rewrite rules that change the sign of an edge weight are not currently supported.");
             }
         }
     }
@@ -450,16 +469,18 @@ double bernoulli_xor(double p1, double p2) {
     return p1 * (1 - p2) + p2 * (1 - p1);
 }
 
-double to_weight(double probability) {
-    return std::log((1 - probability) / probability);
-}
-
 }  // namespace
 
 void pm::add_decomposed_error_to_joint_probabilities(
     DecomposedDemError& error,
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
-    if (error.components.size() > 1) {
+    // if (error.components.size() > 1) {
+    if (error.components.size() == 1) {
+        auto c = error.components[0];
+        std::pair<size_t, size_t> e0 = std::minmax(c.node1, c.node2);
+        auto& p = joint_probabilites[e0][e0];
+        p = bernoulli_xor(p, error.probability);
+    } else {
         for (size_t k0 = 0; k0 < error.components.size(); k0++) {
             for (size_t k1 = k0 + 1; k1 < error.components.size(); k1++) {
                 auto& c0 = error.components[k0];
@@ -473,11 +494,6 @@ void pm::add_decomposed_error_to_joint_probabilities(
             }
         }
     }
-
-    for (auto& e : error.components) {
-        double& p = joint_probabilites[std::minmax(e.node1, e.node2)][std::minmax(e.node1, e.node2)];
-        p = bernoulli_xor(p, error.probability);
-    }
 }
 
 pm::UserGraph pm::detector_error_model_to_user_graph(
@@ -486,6 +502,8 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
     pm::weight_int num_distinct_weights) {
     pm::UserGraph user_graph(detector_error_model.count_detectors(), detector_error_model.count_observables());
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilites;
+    std::cout << "joint_probabilites size is  " << joint_probabilites.size() << std::endl;
+    std::cout << "enable_correlations is  " << enable_correlations << std::endl;
     if (enable_correlations) {
         pm::iter_dem_instructions_include_correlations(
             detector_error_model,
@@ -493,6 +511,8 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
                 user_graph.handle_dem_instruction(p, detectors, observables);
             },
             joint_probabilites);
+
+        std::cout << "joint_probabilites size is  " << joint_probabilites.size() << std::endl;
 
         user_graph.populate_implied_edge_weights(joint_probabilites);
     } else {
@@ -502,6 +522,19 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
                 user_graph.handle_dem_instruction(p, detectors, observables);
             });
         user_graph.loaded_from_dem_without_correlations = true;
+    }
+    for (auto& edge : user_graph.edges) {
+        // std::cout << "------ New Edge ------" << std::endl;
+        // std::cout << "d0: " << edge.node1 << std::endl;
+        // std::cout << "d1: " << edge.node2 << std::endl;
+        // std::cout << "p : " << edge.error_probability << std::endl;
+        // std::cout << "w : " << edge.weight << std::endl;
+        for (const auto& implied : edge.implied_weights_for_other_edges) {
+            // std::cout << "\t------ New Implied Edge Weight ------" << std::endl;
+            // std::cout << "\td0: " << implied.node1 << std::endl;
+            // std::cout << "\td1: " << implied.node2 << std::endl;
+            // std::cout << "\tw : " << implied.implied_weight << std::endl;
+        }
     }
     return user_graph;
 }
@@ -517,15 +550,23 @@ void pm::UserGraph::populate_implied_edge_weights(
             double marginal_probability = pf.second.at(causal_edge);
             if (marginal_probability == 0)
                 continue;
+            double summed_probabilities = 0;
+            for (const auto& affected_edge_and_probability : pf.second) {
+                summed_probabilities += affected_edge_and_probability.second;
+            }
 
             for (const auto& affected_edge_and_probability : pf.second) {
                 std::pair<size_t, size_t> affected_edge = affected_edge_and_probability.first;
                 if (affected_edge != causal_edge) {
+                    std::cout << "pushing back an implied weight" << std::endl;
                     // Since edge weights are computed as std::log((1-p)/p), a probability of more than 0.5 for an
                     // error, would lead to a negatively weighted error. We do not support this (yet), and use a
                     // minimum of 0.5 as an implied probability for an edge to be reweighted.
+                    //
+                    // double implied_probability_for_other_edge =
+                    // std::min(0.9, affected_edge_and_probability.second / marginal_probability);
                     double implied_probability_for_other_edge =
-                        std::min(0.5, affected_edge_and_probability.second / marginal_probability);
+                        std::min(0.9, affected_edge_and_probability.second / summed_probabilities);
                     double w = to_weight(implied_probability_for_other_edge);
                     ImpliedWeightUnconverted implied{affected_edge.first, affected_edge.second, w};
                     edge.implied_weights_for_other_edges.push_back(implied);
