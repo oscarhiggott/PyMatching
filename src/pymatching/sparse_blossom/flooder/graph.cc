@@ -208,7 +208,7 @@ void MatchingGraph::reweight_for_edges(const std::vector<int64_t>& edges) {
             "Attempting to decode with `enable_correlations=True`, however the decoder has "
             "not been configured to decode using correlations. Ensure that you also set "
             "`enable_correlations=True` when loading the stim circuit or detector error model. "
-            "For example: `matching = pymatching.Matching.from_detector_error_model(enable_correlations=True)`");
+            "For example: `matching = pymatching.Matching.from_detector_error_model(dem, enable_correlations=True)`");
     }
     for (size_t i = 0; i < edges.size() >> 1; ++i) {
         int64_t u = edges[2 * i];
