@@ -277,19 +277,6 @@ def test_detection_event_too_large_raises_value_error():
         m.decode_batch([[8]], bit_packed_shots=True)
 
 
-def test_deprecated_position_arguments_raise_deprecation_warning():
-    m = Matching()
-    m.add_edge(0, 1, fault_ids={0}, weight=4)
-    m.add_edge(1, 2, fault_ids={1}, weight=9)
-    with pytest.warns(DeprecationWarning):
-        correction = m.decode([0, 1, 1], 3)
-        assert np.array_equal(correction, np.array([0, 1]))
-    with pytest.warns(DeprecationWarning):
-        correction, weight = m.decode([0, 1, 1], 3, True)
-        assert np.array_equal(correction, np.array([0, 1]))
-        assert weight == 9.0
-
-
 def test_decode_self_loops():
     m = Matching()
     m.add_boundary_edge(0, fault_ids={0}, weight=1)

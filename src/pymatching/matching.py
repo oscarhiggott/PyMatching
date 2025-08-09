@@ -217,8 +217,6 @@ class Matching:
 
     def decode(self,
                z: Union[np.ndarray, List[bool], List[int]],
-               _legacy_num_neighbours: int = None,
-               _legacy_return_weight: bool = None,
                *,
                return_weight: bool = False,
                enable_correlations: bool = False,
@@ -338,17 +336,6 @@ class Matching:
         >>> m.decode(syndrome)
         array([0, 0, 1, 0], dtype=uint8)
         """
-
-        if _legacy_num_neighbours is not None:
-            warnings.warn("The ``num_neighbours`` argument no longer has any effect in PyMatching v2.0.0 or later,"
-                          " since it introduced an approximation that is no longer relevant or necessary. Providing "
-                          "``num_neighbours`` as the second positional argument to ``Matching.decode`` will raise an "
-                          "exception in a future version of PyMatching", DeprecationWarning, stacklevel=2)
-        if _legacy_return_weight is not None:
-            warnings.warn("The ``return_weights`` argument was provided as a positional argument, but in a future "
-                          "version of PyMatching, it will be required to provide ``return_weights`` as a keyword "
-                          "argument.", DeprecationWarning, stacklevel=2)
-            return_weight = _legacy_return_weight
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(
             detection_events, enable_correlations=enable_correlations
