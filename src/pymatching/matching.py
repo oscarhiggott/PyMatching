@@ -111,7 +111,7 @@ class Matching:
             (row) of `check_matrix` is set to `measurement_error_probabilities[i]`. By default None
         enable_correlations : bool, optional
             If `enable_correlations==True`, and if `graph` is a `stim.Circuit` or `stim.DetectorErrorModel`,
-            the circuit or detector error model is converted into an internal representation that allows 
+            the circuit or detector error model is converted into an internal representation that allows
             correlated matching to be used. Note that you must set `enable_correlations=True` here in order
             to use `enable_correlations=True` when decoding. By default, False.
         **kwargs
@@ -1249,7 +1249,7 @@ class Matching:
             error mechanisms
         enable_correlations : bool, optional
             If `enable_correlations==True`, the detector error model is converted into an internal
-            representation that allows correlated matching to be used. Note that you must set 
+            representation that allows correlated matching to be used. Note that you must set
             `enable_correlations=True` here in order to use `enable_correlations=True` when decoding.
             By default, False.
 
@@ -1309,7 +1309,7 @@ class Matching:
             graphlike error mechanisms
         enable_correlations : bool, optional
             If `enable_correlations==True`, the circuit's detector error model is converted into an internal
-            representation that allows correlated matching to be used. Note that you must set 
+            representation that allows correlated matching to be used. Note that you must set
             `enable_correlations=True` here in order to use `enable_correlations=True` when decoding.
             By default, False.
 
