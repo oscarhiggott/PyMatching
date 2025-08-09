@@ -241,7 +241,7 @@ class Matching:
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
             If True, then also return the weight of the solution. The weight of the
-            solution is the sum of the weight of its edges. 
+            solution is the sum of the weight of its edges.
             If `enable_correlations==True` as well, then the solution weight uses
             the modified edge weights (i.e. the edge weights after they have been
             changed by the correlated matching algorithm). By default, False.
@@ -407,7 +407,7 @@ class Matching:
             hyperedge error is a Y error in the surface code. To use correlated matching,
             the `pymatching.Matching` object must be configured from a `stim.Circuit` or
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
-            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863. 
+            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
 
         Returns
@@ -500,7 +500,7 @@ class Matching:
             hyperedge error is a Y error in the surface code. To use correlated matching,
             the `pymatching.Matching` object must be configured from a `stim.Circuit` or
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
-            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863. 
+            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
 
         Returns
