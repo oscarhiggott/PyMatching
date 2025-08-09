@@ -240,9 +240,22 @@ class Matching:
         return_weight : bool, optional
             If `return_weight==True`, the sum of the weights of the edges in the
             minimum weight perfect matching is also returned. By default False
+            If True, then also return the weight of the solution. The weight of the
+            solution is the sum of the weight of its edges. 
+            If `enable_correlations==True` as well, then the solution weight uses
+            the modified edge weights (i.e. the edge weights after they have been
+            changed by the correlated matching algorithm). By default, False.
         enable_correlations: bool, optional
             If `enable_correlations==True`, two-pass correlated matching is used
-            for decoding (see https://arxiv.org/abs/1310.0863).
+            for decoding. Correlated matching is a more accurate variant of matching
+            that exploits knowledge of any hyperedge error (errors that flip more
+            than two detectors), provided that these errors can be decomposed into
+            edges (errors that flip one or two detectors). An example of a decomposable
+            hyperedge error is a Y error in the surface code. To use correlated matching,
+            the `pymatching.Matching` object must be configured from a `stim.Circuit` or
+            `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
+            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
+            By default, False
 
         Returns
         -------
@@ -376,13 +389,26 @@ class Matching:
             detection event `m` in shot `s` can be found at ``(dets[s, m // 8] >> (m % 8)) & 1``.
         return_weights : bool
             If True, then also return a numpy array containing the weights of the solutions for all the shots.
-            By default, False.
+            The weight of a solution is the sum of the weight of its edges. If `enable_correlations==True` as
+            well, then the solution weight uses the modified edge weights (i.e. the edge weights after they
+            have been changed by the correlated matching algorithm). By default, False.
         bit_packed_shots : bool
             Set to `True` to provide `shots` as a bit-packed array, such that the bit for
             detection event `m` in shot `s` can be found at ``(dets[s, m // 8] >> (m % 8)) & 1``.
         bit_packed_predictions : bool
             Set to `True` if the returned predictions should be bit-packed, with the bit for fault id `m` in
             shot `s` in ``(obs[s, m // 8] >> (m % 8)) & 1``
+        enable_correlations: bool, optional
+            If `enable_correlations==True`, two-pass correlated matching is used
+            for decoding. Correlated matching is a more accurate variant of matching
+            that exploits knowledge of any hyperedge error (errors that flip more
+            than two detectors), provided that these errors can be decomposed into
+            edges (errors that flip one or two detectors). An example of a decomposable
+            hyperedge error is a Y error in the surface code. To use correlated matching,
+            the `pymatching.Matching` object must be configured from a `stim.Circuit` or
+            `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
+            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863. 
+            By default, False
 
         Returns
         -------
@@ -465,10 +491,17 @@ class Matching:
             (modulo 2) between the (noisy) measurement of stabiliser `i` in time
             step `j+1` and time step `j` (for the case where the matching graph is
             constructed from a check matrix with `repetitions>1`).
-        enable_correlations : bool, optional
-            Whether to use correlated matching (https://arxiv.org/abs/1310.0863).
-            This can result in a more accurate solution, but may be slower.
-            Defaults to False.
+        enable_correlations: bool, optional
+            If `enable_correlations==True`, two-pass correlated matching is used
+            for decoding. Correlated matching is a more accurate variant of matching
+            that exploits knowledge of any hyperedge error (errors that flip more
+            than two detectors), provided that these errors can be decomposed into
+            edges (errors that flip one or two detectors). An example of a decomposable
+            hyperedge error is a Y error in the surface code. To use correlated matching,
+            the `pymatching.Matching` object must be configured from a `stim.Circuit` or
+            `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
+            of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863. 
+            By default, False
 
         Returns
         -------
