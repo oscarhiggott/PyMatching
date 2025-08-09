@@ -304,13 +304,11 @@ TEST(IterDemInstructionsTest, ZeroProbabilityError) {
     ASSERT_TRUE(joint_probabilities.empty());
 }
 
-TEST(IterDemInstructionsTest, ThreeDetectorErrorIsIgnored) {
+TEST(IterDemInstructionsTest, ThreeDetectorErrorThrowsInvalidArgument) {
     stim::DetectorErrorModel dem("error(0.1) D0 D1 D2");
     TestHandler handler;
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
-    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
-    ASSERT_TRUE(handler.handled_errors.empty());
-    ASSERT_TRUE(joint_probabilities.empty());
+    ASSERT_THROW(pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
 }
 
 // Test a decomposed error instruction. The handler should be called for each component.
@@ -360,7 +358,6 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
     stim::DetectorErrorModel dem(R"DEM(
         error(0.1) D0            # Instruction 1: Simple
         error(0.2) D1 D2 L0      # Instruction 2: Two detectors, one observable
-        error(0.3) D3 D4 D5      # Instruction 3: Hyperedge ignored, second component handled
         error(0.0) D7            # Instruction 4: Zero probability, ignored
         error(0.4) D8 ^ D9 L1    # Instruction 5: Decomposed
     )DEM");

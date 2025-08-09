@@ -58,6 +58,10 @@ class MatchingGraph {
     double normalising_constant;
     std::vector<PreviousWeight> previous_weights;
     std::map<size_t, std::vector<std::vector<pm::ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    // Tracks whether the MatchingGraph was loaded from a DEM without enable_correlations. This is used to
+    // alert a user if they try to decode with enable_correlations=true, but forgot to load from the
+    // dem with enable_correlations=true.
+    bool loaded_from_dem_without_correlations = false;
 
     MatchingGraph();
     MatchingGraph(size_t num_nodes, size_t num_observables);

@@ -313,10 +313,12 @@ pm::Mwpm pm::UserGraph::to_mwpm(pm::weight_int num_distinct_weights, bool ensure
             pm::GraphFlooder(to_matching_graph(num_distinct_weights)),
             pm::SearchFlooder(to_search_graph(num_distinct_weights)));
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
+        mwpm.flooder.graph.loaded_from_dem_without_correlations = loaded_from_dem_without_correlations;
         return mwpm;
     } else {
         auto mwpm = pm::Mwpm(pm::GraphFlooder(to_matching_graph(num_distinct_weights)));
         mwpm.flooder.sync_negative_weight_observables_and_detection_events();
+        mwpm.flooder.graph.loaded_from_dem_without_correlations = loaded_from_dem_without_correlations;
         return mwpm;
     }
 }
@@ -499,6 +501,7 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
             [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
                 user_graph.handle_dem_instruction(p, detectors, observables);
             });
+        user_graph.loaded_from_dem_without_correlations = true;
     }
     return user_graph;
 }

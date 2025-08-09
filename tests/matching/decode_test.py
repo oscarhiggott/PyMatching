@@ -373,14 +373,69 @@ def test_decode_to_edges_with_correlations():
     stim = pytest.importorskip("stim")
     dem = stim.DetectorErrorModel("""
         error(0.1) D0 D1
-        error(0.1) D1 D2
-        error(0.2) D0 D2
-        error(0.3) D0 D1 D2
+        error(0.1) D2 D3
+        error(0.3) D0 D1 ^ D2 D3
     """)
     m = Matching.from_detector_error_model(dem, enable_correlations=True)
-    syndrome = np.array([1, 0, 1])
+    syndrome = np.array([1, 1, 1, 1])
     edges = m.decode_to_edges_array(syndrome, enable_correlations=True)
     edges.sort(axis=1)
     edges = edges[np.lexsort((edges[:, 1], edges[:, 0]))]
-    expected_edges = np.array([[0, 2]])
+    expected_edges = np.array([[0, 1], [2, 3]])
     assert np.array_equal(edges, expected_edges)
+
+
+def test_load_from_circuit_with_correlations():
+    stim = pytest.importorskip("stim")
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=3,
+        rounds=3,
+        after_clifford_depolarization=0.001
+    )
+    shots = circuit.compile_detector_sampler().sample(shots=10)
+    matching_1 = pymatching.Matching(circuit, enable_correlations=True)
+    matching_2 = pymatching.Matching.from_stim_circuit(circuit=circuit, enable_correlations=True)
+    for m in (matching_1, matching_2):
+        predictions, weights = m.decode_batch(shots=shots, return_weights=True, enable_correlations=True)
+
+
+def test_use_correlations_with_uncorrelated_dem_load_raises_value_error():
+    stim = pytest.importorskip("stim")
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=3,
+        rounds=3,
+        after_clifford_depolarization=0.001
+    )
+    shots = circuit.compile_detector_sampler().sample(shots=10)
+    matching_1 = pymatching.Matching(circuit, enable_correlations=False)
+    matching_2 = pymatching.Matching.from_stim_circuit(circuit=circuit, enable_correlations=False)
+    matching_3 = pymatching.Matching.from_detector_error_model(
+        model=circuit.detector_error_model(decompose_errors=True),
+        enable_correlations=False
+    )
+    for m in (matching_1, matching_2, matching_3):
+        with pytest.raises(ValueError):
+            m.decode_batch(shots=shots, return_weights=True, enable_correlations=True)
+        with pytest.raises(ValueError):
+            m.decode_batch(shots=shots, return_weights=False, enable_correlations=True)
+        with pytest.raises(ValueError):
+            m.decode_to_edges_array(shots[0], enable_correlations=True)
+        with pytest.raises(ValueError):
+            m.decode(shots[0], enable_correlations=True)
+
+
+def test_use_correlations_without_decompose_errors_raises_value_error():
+    stim = pytest.importorskip("stim")
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=3,
+        rounds=3,
+        after_clifford_depolarization=0.001
+    )
+    dem = circuit.detector_error_model(decompose_errors=False)
+    with pytest.raises(ValueError):
+        pymatching.Matching.from_detector_error_model(dem, enable_correlations=True)
+    with pytest.raises(ValueError):
+        pymatching.Matching(dem, enable_correlations=True)
