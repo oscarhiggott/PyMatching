@@ -60,7 +60,11 @@ int main_predict(int argc, const char **argv) {
     writer->begin_result_type('L');
 
     pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, enable_correlations);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem,
+        num_buckets,
+        /*ensure_search_flooder_included=*/enable_correlations,
+        /*enable_correlations=*/enable_correlations);
 
     stim::SparseShot sparse_shot;
     sparse_shot.clear();
@@ -130,7 +134,11 @@ int main_count_mistakes(int argc, const char **argv) {
         shots_in, shots_in_format.id, 0, dem.count_detectors(), append_obs * num_obs);
 
     pm::weight_int num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, enable_correlations, enable_correlations);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem,
+        num_buckets,
+        /*ensure_search_flooder_included=*/enable_correlations,
+        /*enable_correlations=*/enable_correlations);
 
     stim::SparseShot sparse_shot;
     stim::SparseShot obs_shot;
