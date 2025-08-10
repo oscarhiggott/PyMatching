@@ -73,7 +73,7 @@ Yue also has a paper coming soon, so stay tuned for that as well.
 
 ## Correlated matching
 
-As of PyMatching version 2.3, [correlated matching](https://arxiv.org/abs/1310.0863) is now also available in pymatching! Thank you to Sid Madhuk, who was the primary contributor for this.
+As of PyMatching version 2.3, [correlated matching](https://arxiv.org/abs/1310.0863) is now also available in pymatching! Thank you to Sid Madhuk, who was the primary contributor for this new feature.
 
 Correlated matching has better accuracy than standard (uncorrelated) matching for many decoding problems where hyperedge errors are present. When these hyperedge errors are decomposed into edges (graphlike errors), they amount to correlations between these edges in the matching graph. A common example of such a hyperedge error is a $Y$ error in the surface code.
 
