@@ -326,7 +326,12 @@ void iter_dem_instructions_include_correlations(
         }
         // If the final error in the decomposition had 3 or more components, we ignore it.
         if (component->node1 == SIZE_MAX) {
-            decomposed_err.components.pop_back();
+            // Undecomposed hyperedges are not supported
+            throw std::invalid_argument(
+                "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                "This is not supported when using `enable_correlations=True`. "
+                "Did you forget to set `decompose_errors=True` when "
+                "converting the stim circuit to a detector error model?");
         } else if (p > 0) {
             if (component->node2 == SIZE_MAX) {
                 handle_dem_error(p, {component->node1}, component->observable_indices);
