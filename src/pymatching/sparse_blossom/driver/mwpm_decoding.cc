@@ -72,8 +72,10 @@ pm::obs_int pm::bit_vector_to_obs_mask(const std::vector<uint8_t>& bit_vector) {
 pm::Mwpm pm::detector_error_model_to_mwpm(
     const stim::DetectorErrorModel& detector_error_model,
     pm::weight_int num_distinct_weights,
-    bool ensure_search_flooder_included) {
-    auto user_graph = pm::detector_error_model_to_user_graph(detector_error_model);
+    bool ensure_search_flooder_included,
+    bool enable_correlations) {
+    auto user_graph =
+        pm::detector_error_model_to_user_graph(detector_error_model, enable_correlations, num_distinct_weights);
     return user_graph.to_mwpm(num_distinct_weights, ensure_search_flooder_included);
 }
 
@@ -163,7 +165,18 @@ void shatter_blossoms_for_all_detection_events_and_extract_match_edges(
 }
 
 pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
-    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, bool edge_correlations) {
+    if (edge_correlations) {
+        // Edge correlations might also be called 2-pass matching. This is the slowest and
+        // highest-accuracy reweighting rule for correlated decoding in which we first decode to edges,
+        // and then reweight the associated edges conditioned on the assumption that an error occurred
+        // at that edge.
+        std::vector<int64_t> edges;
+        decode_detection_events_to_edges(mwpm, detection_events, edges);
+        mwpm.flooder.graph.reweight_for_edges(edges);
+        mwpm.search_flooder.graph.reweight_for_edges(edges);
+    }
+
     process_timeline_until_completion(mwpm, detection_events);
     auto res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
     if (!mwpm.flooder.negative_weight_detection_events.empty())
@@ -171,6 +184,12 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
             mwpm, mwpm.flooder.negative_weight_detection_events);
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
     res.weight += mwpm.flooder.negative_weight_sum;
+
+    if (edge_correlations) {
+        mwpm.flooder.graph.undo_reweights();
+        mwpm.search_flooder.graph.undo_reweights();
+    }
+
     return res;
 }
 
@@ -178,7 +197,19 @@ void pm::decode_detection_events(
     pm::Mwpm& mwpm,
     const std::vector<uint64_t>& detection_events,
     uint8_t* obs_begin_ptr,
-    pm::total_weight_int& weight) {
+    pm::total_weight_int& weight,
+    bool edge_correlations) {
+    if (edge_correlations) {
+        // Edge correlations might also be called 2-pass matching. This is the slowest and
+        // highest-accuracy reweighting rule for correlated decoding in which we first decode to edges,
+        // and then reweight the associated edges conditioned on the assumption that an error occurred
+        // at that edge.
+        std::vector<int64_t> edges;
+        decode_detection_events_to_edges(mwpm, detection_events, edges);
+        mwpm.flooder.graph.reweight_for_edges(edges);
+        mwpm.search_flooder.graph.reweight_for_edges(edges);
+    }
+
     size_t num_observables = mwpm.flooder.graph.num_observables;
     process_timeline_until_completion(mwpm, detection_events);
 
@@ -208,6 +239,11 @@ void pm::decode_detection_events(
         fill_bit_vector_from_obs_mask(bit_packed_res.obs_mask, obs_begin_ptr, num_observables);
         // Add negative weight sum to blossom solution weight
         weight = bit_packed_res.weight + mwpm.flooder.negative_weight_sum;
+    }
+
+    if (edge_correlations) {
+        mwpm.flooder.graph.undo_reweights();
+        mwpm.search_flooder.graph.undo_reweights();
     }
 }
 
@@ -287,4 +323,17 @@ void pm::decode_detection_events_to_edges(
             i++;
         }
     }
+}
+
+void pm::decode_detection_events_to_edges_with_edge_correlations(
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, std::vector<int64_t>& edges) {
+    decode_detection_events_to_edges(mwpm, detection_events, edges);
+    mwpm.flooder.graph.reweight_for_edges(edges);
+    mwpm.search_flooder.graph.reweight_for_edges(edges);
+    edges.clear();
+
+    decode_detection_events_to_edges(mwpm, detection_events, edges);
+
+    mwpm.flooder.graph.undo_reweights();
+    mwpm.search_flooder.graph.undo_reweights();
 }

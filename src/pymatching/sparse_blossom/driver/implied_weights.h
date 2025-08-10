@@ -12,12 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pymatching/sparse_blossom/driver/io.h"
+#ifndef PYMATCHING2_IMPLIED_WEIGHT_UNCONVERTED_H
+#define PYMATCHING2_IMPLIED_WEIGHT_UNCONVERTED_H
 
-#include <algorithm>
+#include "pymatching/sparse_blossom/ints.h"
 
-double pm::merge_weights(double a, double b) {
-    auto sgn = std::copysign(1, a) * std::copysign(1, b);
-    auto signed_min = sgn * std::min(std::abs(a), std::abs(b));
-    return signed_min + std::log(1 + std::exp(-std::abs(a + b))) - std::log(1 + std::exp(-std::abs(a - b)));
-}
+namespace pm {
+
+struct ImpliedWeightUnconverted {
+    size_t node1;
+    size_t node2;
+    double implied_weight;
+};
+
+struct ImpliedWeight {
+    weight_int* edge0_ptr;
+    weight_int* edge1_ptr;
+    weight_int implied_weight;
+};
+
+}  // namespace pm
+
+#endif  // PYMATCHING2_IMPLIED_WEIGHT_UNCONVERTED_H

@@ -30,9 +30,7 @@ def repetition_code(n: int):
     return csc_matrix((data, (row_ind, col_ind)))
 
 
-weight_fixtures = [
-    10, 15, 20, 100
-]
+weight_fixtures = [10, 15, 20, 100]
 
 
 @pytest.mark.parametrize("n", weight_fixtures)
@@ -100,12 +98,7 @@ def test_decode_to_matched_detection_events():
     assert np.array_equal(arr, np.array([[2, -1], [10, 12], [18, -1]]))
 
     d = m.decode_to_matched_dets_dict(syndrome)
-    assert d == {
-        2: None,
-        10: 12,
-        12: 10,
-        18: None
-    }
+    assert d == {2: None, 10: 12, 12: 10, 18: None}
 
 
 def test_decode_to_matched_detection_events_with_negative_weights_raises_value_error():
@@ -144,27 +137,42 @@ def get_full_data_path(filename: str) -> str:
 
 def test_surface_code_solution_weights(data_dir: Path):
     stim = pytest.importorskip("stim")
-    dem = stim.DetectorErrorModel.from_file(data_dir / "surface_code_rotated_memory_x_13_0.01.dem")
+    dem = stim.DetectorErrorModel.from_file(
+        data_dir / "surface_code_rotated_memory_x_13_0.01.dem"
+    )
     m = Matching.from_detector_error_model(dem)
-    shots = stim.read_shot_data_file(path=data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots.b8",
-                                     format="b8", num_detectors=m.num_detectors,
-                                     num_observables=m.num_fault_ids)
-    with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt",
-              "r", encoding="utf-8") as f:
+    shots = stim.read_shot_data_file(
+        path=data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots.b8",
+        format="b8",
+        num_detectors=m.num_detectors,
+        num_observables=m.num_fault_ids,
+    )
+    with open(
+        data_dir
+        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv0.7_exact.txt",
+        "r",
+        encoding="utf-8",
+    ) as f:
         expected_weights = [float(w) for w in f.readlines()]
-    with open(data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt",
-              "r", encoding="utf-8") as f:
+    with open(
+        data_dir
+        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv0.7_exact.txt",
+        "r",
+        encoding="utf-8",
+    ) as f:
         expected_observables = [int(w) for w in f.readlines()]
     assert shots.shape == (1000, m.num_detectors + m.num_fault_ids)
     weights = []
     predicted_observables = []
     for i in range(min(shots.shape[0], 1000)):
-        prediction, weight = m.decode(shots[i, 0:-m.num_fault_ids], return_weight=True)
+        prediction, weight = m.decode(
+            shots[i, 0: -m.num_fault_ids], return_weight=True
+        )
         weights.append(weight)
         predicted_observables.append(prediction)
     for weight, expected_weight in zip(weights, expected_weights):
         assert weight == pytest.approx(expected_weight, rel=1e-8)
-    assert predicted_observables == expected_observables[0:len(predicted_observables)]
+    assert predicted_observables == expected_observables[0: len(predicted_observables)]
 
     expected_observables_arr = np.zeros((shots.shape[0], 1), dtype=np.uint8)
     expected_observables_arr[:, 0] = np.array(expected_observables)
@@ -173,25 +181,64 @@ def test_surface_code_solution_weights(data_dir: Path):
     temp_shots, _, _ = sampler.sample(shots=10, bit_packed=True)
     assert temp_shots.shape[1] == np.ceil(dem.num_detectors // 8)
 
-    batch_predictions = m.decode_batch(shots[:, 0:-m.num_fault_ids])
+    batch_predictions = m.decode_batch(shots[:, 0: -m.num_fault_ids])
     assert np.array_equal(batch_predictions, expected_observables_arr)
 
-    batch_predictions, batch_weights = m.decode_batch(shots[:, 0:-m.num_fault_ids], return_weights=True)
+    batch_predictions, batch_weights = m.decode_batch(
+        shots[:, 0: -m.num_fault_ids], return_weights=True
+    )
     assert np.array_equal(batch_predictions, expected_observables_arr)
     assert np.allclose(batch_weights, expected_weights, rtol=1e-8)
 
-    bitpacked_shots = np.packbits(shots[:, 0:dem.num_detectors], bitorder='little', axis=1)
-    batch_predictions_from_bitpacked, bitpacked_batch_weights = m.decode_batch(bitpacked_shots, return_weights=True,
-                                                                               bit_packed_shots=True)
+    bitpacked_shots = np.packbits(
+        shots[:, 0: dem.num_detectors], bitorder="little", axis=1
+    )
+    batch_predictions_from_bitpacked, bitpacked_batch_weights = m.decode_batch(
+        bitpacked_shots, return_weights=True, bit_packed_shots=True
+    )
     assert np.array_equal(batch_predictions_from_bitpacked, expected_observables_arr)
     assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
 
-    bitpacked_batch_predictions_from_bitpacked, bitpacked_batch_weights = m.decode_batch(bitpacked_shots,
-                                                                                         return_weights=True,
-                                                                                         bit_packed_shots=True,
-                                                                                         bit_packed_predictions=True)
-    assert np.array_equal(bitpacked_batch_predictions_from_bitpacked, expected_observables_arr)
+    bitpacked_batch_predictions_from_bitpacked, bitpacked_batch_weights = (
+        m.decode_batch(
+            bitpacked_shots,
+            return_weights=True,
+            bit_packed_shots=True,
+            bit_packed_predictions=True,
+        )
+    )
+    assert np.array_equal(
+        bitpacked_batch_predictions_from_bitpacked, expected_observables_arr
+    )
     assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
+
+    # Test correlated decoding
+    with open(
+        data_dir
+        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv2.2.2_correlated.txt",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected_corr_weights = [float(w) for w in f.readlines()]
+    with open(
+        data_dir
+        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv2.2.2_correlated.txt",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        expected_corr_observables = [int(w) for w in f.readlines()]
+
+    expected_corr_observables_arr = np.zeros((shots.shape[0], 1), dtype=np.uint8)
+    expected_corr_observables_arr[:, 0] = np.array(expected_corr_observables)
+
+    m_corr = Matching.from_detector_error_model(dem, enable_correlations=True)
+    corr_predictions, corr_weights = m_corr.decode_batch(
+        shots[:, 0: -m.num_fault_ids],
+        return_weights=True,
+        enable_correlations=True,
+    )
+    assert np.array_equal(corr_predictions, expected_corr_observables_arr)
+    assert np.allclose(corr_weights, expected_corr_weights, rtol=1e-8)
 
 
 def test_decode_batch_to_bitpacked_predictions():
@@ -201,13 +248,22 @@ def test_decode_batch_to_bitpacked_predictions():
     m.add_edge(2, 3, fault_ids={3, 5})
     m.add_edge(3, 4, fault_ids={20, 16})
 
-    predictions = m.decode_batch(np.array([[1, 0, 1, 0, 0], [0, 0, 1, 0, 1]], dtype=np.uint8),
-                                 bit_packed_predictions=True)
-    assert np.array_equal(predictions, np.array([[1, 4, 0], [40, 0, 17]], dtype=np.uint8))
+    predictions = m.decode_batch(
+        np.array([[1, 0, 1, 0, 0], [0, 0, 1, 0, 1]], dtype=np.uint8),
+        bit_packed_predictions=True,
+    )
+    assert np.array_equal(
+        predictions, np.array([[1, 4, 0], [40, 0, 17]], dtype=np.uint8)
+    )
 
-    predictions = m.decode_batch(np.array([[5], [20]], dtype=np.uint8), bit_packed_shots=True,
-                                 bit_packed_predictions=True)
-    assert np.array_equal(predictions, np.array([[1, 4, 0], [40, 0, 17]], dtype=np.uint8))
+    predictions = m.decode_batch(
+        np.array([[5], [20]], dtype=np.uint8),
+        bit_packed_shots=True,
+        bit_packed_predictions=True,
+    )
+    assert np.array_equal(
+        predictions, np.array([[1, 4, 0], [40, 0, 17]], dtype=np.uint8)
+    )
     with pytest.raises(ValueError):
         m.decode_batch(np.array([[]], dtype=np.uint8))
 
@@ -262,9 +318,17 @@ def test_decode_to_edges():
     for i in range(10):
         m.add_edge(i, i + 1)
     edges = m.decode_to_edges_array([0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0])
-    assert np.array_equal(edges, np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64))
-    edges = m.decode_to_edges_array([False, True, False, True, False, False, True, False, True, True, False])
-    assert np.array_equal(edges, np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64))
+    assert np.array_equal(
+        edges,
+        np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64),
+    )
+    edges = m.decode_to_edges_array(
+        [False, True, False, True, False, False, True, False, True, True, False]
+    )
+    assert np.array_equal(
+        edges,
+        np.array([[9, 8], [5, 6], [4, 3], [5, 4], [0, 1], [0, -1]], dtype=np.int64),
+    )
 
 
 def test_parallel_boundary_edges_decoding():
@@ -283,6 +347,82 @@ def test_parallel_boundary_edges_decoding():
     m.add_boundary_edge(0, fault_ids=2, weight=-0.5)
     m.add_edge(0, 3, fault_ids=3, weight=-3)
     m.add_edge(0, 4, fault_ids=4, weight=-2)
-    assert np.array_equal(m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 1, 0, 0], dtype=np.uint8))
+    assert np.array_equal(
+        m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 1, 0, 0], dtype=np.uint8)
+    )
     m.set_boundary_nodes({1, 2, 3, 4})
-    assert np.array_equal(m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0], dtype=np.uint8))
+    assert np.array_equal(
+        m.decode([1, 0, 0, 0, 0]), np.array([0, 0, 0, 1, 0], dtype=np.uint8)
+    )
+
+
+def test_decode_to_edges_with_correlations():
+    stim = pytest.importorskip("stim")
+    dem = stim.DetectorErrorModel("""
+        error(0.1) D0 D1
+        error(0.1) D2 D3
+        error(0.3) D0 D1 ^ D2 D3
+    """)
+    m = Matching.from_detector_error_model(dem, enable_correlations=True)
+    syndrome = np.array([1, 1, 1, 1])
+    edges = m.decode_to_edges_array(syndrome, enable_correlations=True)
+    edges.sort(axis=1)
+    edges = edges[np.lexsort((edges[:, 1], edges[:, 0]))]
+    expected_edges = np.array([[0, 1], [2, 3]])
+    assert np.array_equal(edges, expected_edges)
+
+
+def test_load_from_circuit_with_correlations():
+    stim = pytest.importorskip("stim")
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=3,
+        rounds=3,
+        after_clifford_depolarization=0.001
+    )
+    shots = circuit.compile_detector_sampler().sample(shots=10)
+    matching_1 = pymatching.Matching(circuit, enable_correlations=True)
+    matching_2 = pymatching.Matching.from_stim_circuit(circuit=circuit, enable_correlations=True)
+    for m in (matching_1, matching_2):
+        predictions, weights = m.decode_batch(shots=shots, return_weights=True, enable_correlations=True)
+
+
+def test_use_correlations_with_uncorrelated_dem_load_raises_value_error():
+    stim = pytest.importorskip("stim")
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=3,
+        rounds=3,
+        after_clifford_depolarization=0.001
+    )
+    shots = circuit.compile_detector_sampler().sample(shots=10)
+    matching_1 = pymatching.Matching(circuit, enable_correlations=False)
+    matching_2 = pymatching.Matching.from_stim_circuit(circuit=circuit, enable_correlations=False)
+    matching_3 = pymatching.Matching.from_detector_error_model(
+        model=circuit.detector_error_model(decompose_errors=True),
+        enable_correlations=False
+    )
+    for m in (matching_1, matching_2, matching_3):
+        with pytest.raises(ValueError):
+            m.decode_batch(shots=shots, return_weights=True, enable_correlations=True)
+        with pytest.raises(ValueError):
+            m.decode_batch(shots=shots, return_weights=False, enable_correlations=True)
+        with pytest.raises(ValueError):
+            m.decode_to_edges_array(shots[0], enable_correlations=True)
+        with pytest.raises(ValueError):
+            m.decode(shots[0], enable_correlations=True)
+
+
+def test_use_correlations_without_decompose_errors_raises_value_error():
+    stim = pytest.importorskip("stim")
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=3,
+        rounds=3,
+        after_clifford_depolarization=0.001
+    )
+    dem = circuit.detector_error_model(decompose_errors=False)
+    with pytest.raises(ValueError):
+        pymatching.Matching.from_detector_error_model(dem, enable_correlations=True)
+    with pytest.raises(ValueError):
+        pymatching.Matching(dem, enable_correlations=True)

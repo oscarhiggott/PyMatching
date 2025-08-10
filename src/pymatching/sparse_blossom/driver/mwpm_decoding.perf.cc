@@ -15,10 +15,11 @@
 #include "pymatching/sparse_blossom/driver/mwpm_decoding.h"
 
 #include "pymatching/perf/util.perf.h"
+#include "pymatching/sparse_blossom/driver/user_graph.h"
 #include "stim.h"
 
 std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data(
-    size_t distance, size_t rounds, double noise, size_t num_shots) {
+    size_t distance, size_t rounds, double noise, size_t num_shots, bool decompose_errors = false) {
     stim::CircuitGenParameters gen(rounds, distance, "rotated_memory_x");
     gen.after_clifford_depolarization = noise;
     gen.after_reset_flip_probability = noise;
@@ -41,7 +42,8 @@ std::pair<stim::DetectorErrorModel, std::vector<stim::SparseShot>> generate_data
         }
     }
 
-    auto dem = stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, false, true, false, 0, false, false);
+    auto dem =
+        stim::ErrorAnalyzer::circuit_to_detector_error_model(circuit, decompose_errors, true, false, 0, false, false);
 
     return {dem, shots};
 }
@@ -63,7 +65,8 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -95,7 +98,8 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -127,7 +131,8 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -159,7 +164,8 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -191,7 +197,8 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -223,7 +230,8 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -257,7 +265,8 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -280,7 +289,8 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -291,6 +301,33 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
         for (const auto &shot : shots) {
             edges.clear();
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_millis(8.2)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
+BENCHMARK(Decode_surface_r21_d21_p100_to_edges_with_correlations) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.01, 8, true);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_millis(8.2)
@@ -316,7 +353,8 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -351,7 +389,8 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -374,7 +413,8 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -385,6 +425,33 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
         for (const auto &shot : shots) {
             edges.clear();
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_millis(8.4)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
+BENCHMARK(Decode_surface_r21_d21_p1000_to_edges_with_correlations) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.001, 256, true);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_millis(8.4)
@@ -410,7 +477,8 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -445,7 +513,8 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -468,7 +537,8 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -479,6 +549,33 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
         for (const auto &shot : shots) {
             edges.clear();
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_millis(1.4)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
+BENCHMARK(Decode_surface_r21_d21_p10000_to_edges_with_correlations) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.0001, 512, true);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_millis(1.4)
@@ -504,7 +601,8 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
     size_t num_mistakes = 0;
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            auto res = pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_mask) {
                 num_mistakes++;
             }
@@ -539,7 +637,8 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
     pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
     benchmark_go([&]() {
         for (const auto &shot : shots) {
-            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight);
+            pm::decode_detection_events(
+                mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/false);
             if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
                 num_mistakes++;
             }
@@ -562,7 +661,8 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
     const auto &shots = data.second;
 
     size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
-    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, true);
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/false);
 
     size_t num_dets = 0;
     for (const auto &shot : shots) {
@@ -573,6 +673,33 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
         for (const auto &shot : shots) {
             edges.clear();
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_micros(130)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
+BENCHMARK(Decode_surface_r21_d21_p100000_to_edges_with_correlations) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.00001, 512, true);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
         .goal_micros(130)

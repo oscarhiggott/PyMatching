@@ -18,16 +18,19 @@
 #include <cmath>
 #include <list>
 #include <set>
+#include <stdexcept>
 #include <vector>
 
-#include "pymatching/rand/rand_gen.h"
-#include "pymatching/sparse_blossom/driver/io.h"
+#include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder/graph.h"
 #include "pymatching/sparse_blossom/ints.h"
 #include "pymatching/sparse_blossom/matcher/mwpm.h"
 #include "pymatching/sparse_blossom/search/search_graph.h"
+#include "stim.h"
 
 namespace pm {
+
+const pm::weight_int NUM_DISTINCT_WEIGHTS = 1 << (sizeof(pm::weight_int) * 8 - 8);
 
 struct UserEdge {
     size_t node1;
@@ -35,6 +38,7 @@ struct UserEdge {
     std::vector<size_t> observable_indices;  /// The indices of the observables crossed along this edge
     double weight;                           /// The weight of the edge to this neighboring node
     double error_probability;                /// The error probability associated with this node
+    std::vector<ImpliedWeightUnconverted> implied_weights_for_other_edges;
 };
 
 struct UserNeighbor {
@@ -59,6 +63,7 @@ class UserGraph {
     std::vector<UserNode> nodes;
     std::list<UserEdge> edges;
     std::set<size_t> boundary_nodes;
+    bool loaded_from_dem_without_correlations = false;
 
     UserGraph();
     explicit UserGraph(size_t num_nodes);
@@ -85,6 +90,7 @@ class UserGraph {
         MERGE_STRATEGY merge_strategy = DISALLOW);
     bool has_edge(size_t node1, size_t node2);
     bool has_boundary_edge(size_t node);
+    bool get_edge_or_boundary_edge_weight(size_t node1, size_t node2, double& weight_out);
     void set_boundary(const std::set<size_t>& boundary);
     std::set<size_t> get_boundary();
     size_t get_num_observables();
@@ -115,6 +121,8 @@ class UserGraph {
     Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
+    void populate_implied_edge_weights(
+        std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
 
    private:
     pm::Mwpm _mwpm;
@@ -138,11 +146,11 @@ inline double UserGraph::iter_discretized_edges(
         bool node1_boundary = is_boundary_node(e.node1);
         bool node2_boundary = is_boundary_node(e.node2);
         if (node2_boundary && !node1_boundary) {
-            boundary_edge_func(e.node1, w, e.observable_indices);
+            boundary_edge_func(e.node1, w, e.observable_indices, e.implied_weights_for_other_edges);
         } else if (node1_boundary && !node2_boundary) {
-            boundary_edge_func(e.node2, w, e.observable_indices);
+            boundary_edge_func(e.node2, w, e.observable_indices, e.implied_weights_for_other_edges);
         } else if (!node1_boundary) {
-            edge_func(e.node1, e.node2, w, e.observable_indices);
+            edge_func(e.node1, e.node2, w, e.observable_indices, e.implied_weights_for_other_edges);
         }
     }
     return normalising_constant * 2;
@@ -158,28 +166,183 @@ inline double UserGraph::to_matching_or_search_graph_helper(
     std::vector<bool> has_boundary_edge(nodes.size(), false);
     std::vector<pm::signed_weight_int> boundary_edge_weights(nodes.size());
     std::vector<std::vector<size_t>> boundary_edge_observables(nodes.size());
+    std::vector<std::vector<ImpliedWeightUnconverted>> boundary_edge_implied_weights_unconverted(nodes.size());
 
     double normalising_constant = iter_discretized_edges(
         num_distinct_weights,
         edge_func,
-        [&](size_t u, pm::signed_weight_int weight, const std::vector<size_t>& observables) {
+        [&](size_t u,
+            pm::signed_weight_int weight,
+            const std::vector<size_t>& observables,
+            const std::vector<ImpliedWeightUnconverted>& implied_weights_for_other_edges) {
             // For parallel boundary edges, keep the boundary edge with the smaller weight
             if (!has_boundary_edge[u] || boundary_edge_weights[u] > weight) {
                 boundary_edge_weights[u] = weight;
                 boundary_edge_observables[u] = observables;
                 has_boundary_edge[u] = true;
+                boundary_edge_implied_weights_unconverted[u] = implied_weights_for_other_edges;
             }
         });
 
     // Now add boundary edges to the graph
     for (size_t i = 0; i < has_boundary_edge.size(); i++) {
         if (has_boundary_edge[i])
-            boundary_edge_func(i, boundary_edge_weights[i], boundary_edge_observables[i]);
+            boundary_edge_func(
+                i,
+                boundary_edge_weights[i],
+                boundary_edge_observables[i],
+                boundary_edge_implied_weights_unconverted[i]);
     }
     return normalising_constant;
 }
 
-UserGraph detector_error_model_to_user_graph(const stim::DetectorErrorModel& detector_error_model);
+UserGraph detector_error_model_to_user_graph(
+    const stim::DetectorErrorModel& detector_error_model,
+    bool enable_correlations,
+    pm::weight_int num_distinct_weights);
+
+/// Computes the weight of an edge resulting from merging edges with weight `a' and weight `b', assuming each edge
+/// weight is a log-likelihood ratio log((1-p)/p) associated with the probability p of an error occurring on the
+/// edge, and that the error mechanisms associated with the two edges being merged are independent.
+///
+/// A mathematically equivalent implementation of this method would be:
+///
+///  double merge_weights(double a, double b){
+///     double p_a = 1/(1 + std::exp(a));
+///     double p_b = 1/(1 + std::exp(b));
+///     double p_both = p_a * (1 - p_b) + p_b * (1 - p_a);
+///     return std::log((1-p_both)/p_both);
+///  }
+///
+/// however this would suffer from numerical overflow issues for abs(a) >> 30 or abs(b) >> 30 which is avoided by the
+/// the implementation used here instead. See Equation (6) of https://ieeexplore.ieee.org/document/1495850 for more
+/// details.
+double merge_weights(double a, double b);
+
+template <typename Handler>
+void iter_detector_error_model_edges(
+    const stim::DetectorErrorModel& detector_error_model, const Handler& handle_dem_error) {
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction& instruction) {
+        std::vector<size_t> dets;
+        std::vector<size_t> observables;
+        double p = instruction.arg_data[0];
+        for (auto& target : instruction.target_data) {
+            if (target.is_relative_detector_id()) {
+                dets.push_back(target.val());
+            } else if (target.is_observable_id()) {
+                observables.push_back(target.val());
+            } else if (target.is_separator()) {
+                if (p > 0) {
+                    handle_dem_error(p, dets, observables);
+                    observables.clear();
+                    dets.clear();
+                }
+            }
+        }
+        if (p > 0) {
+            handle_dem_error(p, dets, observables);
+        }
+    });
+}
+
+struct DecomposedDemError {
+    /// The probability of this error occurring.
+    double probability;
+    /// Effects of the error.
+    stim::FixedCapVector<UserEdge, 8> components;
+
+    bool operator==(const DecomposedDemError& other) const;
+    bool operator!=(const DecomposedDemError& other) const;
+};
+
+void add_decomposed_error_to_joint_probabilities(
+    DecomposedDemError& error,
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
+
+template <typename Handler>
+void iter_dem_instructions_include_correlations(
+    const stim::DetectorErrorModel& detector_error_model,
+    const Handler& handle_dem_error,
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction& instruction) {
+        double p = instruction.arg_data[0];
+        pm::DecomposedDemError decomposed_err;
+        decomposed_err.probability = p;
+        if (p > 0.5) {
+            throw ::std::invalid_argument(
+                "Errors with probability greater than 0.5 are not supported with correlations enabled");
+        }
+        if (p == 0) {
+            // Ignore errors with no error probability.
+            return;
+        }
+        decomposed_err.components = {};
+        decomposed_err.components.push_back({});
+        UserEdge* component = &decomposed_err.components.back();
+        // Mark component as empty to begin with.
+        component->node1 = SIZE_MAX;
+        component->node2 = SIZE_MAX;
+        size_t num_component_detectors = 0;
+        for (auto& target : instruction.target_data) {
+            // Decompose error
+            if (target.is_relative_detector_id()) {
+                num_component_detectors++;
+                if (num_component_detectors == 1) {
+                    const size_t& d1 = target.raw_id();
+                    component->node1 = d1;
+                } else if (num_component_detectors == 2) {
+                    // Maintain invariant that node1 <= node2.
+                    if (component->node1 <= target.raw_id()) {
+                        component->node2 = target.raw_id();
+                    } else {
+                        component->node2 = component->node1;
+                        component->node1 = target.raw_id();
+                    }
+                } else {
+                    // Undecomposed hyperedges are not supported
+                    throw std::invalid_argument(
+                        "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                        "This is not supported when using `enable_correlations=True`. "
+                        "Did you forget to set `decompose_errors=True` when "
+                        "converting the stim circuit to a detector error model?");
+                }
+            } else if (target.is_observable_id()) {
+                component->observable_indices.push_back(target.val());
+            } else if (target.is_separator()) {
+                // If the previous error in the decomposition had 3 or more components, we ignore it.
+                if (component->node1 == SIZE_MAX) {
+                    throw std::invalid_argument(
+                        "Encountered a decomposed error instruction with a hyperedge component (3 or more detectors). "
+                        "This is not supported.");
+                } else if (p > 0) {
+                    handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                }
+                decomposed_err.components.push_back({});
+                component = &decomposed_err.components.back();
+                component->node1 = SIZE_MAX;
+                component->node2 = SIZE_MAX;
+                num_component_detectors = 0;
+            }
+        }
+        // If the final error in the decomposition had 3 or more components, we ignore it.
+        if (component->node1 == SIZE_MAX) {
+            // Undecomposed hyperedges are not supported
+            throw std::invalid_argument(
+                "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                "This is not supported when using `enable_correlations=True`. "
+                "Did you forget to set `decompose_errors=True` when "
+                "converting the stim circuit to a detector error model?");
+        } else if (p > 0) {
+            if (component->node2 == SIZE_MAX) {
+                handle_dem_error(p, {component->node1}, component->observable_indices);
+            } else {
+                handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+            }
+        }
+
+        add_decomposed_error_to_joint_probabilities(decomposed_err, joint_probabilites);
+    });
+}
 
 }  // namespace pm
 
