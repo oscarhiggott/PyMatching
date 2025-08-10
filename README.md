@@ -23,6 +23,7 @@ PyMatching can be configured using arbitrary weighted graphs, with or without a 
 Craig Gidney's [Stim](https://github.com/quantumlib/Stim) library to simulate and decode error correction circuits 
 in the presence of circuit-level noise. The [sinter](https://pypi.org/project/sinter/) package combines Stim and 
 PyMatching to perform fast, parallelised monte-carlo sampling of quantum error correction circuits.
+As of a recent update (v2.3), pymatching also supports [correlated matching](https://arxiv.org/abs/1310.0863).
 
 Documentation for PyMatching can be found at: [pymatching.readthedocs.io](https://pymatching.readthedocs.io/en/stable/)
 
@@ -70,6 +71,14 @@ in a similar way to how clusters are grown in Union-Find, whereas our approach i
 and uses a global priority queue to grow alternating trees.
 Yue also has a paper coming soon, so stay tuned for that as well.
 
+## Correlated matching
+
+As of PyMatching version 2.3, [correlated matching](https://arxiv.org/abs/1310.0863) is now also available in pymatching! Thank you to Sid Madhuk, who was the primary contributor for this new feature.
+
+Correlated matching has better accuracy than standard (uncorrelated) matching for many decoding problems where hyperedge errors are present. When these hyperedge errors are decomposed into edges (graphlike errors), they amount to correlations between these edges in the matching graph. A common example of such a hyperedge error is a $Y$ error in the surface code.
+
+The "two-pass" correlated matching decoder implemented in pymatching works by running sparse blossom twice. The first pass is a standard (uncorrelated) run of sparse blossom, to predict a set of edges in the matching graph. Correlated matching then assumes these errors (edges) occurred and reweights edges that are correlated with it based on this assumption. Matching is then run for the second time on this reweighted graph.
+
 ## Installation
 
 The latest version of PyMatching can be downloaded and installed from [PyPI](https://pypi.org/project/PyMatching/) 
@@ -100,10 +109,12 @@ First, we generate a stim circuit. Here, we use a surface code circuit included 
 import numpy as np
 import stim
 import pymatching
-circuit = stim.Circuit.generated("surface_code:rotated_memory_x", 
-                                 distance=5, 
-                                 rounds=5, 
-                                 after_clifford_depolarization=0.005)
+circuit = stim.Circuit.generated(
+    "surface_code:rotated_memory_x", 
+    distance=5, 
+    rounds=5, 
+    after_clifford_depolarization=0.005
+)
 ```
 
 Next, we use stim to generate a `stim.DetectorErrorModel` (DEM), which is effectively a 
@@ -125,28 +136,26 @@ sampler = circuit.compile_detector_sampler()
 syndrome, actual_observables = sampler.sample(shots=1000, separate_observables=True)
 ```
 
-Now we can decode! We compare PyMatching's predictions of the logical observables with the actual observables sampled 
-with stim, in order to count the number of mistakes and estimate the logical error rate:
-
-```python
-num_errors = 0
-for i in range(syndrome.shape[0]):
-    predicted_observables = matching.decode(syndrome[i, :])
-    num_errors += not np.array_equal(actual_observables[i, :], predicted_observables)
-
-print(num_errors)  # prints 8
-```
-
-As of PyMatching v2.1.0, you can use `matching.decode_batch` to decode a batch of shots instead.
-Since `matching.decode_batch` iterates over the shots in C++, it's faster than iterating over calls 
-to `matching.decode` in Python. The following cell is therefore a faster 
-equivalent to the cell above:
+Now we can decode! We compare PyMatching's predictions of the logical observables with the actual observables sampled with stim, in order to count the number of mistakes and estimate the logical error rate:
 
 ```python
 predicted_observables = matching.decode_batch(syndrome)
 num_errors = np.sum(np.any(predicted_observables != actual_observables, axis=1))
 
 print(num_errors)  # prints 8
+```
+
+To decode instead with correlated matching, set `enable_correlations=True` both when configuiing the `pymatching.Matching` object:
+```python
+matching_corr = pymatching.Matching.from_detector_error_model(dem, enable_correlations=True)
+```
+
+as well as when decoding:
+```python
+predicted_observables_corr = matching_corr.decode_batch(syndrome, enable_correlations=True)
+num_errors = np.sum(np.any(predicted_observables_corr != actual_observables, axis=1))
+
+print(num_errors)  # prints 3
 ```
 
 ### Loading from a parity check matrix
