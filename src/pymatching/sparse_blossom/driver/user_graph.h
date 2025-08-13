@@ -309,31 +309,22 @@ void iter_dem_instructions_include_correlations(
             } else if (target.is_observable_id()) {
                 component->observable_indices.push_back(target.val());
             } else if (target.is_separator()) {
-                // If the previous error in the decomposition had 3 or more components, we ignore it.
-                if (component->node1 == SIZE_MAX) {
-                    throw std::invalid_argument(
-                        "Encountered a decomposed error instruction with a hyperedge component (3 or more detectors). "
-                        "This is not supported.");
-                } else if (p > 0) {
-                    handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                if (p > 0 && num_component_detectors > 0) {
+                    if (num_component_detectors == 1) {
+                        handle_dem_error(p, {component->node1}, component->observable_indices);
+                    } else {
+                        handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                    }
                 }
-                decomposed_err.components.push_back({});
-                component = &decomposed_err.components.back();
-                component->node1 = SIZE_MAX;
-                component->node2 = SIZE_MAX;
-                num_component_detectors = 0;
             }
+            decomposed_err.components.push_back({});
+            component = &decomposed_err.components.back();
+            component->node1 = SIZE_MAX;
+            component->node2 = SIZE_MAX;
+            num_component_detectors = 0;
         }
-        // If the final error in the decomposition had 3 or more components, we ignore it.
-        if (component->node1 == SIZE_MAX) {
-            // Undecomposed hyperedges are not supported
-            throw std::invalid_argument(
-                "Encountered an undecomposed error instruction with 3 or more detectors. "
-                "This is not supported when using `enable_correlations=True`. "
-                "Did you forget to set `decompose_errors=True` when "
-                "converting the stim circuit to a detector error model?");
-        } else if (p > 0) {
-            if (component->node2 == SIZE_MAX) {
+        if (p > 0 && num_component_detectors > 0) {
+            if (num_component_detectors == 1) {
                 handle_dem_error(p, {component->node1}, component->observable_indices);
             } else {
                 handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
