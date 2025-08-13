@@ -301,7 +301,7 @@ void iter_dem_instructions_include_correlations(
                 } else {
                     // Undecomposed hyperedges are not supported
                     throw std::invalid_argument(
-                        "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                        "Encountered an undecomposed error instruction with 3 or more detectors. "
                         "This is not supported when using `enable_correlations=True`. "
                         "Did you forget to set `decompose_errors=True` when "
                         "converting the stim circuit to a detector error model?");
@@ -328,7 +328,7 @@ void iter_dem_instructions_include_correlations(
         if (component->node1 == SIZE_MAX) {
             // Undecomposed hyperedges are not supported
             throw std::invalid_argument(
-                "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                "Encountered an undecomposed error instruction with 3 or more detectors. "
                 "This is not supported when using `enable_correlations=True`. "
                 "Did you forget to set `decompose_errors=True` when "
                 "converting the stim circuit to a detector error model?");
