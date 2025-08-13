@@ -147,7 +147,7 @@ print(num_errors)  # prints 8
 
 To decode instead with correlated matching, set `enable_correlations=True` both when configuiing the `pymatching.Matching` object:
 ```python
-matching_corr = pymatching.Matching.from_detector_error_model(dem, enable_correlations=True)
+matching_corr = pymatching.Matching.from_detector_error_model(model, enable_correlations=True)
 ```
 
 as well as when decoding:
