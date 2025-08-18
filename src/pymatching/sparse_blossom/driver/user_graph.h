@@ -283,6 +283,7 @@ void iter_dem_instructions_include_correlations(
         component->node1 = SIZE_MAX;
         component->node2 = SIZE_MAX;
         size_t num_component_detectors = 0;
+        bool instruction_contains_separator = false;
         for (auto& target : instruction.target_data) {
             // Decompose error
             if (target.is_relative_detector_id()) {
@@ -309,30 +310,46 @@ void iter_dem_instructions_include_correlations(
             } else if (target.is_observable_id()) {
                 component->observable_indices.push_back(target.val());
             } else if (target.is_separator()) {
-                // If the previous error in the decomposition had 3 or more components, we ignore it.
-                if (component->node1 == SIZE_MAX) {
+                instruction_contains_separator = true;
+                // If the previous error in the decomposition had 3 or more detectors, we throw an exception.
+                if (num_component_detectors > 2) {
                     throw std::invalid_argument(
                         "Encountered a decomposed error instruction with a hyperedge component (3 or more detectors). "
                         "This is not supported.");
-                } else if (p > 0) {
+                } else if (num_component_detectors == 0) {
+                    throw std::invalid_argument(
+                        "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
+                        "This is not supported.");
+                } else if (num_component_detectors > 0) {
+                    // If the previous error in the decomposition had 1 or 2 detectors, we handle it
                     handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                    decomposed_err.components.push_back({});
+                    component = &decomposed_err.components.back();
+                    component->node1 = SIZE_MAX;
+                    component->node2 = SIZE_MAX;
+                    num_component_detectors = 0;
                 }
-                decomposed_err.components.push_back({});
-                component = &decomposed_err.components.back();
-                component->node1 = SIZE_MAX;
-                component->node2 = SIZE_MAX;
-                num_component_detectors = 0;
             }
         }
-        // If the final error in the decomposition had 3 or more components, we ignore it.
-        if (component->node1 == SIZE_MAX) {
+
+        if (num_component_detectors > 2) {
             // Undecomposed hyperedges are not supported
             throw std::invalid_argument(
                 "Encountered an undecomposed error instruction with 3 or mode detectors. "
                 "This is not supported when using `enable_correlations=True`. "
                 "Did you forget to set `decompose_errors=True` when "
                 "converting the stim circuit to a detector error model?");
-        } else if (p > 0) {
+        } else if (num_component_detectors == 0) {
+            if (instruction_contains_separator) {
+                throw std::invalid_argument(
+                    "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
+                    "This is not supported.");
+            } else {
+                // Ignore errors that are undetectable, provided they are not a component of a decomposed error
+                return;
+            }
+
+        } else if (num_component_detectors > 0) {
             if (component->node2 == SIZE_MAX) {
                 handle_dem_error(p, {component->node1}, component->observable_indices);
             } else {

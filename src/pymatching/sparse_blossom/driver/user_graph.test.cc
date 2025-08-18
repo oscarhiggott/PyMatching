@@ -308,7 +308,8 @@ TEST(IterDemInstructionsTest, ThreeDetectorErrorThrowsInvalidArgument) {
     stim::DetectorErrorModel dem("error(0.1) D0 D1 D2");
     TestHandler handler;
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
-    ASSERT_THROW(pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
+    ASSERT_THROW(
+        pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
 }
 
 // Test a decomposed error instruction. The handler should be called for each component.
@@ -353,13 +354,30 @@ TEST(IterDemInstructionsTest, DecomposedErrorWithHyperedgeThrows) {
         pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
 }
 
+// Test that a decomposed error with an undetectable component throws an exception.
+TEST(IterDemInstructionsTest, DecomposedErrorWithUndetectableErrorThrows) {
+    stim::DetectorErrorModel dem("error(0.15) L0 ^ D2 D4 ^ D5 D6 L2");
+    TestHandler handler;
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+
+    // Assert that the function throws std::invalid_argument when processing the DEM.
+    ASSERT_THROW(
+        pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities), std::invalid_argument);
+
+    stim::DetectorErrorModel dem2("error(0.15) D2 D4 ^ D5 D6 L2 ^ L1");
+    // Assert that the function throws std::invalid_argument when processing the DEM.
+    ASSERT_THROW(
+        pm::iter_dem_instructions_include_correlations(dem2, handler, joint_probabilities), std::invalid_argument);
+}
+
 // Test a complex DEM with multiple instruction types and edge cases combined.
 TEST(IterDemInstructionsTest, CombinedComplexDem) {
     stim::DetectorErrorModel dem(R"DEM(
         error(0.1) D0            # Instruction 1: Simple
+        error(0.3) L0            # Instruction 2: Undetectable error, ignored
         error(0.2) D1 D2 L0      # Instruction 2: Two detectors, one observable
-        error(0.0) D7            # Instruction 4: Zero probability, ignored
-        error(0.4) D8 ^ D9 L1    # Instruction 5: Decomposed
+        error(0.0) D7            # Instruction 3: Zero probability, ignored
+        error(0.4) D8 ^ D9 L1    # Instruction 4: Decomposed
     )DEM");
     TestHandler handler;
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
