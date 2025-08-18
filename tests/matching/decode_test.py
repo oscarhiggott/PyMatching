@@ -387,22 +387,32 @@ def test_load_from_circuit_with_correlations():
         predictions, weights = m.decode_batch(shots=shots, return_weights=True, enable_correlations=True)
 
 
-def test_use_correlations_with_uncorrelated_dem_load_raises_value_error():
+def test_use_correlations_with_uncorrelated_dem_load_raises_value_error(tmp_path):
     stim = pytest.importorskip("stim")
+    d = 3
+    p = 0.001
     circuit = stim.Circuit.generated(
         code_task="surface_code:rotated_memory_x",
-        distance=3,
-        rounds=3,
-        after_clifford_depolarization=0.001
+        distance=d,
+        rounds=d,
+        after_clifford_depolarization=p
     )
+    dem = circuit.detector_error_model(decompose_errors=True)
     shots = circuit.compile_detector_sampler().sample(shots=10)
     matching_1 = pymatching.Matching(circuit, enable_correlations=False)
     matching_2 = pymatching.Matching.from_stim_circuit(circuit=circuit, enable_correlations=False)
     matching_3 = pymatching.Matching.from_detector_error_model(
-        model=circuit.detector_error_model(decompose_errors=True),
+        model=dem,
         enable_correlations=False
     )
-    for m in (matching_1, matching_2, matching_3):
+    fn = f"surface_code_x_d{d}_r{d}_p{p}"
+    stim_file = tmp_path / f"{fn}.stim"
+    circuit.to_file(stim_file)
+    matching_4 = pymatching.Matching.from_stim_circuit_file(stim_file, enable_correlations=False)
+    dem_file = tmp_path / f"{fn}.dem"
+    dem.to_file(dem_file)
+    matching_5 = pymatching.Matching.from_detector_error_model_file(dem_file, enable_correlations=False)
+    for m in (matching_1, matching_2, matching_3, matching_4, matching_5):
         with pytest.raises(ValueError):
             m.decode_batch(shots=shots, return_weights=True, enable_correlations=True)
         with pytest.raises(ValueError):
@@ -413,16 +423,22 @@ def test_use_correlations_with_uncorrelated_dem_load_raises_value_error():
             m.decode(shots[0], enable_correlations=True)
 
 
-def test_use_correlations_without_decompose_errors_raises_value_error():
+def test_use_correlations_without_decompose_errors_raises_value_error(tmp_path):
     stim = pytest.importorskip("stim")
+    d = 3
+    p = 0.001
     circuit = stim.Circuit.generated(
         code_task="surface_code:rotated_memory_x",
-        distance=3,
-        rounds=3,
-        after_clifford_depolarization=0.001
+        distance=d,
+        rounds=d,
+        after_clifford_depolarization=p
     )
     dem = circuit.detector_error_model(decompose_errors=False)
+    dem_file = tmp_path / "surface_code.dem"
+    dem.to_file(dem_file)
     with pytest.raises(ValueError):
         pymatching.Matching.from_detector_error_model(dem, enable_correlations=True)
     with pytest.raises(ValueError):
         pymatching.Matching(dem, enable_correlations=True)
+    with pytest.raises(ValueError):
+        pymatching.Matching.from_detector_error_model_file(dem_file, enable_correlations=True)
