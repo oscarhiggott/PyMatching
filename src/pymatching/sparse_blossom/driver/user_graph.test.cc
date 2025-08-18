@@ -413,6 +413,13 @@ double bernoulli_xor(double p1, double p2) {
     return p1 * (1 - p2) + p2 * (1 - p1);
 }
 
+TEST(IterDemInstructionsTest, MoreThanEightComponents) {
+    stim::DetectorErrorModel dem("error(0.1) D0 ^ D1 ^ D2 ^ D3 ^ D4 ^ D5 ^ D6 ^ D7 ^ D8");
+    TestHandler handler;
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
+    pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
+}
+
 // Tests that multiple error instructions on the same edge correctly combine their probabilities.
 TEST(IterDemInstructionsTest, MultipleErrorsOnSameEdgeCombine) {
     stim::DetectorErrorModel dem("error(0.1) D0 D1\n error(0.2) D0 D1");

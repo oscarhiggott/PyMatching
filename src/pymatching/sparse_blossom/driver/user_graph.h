@@ -249,7 +249,7 @@ struct DecomposedDemError {
     /// The probability of this error occurring.
     double probability;
     /// Effects of the error.
-    stim::FixedCapVector<UserEdge, 8> components;
+    std::vector<UserEdge> components;
 
     bool operator==(const DecomposedDemError& other) const;
     bool operator!=(const DecomposedDemError& other) const;
