@@ -1296,7 +1296,11 @@ class Matching:
         return m
 
     @staticmethod
-    def from_detector_error_model_file(dem_path: Union[str, Path]) -> 'pymatching.Matching':
+    def from_detector_error_model_file(
+        dem_path: Union[str, Path],
+        *,
+        enable_correlations: bool = False
+    ) -> 'pymatching.Matching':
         """
         Construct a `pymatching.Matching` by loading from a stim DetectorErrorModel file path.
 
@@ -1304,6 +1308,11 @@ class Matching:
         ----------
         dem_path : str
             The path of the detector error model file
+        enable_correlations : bool, optional
+            If `enable_correlations==True`, the detector error model is converted into an internal
+            representation that allows correlated matching to be used. Note that you must set
+            `enable_correlations=True` here in order to use `enable_correlations=True` when decoding.
+            By default, False.
 
         Returns
         -------
@@ -1314,7 +1323,10 @@ class Matching:
         if isinstance(dem_path, Path):
             dem_path = str(dem_path)
         m = Matching()
-        m._matching_graph = _cpp_pm.detector_error_model_file_to_matching_graph(dem_path)
+        m._matching_graph = _cpp_pm.detector_error_model_file_to_matching_graph(
+            dem_path,
+            enable_correlations=enable_correlations
+        )
         return m
 
     @staticmethod
@@ -1371,7 +1383,11 @@ class Matching:
         return m
 
     @staticmethod
-    def from_stim_circuit_file(stim_circuit_path: Union[str, Path]) -> 'pymatching.Matching':
+    def from_stim_circuit_file(
+        stim_circuit_path: Union[str, Path],
+        *,
+        enable_correlations: bool = False
+    ) -> 'pymatching.Matching':
         """
         Construct a `pymatching.Matching` by loading from a stim circuit file path.
 
@@ -1386,11 +1402,19 @@ class Matching:
             A `pymatching.Matching` object representing the graphlike error mechanisms in the stim circuit
             in the file `stim_circuit_path`, with any hyperedge error mechanisms decomposed into graphlike error
             mechanisms. Parallel edges are merged using `merge_strategy="independent"`.
+        enable_correlations : bool, optional
+            If `enable_correlations==True`, the stim circuit's detector error model is converted into an internal
+            representation that allows correlated matching to be used. Note that you must set
+            `enable_correlations=True` here in order to use `enable_correlations=True` when decoding.
+            By default, False.
         """
         if isinstance(stim_circuit_path, Path):
             stim_circuit_path = str(stim_circuit_path)
         m = Matching()
-        m._matching_graph = _cpp_pm.stim_circuit_file_to_matching_graph(stim_circuit_path)
+        m._matching_graph = _cpp_pm.stim_circuit_file_to_matching_graph(
+            stim_circuit_path,
+            enable_correlations=enable_correlations
+        )
         return m
 
     def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel', *, enable_correlations: bool = False) -> None:
