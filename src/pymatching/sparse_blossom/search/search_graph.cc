@@ -113,9 +113,13 @@ void pm::SearchGraph::reweight_for_edges(const std::vector<int64_t>& edges) {
         reweight_for_edge(u, v);
     }
 }
+
 void pm::SearchGraph::undo_reweights() {
-    for (auto& [ptr, weight] : previous_weights) {
-        *ptr = weight;
+    // We iterate backward over the previous weights, since some edges
+    // may have been reweighted more than once.
+    for (auto it = previous_weights.rbegin(); it != previous_weights.rend(); ++it) {
+        pm::PreviousWeight& prev = *it;
+        *prev.ptr = prev.val;
     }
     previous_weights.clear();
 }
