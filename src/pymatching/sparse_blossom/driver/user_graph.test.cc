@@ -374,20 +374,26 @@ TEST(IterDemInstructionsTest, DecomposedErrorWithUndetectableErrorThrows) {
 // Test a complex DEM with multiple instruction types and edge cases combined.
 TEST(IterDemInstructionsTest, CombinedComplexDem) {
     stim::DetectorErrorModel dem(R"DEM(
-        error(0.1) D0            # Instruction 1: Simple
-        error(0.3) L0            # Instruction 2: Undetectable error, ignored
-        error(0.2) D1 D2 L0      # Instruction 2: Two detectors, one observable
-        error(0.0) D7            # Instruction 3: Zero probability, ignored
-        error(0.4) D8 ^ D9 L1    # Instruction 4: Decomposed
+        error(0.1) D0                   # Simple
+        error(0.3) L0                   # Undetectable error, ignored
+        error(0.2) D1 D2 L0             # Two detectors, one observable
+        error(0.0) D7                   # Zero probability, ignored
+        error(0.4) D8 D10 ^ D9 D11 L1   # Decomposed hyperedge
+        error(0.25) D12 ^ D13 L1        # Decomposed edge
     )DEM");
     TestHandler handler;
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
     pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
-    ASSERT_EQ(handler.handled_errors.size(), 2);
+
+    ASSERT_EQ(handler.handled_errors.size(), 3);
     std::vector<HandledError> expected = {
-        {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}};
+        {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.25, 12, 13, {1}}};
     EXPECT_EQ(handler.handled_errors, expected);
+    // ASSERT_EQ(handler.handled_errors.size(), 2);
+    // std::vector<HandledError> expected = {
+    //     {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}};
+    // EXPECT_EQ(handler.handled_errors, expected);
     // ASSERT_EQ(handler.handled_errors.size(), 4);
     // std::vector<HandledError> expected = {
     //     {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
@@ -396,18 +402,18 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
     // Check joint probabilities
     std::pair<size_t, size_t> key0B = {0, SIZE_MAX};
     std::pair<size_t, size_t> key12 = {1, 2};
-    std::pair<size_t, size_t> key8B = {8, SIZE_MAX};
-    std::pair<size_t, size_t> key9B = {9, SIZE_MAX};
+    std::pair<size_t, size_t> key8_10 = {8, 10};
+    std::pair<size_t, size_t> key9_11 = {9, 11};
 
     // Marginal probabilities from each instruction
     EXPECT_DOUBLE_EQ(joint_probabilities[key0B][key0B], 0.1);
     EXPECT_DOUBLE_EQ(joint_probabilities[key12][key12], 0.2);
-    EXPECT_DOUBLE_EQ(joint_probabilities[key8B][key8B], 0.4);
-    EXPECT_DOUBLE_EQ(joint_probabilities[key9B][key9B], 0.4);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key8_10][key8_10], 0.4);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key9_11][key9_11], 0.4);
 
     // Joint probability from the last instruction
-    EXPECT_DOUBLE_EQ(joint_probabilities[key8B][key9B], 0.4);
-    EXPECT_DOUBLE_EQ(joint_probabilities[key9B][key8B], 0.4);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key8_10][key9_11], 0.4);
+    EXPECT_DOUBLE_EQ(joint_probabilities[key9_11][key8_10], 0.4);
 
     // Check that there are no other joint probabilities
     EXPECT_EQ(joint_probabilities[key0B].count(key12), 0);
@@ -441,16 +447,16 @@ TEST(IterDemInstructionsTest, MultipleErrorsOnSameEdgeCombine) {
 // Tests how marginal and joint probabilities are combined across different decomposed error instructions.
 TEST(IterDemInstructionsTest, ComplexCombinationOfErrors) {
     stim::DetectorErrorModel dem(R"DEM(
-        error(0.1) D0 ^ D1
-        error(0.2) D0 ^ D2
+        error(0.1) D0 D3 ^ D1 D4
+        error(0.2) D0 D3 ^ D2 D5
     )DEM");
     TestHandler handler;
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
     pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
-    std::pair<size_t, size_t> k0 = {0, SIZE_MAX};
-    std::pair<size_t, size_t> k1 = {1, SIZE_MAX};
-    std::pair<size_t, size_t> k2 = {2, SIZE_MAX};
+    std::pair<size_t, size_t> k0 = {0, 3};
+    std::pair<size_t, size_t> k1 = {1, 4};
+    std::pair<size_t, size_t> k2 = {2, 5};
 
     // Marginal probabilities
     EXPECT_DOUBLE_EQ(joint_probabilities[k0][k0], bernoulli_xor(0.1, 0.2));  // 0.26
@@ -463,7 +469,7 @@ TEST(IterDemInstructionsTest, ComplexCombinationOfErrors) {
     EXPECT_DOUBLE_EQ(joint_probabilities[k0][k2], 0.2);
     EXPECT_DOUBLE_EQ(joint_probabilities[k2][k0], 0.2);
 
-    // No instruction connects D1 and D2, so their joint probability should be 0.
+    // No instruction connects (D1 D4) and (D2 D5), so their joint probability should be 0.
     EXPECT_DOUBLE_EQ(joint_probabilities[k1][k2], 0.0);
 }
 

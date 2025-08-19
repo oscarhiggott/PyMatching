@@ -466,6 +466,61 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
     }
 }
 
+bool pm::undecompose_error_if_edgelike(pm::DecomposedDemError& decomposed_error) {
+    if (decomposed_error.components.size() < 2) {
+        // Already not decomposed
+        return false;
+    }
+
+    // Compute symptom of error by taking the symmetric difference of components
+    std::set<size_t> all_detectors;
+    std::set<size_t> all_observables;
+
+    for (auto& component : decomposed_error.components) {
+        // Update detectors set
+        if (all_detectors.find(component.node1) != all_detectors.end()) {
+            all_detectors.erase(component.node1);
+        } else {
+            all_detectors.insert(component.node1);
+        }
+        if (component.node2 != SIZE_MAX) {
+            if (all_detectors.find(component.node2) != all_detectors.end()) {
+                all_detectors.erase(component.node2);
+            } else {
+                all_detectors.insert(component.node2);
+            }
+        }
+        // Update observables set
+        for (auto& obs : component.observable_indices) {
+            if (all_observables.find(obs) != all_observables.end()) {
+                all_observables.erase(obs);
+            } else {
+                all_observables.insert(obs);
+            }
+        }
+    }
+
+    // The error really is a hyperedge, so we keep the decomposition
+    if (all_detectors.size() > 2) {
+        return false;
+    }
+
+    // The error is an edge, but has been decomposed. Undecompose it.
+    decomposed_error.components.clear();
+    decomposed_error.components.push_back({});
+    UserEdge* component = &decomposed_error.components.back();
+    component->node1 = *all_detectors.begin();
+    if (all_detectors.size() == 2) {
+        component->node2 = *all_detectors.rbegin();
+    } else {
+        component->node2 = SIZE_MAX;
+    }
+    for (size_t obs : all_observables) {
+        component->observable_indices.push_back(obs);
+    }
+    return true;
+}
+
 void pm::add_decomposed_error_to_joint_probabilities(
     DecomposedDemError& error,
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {

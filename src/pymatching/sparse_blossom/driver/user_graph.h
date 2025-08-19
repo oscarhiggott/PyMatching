@@ -120,7 +120,8 @@ class UserGraph {
     Mwpm& get_mwpm();
     Mwpm& get_mwpm_with_search_graph();
     void handle_dem_instruction(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
-    void handle_dem_instruction_include_correlations(double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
+    void handle_dem_instruction_include_correlations(
+        double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables);
     void get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes);
     void populate_implied_edge_weights(
         std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
@@ -258,6 +259,8 @@ struct DecomposedDemError {
     bool operator!=(const DecomposedDemError& other) const;
 };
 
+bool undecompose_error_if_edgelike(DecomposedDemError& decomposed_error);
+
 void add_decomposed_error_to_joint_probabilities(
     DecomposedDemError& error,
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites);
@@ -314,7 +317,8 @@ void iter_dem_instructions_include_correlations(
                 component->observable_indices.push_back(target.val());
             } else if (target.is_separator()) {
                 instruction_contains_separator = true;
-                // We cannot have num_component_detectors > 2 at this point, or we would have already thrown an exception
+                // We cannot have num_component_detectors > 2 at this point, or we would have already thrown an
+                // exception
                 if (num_component_detectors == 0) {
                     throw std::invalid_argument(
                         "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
@@ -339,7 +343,9 @@ void iter_dem_instructions_include_correlations(
                 return;
             }
         }
-        
+
+        bool undecomposed_an_edge = undecompose_error_if_edgelike(decomposed_err);
+
         // Only add the edge into the graph if it is not a component in a decomposed error with more than one component
         if (decomposed_err.components.size() == 1) {
             component = &decomposed_err.components.back();
