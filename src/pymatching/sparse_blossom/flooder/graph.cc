@@ -138,66 +138,6 @@ MatchingGraph::MatchingGraph(MatchingGraph&& graph) noexcept
       loaded_from_dem_without_correlations(graph.loaded_from_dem_without_correlations) {
 }
 
-bool MatchingGraph::graph_structure_equal(const MatchingGraph& other) const {
-    if ((this->negative_weight_detection_events_set != other.negative_weight_detection_events_set) ||
-        (this->negative_weight_observables_set != other.negative_weight_observables_set) ||
-        (this->negative_weight_sum != other.negative_weight_sum) ||
-        (this->is_user_graph_boundary_node != other.is_user_graph_boundary_node) ||
-        (this->num_nodes != other.num_nodes) || (this->num_observables != other.num_observables) ||
-        (this->normalising_constant != other.normalising_constant) ||
-        (this->previous_weights != other.previous_weights) ||
-        (this->edges_to_implied_weights_unconverted != other.edges_to_implied_weights_unconverted) ||
-        (this->loaded_from_dem_without_correlations != other.loaded_from_dem_without_correlations)) {
-        return false;
-    }
-    if (this->nodes.size() != other.nodes.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < nodes.size(); i++) {
-        if ((nodes[i].neighbors.size() != other.nodes[i].neighbors.size()) ||
-            (nodes[i].neighbor_weights != other.nodes[i].neighbor_weights) ||
-            (nodes[i].neighbor_implied_weights.size() != other.nodes[i].neighbor_implied_weights.size())) {
-            return false;
-        }
-        for (size_t j = 0; j < nodes[i].neighbors.size(); j++) {
-            if (j == 0 && nodes[i].neighbors[0] == nullptr && other.nodes[i].neighbors[0] == nullptr) {
-                continue;
-            }
-            auto node_i_j = nodes[i].neighbors[j] - nodes.data();
-            auto other_node_i_j = other.nodes[i].neighbors[j] - other.nodes.data();
-            if (node_i_j != other_node_i_j) {
-                // std::cout << " i: " << i << " j: " << j << " node_i_j: " << node_i_j << " other_node_i_j: " <<
-                // other_node_i_j << std::endl;
-                return false;
-            }
-        }
-        for (size_t j = 0; j < nodes[i].neighbor_implied_weights.size(); j++) {
-            if (nodes[i].neighbor_implied_weights[j].size() != other.nodes[i].neighbor_implied_weights[j].size()) {
-                return false;
-            }
-            for (size_t k = 0; k < nodes[i].neighbor_implied_weights[j].size(); k++) {
-                if (*nodes[i].neighbor_implied_weights[j][k].edge0_ptr !=
-                    *other.nodes[i].neighbor_implied_weights[j][k].edge0_ptr) {
-                    return false;
-                }
-                if (nodes[i].neighbor_implied_weights[j][k].implied_weight !=
-                    other.nodes[i].neighbor_implied_weights[j][k].implied_weight) {
-                    return false;
-                }
-                if ((nodes[i].neighbor_implied_weights[j][k].edge1_ptr == nullptr) &&
-                    (other.nodes[i].neighbor_implied_weights[j][k].edge1_ptr == nullptr)) {
-                    continue;
-                }
-                if (*nodes[i].neighbor_implied_weights[j][k].edge1_ptr !=
-                    *other.nodes[i].neighbor_implied_weights[j][k].edge1_ptr) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
-}
-
 MatchingGraph::MatchingGraph() : negative_weight_sum(0), num_nodes(0), num_observables(0), normalising_constant(0) {
 }
 
