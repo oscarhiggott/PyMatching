@@ -67,6 +67,7 @@ class MatchingGraph {
     MatchingGraph(size_t num_nodes, size_t num_observables);
     MatchingGraph(size_t num_nodes, size_t num_observables, double normalising_constant);
     MatchingGraph(MatchingGraph&& graph) noexcept;
+    bool graph_structure_equal(const MatchingGraph& other) const;
     void add_edge(
         size_t u,
         size_t v,
