@@ -249,7 +249,7 @@ bool graph_structure_equal(const pm::MatchingGraph& graph1, const pm::MatchingGr
 }
 
 bool graph_structure_equal(const pm::SearchGraph& graph1, const pm::SearchGraph& graph2) {
-    if ((graph1.num_nodes != graph2.num_nodes) || (graph1.previous_weights != graph2.previous_weights) ||
+    if ((graph1.num_nodes != graph2.num_nodes) ||
         (graph1.negative_weight_edges != graph2.negative_weight_edges) ||
         (graph1.edges_to_implied_weights_unconverted != graph2.edges_to_implied_weights_unconverted) ||
         (graph1.previous_weights.size() != graph2.previous_weights.size())) {

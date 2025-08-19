@@ -33,10 +33,6 @@ struct PreviousWeight {
     weight_int val;
     PreviousWeight(weight_int* ptr, weight_int val) : ptr(ptr), val(val) {
     }
-    // Two PreviousWeight structs are equal if the *value* of ptr and val are equal
-    bool operator==(const PreviousWeight& other) const {
-        return (*(this->ptr) == *(other.ptr)) && (this->val && other.val);
-    }
 };
 
 /// A collection of detector nodes. It's expected that all detector nodes in the graph
@@ -71,7 +67,6 @@ class MatchingGraph {
     MatchingGraph(size_t num_nodes, size_t num_observables);
     MatchingGraph(size_t num_nodes, size_t num_observables, double normalising_constant);
     MatchingGraph(MatchingGraph&& graph) noexcept;
-    bool graph_structure_equal(const MatchingGraph& other) const;
     void add_edge(
         size_t u,
         size_t v,
