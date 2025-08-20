@@ -86,6 +86,54 @@ DecodingTestCase load_surface_code_d13_p100_some_negative_weights_test_case() {
         "exact.txt");
 }
 
+std::vector<uint64_t> get_syndrome_from_edges(const std::vector<int64_t>& edges) {
+    std::set<int64_t> syndrome;
+    for (size_t i = 0; i < edges.size() / 2; i++) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+
+        auto u_it = syndrome.find(u);
+        if (u_it == syndrome.end()) {
+            syndrome.insert(u);
+        } else {
+            syndrome.erase(u_it);
+        }
+
+        if (v != -1) {
+            auto v_it = syndrome.find(v);
+            if (v_it == syndrome.end()) {
+                syndrome.insert(v);
+            } else {
+                syndrome.erase(v_it);
+            }
+        }
+    }
+    std::vector<uint64_t> sorted_syndrome;
+    for (auto& s : syndrome)
+        sorted_syndrome.push_back(s);
+    return sorted_syndrome;
+}
+
+uint64_t get_observables_from_edges(const std::vector<int64_t>& edges, pm::Mwpm& mwpm) {
+    uint64_t obs_mask = 0;
+    for (size_t i = 0; i < edges.size() / 2; i++) {
+        int64_t u = edges[2 * i];
+        int64_t v = edges[2 * i + 1];
+
+        auto& u_node = mwpm.search_flooder.graph.nodes[u];
+        size_t idx = SIZE_MAX;
+        if (v == -1) {
+            idx = 0;
+        } else {
+            auto v_ptr = &mwpm.search_flooder.graph.nodes[v];
+            idx = u_node.index_of_neighbor(v_ptr);
+        }
+        for (auto& obs : u_node.neighbor_observable_indices[idx])
+            obs_mask ^= 1 << obs;
+    }
+    return obs_mask;
+}
+
 TEST(MwpmDecoding, CompareSolutionWeights) {
     DecodingTestCase test_case;
     for (int i : {0, 1}) {
@@ -118,6 +166,220 @@ TEST(MwpmDecoding, CompareSolutionWeights) {
         }
         ASSERT_TRUE(num_mistakes < max_shots * 50 / 1000);
     }
+}
+
+TEST(MwpmCorrelatedDecoding, NegativeEdgeWeightsThrowException) {
+    DecodingTestCase test_case;
+    test_case = load_surface_code_d13_p100_some_negative_weights_test_case();
+    pm::weight_int num_distinct_weights = 10001;
+    EXPECT_THROW(
+        pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights, true, true);
+        , std::invalid_argument);
+}
+
+// For simplicity, we say two previous weights are equal if val and the value at ptr are equal
+bool previous_weights_equal(const pm::PreviousWeight& prev1, const pm::PreviousWeight& prev2) {
+    return (*prev1.ptr == *prev2.ptr) && (prev1.val == prev2.val);
+}
+
+bool graph_structure_equal(const pm::MatchingGraph& graph1, const pm::MatchingGraph& graph2) {
+    if ((graph1.negative_weight_detection_events_set != graph2.negative_weight_detection_events_set) ||
+        (graph1.negative_weight_observables_set != graph2.negative_weight_observables_set) ||
+        (graph1.negative_weight_sum != graph2.negative_weight_sum) ||
+        (graph1.is_user_graph_boundary_node != graph2.is_user_graph_boundary_node) ||
+        (graph1.num_nodes != graph2.num_nodes) || (graph1.num_observables != graph2.num_observables) ||
+        (graph1.normalising_constant != graph2.normalising_constant) ||
+        (graph1.previous_weights.size() != graph2.previous_weights.size()) ||
+        (graph1.edges_to_implied_weights_unconverted != graph2.edges_to_implied_weights_unconverted) ||
+        (graph1.loaded_from_dem_without_correlations != graph2.loaded_from_dem_without_correlations)) {
+        return false;
+    }
+
+    for (size_t i = 0; i < graph1.previous_weights.size(); i++) {
+        if (!previous_weights_equal(graph1.previous_weights[i], graph2.previous_weights[i])) {
+            return false;
+        }
+    }
+
+    if (graph1.nodes.size() != graph2.nodes.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < graph1.nodes.size(); i++) {
+        if ((graph1.nodes[i].neighbors.size() != graph2.nodes[i].neighbors.size()) ||
+            (graph1.nodes[i].neighbor_weights != graph2.nodes[i].neighbor_weights) ||
+            (graph1.nodes[i].neighbor_implied_weights.size() != graph2.nodes[i].neighbor_implied_weights.size())) {
+            return false;
+        }
+        for (size_t j = 0; j < graph1.nodes[i].neighbors.size(); j++) {
+            if (j == 0 && graph1.nodes[i].neighbors[0] == nullptr && graph2.nodes[i].neighbors[0] == nullptr) {
+                continue;
+            }
+            auto node_i_j = graph1.nodes[i].neighbors[j] - graph1.nodes.data();
+            auto graph2_node_i_j = graph2.nodes[i].neighbors[j] - graph2.nodes.data();
+            if (node_i_j != graph2_node_i_j) {
+                return false;
+            }
+        }
+        for (size_t j = 0; j < graph1.nodes[i].neighbor_implied_weights.size(); j++) {
+            if (graph1.nodes[i].neighbor_implied_weights[j].size() !=
+                graph2.nodes[i].neighbor_implied_weights[j].size()) {
+                return false;
+            }
+            for (size_t k = 0; k < graph1.nodes[i].neighbor_implied_weights[j].size(); k++) {
+                if (*graph1.nodes[i].neighbor_implied_weights[j][k].edge0_ptr !=
+                    *graph2.nodes[i].neighbor_implied_weights[j][k].edge0_ptr) {
+                    return false;
+                }
+                if (graph1.nodes[i].neighbor_implied_weights[j][k].implied_weight !=
+                    graph2.nodes[i].neighbor_implied_weights[j][k].implied_weight) {
+                    return false;
+                }
+                if ((graph1.nodes[i].neighbor_implied_weights[j][k].edge1_ptr == nullptr) &&
+                    (graph2.nodes[i].neighbor_implied_weights[j][k].edge1_ptr == nullptr)) {
+                    continue;
+                }
+                if (*graph1.nodes[i].neighbor_implied_weights[j][k].edge1_ptr !=
+                    *graph2.nodes[i].neighbor_implied_weights[j][k].edge1_ptr) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+bool graph_structure_equal(const pm::SearchGraph& graph1, const pm::SearchGraph& graph2) {
+    if ((graph1.num_nodes != graph2.num_nodes) ||
+        (graph1.negative_weight_edges != graph2.negative_weight_edges) ||
+        (graph1.edges_to_implied_weights_unconverted != graph2.edges_to_implied_weights_unconverted) ||
+        (graph1.previous_weights.size() != graph2.previous_weights.size())) {
+        return false;
+    }
+
+    for (size_t i = 0; i < graph1.previous_weights.size(); i++) {
+        if (!previous_weights_equal(graph1.previous_weights[i], graph2.previous_weights[i])) {
+            return false;
+        }
+    }
+
+    if (graph1.nodes.size() != graph2.nodes.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < graph1.nodes.size(); i++) {
+        if ((graph1.nodes[i].neighbors.size() != graph2.nodes[i].neighbors.size()) ||
+            (graph1.nodes[i].neighbor_weights != graph2.nodes[i].neighbor_weights) ||
+            (graph1.nodes[i].neighbor_implied_weights.size() != graph2.nodes[i].neighbor_implied_weights.size())) {
+            return false;
+        }
+        for (size_t j = 0; j < graph1.nodes[i].neighbors.size(); j++) {
+            if (j == 0 && graph1.nodes[i].neighbors[0] == nullptr && graph2.nodes[i].neighbors[0] == nullptr) {
+                continue;
+            }
+            auto node_i_j = graph1.nodes[i].neighbors[j] - graph1.nodes.data();
+            auto graph2_node_i_j = graph2.nodes[i].neighbors[j] - graph2.nodes.data();
+            if (node_i_j != graph2_node_i_j) {
+                return false;
+            }
+        }
+        for (size_t j = 0; j < graph1.nodes[i].neighbor_implied_weights.size(); j++) {
+            if (graph1.nodes[i].neighbor_implied_weights[j].size() !=
+                graph2.nodes[i].neighbor_implied_weights[j].size()) {
+                return false;
+            }
+            for (size_t k = 0; k < graph1.nodes[i].neighbor_implied_weights[j].size(); k++) {
+                if (*graph1.nodes[i].neighbor_implied_weights[j][k].edge0_ptr !=
+                    *graph2.nodes[i].neighbor_implied_weights[j][k].edge0_ptr) {
+                    std::cout << *graph1.nodes[i].neighbor_implied_weights[j][k].edge0_ptr << std::endl;
+                    std::cout << *graph2.nodes[i].neighbor_implied_weights[j][k].edge0_ptr << std::endl;
+                    std::cout << graph1.nodes[i].neighbor_implied_weights[j][k].implied_weight << std::endl;
+                    return false;
+                }
+                if (graph1.nodes[i].neighbor_implied_weights[j][k].implied_weight !=
+                    graph2.nodes[i].neighbor_implied_weights[j][k].implied_weight) {
+                    return false;
+                }
+                if ((graph1.nodes[i].neighbor_implied_weights[j][k].edge1_ptr == nullptr) &&
+                    (graph2.nodes[i].neighbor_implied_weights[j][k].edge1_ptr == nullptr)) {
+                    continue;
+                }
+                if (*graph1.nodes[i].neighbor_implied_weights[j][k].edge1_ptr !=
+                    *graph2.nodes[i].neighbor_implied_weights[j][k].edge1_ptr) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+TEST(MwpmCorrelatedDecoding, BetterLogicalErrorRateThanUncorrelated) {
+    DecodingTestCase test_case;
+    test_case = load_surface_code_d13_p100_test_case();
+    pm::weight_int num_distinct_weights = 10001;
+    auto mwpm_correlated_untouched =
+        pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights, true, true);
+    auto mwpm_correlated =
+        pm::detector_error_model_to_mwpm(test_case.detector_error_model, num_distinct_weights, true, true);
+
+    ASSERT_TRUE(graph_structure_equal(mwpm_correlated.flooder.graph, mwpm_correlated_untouched.flooder.graph));
+    ASSERT_TRUE(
+        graph_structure_equal(mwpm_correlated.search_flooder.graph, mwpm_correlated_untouched.search_flooder.graph));
+
+    stim::SparseShot sparse_shot;
+    size_t num_mistakes = 0;
+    size_t num_mistakes_uncorrelated = 0;
+    size_t num_shots = 0;
+    size_t max_shots = 300;
+    size_t expected_mistakes_correlated = 5;
+    size_t expected_mistakes_uncorrelated = 11;
+    pm::ExtendedMatchingResult res(mwpm_correlated.flooder.graph.num_observables);
+    std::vector<int64_t> edges;
+    while (test_case.reader->start_and_read_entire_record(sparse_shot)) {
+        if (num_shots > max_shots)
+            break;
+        pm::decode_detection_events(
+            mwpm_correlated, sparse_shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/true);
+        if (sparse_shot.obs_mask_as_u64() != res.obs_crossed[0]) {
+            num_mistakes++;
+        }
+        if (num_shots < 3) {
+            ASSERT_TRUE(graph_structure_equal(mwpm_correlated.flooder.graph, mwpm_correlated_untouched.flooder.graph));
+            ASSERT_TRUE(graph_structure_equal(
+                mwpm_correlated.search_flooder.graph, mwpm_correlated_untouched.search_flooder.graph));
+        }
+        if (sparse_shot.obs_mask_as_u64() != test_case.expected_obs_masks[num_shots]) {
+            num_mistakes_uncorrelated++;
+        }
+        pm::MatchingResult res_bitmask = pm::decode_detection_events_for_up_to_64_observables(
+            mwpm_correlated, sparse_shot.hits, /*enable_correlations=*/true);
+        ASSERT_EQ(res.obs_crossed[0], res_bitmask.obs_mask);
+        if (num_shots < 3) {
+            ASSERT_TRUE(graph_structure_equal(mwpm_correlated.flooder.graph, mwpm_correlated_untouched.flooder.graph));
+            ASSERT_TRUE(graph_structure_equal(
+                mwpm_correlated.search_flooder.graph, mwpm_correlated_untouched.search_flooder.graph));
+        }
+        pm::decode_detection_events_to_edges_with_edge_correlations(mwpm_correlated, sparse_shot.hits, edges);
+        auto obs_edge_corr = get_observables_from_edges(edges, mwpm_correlated);
+        auto edges_syndrome = get_syndrome_from_edges(edges);
+        ASSERT_EQ(res.obs_crossed[0], obs_edge_corr);
+        ASSERT_EQ(edges_syndrome, sparse_shot.hits);
+        if (num_shots < 3) {
+            ASSERT_TRUE(graph_structure_equal(mwpm_correlated.flooder.graph, mwpm_correlated_untouched.flooder.graph));
+            ASSERT_TRUE(graph_structure_equal(
+                mwpm_correlated.search_flooder.graph, mwpm_correlated_untouched.search_flooder.graph));
+        }
+        edges.clear();
+        sparse_shot.clear();
+        num_shots++;
+        std::fill(res.obs_crossed.begin(), res.obs_crossed.end(), 0);
+        res.weight = 0;
+    }
+    ASSERT_TRUE(graph_structure_equal(mwpm_correlated.flooder.graph, mwpm_correlated_untouched.flooder.graph));
+    ASSERT_TRUE(
+        graph_structure_equal(mwpm_correlated.search_flooder.graph, mwpm_correlated_untouched.search_flooder.graph));
+    ASSERT_LT(num_mistakes, num_mistakes_uncorrelated);
+    ASSERT_EQ(num_mistakes, expected_mistakes_correlated);
+    ASSERT_EQ(num_mistakes_uncorrelated, expected_mistakes_uncorrelated);
 }
 
 TEST(MwpmDecoding, CompareSolutionWeightsWithNoLimitOnNumObservables) {
@@ -192,54 +454,6 @@ TEST(MwpmDecoding, DecodeToMatchEdges) {
         sparse_shot.clear();
         num_shots++;
     }
-}
-
-std::vector<uint64_t> get_syndrome_from_edges(const std::vector<int64_t>& edges) {
-    std::set<int64_t> syndrome;
-    for (size_t i = 0; i < edges.size() / 2; i++) {
-        int64_t u = edges[2 * i];
-        int64_t v = edges[2 * i + 1];
-
-        auto u_it = syndrome.find(u);
-        if (u_it == syndrome.end()) {
-            syndrome.insert(u);
-        } else {
-            syndrome.erase(u_it);
-        }
-
-        if (v != -1) {
-            auto v_it = syndrome.find(v);
-            if (v_it == syndrome.end()) {
-                syndrome.insert(v);
-            } else {
-                syndrome.erase(v_it);
-            }
-        }
-    }
-    std::vector<uint64_t> sorted_syndrome;
-    for (auto& s : syndrome)
-        sorted_syndrome.push_back(s);
-    return sorted_syndrome;
-}
-
-uint64_t get_observables_from_edges(const std::vector<int64_t>& edges, pm::Mwpm& mwpm) {
-    uint64_t obs_mask = 0;
-    for (size_t i = 0; i < edges.size() / 2; i++) {
-        int64_t u = edges[2 * i];
-        int64_t v = edges[2 * i + 1];
-
-        auto& u_node = mwpm.search_flooder.graph.nodes[u];
-        size_t idx = SIZE_MAX;
-        if (v == -1) {
-            idx = 0;
-        } else {
-            auto v_ptr = &mwpm.search_flooder.graph.nodes[v];
-            idx = u_node.index_of_neighbor(v_ptr);
-        }
-        for (auto& obs : u_node.neighbor_observable_indices[idx])
-            obs_mask ^= 1 << obs;
-    }
-    return obs_mask;
 }
 
 TEST(MwpmDecoding, DecodeToEdges) {

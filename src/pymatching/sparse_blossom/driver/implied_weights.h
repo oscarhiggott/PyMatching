@@ -23,6 +23,10 @@ struct ImpliedWeightUnconverted {
     size_t node1;
     size_t node2;
     double implied_weight;
+    bool operator==(const ImpliedWeightUnconverted& other) const {
+        return (this->node1 == other.node1) && (this->node2 == other.node2) &&
+               (this->implied_weight == other.implied_weight);
+    }
 };
 
 struct ImpliedWeight {

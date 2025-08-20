@@ -18,6 +18,7 @@
 #include <cmath>
 #include <map>
 
+#include "graph.h"
 #include "pymatching/sparse_blossom/driver/implied_weights.h"
 #include "pymatching/sparse_blossom/flooder_matcher_interop/mwpm_event.h"
 

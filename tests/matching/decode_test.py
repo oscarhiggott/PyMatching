@@ -212,17 +212,30 @@ def test_surface_code_solution_weights(data_dir: Path):
     )
     assert np.allclose(bitpacked_batch_weights, expected_weights, rtol=1e-8)
 
+
+def test_surface_code_solution_weights_with_correlations(data_dir: Path):
+    stim = pytest.importorskip("stim")
+    dem = stim.DetectorErrorModel.from_file(
+        data_dir / "surface_code_rotated_memory_x_13_0.01.dem"
+    )
+    m = Matching.from_detector_error_model(dem)
+    shots = stim.read_shot_data_file(
+        path=data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots.b8",
+        format="b8",
+        num_detectors=m.num_detectors,
+        num_observables=m.num_fault_ids,
+    )
     # Test correlated decoding
+    corr_weights_path = data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatching_correlated.txt"
+    corr_predictions_path = data_dir / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatching_correlated.txt"
     with open(
-        data_dir
-        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_weights_pymatchingv2.2.2_correlated.txt",
+        corr_weights_path,
         "r",
         encoding="utf-8",
     ) as f:
         expected_corr_weights = [float(w) for w in f.readlines()]
     with open(
-        data_dir
-        / "surface_code_rotated_memory_x_13_0.01_1000_shots_no_buckets_predictions_pymatchingv2.2.2_correlated.txt",
+        corr_predictions_path,
         "r",
         encoding="utf-8",
     ) as f:
@@ -237,6 +250,21 @@ def test_surface_code_solution_weights(data_dir: Path):
         return_weights=True,
         enable_correlations=True,
     )
+    # # Uncomment to update data files
+    # with open(
+    #     corr_weights_path,
+    #     "w",
+    #     encoding="utf-8",
+    # ) as f:
+    #     for w in corr_weights:
+    #         print(w, file=f)
+    # with open(
+    #     corr_predictions_path,
+    #     "w",
+    #     encoding="utf-8",
+    # ) as f:
+    #     for pred in corr_predictions:
+    #         print(pred[0], file=f)
     assert np.array_equal(corr_predictions, expected_corr_observables_arr)
     assert np.allclose(corr_weights, expected_corr_weights, rtol=1e-8)
 
