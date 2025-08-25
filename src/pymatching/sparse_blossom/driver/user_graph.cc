@@ -17,6 +17,19 @@
 #include "pymatching/rand/rand_gen.h"
 #include "pymatching/sparse_blossom/driver/implied_weights.h"
 
+namespace {
+
+double bernoulli_xor(double p1, double p2) {
+    return p1 * (1 - p2) + p2 * (1 - p1);
+}
+
+}  // namespace
+
+
+double pm::to_weight_for_correlations(double probability) {
+    return std::log((1 - probability) / probability);
+}
+
 double pm::merge_weights(double a, double b) {
     auto sgn = std::copysign(1, a) * std::copysign(1, b);
     auto signed_min = sgn * std::min(std::abs(a), std::abs(b));
@@ -342,6 +355,15 @@ void pm::UserGraph::handle_dem_instruction(
     }
 }
 
+void pm::UserGraph::handle_dem_instruction_include_correlations(
+    double p, const std::vector<size_t>& detectors, const std::vector<size_t>& observables) {
+    if (detectors.size() == 2) {
+        add_or_merge_edge(detectors[0], detectors[1], observables, pm::to_weight_for_correlations(p), p, INDEPENDENT);
+    } else if (detectors.size() == 1) {
+        add_or_merge_boundary_edge(detectors[0], observables, pm::to_weight_for_correlations(p), p, INDEPENDENT);
+    }
+}
+
 void pm::UserGraph::get_nodes_on_shortest_path_from_source(size_t src, size_t dst, std::vector<size_t>& out_nodes) {
     auto& mwpm = get_mwpm_with_search_graph();
     bool src_is_boundary = is_boundary_node(src);
@@ -444,18 +466,6 @@ double pm::UserGraph::get_edge_weight_normalising_constant(size_t max_num_distin
     }
 }
 
-namespace {
-
-double bernoulli_xor(double p1, double p2) {
-    return p1 * (1 - p2) + p2 * (1 - p1);
-}
-
-double to_weight(double probability) {
-    return std::log((1 - probability) / probability);
-}
-
-}  // namespace
-
 void pm::add_decomposed_error_to_joint_probabilities(
     DecomposedDemError& error,
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
@@ -490,7 +500,7 @@ pm::UserGraph pm::detector_error_model_to_user_graph(
         pm::iter_dem_instructions_include_correlations(
             detector_error_model,
             [&](double p, const std::vector<size_t>& detectors, std::vector<size_t>& observables) {
-                user_graph.handle_dem_instruction(p, detectors, observables);
+                user_graph.handle_dem_instruction_include_correlations(p, detectors, observables);
             },
             joint_probabilites);
 
@@ -526,7 +536,7 @@ void pm::UserGraph::populate_implied_edge_weights(
                     // minimum of 0.5 as an implied probability for an edge to be reweighted.
                     double implied_probability_for_other_edge =
                         std::min(0.5, affected_edge_and_probability.second / marginal_probability);
-                    double w = to_weight(implied_probability_for_other_edge);
+                    double w = pm::to_weight_for_correlations(implied_probability_for_other_edge);
                     ImpliedWeightUnconverted implied{affected_edge.first, affected_edge.second, w};
                     edge.implied_weights_for_other_edges.push_back(implied);
                 }
