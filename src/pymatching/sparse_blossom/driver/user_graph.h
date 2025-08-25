@@ -267,96 +267,96 @@ template <typename Handler>
 void iter_dem_instructions_include_correlations(
     const stim::DetectorErrorModel& detector_error_model,
     const Handler& handle_dem_error,
-    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites) {
-    detector_error_model.iter_flatten_error_instructions(
-        [&](const stim::DemInstruction& instruction, bool include_decomposed_error_components_in_edge_weights = false) {
-            double p = instruction.arg_data[0];
-            pm::DecomposedDemError decomposed_err;
-            decomposed_err.probability = p;
-            if (p > 0.5) {
-                throw ::std::invalid_argument(
-                    "Errors with probability greater than 0.5 are not supported with correlations enabled");
-            }
-            if (p == 0) {
-                // Ignore errors with no error probability.
-                return;
-            }
-            decomposed_err.components = {};
-            decomposed_err.components.push_back({});
-            UserEdge* component = &decomposed_err.components.back();
-            // Mark component as empty to begin with.
-            component->node1 = SIZE_MAX;
-            component->node2 = SIZE_MAX;
-            size_t num_component_detectors = 0;
-            bool instruction_contains_separator = false;
-            for (auto& target : instruction.target_data) {
-                // Decompose error
-                if (target.is_relative_detector_id()) {
-                    num_component_detectors++;
-                    if (num_component_detectors == 1) {
-                        const size_t& d1 = target.raw_id();
-                        component->node1 = d1;
-                    } else if (num_component_detectors == 2) {
-                        // Maintain invariant that node1 <= node2.
-                        if (component->node1 <= target.raw_id()) {
-                            component->node2 = target.raw_id();
-                        } else {
-                            component->node2 = component->node1;
-                            component->node1 = target.raw_id();
-                        }
+    std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>>& joint_probabilites,
+    bool include_decomposed_error_components_in_edge_weights = true) {
+    detector_error_model.iter_flatten_error_instructions([&](const stim::DemInstruction& instruction) {
+        double p = instruction.arg_data[0];
+        pm::DecomposedDemError decomposed_err;
+        decomposed_err.probability = p;
+        if (p > 0.5) {
+            throw ::std::invalid_argument(
+                "Errors with probability greater than 0.5 are not supported with correlations enabled");
+        }
+        if (p == 0) {
+            // Ignore errors with no error probability.
+            return;
+        }
+        decomposed_err.components = {};
+        decomposed_err.components.push_back({});
+        UserEdge* component = &decomposed_err.components.back();
+        // Mark component as empty to begin with.
+        component->node1 = SIZE_MAX;
+        component->node2 = SIZE_MAX;
+        size_t num_component_detectors = 0;
+        bool instruction_contains_separator = false;
+        for (auto& target : instruction.target_data) {
+            // Decompose error
+            if (target.is_relative_detector_id()) {
+                num_component_detectors++;
+                if (num_component_detectors == 1) {
+                    const size_t& d1 = target.raw_id();
+                    component->node1 = d1;
+                } else if (num_component_detectors == 2) {
+                    // Maintain invariant that node1 <= node2.
+                    if (component->node1 <= target.raw_id()) {
+                        component->node2 = target.raw_id();
                     } else {
-                        // Undecomposed hyperedges are not supported
-                        throw std::invalid_argument(
-                            "Encountered an undecomposed error instruction with 3 or mode detectors. "
-                            "This is not supported when using `enable_correlations=True`. "
-                            "Did you forget to set `decompose_errors=True` when "
-                            "converting the stim circuit to a detector error model?");
+                        component->node2 = component->node1;
+                        component->node1 = target.raw_id();
                     }
-                } else if (target.is_observable_id()) {
-                    component->observable_indices.push_back(target.val());
-                } else if (target.is_separator()) {
-                    instruction_contains_separator = true;
-                    // We cannot have num_component_detectors > 2 at this point, or we would have already thrown an
-                    // exception
-                    if (num_component_detectors == 0) {
-                        throw std::invalid_argument(
-                            "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
-                            "This is not supported.");
-                    }
-                    // The previous error in the decomposition must have 1 or 2 detectors
-                    decomposed_err.components.push_back({});
-                    component = &decomposed_err.components.back();
-                    component->node1 = SIZE_MAX;
-                    component->node2 = SIZE_MAX;
-                    num_component_detectors = 0;
+                } else {
+                    // Undecomposed hyperedges are not supported
+                    throw std::invalid_argument(
+                        "Encountered an undecomposed error instruction with 3 or mode detectors. "
+                        "This is not supported when using `enable_correlations=True`. "
+                        "Did you forget to set `decompose_errors=True` when "
+                        "converting the stim circuit to a detector error model?");
                 }
-            }
-
-            if (num_component_detectors == 0) {
-                if (instruction_contains_separator) {
+            } else if (target.is_observable_id()) {
+                component->observable_indices.push_back(target.val());
+            } else if (target.is_separator()) {
+                instruction_contains_separator = true;
+                // We cannot have num_component_detectors > 2 at this point, or we would have already thrown an
+                // exception
+                if (num_component_detectors == 0) {
                     throw std::invalid_argument(
                         "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
                         "This is not supported.");
+                }
+                // The previous error in the decomposition must have 1 or 2 detectors
+                decomposed_err.components.push_back({});
+                component = &decomposed_err.components.back();
+                component->node1 = SIZE_MAX;
+                component->node2 = SIZE_MAX;
+                num_component_detectors = 0;
+            }
+        }
+
+        if (num_component_detectors == 0) {
+            if (instruction_contains_separator) {
+                throw std::invalid_argument(
+                    "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
+                    "This is not supported.");
+            } else {
+                // Ignore errors that are undetectable, provided they are not a component of a decomposed error
+                return;
+            }
+        }
+
+        // If include_decomposed_error_components_in_edge_weights, then only add the edge into the graph if
+        // it is not a component in a decomposed error with more than one component
+        if (include_decomposed_error_components_in_edge_weights || decomposed_err.components.size() == 1) {
+            for (pm::UserEdge& component : decomposed_err.components) {
+                if (component.node2 == SIZE_MAX) {
+                    handle_dem_error(p, {component.node1}, component.observable_indices);
                 } else {
-                    // Ignore errors that are undetectable, provided they are not a component of a decomposed error
-                    return;
+                    handle_dem_error(p, {component.node1, component.node2}, component.observable_indices);
                 }
             }
+        }
 
-            // If include_decomposed_error_components_in_edge_weights, then only add the edge into the graph if
-            // it is not a component in a decomposed error with more than one component
-            if (include_decomposed_error_components_in_edge_weights || decomposed_err.components.size() == 1) {
-                for (pm::UserEdge& component : decomposed_err.components) {
-                    if (component.node2 == SIZE_MAX) {
-                        handle_dem_error(p, {component.node1}, component.observable_indices);
-                    } else {
-                        handle_dem_error(p, {component.node1, component.node2}, component.observable_indices);
-                    }
-                }
-            }
-
-            add_decomposed_error_to_joint_probabilities(decomposed_err, joint_probabilites);
-        });
+        add_decomposed_error_to_joint_probabilities(decomposed_err, joint_probabilites);
+    });
 }
 
 }  // namespace pm

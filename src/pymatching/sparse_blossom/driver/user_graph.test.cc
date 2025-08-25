@@ -320,10 +320,9 @@ TEST(IterDemInstructionsTest, DecomposedError) {
     pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
     // Check handler calls
-    ASSERT_EQ(handler.handled_errors.size(), 0);
-    // ASSERT_EQ(handler.handled_errors.size(), 3);
-    // std::vector<HandledError> expected_handled = {{0.1, 0, 1, {}}, {0.1, 2, 3, {0}}, {0.1, 4, SIZE_MAX, {}}};
-    // EXPECT_EQ(handler.handled_errors, expected_handled);
+    ASSERT_EQ(handler.handled_errors.size(), 3);
+    std::vector<HandledError> expected_handled = {{0.1, 0, 1, {}}, {0.1, 2, 3, {0}}, {0.1, 4, SIZE_MAX, {}}};
+    EXPECT_EQ(handler.handled_errors, expected_handled);
 
     // Check joint probabilities
     std::pair<size_t, size_t> key01 = {0, 1};
@@ -384,14 +383,10 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
     std::map<std::pair<size_t, size_t>, std::map<std::pair<size_t, size_t>, double>> joint_probabilities;
     pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
-    ASSERT_EQ(handler.handled_errors.size(), 2);
+    ASSERT_EQ(handler.handled_errors.size(), 4);
     std::vector<HandledError> expected = {
-        {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}};
+        {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
     EXPECT_EQ(handler.handled_errors, expected);
-    // ASSERT_EQ(handler.handled_errors.size(), 4);
-    // std::vector<HandledError> expected = {
-    //     {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
-    // EXPECT_EQ(handler.handled_errors, expected);
 
     // Check joint probabilities
     std::pair<size_t, size_t> key0B = {0, SIZE_MAX};
