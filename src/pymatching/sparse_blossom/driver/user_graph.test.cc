@@ -512,7 +512,7 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     ASSERT_EQ(implied_23.node1, 0);
     ASSERT_EQ(implied_23.node2, 1);
     // ASSERT_EQ(implied_23.implied_weight, 0);
-    ASSERT_NEAR(implied_23.implied_weight, 0.105361, 0.00001);
+    ASSERT_NEAR(implied_23.implied_weight, 0.0, 0.00001);
 }
 
 TEST(UserGraph, ConvertImpliedWeights) {

@@ -27,7 +27,7 @@ double bernoulli_xor(double p1, double p2) {
 
 
 double pm::to_weight_for_correlations(double probability) {
-    return -std::log(probability);
+    return std::log((1 - probability) / probability);
 }
 
 double pm::merge_weights(double a, double b) {
@@ -535,7 +535,7 @@ void pm::UserGraph::populate_implied_edge_weights(
                     // error, would lead to a negatively weighted error. We do not support this (yet), and use a
                     // minimum of 0.5 as an implied probability for an edge to be reweighted.
                     double implied_probability_for_other_edge =
-                        std::min(0.9, affected_edge_and_probability.second / marginal_probability);
+                        std::min(0.5, affected_edge_and_probability.second / marginal_probability);
                     double w = pm::to_weight_for_correlations(implied_probability_for_other_edge);
                     ImpliedWeightUnconverted implied{affected_edge.first, affected_edge.second, w};
                     edge.implied_weights_for_other_edges.push_back(implied);

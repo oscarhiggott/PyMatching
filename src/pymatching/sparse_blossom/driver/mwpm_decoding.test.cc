@@ -330,7 +330,7 @@ TEST(MwpmCorrelatedDecoding, BetterLogicalErrorRateThanUncorrelated) {
     size_t num_mistakes_uncorrelated = 0;
     size_t num_shots = 0;
     size_t max_shots = 300;
-    size_t expected_mistakes_correlated = 4;
+    size_t expected_mistakes_correlated = 3;
     size_t expected_mistakes_uncorrelated = 11;
     pm::ExtendedMatchingResult res(mwpm_correlated.flooder.graph.num_observables);
     std::vector<int64_t> edges;
