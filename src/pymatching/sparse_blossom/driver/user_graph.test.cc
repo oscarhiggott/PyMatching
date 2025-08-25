@@ -384,6 +384,7 @@ TEST(IterDemInstructionsTest, CombinedComplexDem) {
     pm::iter_dem_instructions_include_correlations(dem, handler, joint_probabilities);
 
     ASSERT_EQ(handler.handled_errors.size(), 4);
+    
     std::vector<HandledError> expected = {
         {0.1, 0, SIZE_MAX, {}}, {0.2, 1, 2, {0}}, {0.4, 8, SIZE_MAX, {}}, {0.4, 9, SIZE_MAX, {1}}};
     EXPECT_EQ(handler.handled_errors, expected);
@@ -506,7 +507,6 @@ TEST(UserGraph, PopulateImpliedEdgeWeights) {
     const auto& implied_23 = it_23->implied_weights_for_other_edges[0];
     ASSERT_EQ(implied_23.node1, 0);
     ASSERT_EQ(implied_23.node2, 1);
-    // ASSERT_EQ(implied_23.implied_weight, 0);
     ASSERT_NEAR(implied_23.implied_weight, 0.0, 0.00001);
 }
 
