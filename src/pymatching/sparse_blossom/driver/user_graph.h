@@ -321,8 +321,12 @@ void iter_dem_instructions_include_correlations(
                         "Encountered a decomposed error instruction with an undetectable component (0 detectors). "
                         "This is not supported.");
                 } else if (num_component_detectors > 0) {
-                    // If the previous error in the decomposition had 1 or 2 detectors, we handle it
-                    handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                    // If the previous error in the decomposition had 1 or 2 detectors, we handle it.
+                    if (component->node2 == SIZE_MAX) {
+                        handle_dem_error(p, {component->node1}, component->observable_indices);
+                    } else {
+                        handle_dem_error(p, {component->node1, component->node2}, component->observable_indices);
+                    }
                     decomposed_err.components.push_back({});
                     component = &decomposed_err.components.back();
                     component->node1 = SIZE_MAX;
