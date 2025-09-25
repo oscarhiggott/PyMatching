@@ -343,8 +343,8 @@ void iter_dem_instructions_include_correlations(
             }
         }
 
-        // If include_decomposed_error_components_in_edge_weights, then only add the edge into the graph if
-        // it is not a component in a decomposed error with more than one component
+        // If include_decomposed_error_components_in_edge_weights is False, then only add the edge into 
+        // the graph if it is not a component in a decomposed error with more than one component
         if (include_decomposed_error_components_in_edge_weights || decomposed_err.components.size() == 1) {
             for (pm::UserEdge& component : decomposed_err.components) {
                 if (component.node2 == SIZE_MAX) {
