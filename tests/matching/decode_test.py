@@ -400,6 +400,26 @@ def test_decode_to_edges_with_correlations():
     assert np.array_equal(edges, expected_edges)
 
 
+def test_correlated_matching_handles_single_detector_components():
+    stim = pytest.importorskip("stim")
+    p = 0.1
+    circuit = stim.Circuit.generated(
+        code_task="surface_code:rotated_memory_x",
+        distance=5,
+        rounds=5,
+        before_round_data_depolarization=p,
+    )
+    circ_str = str(circuit).replace(
+        f"DEPOLARIZE1({p})", f"PAULI_CHANNEL_1(0, {p}, 0)"
+    )
+    noisy_circuit = stim.Circuit(circ_str)
+    dem = noisy_circuit.detector_error_model(
+        decompose_errors=True, approximate_disjoint_errors=True
+    )
+    m = Matching.from_detector_error_model(dem, enable_correlations=True)
+    assert m.num_detectors > 0
+
+
 def test_load_from_circuit_with_correlations():
     stim = pytest.importorskip("stim")
     circuit = stim.Circuit.generated(
