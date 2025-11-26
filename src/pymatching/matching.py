@@ -220,6 +220,7 @@ class Matching:
                *,
                return_weight: bool = False,
                enable_correlations: bool = False,
+               edge_reweights: Optional[np.ndarray] = None,
                **kwargs
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         r"""
@@ -254,6 +255,15 @@ class Matching:
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
             of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
+        edge_reweights: np.ndarray, optional
+            A 2D numpy array of edge reweights, of shape (N, 3). Each row of `edge_reweights`
+            specifies an edge to be temporarily reweighted for the duration of the decoding
+            of the shot `z`. The first two columns of `edge_reweights` specify the node endpoints
+            of the edge to reweight, and the third column is the new edge weight (as a float) to reweight to.
+            For example, `edge_reweights[i, :] == np.array([4, 5, 2.4], dtype=np.float64)` means
+            "give edge (4, 5) a new weight of 2.4".
+            For a boundary edge, the second node index is -1.
+            By default None.
 
         Returns
         -------
@@ -338,7 +348,7 @@ class Matching:
         """
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(
-            detection_events, enable_correlations=enable_correlations
+            detection_events, enable_correlations=enable_correlations, edge_reweights=edge_reweights
         )
         if return_weight:
             return correction, weight
@@ -352,7 +362,8 @@ class Matching:
             return_weights: bool = False,
             bit_packed_shots: bool = False,
             bit_packed_predictions: bool = False,
-            enable_correlations: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+            enable_correlations: bool = False,
+            edge_reweights: Optional[List[Optional[np.ndarray]]] = None) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Decode from a 2D `shots` array containing a batch of syndrome measurements. A faster
         alternative to using `pymatching.Matching.decode` and iterating over the shots in Python.
@@ -396,6 +407,12 @@ class Matching:
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
             of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
+        edge_reweights : list[numpy.ndarray], optional
+            A list of reweighting rules for each shot. `edge_reweights[i]` corresponds to the edge reweights
+            for shot `i`. `edge_reweights[i]` can be `None` (no reweighting) or a 2D numpy array of shape (M, 3),
+            where each row specifies an edge to reweight (see `Matching.decode` documentation for more details).
+            The length of `edge_reweights` must equal the number of shots (the first dimension of `shots`).
+            By default None.
 
         Returns
         -------
@@ -452,7 +469,8 @@ class Matching:
             shots,
             bit_packed_predictions=bit_packed_predictions,
             bit_packed_shots=bit_packed_shots,
-            enable_correlations=enable_correlations
+            enable_correlations=enable_correlations,
+            edge_reweights=edge_reweights
         )
         if return_weights:
             return predictions, weights

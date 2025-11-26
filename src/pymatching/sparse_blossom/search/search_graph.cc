@@ -159,3 +159,42 @@ void pm::SearchGraph::convert_implied_weights(const double normalising_constant)
         }
     }
 }
+
+void pm::SearchGraph::apply_temp_reweights(
+    const std::vector<std::tuple<size_t, int64_t, double>>& reweights, double normalising_constant) {
+    for (const auto& rw : reweights) {
+        size_t u = std::get<0>(rw);
+        int64_t v = std::get<1>(rw);
+        double weight = std::get<2>(rw);
+
+        double rescaled_normalising_constant = normalising_constant / 2;
+        pm::signed_weight_int w = (pm::signed_weight_int)round(weight * rescaled_normalising_constant);
+        w *= 2;
+        pm::weight_int new_w = std::abs(w);
+
+        if (u >= nodes.size())
+            throw std::invalid_argument("Node index " + std::to_string(u) + " out of range");
+        SearchDetectorNode* u_node_ptr = &nodes[u];
+        SearchDetectorNode* v_node_ptr = nullptr;
+        if (v != -1) {
+            if (v < 0 || (size_t)v >= nodes.size())
+                throw std::invalid_argument("Node index " + std::to_string(v) + " out of range");
+            v_node_ptr = &nodes[(size_t)v];
+        }
+
+        size_t idx = u_node_ptr->index_of_neighbor(v_node_ptr);
+        if (idx == SIZE_MAX)
+            throw std::invalid_argument("Edge (" + std::to_string(u) + ", " + std::to_string(v) + ") not found");
+
+        weight_int* w_ptr = &u_node_ptr->neighbor_weights[idx];
+        previous_weights.emplace_back(w_ptr, *w_ptr);
+        *w_ptr = new_w;
+
+        if (v_node_ptr) {
+            size_t idx_v = v_node_ptr->index_of_neighbor(u_node_ptr);
+            weight_int* w_ptr_v = &v_node_ptr->neighbor_weights[idx_v];
+            previous_weights.emplace_back(w_ptr_v, *w_ptr_v);
+            *w_ptr_v = new_w;
+        }
+    }
+}

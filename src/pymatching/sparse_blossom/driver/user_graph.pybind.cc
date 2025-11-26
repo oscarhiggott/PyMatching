@@ -178,14 +178,39 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     });
     g.def(
         "decode",
-        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events, bool enable_correlations) {
+        [](pm::UserGraph &self,
+           const py::array_t<uint64_t> &detection_events,
+           bool enable_correlations,
+           py::object edge_reweights) {
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
             auto &mwpm = enable_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
+
+            if (!edge_reweights.is_none()) {
+                auto rw_array = edge_reweights.cast<py::array_t<double>>();
+                if (rw_array.ndim() != 2 || rw_array.shape(1) != 3)
+                    throw std::invalid_argument("edge_reweights must be (N, 3)");
+                auto r = rw_array.unchecked<2>();
+                std::vector<std::tuple<size_t, int64_t, double>> reweights;
+                reweights.reserve(r.shape(0));
+                for (py::ssize_t i = 0; i < r.shape(0); i++) {
+                    reweights.emplace_back((size_t)r(i, 0), (int64_t)r(i, 1), r(i, 2));
+                }
+                mwpm.flooder.graph.apply_temp_reweights(reweights);
+                if (enable_correlations)
+                    mwpm.search_flooder.graph.apply_temp_reweights(reweights, mwpm.flooder.graph.normalising_constant);
+            }
+
             auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
             pm::total_weight_int weight = 0;
             pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight, enable_correlations);
             double rescaled_weight = (double)weight / mwpm.flooder.graph.normalising_constant;
+
+            if (!edge_reweights.is_none()) {
+                mwpm.flooder.graph.undo_reweights();
+                if (enable_correlations)
+                    mwpm.search_flooder.graph.undo_reweights();
+            }
 
             auto err_capsule = py::capsule(obs_crossed, [](void *x) {
                 delete reinterpret_cast<std::vector<uint8_t> *>(x);
@@ -196,7 +221,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             return res;
         },
         "detection_events"_a,
-        "enable_correlations"_a = false);
+        "enable_correlations"_a = false,
+        "edge_reweights"_a = py::none());
     g.def(
         "decode_to_edges_array",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events, bool enable_correlations) {
@@ -250,7 +276,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
            const py::array_t<uint8_t> &shots,
            bool bit_packed_shots,
            bool bit_packed_predictions,
-           bool enable_correlations) {
+           bool enable_correlations,
+           py::object edge_reweights) {
             if (shots.ndim() != 2)
                 throw std::invalid_argument(
                     "`shots` array should have two dimensions, not " + std::to_string(shots.ndim()));
@@ -288,6 +315,14 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             auto &mwpm = enable_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
             std::vector<uint64_t> detection_events;
 
+            py::list reweights_list;
+            bool has_reweights = !edge_reweights.is_none();
+            if (has_reweights) {
+                reweights_list = edge_reweights.cast<py::list>();
+                if (reweights_list.size() != (size_t)shots.shape(0))
+                    throw std::invalid_argument("edge_reweights list must have same length as shots");
+            }
+
             // Vector used to extract predicted observables when decoding if bit_packed_predictions is true
             std::vector<uint8_t> temp_predictions;
             if (bit_packed_predictions)
@@ -310,6 +345,25 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                             detection_events.push_back(j);
                     }
                 }
+
+                if (has_reweights) {
+                    py::object rw_obj = reweights_list[i];
+                    if (!rw_obj.is_none()) {
+                        auto rw_array = rw_obj.cast<py::array_t<double>>();
+                        if (rw_array.ndim() != 2 || rw_array.shape(1) != 3)
+                            throw std::invalid_argument("edge_reweights element must be (N, 3)");
+                        auto r = rw_array.unchecked<2>();
+                        std::vector<std::tuple<size_t, int64_t, double>> reweights;
+                        reweights.reserve(r.shape(0));
+                        for (py::ssize_t k = 0; k < r.shape(0); k++) {
+                            reweights.emplace_back((size_t)r(k, 0), (int64_t)r(k, 1), r(k, 2));
+                        }
+                        mwpm.flooder.graph.apply_temp_reweights(reweights);
+                        if (enable_correlations)
+                            mwpm.search_flooder.graph.apply_temp_reweights(reweights, mwpm.flooder.graph.normalising_constant);
+                    }
+                }
+
                 pm::total_weight_int solution_weight = 0;
                 if (bit_packed_predictions) {
                     std::fill(temp_predictions.begin(), temp_predictions.end(), 0);
@@ -328,6 +382,15 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                         solution_weight,
                         enable_correlations);
                 }
+
+                if (has_reweights) {
+                    if (!reweights_list[i].is_none()) {
+                        mwpm.flooder.graph.undo_reweights();
+                        if (enable_correlations)
+                            mwpm.search_flooder.graph.undo_reweights();
+                    }
+                }
+
                 ws(i) = (double)solution_weight / mwpm.flooder.graph.normalising_constant;
                 detection_events.clear();
             }
@@ -337,7 +400,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "shots"_a,
         "bit_packed_shots"_a = false,
         "bit_packed_predictions"_a = false,
-        "enable_correlations"_a = false);
+        "enable_correlations"_a = false,
+        "edge_reweights"_a = py::none());
     g.def(
         "decode_to_matched_detection_events_dict",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
