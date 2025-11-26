@@ -83,6 +83,10 @@ struct Mwpm {
 
     void create_detection_event(DetectorNode* node);
     void reset();
+
+    bool search_flooder_available() const {
+        return flooder.graph.nodes.size() == search_flooder.graph.nodes.size();
+    }
 };
 }  // namespace pm
 

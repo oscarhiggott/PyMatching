@@ -337,7 +337,7 @@ pm::Mwpm pm::UserGraph::to_mwpm(pm::weight_int num_distinct_weights, bool ensure
 }
 
 pm::Mwpm& pm::UserGraph::get_mwpm_with_search_graph() {
-    if (!_mwpm_needs_updating && _mwpm.flooder.graph.nodes.size() == _mwpm.search_flooder.graph.nodes.size()) {
+    if (!_mwpm_needs_updating && _mwpm.search_flooder_available()) {
         return _mwpm;
     } else {
         _mwpm = to_mwpm(pm::NUM_DISTINCT_WEIGHTS, true);

@@ -197,7 +197,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                     reweights.emplace_back((size_t)r(i, 0), (int64_t)r(i, 1), r(i, 2));
                 }
                 mwpm.flooder.graph.apply_temp_reweights(reweights);
-                if (enable_correlations)
+                if (mwpm.search_flooder_available())
                     mwpm.search_flooder.graph.apply_temp_reweights(reweights, mwpm.flooder.graph.normalising_constant);
             }
 
@@ -208,7 +208,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
 
             if (!edge_reweights.is_none()) {
                 mwpm.flooder.graph.undo_reweights();
-                if (enable_correlations)
+                if (mwpm.search_flooder_available())
                     mwpm.search_flooder.graph.undo_reweights();
             }
 
@@ -359,7 +359,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                             reweights.emplace_back((size_t)r(k, 0), (int64_t)r(k, 1), r(k, 2));
                         }
                         mwpm.flooder.graph.apply_temp_reweights(reweights);
-                        if (enable_correlations)
+                        if (mwpm.search_flooder_available())
                             mwpm.search_flooder.graph.apply_temp_reweights(reweights, mwpm.flooder.graph.normalising_constant);
                     }
                 }
@@ -386,7 +386,7 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 if (has_reweights) {
                     if (!reweights_list[i].is_none()) {
                         mwpm.flooder.graph.undo_reweights();
-                        if (enable_correlations)
+                        if (mwpm.search_flooder_available())
                             mwpm.search_flooder.graph.undo_reweights();
                     }
                 }
