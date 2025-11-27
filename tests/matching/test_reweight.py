@@ -111,3 +111,52 @@ def test_decode_reweight_large_observables():
     # Verify the weight is restored
     res, weight = m.decode(syndrome, return_weight=True)
     assert weight == 1.0
+
+def test_reweight_sign_flip_raises_error():
+    m = pymatching.Matching()
+    m.add_edge(0, 1, weight=2)
+    m.add_edge(1, 2, weight=-3)
+    
+    # Positive to negative (flip)
+    with pytest.raises(ValueError, match="sign flip not allowed"):
+        m.decode(np.array([1, 0, 1]), edge_reweights=np.array([[0, 1, -5.0]]))
+        
+    # Negative to positive (flip)
+    with pytest.raises(ValueError, match="sign flip not allowed"):
+        m.decode(np.array([1, 0, 1]), edge_reweights=np.array([[1, 2, 3.0]]))
+
+def test_reweight_negative_to_negative():
+    # Graph: 0 -- 1 -- 2
+    # (0, 1) weight 5
+    # (1, 2) weight -3.  
+    # Solution for detection events at 0, 2.
+    # Standard matching: 0 matches to 2 via 1. Path: (0,1), (1,2).
+    # Cost: 5 + (-3) = 2.
+    # Note: Negative weight -3 means edge (1,2) is pre-flipped.
+    # Events at 0, 2 means syndrome is 1 at 0, 1 at 2.
+    # If (1,2) is pre-flipped, it causes events at 1, 2.
+    # Observed syndrome: 0:1, 1:0, 2:1.
+    # Adjusted syndrome (xor with negative weight syndrome):
+    # 0:1, 1:1, 2:0.
+    # Now we match 0 and 1. Path (0, 1) cost 5.
+    # Total cost = 5 + (-3) = 2.
+    
+    m = pymatching.Matching()
+    m.add_edge(0, 1, weight=5)
+    m.add_edge(1, 2, weight=-3)
+    
+    # Check baseline
+    res, weight = m.decode(np.array([1, 0, 1]), return_weight=True)
+    assert weight == 2.0
+    
+    # Reweight (1, 2) to -10.
+    # New cost calculation:
+    # Path (0, 1) cost 5.
+    # Total cost = 5 + (-10) = -5.
+    reweights = np.array([[1, 2, -10.0]])
+    res, weight = m.decode(np.array([1, 0, 1]), return_weight=True, edge_reweights=reweights)
+    assert weight == -5.0
+    
+    # Verify restoration
+    res, weight = m.decode(np.array([1, 0, 1]), return_weight=True)
+    assert weight == 2.0

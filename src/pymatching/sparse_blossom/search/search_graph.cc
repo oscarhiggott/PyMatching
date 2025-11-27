@@ -186,6 +186,18 @@ void pm::SearchGraph::apply_temp_reweights(
         if (idx == SIZE_MAX)
             throw std::invalid_argument("Edge (" + std::to_string(u) + ", " + std::to_string(v) + ") not found");
 
+        // Check sign consistency
+        bool new_is_negative = w < 0;
+        bool old_is_negative = u_node_ptr->neighbor_markers[idx] & pm::WEIGHT_SIGN;
+        if (new_is_negative != old_is_negative) {
+            throw std::invalid_argument(
+                "Reweighting edge (" + std::to_string(u) + ", " + std::to_string(v) +
+                ") failed: sign flip not allowed. "
+                "Original sign: " +
+                (old_is_negative ? "negative" : "positive") +
+                ", New sign: " + (new_is_negative ? "negative" : "positive"));
+        }
+
         weight_int* w_ptr = &u_node_ptr->neighbor_weights[idx];
         previous_weights.emplace_back(w_ptr, *w_ptr);
         *w_ptr = new_w;

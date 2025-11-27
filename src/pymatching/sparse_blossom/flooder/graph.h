@@ -62,6 +62,7 @@ class MatchingGraph {
     // alert a user if they try to decode with enable_correlations=true, but forgot to load from the
     // dem with enable_correlations=true.
     bool loaded_from_dem_without_correlations = false;
+    pm::total_weight_int negative_weight_sum_delta = 0;
 
     MatchingGraph();
     MatchingGraph(size_t num_nodes, size_t num_observables);

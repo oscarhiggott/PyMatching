@@ -183,7 +183,7 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
         res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
             mwpm, mwpm.flooder.negative_weight_detection_events);
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
-    res.weight += mwpm.flooder.negative_weight_sum;
+    res.weight += mwpm.flooder.graph.negative_weight_sum;
 
     if (edge_correlations) {
         mwpm.flooder.graph.undo_reweights();
@@ -225,7 +225,7 @@ void pm::decode_detection_events(
         for (auto& obs : mwpm.flooder.negative_weight_observables)
             *(obs_begin_ptr + obs) ^= 1;
         // Add negative weight sum to blossom solution weight
-        weight += mwpm.flooder.negative_weight_sum;
+        weight += mwpm.flooder.graph.negative_weight_sum;
 
     } else {
         pm::MatchingResult bit_packed_res =
@@ -238,7 +238,7 @@ void pm::decode_detection_events(
         // Translate observable mask into bit vector
         fill_bit_vector_from_obs_mask(bit_packed_res.obs_mask, obs_begin_ptr, num_observables);
         // Add negative weight sum to blossom solution weight
-        weight = bit_packed_res.weight + mwpm.flooder.negative_weight_sum;
+        weight = bit_packed_res.weight + mwpm.flooder.graph.negative_weight_sum;
     }
 
     if (edge_correlations) {
@@ -248,7 +248,7 @@ void pm::decode_detection_events(
 }
 
 void pm::decode_detection_events_to_match_edges(pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events) {
-    if (mwpm.flooder.negative_weight_sum != 0)
+    if (mwpm.flooder.graph.negative_weight_sum != 0)
         throw std::invalid_argument(
             "Decoding to matched detection events not supported for graphs containing edges with negative weights.");
     process_timeline_until_completion(mwpm, detection_events);
