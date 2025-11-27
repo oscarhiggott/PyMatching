@@ -63,6 +63,7 @@ class MatchingGraph {
     // dem with enable_correlations=true.
     bool loaded_from_dem_without_correlations = false;
     pm::total_weight_int negative_weight_sum_delta = 0;
+    std::vector<std::tuple<size_t, int64_t, double>> reweight_buffer;
 
     MatchingGraph();
     MatchingGraph(size_t num_nodes, size_t num_observables);

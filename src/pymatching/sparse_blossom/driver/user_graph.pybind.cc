@@ -191,7 +191,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                 if (rw_array.ndim() != 2 || rw_array.shape(1) != 3)
                     throw std::invalid_argument("edge_reweights must be (N, 3)");
                 auto r = rw_array.unchecked<2>();
-                std::vector<std::tuple<size_t, int64_t, double>> reweights;
+                auto& reweights = mwpm.flooder.graph.reweight_buffer;
+                reweights.clear();
                 reweights.reserve(r.shape(0));
                 for (py::ssize_t i = 0; i < r.shape(0); i++) {
                     reweights.emplace_back((size_t)r(i, 0), (int64_t)r(i, 1), r(i, 2));
@@ -353,7 +354,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
                         if (rw_array.ndim() != 2 || rw_array.shape(1) != 3)
                             throw std::invalid_argument("edge_reweights element must be (N, 3)");
                         auto r = rw_array.unchecked<2>();
-                        std::vector<std::tuple<size_t, int64_t, double>> reweights;
+                        auto& reweights = mwpm.flooder.graph.reweight_buffer;
+                        reweights.clear();
                         reweights.reserve(r.shape(0));
                         for (py::ssize_t k = 0; k < r.shape(0); k++) {
                             reweights.emplace_back((size_t)r(k, 0), (int64_t)r(k, 1), r(k, 2));
