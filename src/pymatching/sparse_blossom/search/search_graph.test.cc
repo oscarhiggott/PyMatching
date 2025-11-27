@@ -46,3 +46,32 @@ TEST(SearchGraph, AddBoundaryEdge) {
     ASSERT_EQ(g.nodes[0].neighbor_observable_indices[0], v1);
     ASSERT_EQ(g.nodes[0].neighbor_weights[0], 7);
 }
+
+TEST(SearchGraph, ApplyTempReweights) {
+    pm::SearchGraph g(3);
+    g.add_edge(0, 1, 10, {0});
+    g.add_edge(1, 2, -20, {1});
+
+    std::vector<std::tuple<size_t, int64_t, double>> reweights;
+    reweights.emplace_back(0, 1, 30.0);
+    // normalising_constant = 1.0
+    g.apply_temp_reweights(reweights, 1.0);
+    
+    // 30.0 * 0.5 = 15. 15*2 = 30.
+    ASSERT_EQ(g.nodes[0].neighbor_weights[0], 30);
+    
+    g.undo_reweights();
+    ASSERT_EQ(g.nodes[0].neighbor_weights[0], 10);
+    
+    reweights.clear();
+    reweights.emplace_back(1, 2, -40.0);
+    g.apply_temp_reweights(reweights, 1.0);
+    ASSERT_EQ(g.nodes[1].neighbor_weights[1], 40);
+    
+    g.undo_reweights();
+    ASSERT_EQ(g.nodes[1].neighbor_weights[1], 20);
+    
+    reweights.clear();
+    reweights.emplace_back(0, 1, -5.0);
+    ASSERT_THROW(g.apply_temp_reweights(reweights, 1.0), std::invalid_argument);
+}
