@@ -15,6 +15,9 @@
 #ifndef PYMATCHING2_SEARCH_DETECTOR_NODE_H
 #define PYMATCHING2_SEARCH_DETECTOR_NODE_H
 
+#include <cstdint>
+#include <limits>
+
 #include "pymatching/sparse_blossom/flooder/detector_node.h"
 #include "pymatching/sparse_blossom/tracker/queued_event_tracker.h"
 
@@ -23,7 +26,7 @@ namespace pm {
 enum SearchNodeFlags : uint8_t { FLIPPED = 1 };
 
 struct SearchDetectorNode {
-    SearchDetectorNode() : reached_from_source(nullptr), index_of_predecessor(0), distance_from_source(0), node_event_tracker() {}
+    SearchDetectorNode() : reached_from_source(nullptr), index_of_predecessor(SIZE_MAX), distance_from_source(0), node_event_tracker() {}
 
     /// The SearchDetectorNode that this node was reached from in the Dijkstra search
     SearchDetectorNode *reached_from_source;
