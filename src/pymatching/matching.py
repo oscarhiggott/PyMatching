@@ -38,18 +38,26 @@ class Matching:
     a `stim.DetectorErrorModel`.
     """
 
-    def __init__(self,
-                 graph: Union[csc_matrix, np.ndarray, "rx.PyGraph", nx.Graph, List[
-                     List[int]], 'stim.DetectorErrorModel', spmatrix] = None,
-                 weights: Union[float, np.ndarray, List[float]] = None,
-                 error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                 repetitions: int = None,
-                 timelike_weights: Union[float, np.ndarray, List[float]] = None,
-                 measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                 *,
-                 enable_correlations: bool = False,
-                 **kwargs
-                 ):
+    def __init__(
+        self,
+        graph: Union[
+            csc_matrix,
+            np.ndarray,
+            "rx.PyGraph",
+            nx.Graph,
+            List[List[int]],
+            "stim.DetectorErrorModel",
+            spmatrix,
+        ] = None,
+        weights: Union[float, np.ndarray, List[float]] = None,
+        error_probabilities: Union[float, np.ndarray, List[float]] = None,
+        repetitions: int = None,
+        timelike_weights: Union[float, np.ndarray, List[float]] = None,
+        measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+        *,
+        enable_correlations: bool = False,
+        **kwargs,
+    ):
         r"""Constructor for the Matching class
 
         Parameters
@@ -151,6 +159,7 @@ class Matching:
         # Rustworkx PyGraph
         try:
             import rustworkx as rx
+
             if isinstance(graph, rx.PyGraph):
                 self.load_from_rustworkx(graph)
                 return
@@ -159,12 +168,18 @@ class Matching:
         # stim.DetectorErrorModel
         try:
             import stim
+
             if isinstance(graph, stim.DetectorErrorModel):
-                self._load_from_detector_error_model(graph, enable_correlations=enable_correlations)
+                self._load_from_detector_error_model(
+                    graph, enable_correlations=enable_correlations
+                )
                 return
             elif isinstance(graph, stim.Circuit):
                 self.from_stim_circuit
-                self._load_from_detector_error_model(graph.detector_error_model(decompose_errors=True), enable_correlations=enable_correlations)
+                self._load_from_detector_error_model(
+                    graph.detector_error_model(decompose_errors=True),
+                    enable_correlations=enable_correlations,
+                )
                 return
         except ImportError:  # pragma no cover
             pass
@@ -172,12 +187,20 @@ class Matching:
         try:
             graph = csc_matrix(graph)
         except TypeError:
-            raise TypeError("The type of the input graph is not recognised. `graph` must be "
-                            "a scipy.sparse or numpy matrix, networkx or rustworkx graph, or "
-                            "stim.DetectorErrorModel.")
-        self.load_from_check_matrix(graph, weights, error_probabilities,
-                                    repetitions, timelike_weights, measurement_error_probabilities,
-                                    **kwargs)
+            raise TypeError(
+                "The type of the input graph is not recognised. `graph` must be "
+                "a scipy.sparse or numpy matrix, networkx or rustworkx graph, or "
+                "stim.DetectorErrorModel."
+            )
+        self.load_from_check_matrix(
+            graph,
+            weights,
+            error_probabilities,
+            repetitions,
+            timelike_weights,
+            measurement_error_probabilities,
+            **kwargs,
+        )
 
     def add_noise(self) -> Union[Tuple[np.ndarray, np.ndarray], None]:
         """Add noise by flipping edges in the matching graph with
@@ -199,30 +222,38 @@ class Matching:
             return None
         return self._matching_graph.add_noise()
 
-    def _syndrome_array_to_detection_events(self, z: Union[np.ndarray, List[int]]) -> np.ndarray:
+    def _syndrome_array_to_detection_events(
+        self, z: Union[np.ndarray, List[int]]
+    ) -> np.ndarray:
         try:
             z = np.array(z, dtype=np.uint8)
         except ValueError:
-            raise ValueError("Syndrome must be of type numpy.ndarray or "
-                             "convertible to numpy.ndarray, not {}".format(z))
-        if len(z.shape) == 1 and (self.num_detectors <= z.shape[0]
-                                  <= self.num_detectors + len(self.boundary)):
+            raise ValueError(
+                "Syndrome must be of type numpy.ndarray or "
+                "convertible to numpy.ndarray, not {}".format(z)
+            )
+        if len(z.shape) == 1 and (
+            self.num_detectors <= z.shape[0] <= self.num_detectors + len(self.boundary)
+        ):
             detection_events = z.nonzero()[0]
         elif len(z.shape) == 2 and z.shape[0] * z.shape[1] == self.num_detectors:
             times, checks = z.T.nonzero()
             detection_events = times * z.shape[0] + checks
         else:
-            raise ValueError("The shape ({}) of the syndrome vector z is not valid.".format(z.shape))
+            raise ValueError(
+                "The shape ({}) of the syndrome vector z is not valid.".format(z.shape)
+            )
         return detection_events
 
-    def decode(self,
-               z: Union[np.ndarray, List[bool], List[int]],
-               *,
-               return_weight: bool = False,
-               enable_correlations: bool = False,
-               edge_reweights: Optional[np.ndarray] = None,
-               **kwargs
-               ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    def decode(
+        self,
+        z: Union[np.ndarray, List[bool], List[int]],
+        *,
+        return_weight: bool = False,
+        enable_correlations: bool = False,
+        edge_reweights: Optional[np.ndarray] = None,
+        **kwargs,
+    ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         r"""
         Decode the syndrome `z` using minimum-weight perfect matching
 
@@ -348,7 +379,9 @@ class Matching:
         """
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(
-            detection_events, enable_correlations=enable_correlations, edge_reweights=edge_reweights
+            detection_events,
+            enable_correlations=enable_correlations,
+            edge_reweights=edge_reweights,
         )
         if return_weight:
             return correction, weight
@@ -356,14 +389,15 @@ class Matching:
             return correction
 
     def decode_batch(
-            self,
-            shots: np.ndarray,
-            *,
-            return_weights: bool = False,
-            bit_packed_shots: bool = False,
-            bit_packed_predictions: bool = False,
-            enable_correlations: bool = False,
-            edge_reweights: Optional[List[Optional[np.ndarray]]] = None) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+        self,
+        shots: np.ndarray,
+        *,
+        return_weights: bool = False,
+        bit_packed_shots: bool = False,
+        bit_packed_predictions: bool = False,
+        enable_correlations: bool = False,
+        edge_reweights: Optional[List[Optional[np.ndarray]]] = None,
+    ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Decode from a 2D `shots` array containing a batch of syndrome measurements. A faster
         alternative to using `pymatching.Matching.decode` and iterating over the shots in Python.
@@ -470,18 +504,19 @@ class Matching:
             bit_packed_predictions=bit_packed_predictions,
             bit_packed_shots=bit_packed_shots,
             enable_correlations=enable_correlations,
-            edge_reweights=edge_reweights
+            edge_reweights=edge_reweights,
         )
         if return_weights:
             return predictions, weights
         else:
             return predictions
 
-    def decode_to_edges_array(self,
-                              syndrome: Union[np.ndarray, List[bool], List[int]],
-                              *,
-                              enable_correlations: bool = False
-                              ) -> np.ndarray:
+    def decode_to_edges_array(
+        self,
+        syndrome: Union[np.ndarray, List[bool], List[int]],
+        *,
+        enable_correlations: bool = False,
+    ) -> np.ndarray:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the edges in the
         solution, given as pairs of detector node indices in a numpy array.
@@ -541,9 +576,9 @@ class Matching:
             detection_events, enable_correlations=enable_correlations
         )
 
-    def decode_to_matched_dets_array(self,
-                                     syndrome: Union[np.ndarray, List[bool], List[int]]
-                                     ) -> np.ndarray:
+    def decode_to_matched_dets_array(
+        self, syndrome: Union[np.ndarray, List[bool], List[int]]
+    ) -> np.ndarray:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the pairs of
         matched detection events (or detection events matched to the boundary) as a 2D numpy array.
@@ -590,11 +625,13 @@ class Matching:
          [ 4  6]]
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
-        return self._matching_graph.decode_to_matched_detection_events_array(detection_events)
+        return self._matching_graph.decode_to_matched_detection_events_array(
+            detection_events
+        )
 
-    def decode_to_matched_dets_dict(self,
-                                    syndrome: Union[np.ndarray, List[bool], List[int]]
-                                    ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
+    def decode_to_matched_dets_dict(
+        self, syndrome: Union[np.ndarray, List[bool], List[int]]
+    ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning a dictionary
         giving the detection event that each detection event was matched to (or None if it was matched
@@ -636,7 +673,9 @@ class Matching:
         {0: None, 3: 4, 4: 3}
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
-        return self._matching_graph.decode_to_matched_detection_events_dict(detection_events)
+        return self._matching_graph.decode_to_matched_detection_events_dict(
+            detection_events
+        )
 
     def draw(self) -> None:
         """Draw the matching graph using matplotlib
@@ -649,15 +688,17 @@ class Matching:
         this function.
         """
         # Ignore matplotlib deprecation warnings from networkx.draw_networkx
-        warnings.filterwarnings("ignore", category=matplotlib.MatplotlibDeprecationWarning)
+        warnings.filterwarnings(
+            "ignore", category=matplotlib.MatplotlibDeprecationWarning
+        )
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         G = self.to_networkx()
         pos = nx.spectral_layout(G, weight=None)
         c = "#bfbfbf"
-        ncolors = ['w' if n[1]['is_boundary'] else c for n in G.nodes(data=True)]
+        ncolors = ["w" if n[1]["is_boundary"] else c for n in G.nodes(data=True)]
         nx.draw_networkx_nodes(G, pos=pos, node_color=ncolors, edgecolors=c)
         nx.draw_networkx_labels(G, pos=pos)
-        weights = np.array([e[2]['weight'] for e in G.edges(data=True)])
+        weights = np.array([e[2]["weight"] for e in G.edges(data=True)])
         normalised_weights = 0.2 + 2 * weights / np.max(weights)
         nx.draw_networkx_edges(G, pos=pos, width=normalised_weights)
 
@@ -669,30 +710,39 @@ class Matching:
             else:
                 return str(qid)
 
-        edge_labels = {(s, t): qid_to_str(d['fault_ids']) for (s, t, d) in G.edges(data=True)}
+        edge_labels = {
+            (s, t): qid_to_str(d["fault_ids"]) for (s, t, d) in G.edges(data=True)
+        }
         nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels)
 
     def __repr__(self) -> str:
         m = self.num_detectors
         b = len(self.boundary)
         e = self._matching_graph.get_num_edges()
-        return "<pymatching.Matching object with " \
-               "{} detector{}, " \
-               "{} boundary node{}, " \
-               "and {} edge{}>".format(
-                   m, 's' if m != 1 else '', b, 's' if b != 1 else '',
-                   e, 's' if e != 1 else '')
+        return (
+            "<pymatching.Matching object with "
+            "{} detector{}, "
+            "{} boundary node{}, "
+            "and {} edge{}>".format(
+                m,
+                "s" if m != 1 else "",
+                b,
+                "s" if b != 1 else "",
+                e,
+                "s" if e != 1 else "",
+            )
+        )
 
     def add_edge(
-            self,
-            node1: int,
-            node2: int,
-            fault_ids: Union[int, Set[int]] = None,
-            weight: float = 1.0,
-            error_probability: float = None,
-            *,
-            merge_strategy: str = "disallow",
-            **kwargs
+        self,
+        node1: int,
+        node2: int,
+        fault_ids: Union[int, Set[int]] = None,
+        weight: float = 1.0,
+        error_probability: float = None,
+        *,
+        merge_strategy: str = "disallow",
+        **kwargs,
     ) -> None:
         """
         Add an edge to the matching graph
@@ -761,27 +811,30 @@ class Matching:
         [(0, 1, {'fault_ids': {1}, 'weight': 1.0, 'error_probability': -1.0})]
         """
         if fault_ids is not None and "qubit_id" in kwargs:
-            raise ValueError("Both `fault_ids` and `qubit_id` were provided as arguments. Please "
-                             "provide `fault_ids` instead of `qubit_id` as an argument, as use of `qubit_id` has "
-                             "been deprecated.")
+            raise ValueError(
+                "Both `fault_ids` and `qubit_id` were provided as arguments. Please "
+                "provide `fault_ids` instead of `qubit_id` as an argument, as use of `qubit_id` has "
+                "been deprecated."
+            )
         if fault_ids is None and "qubit_id" in kwargs:
             fault_ids = kwargs["qubit_id"]
         if isinstance(fault_ids, (int, np.integer)):
             fault_ids = set() if fault_ids == -1 else {int(fault_ids)}
         fault_ids = set() if fault_ids is None else fault_ids
         error_probability = error_probability if error_probability is not None else -1
-        self._matching_graph.add_edge(node1, node2, fault_ids, weight,
-                                      error_probability, merge_strategy)
+        self._matching_graph.add_edge(
+            node1, node2, fault_ids, weight, error_probability, merge_strategy
+        )
 
     def add_boundary_edge(
-            self,
-            node: int,
-            fault_ids: Union[int, Set[int]] = None,
-            weight: float = 1.0,
-            error_probability: float = None,
-            *,
-            merge_strategy: str = "disallow",
-            **kwargs
+        self,
+        node: int,
+        fault_ids: Union[int, Set[int]] = None,
+        weight: float = 1.0,
+        error_probability: float = None,
+        *,
+        merge_strategy: str = "disallow",
+        **kwargs,
     ) -> None:
         """
         Add an edge connecting `node` to the boundary
@@ -849,8 +902,9 @@ class Matching:
             fault_ids = set() if fault_ids == -1 else {int(fault_ids)}
         fault_ids = set() if fault_ids is None else fault_ids
         error_probability = error_probability if error_probability is not None else -1
-        self._matching_graph.add_boundary_edge(node, fault_ids, weight,
-                                               error_probability, merge_strategy)
+        self._matching_graph.add_boundary_edge(
+            node, fault_ids, weight, error_probability, merge_strategy
+        )
 
     def has_edge(self, node1: int, node2: int) -> bool:
         """
@@ -890,7 +944,9 @@ class Matching:
         """
         return self._matching_graph.has_boundary_edge(node)
 
-    def get_edge_data(self, node1: int, node2: int) -> Dict[str, Union[Set[int], float]]:
+    def get_edge_data(
+        self, node1: int, node2: int
+    ) -> Dict[str, Union[Set[int], float]]:
         """
         Returns the edge data associated with the edge `(node1, node2)`.
 
@@ -945,18 +1001,18 @@ class Matching:
 
     @staticmethod
     def from_check_matrix(
-            check_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]],
-            weights: Union[float, np.ndarray, List[float]] = None,
-            error_probabilities: Union[float, np.ndarray, List[float]] = None,
-            repetitions: int = None,
-            timelike_weights: Union[float, np.ndarray, List[float]] = None,
-            measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
-            *,
-            faults_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
-            merge_strategy: str = "smallest-weight",
-            use_virtual_boundary_node: bool = False,
-            **kwargs
-    ) -> 'pymatching.Matching':
+        check_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]],
+        weights: Union[float, np.ndarray, List[float]] = None,
+        error_probabilities: Union[float, np.ndarray, List[float]] = None,
+        repetitions: int = None,
+        timelike_weights: Union[float, np.ndarray, List[float]] = None,
+        measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+        *,
+        faults_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+        merge_strategy: str = "smallest-weight",
+        use_virtual_boundary_node: bool = False,
+        **kwargs,
+    ) -> "pymatching.Matching":
         r"""
         Load a matching graph from a check matrix
 
@@ -1065,23 +1121,24 @@ class Matching:
             faults_matrix=faults_matrix,
             merge_strategy=merge_strategy,
             use_virtual_boundary_node=use_virtual_boundary_node,
-            **kwargs
+            **kwargs,
         )
         return m
 
-    def load_from_check_matrix(self,
-                               check_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
-                               weights: Union[float, np.ndarray, List[float]] = None,
-                               error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                               repetitions: int = None,
-                               timelike_weights: Union[float, np.ndarray, List[float]] = None,
-                               measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
-                               *,
-                               faults_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
-                               merge_strategy: str = "smallest-weight",
-                               use_virtual_boundary_node: bool = False,
-                               **kwargs
-                               ) -> None:
+    def load_from_check_matrix(
+        self,
+        check_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+        weights: Union[float, np.ndarray, List[float]] = None,
+        error_probabilities: Union[float, np.ndarray, List[float]] = None,
+        repetitions: int = None,
+        timelike_weights: Union[float, np.ndarray, List[float]] = None,
+        measurement_error_probabilities: Union[float, np.ndarray, List[float]] = None,
+        *,
+        faults_matrix: Union[csc_matrix, spmatrix, np.ndarray, List[List[int]]] = None,
+        merge_strategy: str = "smallest-weight",
+        use_virtual_boundary_node: bool = False,
+        **kwargs,
+    ) -> None:
         """
         Load a matching graph from a check matrix
 
@@ -1187,13 +1244,17 @@ class Matching:
             try:
                 check_matrix = csc_matrix(check_matrix)
             except TypeError:
-                raise TypeError("`check_matrix` must be convertible to a `scipy.sparse.csc_matrix`")
+                raise TypeError(
+                    "`check_matrix` must be convertible to a `scipy.sparse.csc_matrix`"
+                )
 
         if faults_matrix is not None:
             try:
                 faults_matrix = csc_matrix(faults_matrix)
             except TypeError:
-                raise TypeError("`faults` must be convertible to `scipy.sparse.csc_matrix`")
+                raise TypeError(
+                    "`faults` must be convertible to `scipy.sparse.csc_matrix`"
+                )
 
         num_edges = check_matrix.shape[1]
 
@@ -1201,9 +1262,11 @@ class Matching:
         if weights is None and slw is not None:
             weights = slw
         elif weights is not None and slw is not None:
-            raise ValueError("Both `weights` and `spacelike_weights` were provided as arguments, but these "
-                             "two arguments are equivalent. Please provide only `weights` as an argument, as "
-                             "the `spacelike_weights` argument has been deprecated.")
+            raise ValueError(
+                "Both `weights` and `spacelike_weights` were provided as arguments, but these "
+                "two arguments are equivalent. Please provide only `weights` as an argument, as "
+                "the `spacelike_weights` argument has been deprecated."
+            )
 
         weights = 1.0 if weights is None else weights
         if isinstance(weights, (int, float, np.integer, np.floating)):
@@ -1222,43 +1285,59 @@ class Matching:
         if repetitions > 1:
             timelike_weights = 1.0 if timelike_weights is None else timelike_weights
             if isinstance(timelike_weights, (int, float, np.integer, np.floating)):
-                timelike_weights = np.ones(check_matrix.shape[0], dtype=float) * timelike_weights
+                timelike_weights = (
+                    np.ones(check_matrix.shape[0], dtype=float) * timelike_weights
+                )
             elif isinstance(timelike_weights, (np.ndarray, list)):
                 timelike_weights = np.array(timelike_weights, dtype=float)
             else:
-                raise ValueError("timelike_weights should be a float or a 1d numpy array")
+                raise ValueError(
+                    "timelike_weights should be a float or a 1d numpy array"
+                )
 
             mep = kwargs.get("measurement_error_probability")
             if measurement_error_probabilities is not None and mep is not None:
-                raise ValueError("Both `measurement_error_probabilities` and `measurement_error_probability` "
-                                 "were provided as arguments. Please "
-                                 "provide `measurement_error_probabilities` instead of `measurement_error_probability` "
-                                 "as an argument, as use of `measurement_error_probability` has been deprecated.")
+                raise ValueError(
+                    "Both `measurement_error_probabilities` and `measurement_error_probability` "
+                    "were provided as arguments. Please "
+                    "provide `measurement_error_probabilities` instead of `measurement_error_probability` "
+                    "as an argument, as use of `measurement_error_probability` has been deprecated."
+                )
             if measurement_error_probabilities is None and mep is not None:
                 measurement_error_probabilities = mep
 
-            p_meas = measurement_error_probabilities if measurement_error_probabilities is not None else -1
+            p_meas = (
+                measurement_error_probabilities
+                if measurement_error_probabilities is not None
+                else -1
+            )
             if isinstance(p_meas, (int, float, np.integer, np.floating)):
                 p_meas = np.ones(check_matrix.shape[0], dtype=float) * p_meas
             elif isinstance(p_meas, (np.ndarray, list)):
                 p_meas = np.array(p_meas, dtype=float)
             else:
-                raise ValueError("measurement_error_probabilities should be a float or 1d numpy array")
+                raise ValueError(
+                    "measurement_error_probabilities should be a float or 1d numpy array"
+                )
         else:
             timelike_weights = None
             p_meas = None
-        self._matching_graph = _cpp_pm.sparse_column_check_matrix_to_matching_graph(check_matrix, weights,
-                                                                                    error_probabilities,
-                                                                                    merge_strategy,
-                                                                                    use_virtual_boundary_node,
-                                                                                    repetitions,
-                                                                                    timelike_weights, p_meas,
-                                                                                    faults_matrix)
+        self._matching_graph = _cpp_pm.sparse_column_check_matrix_to_matching_graph(
+            check_matrix,
+            weights,
+            error_probabilities,
+            merge_strategy,
+            use_virtual_boundary_node,
+            repetitions,
+            timelike_weights,
+            p_meas,
+            faults_matrix,
+        )
 
     @staticmethod
     def from_detector_error_model(
-            model: 'stim.DetectorErrorModel', *, enable_correlations: bool = False
-    ) -> 'pymatching.Matching':
+        model: "stim.DetectorErrorModel", *, enable_correlations: bool = False
+    ) -> "pymatching.Matching":
         """
         Constructs a `pymatching.Matching` object by loading from a `stim.DetectorErrorModel`.
 
@@ -1310,15 +1389,15 @@ class Matching:
         <pymatching.Matching object with 120 detectors, 0 boundary nodes, and 502 edges>
         """
         m = Matching()
-        m._load_from_detector_error_model(model, enable_correlations=enable_correlations)
+        m._load_from_detector_error_model(
+            model, enable_correlations=enable_correlations
+        )
         return m
 
     @staticmethod
     def from_detector_error_model_file(
-        dem_path: Union[str, Path],
-        *,
-        enable_correlations: bool = False
-    ) -> 'pymatching.Matching':
+        dem_path: Union[str, Path], *, enable_correlations: bool = False
+    ) -> "pymatching.Matching":
         """
         Construct a `pymatching.Matching` by loading from a stim DetectorErrorModel file path.
 
@@ -1342,13 +1421,14 @@ class Matching:
             dem_path = str(dem_path)
         m = Matching()
         m._matching_graph = _cpp_pm.detector_error_model_file_to_matching_graph(
-            dem_path,
-            enable_correlations=enable_correlations
+            dem_path, enable_correlations=enable_correlations
         )
         return m
 
     @staticmethod
-    def from_stim_circuit(circuit: 'stim.Circuit', *, enable_correlations=False) -> 'pymatching.Matching':
+    def from_stim_circuit(
+        circuit: "stim.Circuit", *, enable_correlations=False
+    ) -> "pymatching.Matching":
         """
         Constructs a `pymatching.Matching` object by loading from a `stim.Circuit`
 
@@ -1392,20 +1472,20 @@ class Matching:
                 "To install stim using pip, run `pip install stim`."
             )
         if not isinstance(circuit, stim.Circuit):
-            raise TypeError(f"`circuit` must be a `stim.Circuit`. Instead, got {type(circuit)}")
+            raise TypeError(
+                f"`circuit` must be a `stim.Circuit`. Instead, got {type(circuit)}"
+            )
         m = Matching()
         m._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(
             str(circuit.detector_error_model(decompose_errors=True)),
-            enable_correlations=enable_correlations
+            enable_correlations=enable_correlations,
         )
         return m
 
     @staticmethod
     def from_stim_circuit_file(
-        stim_circuit_path: Union[str, Path],
-        *,
-        enable_correlations: bool = False
-    ) -> 'pymatching.Matching':
+        stim_circuit_path: Union[str, Path], *, enable_correlations: bool = False
+    ) -> "pymatching.Matching":
         """
         Construct a `pymatching.Matching` by loading from a stim circuit file path.
 
@@ -1430,12 +1510,13 @@ class Matching:
             stim_circuit_path = str(stim_circuit_path)
         m = Matching()
         m._matching_graph = _cpp_pm.stim_circuit_file_to_matching_graph(
-            stim_circuit_path,
-            enable_correlations=enable_correlations
+            stim_circuit_path, enable_correlations=enable_correlations
         )
         return m
 
-    def _load_from_detector_error_model(self, model: 'stim.DetectorErrorModel', *, enable_correlations: bool = False) -> None:
+    def _load_from_detector_error_model(
+        self, model: "stim.DetectorErrorModel", *, enable_correlations: bool = False
+    ) -> None:
         try:
             import stim
         except ImportError:  # pragma no cover
@@ -1445,13 +1526,17 @@ class Matching:
                 "To install stim using pip, run `pip install stim`."
             )
         if not isinstance(model, stim.DetectorErrorModel):
-            raise TypeError(f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}")
+            raise TypeError(
+                f"'model' must be `stim.DetectorErrorModel`. Instead, got: {type(model)}"
+            )
         self._matching_graph = _cpp_pm.detector_error_model_to_matching_graph(
             str(model), enable_correlations=enable_correlations
         )
 
     @staticmethod
-    def from_networkx(graph: nx.Graph, *, min_num_fault_ids: int = None) -> 'pymatching.Matching':
+    def from_networkx(
+        graph: nx.Graph, *, min_num_fault_ids: int = None
+    ) -> "pymatching.Matching":
         r"""
         Returns a new `pymatching.Matching` object from a NetworkX graph
 
@@ -1498,12 +1583,12 @@ class Matching:
         <pymatching.Matching object with 1 detector, 2 boundary nodes, and 2 edges>
         """
         m = Matching()
-        m.load_from_networkx(
-            graph=graph, min_num_fault_ids=min_num_fault_ids
-        )
+        m.load_from_networkx(graph=graph, min_num_fault_ids=min_num_fault_ids)
         return m
 
-    def load_from_networkx(self, graph: nx.Graph, *, min_num_fault_ids: int = None) -> None:
+    def load_from_networkx(
+        self, graph: nx.Graph, *, min_num_fault_ids: int = None
+    ) -> None:
         r"""
         Load a matching graph from a NetworkX graph into a `pymatching.Matching` object
 
@@ -1552,19 +1637,22 @@ class Matching:
 
         if not isinstance(graph, nx.Graph):
             raise TypeError("G must be a NetworkX graph")
-        boundary = {i for i, attr in graph.nodes(data=True)
-                    if attr.get("is_boundary", False)}
+        boundary = {
+            i for i, attr in graph.nodes(data=True) if attr.get("is_boundary", False)
+        }
         num_nodes = graph.number_of_nodes()
         all_fault_ids = set()
         num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
         g = _cpp_pm.MatchingGraph(num_nodes, num_fault_ids)
         g.set_boundary(boundary)
-        for (u, v, attr) in graph.edges(data=True):
+        for u, v, attr in graph.edges(data=True):
             u, v = int(u), int(v)
             if "fault_ids" in attr and "qubit_id" in attr:
-                raise ValueError("Both `fault_ids` and `qubit_id` were provided as edge attributes, however use "
-                                 "of `qubit_id` has been deprecated in favour of `fault_ids`. Please only supply "
-                                 "`fault_ids` as an edge attribute.")
+                raise ValueError(
+                    "Both `fault_ids` and `qubit_id` were provided as edge attributes, however use "
+                    "of `qubit_id` has been deprecated in favour of `fault_ids`. Please only supply "
+                    "`fault_ids` as an edge attribute."
+                )
             if "fault_ids" not in attr and "qubit_id" in attr:
                 fault_ids = attr["qubit_id"]  # Still accept qubit_id as well for now
             else:
@@ -1575,28 +1663,41 @@ class Matching:
                 try:
                     fault_ids = set(fault_ids)
                     if not all(isinstance(q, (int, np.integer)) for q in fault_ids):
-                        raise TypeError("fault_ids must be a set of ints, not {}".format(fault_ids))
+                        raise TypeError(
+                            "fault_ids must be a set of ints, not {}".format(fault_ids)
+                        )
                 except TypeError:
                     raise TypeError(
                         "fault_ids property must be an int or a set of int"
-                        " (or convertible to a set), not {}".format(fault_ids))
+                        " (or convertible to a set), not {}".format(fault_ids)
+                    )
             all_fault_ids = all_fault_ids | fault_ids
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
             # Note: NetworkX graphs do not support parallel edges (merge strategy is redundant)
-            g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
+            g.add_edge(
+                u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight"
+            )
         self._matching_graph = g
 
-    def load_from_retworkx(self, graph: "rx.PyGraph", *, min_num_fault_ids: int = None) -> None:
+    def load_from_retworkx(
+        self, graph: "rx.PyGraph", *, min_num_fault_ids: int = None
+    ) -> None:
         r"""
         Load a matching graph from a retworkX graph. This method is deprecated since the retworkx package has been
         renamed to rustworkx. Please use ``pymatching.Matching.load_from_rustworkx`` instead.
         """
-        warnings.warn("`pymatching.Matching.load_from_retworkx` is now deprecated since the `retworkx` library has been "
-                      "renamed to `rustworkx`. Please use `pymatching.Matching.load_from_rustworkx` instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "`pymatching.Matching.load_from_retworkx` is now deprecated since the `retworkx` library has been "
+            "renamed to `rustworkx`. Please use `pymatching.Matching.load_from_rustworkx` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.load_from_rustworkx(graph=graph, min_num_fault_ids=min_num_fault_ids)
 
-    def load_from_rustworkx(self, graph: "rx.PyGraph", *, min_num_fault_ids: int = None) -> None:
+    def load_from_rustworkx(
+        self, graph: "rx.PyGraph", *, min_num_fault_ids: int = None
+    ) -> None:
         r"""
         Load a matching graph from a rustworkX graph
 
@@ -1641,20 +1742,26 @@ class Matching:
         try:
             import rustworkx as rx
         except ImportError:  # pragma no cover
-            raise ImportError("rustworkx must be installed to use Matching.load_from_rustworkx")
+            raise ImportError(
+                "rustworkx must be installed to use Matching.load_from_rustworkx"
+            )
         if not isinstance(graph, rx.PyGraph):
             raise TypeError("G must be a rustworkx graph")
-        boundary = {i for i in graph.node_indices() if graph[i].get("is_boundary", False)}
+        boundary = {
+            i for i in graph.node_indices() if graph[i].get("is_boundary", False)
+        }
         num_nodes = len(graph)
         num_fault_ids = 0 if min_num_fault_ids is None else min_num_fault_ids
         g = _cpp_pm.MatchingGraph(num_nodes, num_fault_ids)
         g.set_boundary(boundary)
-        for (u, v, attr) in graph.weighted_edge_list():
+        for u, v, attr in graph.weighted_edge_list():
             u, v = int(u), int(v)
             if "fault_ids" in attr and "qubit_id" in attr:
-                raise ValueError("Both `fault_ids` and `qubit_id` were provided as edge attributes, however use "
-                                 "of `qubit_id` has been deprecated in favour of `fault_ids`. Please only supply "
-                                 "`fault_ids` as an edge attribute.")
+                raise ValueError(
+                    "Both `fault_ids` and `qubit_id` were provided as edge attributes, however use "
+                    "of `qubit_id` has been deprecated in favour of `fault_ids`. Please only supply "
+                    "`fault_ids` as an edge attribute."
+                )
             if "fault_ids" not in attr and "qubit_id" in attr:
                 fault_ids = attr["qubit_id"]  # Still accept qubit_id as well for now
             else:
@@ -1665,15 +1772,20 @@ class Matching:
                 try:
                     fault_ids = set(fault_ids)
                     if not all(isinstance(q, (int, np.integer)) for q in fault_ids):
-                        raise TypeError("fault_ids must be a set of ints, not {}".format(fault_ids))
+                        raise TypeError(
+                            "fault_ids must be a set of ints, not {}".format(fault_ids)
+                        )
                 except TypeError:
                     raise TypeError(
                         "fault_ids property must be an int or a set of int"
-                        " (or convertible to a set), not {}".format(fault_ids))
+                        " (or convertible to a set), not {}".format(fault_ids)
+                    )
             weight = attr.get("weight", 1)  # Default weight is 1 if not provided
             e_prob = attr.get("error_probability", -1)
             # Note: rustworkx graphs do not support parallel edges (merge strategy is redundant)
-            g.add_edge(u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight")
+            g.add_edge(
+                u, v, fault_ids, weight, e_prob, merge_strategy="smallest-weight"
+            )
         self._matching_graph = g
 
     def to_networkx(self) -> nx.Graph:
@@ -1699,9 +1811,9 @@ class Matching:
         boundary = self.boundary
         for i in graph.nodes:
             is_boundary = i in boundary
-            graph.nodes[i]['is_boundary'] = is_boundary
+            graph.nodes[i]["is_boundary"] = is_boundary
         if has_virtual_boundary:
-            graph.nodes[num_nodes]['is_boundary'] = True
+            graph.nodes[num_nodes]["is_boundary"] = True
         return graph
 
     def to_retworkx(self) -> "rx.PyGraph":
@@ -1710,8 +1822,12 @@ class Matching:
          ``retworkx.PyGraph``. Note that in the future, only the `rustworkx` package name will be supported,
          see: https://pypi.org/project/retworkx/.
         """
-        warnings.warn("`pymatching.Matching.to_retworkx` is now deprecated since the `retworkx` library has been "
-                      "renamed to `rustworkx`. Please use `pymatching.Matching.to_rustworkx` instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "`pymatching.Matching.to_retworkx` is now deprecated since the `retworkx` library has been "
+            "renamed to `rustworkx`. Please use `pymatching.Matching.to_rustworkx` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.to_rustworkx()
 
     def to_rustworkx(self) -> "rx.PyGraph":
@@ -1729,7 +1845,9 @@ class Matching:
         try:
             import rustworkx as rx
         except ImportError:  # pragma no cover
-            raise ImportError("rustworkx must be installed to use Matching.to_rustworkx.")
+            raise ImportError(
+                "rustworkx must be installed to use Matching.to_rustworkx."
+            )
 
         graph = rx.PyGraph(multigraph=False)
         num_nodes = self.num_nodes
@@ -1746,7 +1864,7 @@ class Matching:
         boundary = self.boundary
         for i in graph.node_indices():
             is_boundary = i in boundary
-            graph[i]['is_boundary'] = is_boundary
+            graph[i]["is_boundary"] = is_boundary
         if has_virtual_boundary:
             graph[num_nodes]["is_boundary"] = True
         return graph
