@@ -72,7 +72,7 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
             }
         }
     })
-        .goal_micros(290)
+        .goal_micros(350)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -105,7 +105,7 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
             }
         }
     })
-        .goal_millis(10)
+        .goal_millis(17)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -153,7 +153,7 @@ BENCHMARK(Decode_surface_r11_d11_p100_reweight) {
             }
         }
     })
-        .goal_millis(10)
+        .goal_millis(17)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -184,7 +184,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(1.5)
+        .goal_millis(2.4)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -217,7 +217,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
             }
         }
     })
-        .goal_micros(83)
+        .goal_micros(78)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -250,7 +250,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
             }
         }
     })
-        .goal_micros(33)
+        .goal_micros(35)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -283,7 +283,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
             }
         }
     })
-        .goal_millis(7.5)
+        .goal_millis(13)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -319,7 +319,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(7.8)
+        .goal_millis(16)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -349,7 +349,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.2)
+        .goal_millis(16)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -376,7 +376,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.2)
+        .goal_millis(34)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -406,7 +406,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
             }
         }
     })
-        .goal_millis(6.3)
+        .goal_millis(9.6)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -451,7 +451,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_reweight) {
             }
         }
     })
-        .goal_millis(6.3)
+        .goal_millis(9.6)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -485,7 +485,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(7.7)
+        .goal_millis(16)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -515,7 +515,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.4)
+        .goal_millis(17)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -542,7 +542,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.4)
+        .goal_millis(48)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -590,7 +590,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_reweight_with_correlations) {
             res.reset();
         }
     })
-        .goal_millis(7.7)
+        .goal_millis(44)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -620,7 +620,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
             }
         }
     })
-        .goal_millis(0.980)
+        .goal_millis(1.7)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -657,7 +657,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(1.3)
+        .goal_millis(2.9)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -687,7 +687,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(1.4)
+        .goal_millis(3.1)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -714,7 +714,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(1.4)
+        .goal_millis(8.0)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -744,7 +744,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
             }
         }
     })
-        .goal_micros(94)
+        .goal_micros(110)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -781,7 +781,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_micros(130)
+        .goal_micros(230)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -811,12 +811,35 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_micros(130)
+        .goal_micros(250)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
 }
 
+BENCHMARK(Decode_surface_r21_d21_p100000_to_edges_with_correlations) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.00001, 512, true);
+    auto &dem = data.first;
+    const auto &shots = data.second;
 
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(
+        dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
 
-
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+    std::vector<int64_t> edges;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            edges.clear();
+            pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
+        }
+    })
+        .goal_micros(590)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+}

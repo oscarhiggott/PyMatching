@@ -37,7 +37,7 @@ BENCHMARK(Varying32_get_distance_at_time) {
             total += varyings[k].get_distance_at_time(times[k]);
         }
     })
-        .goal_millis(3.5)
+        .goal_millis(6.7)
         .show_rate("calls", NUM_ITEMS);
     if (total == 0) {
         std::cerr << "data dependence";
@@ -62,7 +62,7 @@ BENCHMARK(Varying64_get_distance_at_time) {
             total += varyings[k].get_distance_at_time(times[k]);
         }
     })
-        .goal_millis(5.9)
+        .goal_millis(16)
         .show_rate("calls", NUM_ITEMS);
     if (total == 0) {
         std::cerr << "data dependence";

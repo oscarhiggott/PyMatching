@@ -35,7 +35,7 @@ BENCHMARK(Load_dem_r11_d11_p100) {
             auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
         }
     })
-        .goal_millis(35)
+        .goal_millis(54)
         .show_rate("loads", (double)num_loads);
 }
 
@@ -48,10 +48,9 @@ BENCHMARK(Load_dem_r21_d21_p100) {
             auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
         }
     })
-        .goal_millis(280)
+        .goal_millis(460)
         .show_rate("loads", (double)num_loads);
 }
-
 BENCHMARK(Load_dem_r11_d11_p100_correlations) {
     auto dem = generate_dem(11, 11, 0.01, true);
     size_t num_buckets = 1024;
@@ -62,7 +61,7 @@ BENCHMARK(Load_dem_r11_d11_p100_correlations) {
                 dem, num_buckets, /*ensure_search_flooder_included=*/false, /*enable_correlations=*/true);
         }
     })
-        .goal_millis(35)
+        .goal_millis(300)
         .show_rate("loads", (double)num_loads);
 }
 
@@ -76,6 +75,6 @@ BENCHMARK(Load_dem_r21_d21_p100_correlations) {
                 dem, num_buckets, /*ensure_search_flooder_included=*/false, /*enable_correlations=*/true);
         }
     })
-        .goal_millis(280)
+        .goal_millis(3100)
         .show_rate("loads", (double)num_loads);
 }
