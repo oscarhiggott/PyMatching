@@ -15,8 +15,10 @@
 #ifndef PYMATCHING2_GRAPH_H
 #define PYMATCHING2_GRAPH_H
 
+#include <cmath>
 #include <map>
 #include <set>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -114,6 +116,67 @@ inline void apply_reweights(
 
 inline void MatchingGraph::reweight(std::vector<ImpliedWeight>& implied_weights) {
     apply_reweights(implied_weights, previous_weights);
+}
+
+template <typename GraphType, typename OnNegativeEdge>
+void apply_temp_reweights_generic(
+    GraphType& graph,
+    const std::vector<std::tuple<size_t, int64_t, double>>& reweights,
+    double normalising_constant,
+    OnNegativeEdge on_negative_edge) {
+    for (const auto& rw : reweights) {
+        size_t u = std::get<0>(rw);
+        int64_t v = std::get<1>(rw);
+        double weight = std::get<2>(rw);
+
+        double rescaled_normalising_constant = normalising_constant / 2;
+        pm::signed_weight_int w = (pm::signed_weight_int)round(weight * rescaled_normalising_constant);
+        w *= 2;
+        pm::weight_int new_w = std::abs(w);
+
+        if (u >= graph.nodes.size())
+            throw std::invalid_argument("Node index " + std::to_string(u) + " out of range");
+        auto* u_node_ptr = &graph.nodes[u];
+        auto* v_node_ptr = (decltype(u_node_ptr)) nullptr;
+        if (v != -1) {
+            if (v < 0 || (size_t)v >= graph.nodes.size())
+                throw std::invalid_argument("Node index " + std::to_string(v) + " out of range");
+            v_node_ptr = &graph.nodes[(size_t)v];
+        }
+
+        size_t idx = u_node_ptr->index_of_neighbor(v_node_ptr);
+        if (idx == SIZE_MAX)
+            throw std::invalid_argument("Edge (" + std::to_string(u) + ", " + std::to_string(v) + ") not found");
+
+        // Check sign consistency
+        bool new_is_negative = w < 0;
+        bool old_is_negative = u_node_ptr->neighbor_markers[idx] & pm::WEIGHT_SIGN;
+        if (new_is_negative != old_is_negative) {
+            throw std::invalid_argument(
+                "Reweighting edge (" + std::to_string(u) + ", " + std::to_string(v) +
+                ") failed: sign flip not allowed. "
+                "Original sign: " +
+                (old_is_negative ? "negative" : "positive") +
+                ", New sign: " + (new_is_negative ? "negative" : "positive"));
+        }
+
+        if (new_is_negative) {
+            pm::signed_weight_int old_w = -(pm::signed_weight_int)u_node_ptr->neighbor_weights[idx];
+            pm::signed_weight_int delta = w - old_w;
+            on_negative_edge(delta);
+        }
+
+        weight_int* w_ptr = &u_node_ptr->neighbor_weights[idx];
+        graph.previous_weights.emplace_back(w_ptr, *w_ptr);
+        *w_ptr = new_w;
+
+        if (v_node_ptr) {
+            size_t idx_v = v_node_ptr->index_of_neighbor(u_node_ptr);
+            weight_int* w_ptr_v = &v_node_ptr->neighbor_weights[idx_v];
+            graph.previous_weights.emplace_back(w_ptr_v, *w_ptr_v);
+            *w_ptr_v = new_w;
+        }
+    }
 }
 
 }  // namespace pm
