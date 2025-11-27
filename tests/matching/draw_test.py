@@ -23,8 +23,8 @@ def test_draw_matching():
     g.add_edge(0, 1, fault_ids={0}, weight=1.1, error_probability=0.1)
     g.add_edge(1, 2, fault_ids={1}, weight=2.1, error_probability=0.2)
     g.add_edge(2, 3, fault_ids={2, 3}, weight=0.9, error_probability=0.3)
-    g.nodes[0]['is_boundary'] = True
-    g.nodes[3]['is_boundary'] = True
+    g.nodes[0]["is_boundary"] = True
+    g.nodes[3]["is_boundary"] = True
     g.add_edge(0, 3, weight=0.0)
     m = Matching(g)
     plt.figure()

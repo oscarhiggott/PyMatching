@@ -28,7 +28,7 @@ def test_boundary_from_rustworkx():
     g.add_edge(1, 2, dict(fault_ids=2))
     g.add_edge(2, 3, dict(fault_ids=3))
     g.add_edge(3, 4, dict(fault_ids=4))
-    g[4]['is_boundary'] = True
+    g[4]["is_boundary"] = True
     m = Matching(g)
     assert m.boundary == {4}
     assert np.array_equal(m.decode(np.array([1, 0, 0, 0])), np.array([1, 0, 0, 0, 0]))
@@ -47,14 +47,22 @@ def test_boundaries_from_rustworkx():
     g.add_edge(3, 4, dict(fault_ids=3))
     g.add_edge(4, 5, dict(fault_ids=4))
     g.add_edge(0, 5, dict(fault_ids=-1, weight=0.0))
-    g.nodes()[0]['is_boundary'] = True
-    g.nodes()[5]['is_boundary'] = True
+    g.nodes()[0]["is_boundary"] = True
+    g.nodes()[5]["is_boundary"] = True
     m = Matching(g)
     assert m.boundary == {0, 5}
-    assert np.array_equal(m.decode(np.array([0, 1, 0, 0, 0, 0])), np.array([1, 0, 0, 0, 0]))
-    assert np.array_equal(m.decode(np.array([0, 0, 1, 0, 0])), np.array([1, 1, 0, 0, 0]))
-    assert np.array_equal(m.decode(np.array([0, 0, 1, 1, 0])), np.array([0, 0, 1, 0, 0]))
-    assert np.array_equal(m.decode(np.array([0, 0, 0, 1, 0])), np.array([0, 0, 0, 1, 1]))
+    assert np.array_equal(
+        m.decode(np.array([0, 1, 0, 0, 0, 0])), np.array([1, 0, 0, 0, 0])
+    )
+    assert np.array_equal(
+        m.decode(np.array([0, 0, 1, 0, 0])), np.array([1, 1, 0, 0, 0])
+    )
+    assert np.array_equal(
+        m.decode(np.array([0, 0, 1, 1, 0])), np.array([0, 0, 1, 0, 0])
+    )
+    assert np.array_equal(
+        m.decode(np.array([0, 0, 0, 1, 0])), np.array([0, 0, 0, 1, 1])
+    )
 
 
 def test_unweighted_stabiliser_graph_from_rustworkx():
@@ -71,23 +79,20 @@ def test_unweighted_stabiliser_graph_from_rustworkx():
     w.add_edge(3, 4, dict(fault_ids=5, weight=6.0))
     w.add_edge(4, 5, dict(fault_ids=6, weight=9.0))
     m = Matching(w)
-    assert (m.num_fault_ids == 7)
-    assert (m.num_detectors == 6)
-    assert (np.array_equal(
-        m.decode(np.array([1, 0, 1, 0, 0, 0])),
-        np.array([0, 0, 1, 0, 0, 0, 0]))
+    assert m.num_fault_ids == 7
+    assert m.num_detectors == 6
+    assert np.array_equal(
+        m.decode(np.array([1, 0, 1, 0, 0, 0])), np.array([0, 0, 1, 0, 0, 0, 0])
     )
     with pytest.raises(ValueError):
         m.decode(np.array([1, 1, 0]))
     with pytest.raises(ValueError):
         m.decode(np.array([1, 1, 1, 0, 0, 0]))
-    assert (np.array_equal(
-        m.decode(np.array([1, 0, 0, 0, 0, 1])),
-        np.array([0, 0, 1, 0, 1, 0, 0]))
+    assert np.array_equal(
+        m.decode(np.array([1, 0, 0, 0, 0, 1])), np.array([0, 0, 1, 0, 1, 0, 0])
     )
-    assert (np.array_equal(
-        m.decode(np.array([0, 1, 0, 0, 0, 1])),
-        np.array([0, 0, 0, 0, 1, 0, 0]))
+    assert np.array_equal(
+        m.decode(np.array([0, 1, 0, 0, 0, 1])), np.array([0, 0, 0, 0, 1, 0, 0])
     )
 
 
@@ -99,9 +104,9 @@ def test_mwpm_from_rustworkx():
     g.add_edge(0, 2, dict(fault_ids=1))
     g.add_edge(1, 2, dict(fault_ids=2))
     m = Matching(g)
-    assert (isinstance(m._matching_graph, MatchingGraph))
-    assert (m.num_detectors == 3)
-    assert (m.num_fault_ids == 3)
+    assert isinstance(m._matching_graph, MatchingGraph)
+    assert m.num_detectors == 3
+    assert m.num_fault_ids == 3
 
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(3)])
@@ -109,9 +114,9 @@ def test_mwpm_from_rustworkx():
     g.add_edge(0, 2, {})
     g.add_edge(1, 2, {})
     m = Matching(g)
-    assert (isinstance(m._matching_graph, MatchingGraph))
-    assert (m.num_detectors == 3)
-    assert (m.num_fault_ids == 0)
+    assert isinstance(m._matching_graph, MatchingGraph)
+    assert m.num_detectors == 3
+    assert m.num_fault_ids == 0
 
     g = rx.PyGraph()
     g.add_nodes_from([{} for _ in range(3)])
@@ -119,9 +124,9 @@ def test_mwpm_from_rustworkx():
     g.add_edge(0, 2, dict(weight=1.7))
     g.add_edge(1, 2, dict(weight=1.2))
     m = Matching(g)
-    assert (isinstance(m._matching_graph, MatchingGraph))
-    assert (m.num_detectors == 3)
-    assert (m.num_fault_ids == 0)
+    assert isinstance(m._matching_graph, MatchingGraph)
+    assert m.num_detectors == 3
+    assert m.num_fault_ids == 0
 
 
 def test_matching_edges_from_rustworkx():
@@ -131,16 +136,16 @@ def test_matching_edges_from_rustworkx():
     g.add_edge(0, 1, dict(fault_ids=0, weight=1.1, error_probability=0.1))
     g.add_edge(1, 2, dict(fault_ids=1, weight=2.1, error_probability=0.2))
     g.add_edge(2, 3, dict(fault_ids={2, 3}, weight=0.9, error_probability=0.3))
-    g[0]['is_boundary'] = True
-    g[3]['is_boundary'] = True
+    g[0]["is_boundary"] = True
+    g[3]["is_boundary"] = True
     g.add_edge(0, 3, dict(weight=0.0))
     m = Matching(g)
     es = list(m.edges())
     expected_edges = [
-        (0, 1, {'fault_ids': {0}, 'weight': 1.1, 'error_probability': 0.1}),
-        (1, 2, {'fault_ids': {1}, 'weight': 2.1, 'error_probability': 0.2}),
-        (2, 3, {'fault_ids': {2, 3}, 'weight': 0.9, 'error_probability': 0.3}),
-        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0}),
+        (0, 1, {"fault_ids": {0}, "weight": 1.1, "error_probability": 0.1}),
+        (1, 2, {"fault_ids": {1}, "weight": 2.1, "error_probability": 0.2}),
+        (2, 3, {"fault_ids": {2, 3}, "weight": 0.9, "error_probability": 0.3}),
+        (0, 3, {"fault_ids": set(), "weight": 0.0, "error_probability": -1.0}),
     ]
     print(es)
     assert es == expected_edges
@@ -153,16 +158,16 @@ def test_qubit_id_accepted_via_rustworkx():
     g.add_edge(0, 1, dict(qubit_id=0, weight=1.1, error_probability=0.1))
     g.add_edge(1, 2, dict(qubit_id=1, weight=2.1, error_probability=0.2))
     g.add_edge(2, 3, dict(qubit_id={2, 3}, weight=0.9, error_probability=0.3))
-    g[0]['is_boundary'] = True
-    g[3]['is_boundary'] = True
+    g[0]["is_boundary"] = True
+    g[3]["is_boundary"] = True
     g.add_edge(0, 3, dict(weight=0.0))
     m = Matching(g)
     es = list(m.edges())
     expected_edges = [
-        (0, 1, {'fault_ids': {0}, 'weight': 1.1, 'error_probability': 0.1}),
-        (1, 2, {'fault_ids': {1}, 'weight': 2.1, 'error_probability': 0.2}),
-        (2, 3, {'fault_ids': {2, 3}, 'weight': 0.9, 'error_probability': 0.3}),
-        (0, 3, {'fault_ids': set(), 'weight': 0.0, 'error_probability': -1.0})
+        (0, 1, {"fault_ids": {0}, "weight": 1.1, "error_probability": 0.1}),
+        (1, 2, {"fault_ids": {1}, "weight": 2.1, "error_probability": 0.2}),
+        (2, 3, {"fault_ids": {2, 3}, "weight": 0.9, "error_probability": 0.3}),
+        (0, 3, {"fault_ids": set(), "weight": 0.0, "error_probability": -1.0}),
     ]
     assert es == expected_edges
 

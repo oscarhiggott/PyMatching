@@ -22,9 +22,10 @@ def test_repr():
     g.add_edge(0, 1, fault_ids=0)
     g.add_edge(1, 2, fault_ids=1)
     g.add_edge(2, 3, fault_ids=2)
-    g.nodes[0]['is_boundary'] = True
-    g.nodes[3]['is_boundary'] = True
+    g.nodes[0]["is_boundary"] = True
+    g.nodes[3]["is_boundary"] = True
     g.add_edge(0, 3, weight=0.0)
     m = Matching(g)
-    assert m.__repr__() == ("<pymatching.Matching object with "
-                            "2 detectors, 2 boundary nodes, and 4 edges>")
+    assert m.__repr__() == (
+        "<pymatching.Matching object with 2 detectors, 2 boundary nodes, and 4 edges>"
+    )
