@@ -153,7 +153,7 @@ setup(
     entry_points={
         'console_scripts': ['pymatching=pymatching._cli_argv:cli_argv'],
     },
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=['scipy', 'numpy', 'networkx', 'matplotlib'],
     # Needed on Windows to avoid the default `build` colliding with Bazel's `BUILD`.
     options={'build': {'build_base': 'python_build_stim'}},
