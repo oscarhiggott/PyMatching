@@ -1,4 +1,6 @@
-sphinx>=8.1
+# nbsphinx-link is incompatible with sphinx>=9
+# See https://github.com/vidartf/nbsphinx-link/issues/25#issuecomment-3619913954
+sphinx>=8.1,<9 
 sphinx-rtd-theme>=3.0.2
 numpydoc>=1.8.0
 nbsphinx>=0.9.7
