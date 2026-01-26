@@ -38,13 +38,10 @@ def test_add_noise_with_boundary():
     for i in range(11):
         g.add_edge(i, i + 1, fault_ids=i, error_probability=(i + 1) % 2)
     for i in range(5, 12):
-        g.nodes()[i]['is_boundary'] = True
+        g.nodes()[i]["is_boundary"] = True
     m = Matching(g)
     noise, syndrome = m.add_noise()
     assert sum(syndrome) == 5
     assert np.array_equal(noise, (np.arange(11) + 1) % 2)
     assert m.boundary == set(range(5, 12))
-    assert np.array_equal(
-        syndrome,
-        np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0])
-    )
+    assert np.array_equal(syndrome, np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0]))

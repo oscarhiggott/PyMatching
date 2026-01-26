@@ -25,6 +25,8 @@
 
 namespace pm {
 
+enum NodeFlags : uint8_t { WEIGHT_SIGN = 2 };
+
 /// A detector node is a location where a detection event might occur.
 ///
 /// It corresponds to a potential symptom that could be seen, and can
@@ -66,6 +68,7 @@ class DetectorNode {
     std::vector<DetectorNode*> neighbors;       /// The node's neighbors.
     std::vector<weight_int> neighbor_weights;   /// Distance crossed by the edge to each neighbor.
     std::vector<obs_int> neighbor_observables;  /// Observables crossed by the edge to each neighbor.
+    std::vector<uint8_t> neighbor_markers;      /// Markers for each edge (e.g. WEIGHT_SIGN).
 
     /// After it reached this node, how much further did the owning search region grow? Also is it currently growing?
     inline VaryingCT local_radius() const {

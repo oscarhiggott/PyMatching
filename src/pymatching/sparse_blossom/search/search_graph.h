@@ -57,6 +57,7 @@ class SearchGraph {
     void reweight_for_edge(const int64_t& u, const int64_t& v);
     void reweight_for_edges(const std::vector<int64_t>& edges);
     void undo_reweights();
+    void apply_temp_reweights(const std::vector<std::tuple<size_t, int64_t, double>>& reweights, double normalising_constant);
 };
 
 inline void SearchGraph::reweight(std::vector<ImpliedWeight>& implied_weights) {

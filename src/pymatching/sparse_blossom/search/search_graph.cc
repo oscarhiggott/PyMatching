@@ -159,3 +159,8 @@ void pm::SearchGraph::convert_implied_weights(const double normalising_constant)
         }
     }
 }
+
+void pm::SearchGraph::apply_temp_reweights(
+    const std::vector<std::tuple<size_t, int64_t, double>>& reweights, double normalising_constant) {
+    apply_temp_reweights_generic(*this, reweights, normalising_constant, [](pm::signed_weight_int delta) {});
+}

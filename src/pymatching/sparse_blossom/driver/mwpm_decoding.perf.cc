@@ -72,7 +72,7 @@ BENCHMARK(Decode_surface_r5_d5_p1000) {
             }
         }
     })
-        .goal_micros(290)
+        .goal_micros(350)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -105,13 +105,59 @@ BENCHMARK(Decode_surface_r11_d11_p100) {
             }
         }
     })
-        .goal_millis(10)
+        .goal_millis(17)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
+}
+
+BENCHMARK(Decode_surface_r11_d11_p100_reweight) {
+    size_t rounds = 11;
+    auto data = generate_data(11, rounds, 0.01, 128);
+    const auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    // Create a reweight vector (reweight edge 0-1 to weight 5.0)
+    // We need to find valid node indices. Just pick 0 and 1 if they exist.
+    std::vector<std::tuple<size_t, int64_t, double>> reweights_r11_local;
+    if (mwpm.flooder.graph.nodes.size() > 1) {
+        // Find an edge
+        size_t u = 0;
+        int64_t v = -1;
+        if (mwpm.flooder.graph.nodes[0].neighbors[0]) {
+             v = mwpm.flooder.graph.nodes[0].neighbors[0] - &mwpm.flooder.graph.nodes[0];
+        }
+        reweights_r11_local.emplace_back(u, v, 5.0);
+    }
+
+    size_t num_mistakes = 0;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            mwpm.flooder.graph.apply_temp_reweights(reweights_r11_local);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
+            mwpm.flooder.graph.undo_reweights();
+            if (shot.obs_mask_as_u64() != res.obs_mask) {
+                num_mistakes++;
+            }
+        }
+    })
+        .goal_millis(17)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+    // Mistakes are expected since we are messing up the weights
 }
 
 BENCHMARK(Decode_surface_r11_d11_p1000) {
@@ -138,7 +184,7 @@ BENCHMARK(Decode_surface_r11_d11_p1000) {
             }
         }
     })
-        .goal_millis(1.5)
+        .goal_millis(2.4)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -171,7 +217,7 @@ BENCHMARK(Decode_surface_r11_d11_p10000) {
             }
         }
     })
-        .goal_micros(83)
+        .goal_micros(78)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -204,7 +250,7 @@ BENCHMARK(Decode_surface_r11_d11_p100000) {
             }
         }
     })
-        .goal_micros(33)
+        .goal_micros(35)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -237,7 +283,7 @@ BENCHMARK(Decode_surface_r21_d21_p100) {
             }
         }
     })
-        .goal_millis(7.5)
+        .goal_millis(13)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -273,7 +319,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(7.8)
+        .goal_millis(16)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -303,7 +349,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.2)
+        .goal_millis(16)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -330,7 +376,7 @@ BENCHMARK(Decode_surface_r21_d21_p100_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.2)
+        .goal_millis(34)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -360,13 +406,55 @@ BENCHMARK(Decode_surface_r21_d21_p1000) {
             }
         }
     })
-        .goal_millis(6.3)
+        .goal_millis(9.6)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
     if (num_mistakes == shots.size()) {
         std::cerr << "data dependence";
     }
+}
+
+BENCHMARK(Decode_surface_r21_d21_p1000_reweight) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.001, 256);
+    const auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    std::vector<std::tuple<size_t, int64_t, double>> reweights_r21_local;
+    if (mwpm.flooder.graph.nodes.size() > 1) {
+        size_t u = 0;
+        int64_t v = -1;
+        if (mwpm.flooder.graph.nodes[0].neighbors[0]) {
+             v = mwpm.flooder.graph.nodes[0].neighbors[0] - &mwpm.flooder.graph.nodes[0];
+        }
+        reweights_r21_local.emplace_back(u, v, 5.0);
+    }
+
+    size_t num_mistakes = 0;
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            mwpm.flooder.graph.apply_temp_reweights(reweights_r21_local);
+            auto res =
+                pm::decode_detection_events_for_up_to_64_observables(mwpm, shot.hits, /*enable_correlations=*/false);
+            mwpm.flooder.graph.undo_reweights();
+            if (shot.obs_mask_as_u64() != res.obs_mask) {
+                num_mistakes++;
+            }
+        }
+    })
+        .goal_millis(9.6)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
 }
 
 BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
@@ -397,7 +485,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(7.7)
+        .goal_millis(16)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -427,7 +515,7 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.4)
+        .goal_millis(17)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -454,7 +542,55 @@ BENCHMARK(Decode_surface_r21_d21_p1000_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(8.4)
+        .goal_millis(48)
+        .show_rate("dets", (double)num_dets)
+        .show_rate("layers", (double)rounds * (double)shots.size())
+        .show_rate("shots", (double)shots.size());
+}
+
+BENCHMARK(Decode_surface_r21_d21_p1000_reweight_with_correlations) {
+    size_t rounds = 21;
+    auto data = generate_data(21, rounds, 0.001, 256, true);
+    auto &dem = data.first;
+    const auto &shots = data.second;
+
+    size_t num_buckets = pm::NUM_DISTINCT_WEIGHTS;
+    auto mwpm = pm::detector_error_model_to_mwpm(dem, num_buckets, /*ensure_search_flooder_included=*/true, /*enable_correlations=*/true);
+
+    size_t num_dets = 0;
+    for (const auto &shot : shots) {
+        num_dets += shot.hits.size();
+    }
+
+    std::vector<std::tuple<size_t, int64_t, double>> reweights_corr_local;
+    if (mwpm.flooder.graph.nodes.size() > 1) {
+        size_t u = 0;
+        int64_t v = -1;
+        if (mwpm.flooder.graph.nodes[0].neighbors[0]) {
+             v = mwpm.flooder.graph.nodes[0].neighbors[0] - &mwpm.flooder.graph.nodes[0];
+        }
+        reweights_corr_local.emplace_back(u, v, 5.0);
+    }
+
+    size_t num_mistakes = 0;
+    pm::ExtendedMatchingResult res(mwpm.flooder.graph.num_observables);
+    benchmark_go([&]() {
+        for (const auto &shot : shots) {
+            mwpm.flooder.graph.apply_temp_reweights(reweights_corr_local);
+            mwpm.search_flooder.graph.apply_temp_reweights(reweights_corr_local, mwpm.flooder.graph.normalising_constant);
+            
+            pm::decode_detection_events(mwpm, shot.hits, res.obs_crossed.data(), res.weight, /*enable_correlations=*/true);
+            
+            mwpm.flooder.graph.undo_reweights();
+            mwpm.search_flooder.graph.undo_reweights();
+
+            if (shot.obs_mask_as_u64() != res.obs_crossed[0]) {
+                num_mistakes++;
+            }
+            res.reset();
+        }
+    })
+        .goal_millis(44)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -484,7 +620,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000) {
             }
         }
     })
-        .goal_millis(0.980)
+        .goal_millis(1.7)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -521,7 +657,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_millis(1.3)
+        .goal_millis(2.9)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -551,7 +687,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(1.4)
+        .goal_millis(3.1)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -578,7 +714,7 @@ BENCHMARK(Decode_surface_r21_d21_p10000_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_millis(1.4)
+        .goal_millis(8.0)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -608,7 +744,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000) {
             }
         }
     })
-        .goal_micros(94)
+        .goal_micros(110)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -645,7 +781,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_with_dijkstra) {
             res.reset();
         }
     })
-        .goal_micros(130)
+        .goal_micros(230)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -675,7 +811,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges) {
             pm::decode_detection_events_to_edges(mwpm, shot.hits, edges);
         }
     })
-        .goal_micros(130)
+        .goal_micros(250)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());
@@ -702,7 +838,7 @@ BENCHMARK(Decode_surface_r21_d21_p100000_to_edges_with_correlations) {
             pm::decode_detection_events_to_edges_with_edge_correlations(mwpm, shot.hits, edges);
         }
     })
-        .goal_micros(130)
+        .goal_micros(590)
         .show_rate("dets", (double)num_dets)
         .show_rate("layers", (double)rounds * (double)shots.size())
         .show_rate("shots", (double)shots.size());

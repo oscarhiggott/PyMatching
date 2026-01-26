@@ -61,15 +61,22 @@ void MatchingGraph::add_edge(
     // all_edges_to_implied_weights_unconverted[u][v] for a node u corresponds to the edge weights conditioned by (u, v)
     // where v is the v'th neighbour of u in nodes[u].neighbors.
 
+    uint8_t weight_sign = 0;
+    if (weight < 0) {
+        weight_sign = pm::WEIGHT_SIGN;
+    }
+
     nodes[u].neighbors.push_back(&(nodes[v]));
     nodes[u].neighbor_weights.push_back(std::abs(weight));
     nodes[u].neighbor_observables.push_back(obs_mask);
+    nodes[u].neighbor_markers.push_back(weight_sign);
     nodes[u].neighbor_implied_weights.push_back({});
     edges_to_implied_weights_unconverted[u].emplace_back(implied_weights_for_other_edges);
 
     nodes[v].neighbors.push_back(&(nodes[u]));
     nodes[v].neighbor_weights.push_back(std::abs(weight));
     nodes[v].neighbor_observables.push_back(obs_mask);
+    nodes[v].neighbor_markers.push_back(weight_sign);
     nodes[v].neighbor_implied_weights.push_back({});
     edges_to_implied_weights_unconverted[v].emplace_back(implied_weights_for_other_edges);
 }
@@ -99,6 +106,11 @@ void MatchingGraph::add_boundary_edge(
         negative_weight_sum += weight;
     }
 
+    uint8_t weight_sign = 0;
+    if (weight < 0) {
+        weight_sign = pm::WEIGHT_SIGN;
+    }
+
     auto& n = nodes[u];
     if (!n.neighbors.empty() && n.neighbors[0] == nullptr) {
         throw std::invalid_argument("Max one boundary edge.");
@@ -106,6 +118,7 @@ void MatchingGraph::add_boundary_edge(
     n.neighbors.insert(n.neighbors.begin(), 1, nullptr);
     n.neighbor_weights.insert(n.neighbor_weights.begin(), 1, std::abs(weight));
     n.neighbor_observables.insert(n.neighbor_observables.begin(), 1, obs_mask);
+    n.neighbor_markers.insert(n.neighbor_markers.begin(), 1, weight_sign);
     n.neighbor_implied_weights.insert(n.neighbor_implied_weights.begin(), 1, {});
     edges_to_implied_weights_unconverted[u].insert(
         edges_to_implied_weights_unconverted[u].begin(), 1, implied_weights_for_other_edges);
@@ -228,6 +241,16 @@ void MatchingGraph::undo_reweights() {
         *prev.ptr = prev.val;
     }
     previous_weights.clear();
+    negative_weight_sum -= negative_weight_sum_delta;
+    negative_weight_sum_delta = 0;
+}
+
+void MatchingGraph::apply_temp_reweights(const std::vector<std::tuple<size_t, int64_t, double>>& reweights) {
+    apply_temp_reweights_generic(
+        *this, reweights, normalising_constant, [this](pm::signed_weight_int delta) {
+            negative_weight_sum += delta;
+            negative_weight_sum_delta += delta;
+        });
 }
 
 }  // namespace pm

@@ -89,3 +89,51 @@ TEST(Graph, AddBoundaryEdgeWithImpliedWeights) {
     ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].node2, 2);
     ASSERT_EQ(g.edges_to_implied_weights_unconverted[0][0][0].implied_weight, 7);
 }
+
+TEST(Graph, ApplyTempReweights) {
+    pm::MatchingGraph g(4, 64);
+    g.add_edge(0, 1, 10, {0}, {});
+    g.add_edge(1, 2, -20, {1}, {});
+    
+    ASSERT_EQ(g.nodes[0].neighbor_weights[0], 10);
+    ASSERT_EQ(g.nodes[1].neighbor_weights[0], 10);
+    ASSERT_EQ(g.nodes[1].neighbor_weights[1], 20);
+    ASSERT_EQ(g.negative_weight_sum, -20);
+    ASSERT_EQ(g.negative_weight_sum_delta, 0);
+
+    // Reweight positive to positive
+    std::vector<std::tuple<size_t, int64_t, double>> reweights;
+    g.normalising_constant = 1.0;
+    // 30.0 * (1.0/2) = 15.0. 15 * 2 = 30.
+    reweights.emplace_back(0, 1, 30.0);
+    g.apply_temp_reweights(reweights);
+    ASSERT_EQ(g.nodes[0].neighbor_weights[0], 30);
+    ASSERT_EQ(g.negative_weight_sum, -20); // No change
+    ASSERT_EQ(g.negative_weight_sum_delta, 0);
+
+    g.undo_reweights();
+    ASSERT_EQ(g.nodes[0].neighbor_weights[0], 10);
+    ASSERT_EQ(g.negative_weight_sum_delta, 0);
+
+    // Reweight negative to negative
+    // Orig -20. Reweight to -40.0.
+    // -40 * 0.5 = -20. -20 * 2 = -40.
+    reweights.clear();
+    reweights.emplace_back(1, 2, -40.0);
+    g.apply_temp_reweights(reweights);
+    ASSERT_EQ(g.nodes[1].neighbor_weights[1], 40);
+    // Delta: -40 - (-20) = -20.
+    // Sum: -20 + (-20) = -40.
+    ASSERT_EQ(g.negative_weight_sum, -40);
+    ASSERT_EQ(g.negative_weight_sum_delta, -20);
+
+    g.undo_reweights();
+    ASSERT_EQ(g.nodes[1].neighbor_weights[1], 20);
+    ASSERT_EQ(g.negative_weight_sum, -20);
+    ASSERT_EQ(g.negative_weight_sum_delta, 0);
+
+    // Sign flip (should throw)
+    reweights.clear();
+    reweights.emplace_back(0, 1, -5.0);
+    ASSERT_THROW(g.apply_temp_reweights(reweights), std::invalid_argument);
+}
