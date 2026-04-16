@@ -79,6 +79,12 @@ struct Mwpm {
     void extract_paths_from_match_edges(
         const std::vector<CompressedEdge>& match_edges, uint8_t* obs_begin_ptr, pm::total_weight_int& weight);
 
+    /// [NEW] Combined shatter: extracts match_edges AND MatchingResult (obs_mask + weight) in one pass.
+    MatchingResult shatter_blossom_and_extract_all(
+        GraphFillRegion* region, std::vector<CompressedEdge>& match_edges);
+    GraphFillRegion* pair_and_shatter_subblossoms_and_extract_all(
+        GraphFillRegion* region, std::vector<CompressedEdge>& match_edges, MatchingResult& res);
+
     void verify_invariants() const;
 
     void create_detection_event(DetectorNode* node);

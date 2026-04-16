@@ -414,6 +414,62 @@ void Mwpm::shatter_blossom_and_extract_match_edges(GraphFillRegion *region, std:
     return;
 }
 
+// [NEW] Combined shatter: collects match_edges AND {obs_mask, weight} in one pass.
+GraphFillRegion *Mwpm::pair_and_shatter_subblossoms_and_extract_all(
+    GraphFillRegion *region, std::vector<CompressedEdge> &match_edges, MatchingResult &res) {
+    for (auto &r : region->blossom_children) {
+        r.region->clear_blossom_parent_ignoring_wrapped_radius();
+    }
+    auto subblossom = region->match.edge.loc_from->region_that_arrived_top;
+    subblossom->match = region->match;
+    if (subblossom->match.region)
+        subblossom->match.region->match.region = subblossom;
+    res.weight += region->radius.y_intercept();
+    auto iter = std::find_if(
+        region->blossom_children.begin(), region->blossom_children.end(), [&subblossom](const RegionEdge &e) {
+            return e.region == subblossom;
+        });
+    size_t index = std::distance(region->blossom_children.begin(), iter);
+    size_t num_children = region->blossom_children.size();
+    for (size_t i = 0; i < num_children - 1; i += 2) {
+        auto &re1 = region->blossom_children[(index + i + 1) % num_children];
+        auto &re2 = region->blossom_children[(index + i + 2) % num_children];
+        re1.region->add_match(re2.region, re1.edge);
+        res += shatter_blossom_and_extract_all(re1.region, match_edges);
+    }
+    flooder.region_arena.del(region);
+    return subblossom;
+}
+
+MatchingResult Mwpm::shatter_blossom_and_extract_all(
+    GraphFillRegion *region, std::vector<CompressedEdge> &match_edges) {
+    region->cleanup_shell_area();
+
+    if (region->match.region) {
+        region->match.region->cleanup_shell_area();
+        if (region->blossom_children.empty() && region->match.region->blossom_children.empty()) {
+            MatchingResult res = {
+                region->match.edge.obs_mask, region->radius.y_intercept() + region->match.region->radius.y_intercept()};
+            match_edges.push_back(region->match.edge);
+            flooder.region_arena.del(region->match.region);
+            flooder.region_arena.del(region);
+            return res;
+        }
+    } else if (region->blossom_children.empty()) {
+        MatchingResult res = {region->match.edge.obs_mask, region->radius.y_intercept()};
+        match_edges.push_back(region->match.edge);
+        flooder.region_arena.del(region);
+        return res;
+    }
+
+    MatchingResult res{0, 0};
+    if (!region->blossom_children.empty())
+        region = pair_and_shatter_subblossoms_and_extract_all(region, match_edges, res);
+    if (region->match.region && !region->match.region->blossom_children.empty())
+        pair_and_shatter_subblossoms_and_extract_all(region->match.region, match_edges, res);
+    res += shatter_blossom_and_extract_all(region, match_edges);
+    return res;
+}
 void Mwpm::create_detection_event(DetectorNode *node) {
     auto region = flooder.region_arena.alloc_default_constructed();
     auto alt_tree_node = node_arena.alloc_unconstructed();

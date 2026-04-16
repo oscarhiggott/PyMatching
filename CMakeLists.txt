@@ -63,6 +63,7 @@ set(SOURCE_FILES_NO_MAIN
 set(TEST_FILES
         src/pymatching/sparse_blossom/driver/namespaced_main.test.cc
         src/pymatching/sparse_blossom/driver/mwpm_decoding.test.cc
+        src/pymatching/sparse_blossom/driver/k_mwm.test.cc
         src/pymatching/sparse_blossom/flooder_matcher_interop/varying.test.cc
         src/pymatching/sparse_blossom/flooder/graph.test.cc
         src/pymatching/sparse_blossom/flooder/detector_node.test.cc

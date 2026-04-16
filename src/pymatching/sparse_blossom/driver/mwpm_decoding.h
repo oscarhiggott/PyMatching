@@ -53,7 +53,10 @@ Mwpm detector_error_model_to_mwpm(
     bool enable_correlations = false);
 
 MatchingResult decode_detection_events_for_up_to_64_observables(
-    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, bool edge_correlations);
+    pm::Mwpm& mwpm,
+    const std::vector<uint64_t>& detection_events,
+    bool edge_correlations,
+    std::vector<CompressedEdge>* match_edges_out = nullptr);
 
 /// Used to decode detection events for an existing Mwpm object `mwpm', and a vector of
 /// detection event indices `detection_events'. The predicted observables are XOR-ed into an

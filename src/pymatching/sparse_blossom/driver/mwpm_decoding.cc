@@ -165,7 +165,8 @@ void shatter_blossoms_for_all_detection_events_and_extract_match_edges(
 }
 
 pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
-    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, bool edge_correlations) {
+    pm::Mwpm& mwpm, const std::vector<uint64_t>& detection_events, bool edge_correlations,
+    std::vector<CompressedEdge>* match_edges_out) {
     if (edge_correlations) {
         // Edge correlations might also be called 2-pass matching. This is the slowest and
         // highest-accuracy reweighting rule for correlated decoding in which we first decode to edges,
@@ -178,10 +179,31 @@ pm::MatchingResult pm::decode_detection_events_for_up_to_64_observables(
     }
 
     process_timeline_until_completion(mwpm, detection_events);
-    auto res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
-    if (!mwpm.flooder.negative_weight_detection_events.empty())
-        res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
-            mwpm, mwpm.flooder.negative_weight_detection_events);
+
+    pm::MatchingResult res;
+    if (match_edges_out) {
+        // Use combined shatter to get both match_edges and {obs_mask, weight}
+        match_edges_out->clear();
+        res = {0, 0};
+        for (auto& i : detection_events) {
+            if (mwpm.flooder.graph.nodes[i].region_that_arrived)
+                res += mwpm.shatter_blossom_and_extract_all(
+                    mwpm.flooder.graph.nodes[i].region_that_arrived_top, *match_edges_out);
+        }
+        if (!mwpm.flooder.negative_weight_detection_events.empty()) {
+            for (auto& i : mwpm.flooder.negative_weight_detection_events) {
+                if (mwpm.flooder.graph.nodes[i].region_that_arrived)
+                    res += mwpm.shatter_blossom_and_extract_all(
+                        mwpm.flooder.graph.nodes[i].region_that_arrived_top, *match_edges_out);
+            }
+        }
+    } else {
+        // Original path: just get {obs_mask, weight}
+        res = shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(mwpm, detection_events);
+        if (!mwpm.flooder.negative_weight_detection_events.empty())
+            res += shatter_blossoms_for_all_detection_events_and_extract_obs_mask_and_weight(
+                mwpm, mwpm.flooder.negative_weight_detection_events);
+    }
     res.obs_mask ^= mwpm.flooder.negative_weight_obs_mask;
     res.weight += mwpm.flooder.negative_weight_sum;
 
@@ -337,3 +359,4 @@ void pm::decode_detection_events_to_edges_with_edge_correlations(
     mwpm.flooder.graph.undo_reweights();
     mwpm.search_flooder.graph.undo_reweights();
 }
+
