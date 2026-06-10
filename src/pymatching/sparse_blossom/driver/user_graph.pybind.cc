@@ -612,4 +612,65 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "timelike_weights"_a = py::none(),
         "measurement_error_probabilities"_a = py::none(),
         "faults_matrix"_a = py::none());
+
+    g.def(
+        py::pickle(
+            [](pm::UserGraph &g) {
+                py::list edges_list;
+                for (const auto &edge : g.edges) {
+                    py::list implied_weights_list;
+                    for (const auto &iw : edge.implied_weights_for_other_edges) {
+                        implied_weights_list.append(py::make_tuple(iw.node1, iw.node2, iw.implied_weight));
+                    }
+                    edges_list.append(
+                        py::make_tuple(
+                            edge.node1,
+                            edge.node2,
+                            edge.observable_indices,
+                            edge.weight,
+                            edge.error_probability,
+                            implied_weights_list));
+                }
+
+                return py::make_tuple(
+                    g.get_num_nodes(),
+                    g.get_num_observables(),
+                    edges_list,
+                    g.boundary_nodes,
+                    g.loaded_from_dem_without_correlations);
+            },
+            [](py::tuple t) {
+                pm::UserGraph g(t[0].cast<size_t>(), t[1].cast<size_t>());
+                g.boundary_nodes = t[3].cast<std::set<size_t>>();
+                g.loaded_from_dem_without_correlations = t[4].cast<bool>();
+
+                for (const auto &edge_obj : t[2].cast<py::list>()) {
+                    auto et = edge_obj.cast<py::tuple>();
+                    pm::UserEdge edge;
+                    edge.node1 = et[0].cast<size_t>();
+                    edge.node2 = et[1].cast<size_t>();
+                    edge.observable_indices = et[2].cast<std::vector<size_t>>();
+                    edge.weight = et[3].cast<double>();
+                    edge.error_probability = et[4].cast<double>();
+
+                    for (const auto &iw_obj : et[5].cast<py::list>()) {
+                        auto iw_tuple = iw_obj.cast<py::tuple>();
+                        edge.implied_weights_for_other_edges.emplace_back(
+                            iw_tuple[0].cast<size_t>(), iw_tuple[1].cast<size_t>(), iw_tuple[2].cast<double>());
+                    }
+
+                    g.edges.push_back(edge);
+                    auto edge_it = std::prev(g.edges.end());
+
+                    g.nodes[edge.node1].neighbors.push_back({edge_it, 1});
+                    if (edge.node2 != SIZE_MAX && edge.node2 != edge.node1)
+                        g.nodes[edge.node2].neighbors.push_back({edge_it, 0});
+                }
+
+                for (size_t i : g.boundary_nodes)
+                    if (i < g.nodes.size())
+                        g.nodes[i].is_boundary = true;
+
+                return g;
+            }));
 }
