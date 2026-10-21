@@ -537,7 +537,11 @@ void pm::UserGraph::populate_implied_edge_weights(
                     double implied_probability_for_other_edge =
                         std::min(0.5, affected_edge_and_probability.second / marginal_probability);
                     double w = pm::to_weight_for_correlations(implied_probability_for_other_edge);
-                    ImpliedWeightUnconverted implied{affected_edge.first, affected_edge.second, w};
+                    ImpliedWeightUnconverted implied{
+                        affected_edge.first,
+                        affected_edge.second,
+                        w,
+                        affected_edge_and_probability.second / marginal_probability};
                     edge.implied_weights_for_other_edges.push_back(implied);
                 }
             }

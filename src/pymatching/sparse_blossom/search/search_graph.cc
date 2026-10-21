@@ -14,6 +14,7 @@
 
 #include "search_graph.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
@@ -27,7 +28,8 @@ pm::SearchGraph::SearchGraph(size_t num_nodes) : num_nodes(num_nodes) {
 pm::SearchGraph::SearchGraph(pm::SearchGraph&& graph) noexcept
     : nodes(std::move(graph.nodes)),
       num_nodes(graph.num_nodes),
-      negative_weight_edges(std::move(graph.negative_weight_edges)) {
+      negative_weight_edges(std::move(graph.negative_weight_edges)),
+      edges_to_implied_weights_unconverted(std::move(graph.edges_to_implied_weights_unconverted)) {
 }
 
 void pm::SearchGraph::add_edge(
@@ -152,10 +154,22 @@ void pm::SearchGraph::convert_implied_weights(const double normalising_constant)
         const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
             edges_to_implied_weights_unconverted[u];
         for (size_t v = 0; v < nodes[u].neighbors.size(); v++) {
-            for (const auto& rule : rules_for_node[v]) {
+            nodes[u].neighbor_implied_weights[v].clear();
+            for (auto rule : rules_for_node[v]) {
+                if (reweighting_strength != 1.0) {
+                    double p = std::min(0.5, reweighting_strength * rule.implied_probability);
+                    rule.implied_weight = std::log((1 - p) / p);
+                }
                 ImpliedWeight converted = convert_rule(nodes, rule, normalising_constant);
                 nodes[u].neighbor_implied_weights[v].push_back(converted);
             }
         }
+    }
+}
+
+void pm::SearchGraph::set_reweighting_strength(double strength, double normalising_constant) {
+    if (strength != reweighting_strength) {
+        reweighting_strength = strength;
+        convert_implied_weights(normalising_constant);
     }
 }
