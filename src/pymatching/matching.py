@@ -220,6 +220,7 @@ class Matching:
                *,
                return_weight: bool = False,
                enable_correlations: bool = False,
+               reweighting_strength: float = 1.0,
                **kwargs
                ) -> Union[np.ndarray, Tuple[np.ndarray, int]]:
         r"""
@@ -254,6 +255,12 @@ class Matching:
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
             of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
+        reweighting_strength : float, optional
+            Only used when `enable_correlations==True`. Multiplies the conditional probabilities that
+            correlated matching uses to reweight edges after the first pass. The default, 1.0, is
+            standard correlated matching. Values below 1.0 weaken the reweighting, which has been shown
+            to be beneficial in the presence of circuit-level noise at low physical error rates, see
+            https://arxiv.org/abs/2610.26785 for more details.
 
         Returns
         -------
@@ -338,7 +345,7 @@ class Matching:
         """
         detection_events = self._syndrome_array_to_detection_events(z)
         correction, weight = self._matching_graph.decode(
-            detection_events, enable_correlations=enable_correlations
+            detection_events, enable_correlations=enable_correlations, reweighting_strength=reweighting_strength
         )
         if return_weight:
             return correction, weight
@@ -352,7 +359,8 @@ class Matching:
             return_weights: bool = False,
             bit_packed_shots: bool = False,
             bit_packed_predictions: bool = False,
-            enable_correlations: bool = False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
+            enable_correlations: bool = False,
+            reweighting_strength: float = 1.0) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Decode from a 2D `shots` array containing a batch of syndrome measurements. A faster
         alternative to using `pymatching.Matching.decode` and iterating over the shots in Python.
@@ -396,6 +404,8 @@ class Matching:
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
             of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
+        reweighting_strength : float, optional
+            Only used if `enable_correlations==True`. See `Matching.decode`. By default, 1.0
 
         Returns
         -------
@@ -452,7 +462,8 @@ class Matching:
             shots,
             bit_packed_predictions=bit_packed_predictions,
             bit_packed_shots=bit_packed_shots,
-            enable_correlations=enable_correlations
+            enable_correlations=enable_correlations,
+            reweighting_strength=reweighting_strength
         )
         if return_weights:
             return predictions, weights
@@ -462,7 +473,8 @@ class Matching:
     def decode_to_edges_array(self,
                               syndrome: Union[np.ndarray, List[bool], List[int]],
                               *,
-                              enable_correlations: bool = False
+                              enable_correlations: bool = False,
+                              reweighting_strength: float = 1.0
                               ) -> np.ndarray:
         """
         Decode the syndrome `syndrome` using minimum-weight perfect matching, returning the edges in the
@@ -489,6 +501,8 @@ class Matching:
             `stim.DetectorErrorModel` with `enable_correlations=True`. For a description
             of the correlated matching algorithm, see https://arxiv.org/abs/1310.0863.
             By default, False
+        reweighting_strength : float, optional
+            Only used if `enable_correlations==True`. See `Matching.decode`. By default, 1.0
 
         Returns
         -------
@@ -520,7 +534,7 @@ class Matching:
         """
         detection_events = self._syndrome_array_to_detection_events(syndrome)
         return self._matching_graph.decode_to_edges_array(
-            detection_events, enable_correlations=enable_correlations
+            detection_events, enable_correlations=enable_correlations, reweighting_strength=reweighting_strength
         )
 
     def decode_to_matched_dets_array(self,

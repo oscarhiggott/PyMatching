@@ -84,6 +84,11 @@ pm::MERGE_STRATEGY merge_strategy_from_string(const std::string &merge_strategy)
     }
 }
 
+void set_reweighting_strength(pm::Mwpm &mwpm, double reweighting_strength) {
+    mwpm.flooder.graph.set_reweighting_strength(reweighting_strength);
+    mwpm.search_flooder.graph.set_reweighting_strength(reweighting_strength, mwpm.flooder.graph.normalising_constant);
+}
+
 void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGraph> &g) {
     g.def(py::init<>());
     g.def(py::init<size_t>(), "num_nodes"_a);
@@ -178,10 +183,15 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
     });
     g.def(
         "decode",
-        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events, bool enable_correlations) {
+        [](pm::UserGraph &self,
+           const py::array_t<uint64_t> &detection_events,
+           bool enable_correlations,
+           double reweighting_strength) {
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
             auto &mwpm = enable_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
+            if (enable_correlations)
+                set_reweighting_strength(mwpm, reweighting_strength);
             auto obs_crossed = new std::vector<uint8_t>(self.get_num_observables(), 0);
             pm::total_weight_int weight = 0;
             pm::decode_detection_events(mwpm, detection_events_vec, obs_crossed->data(), weight, enable_correlations);
@@ -196,11 +206,17 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             return res;
         },
         "detection_events"_a,
-        "enable_correlations"_a = false);
+        "enable_correlations"_a = false,
+        "reweighting_strength"_a = 1.0);
     g.def(
         "decode_to_edges_array",
-        [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events, bool enable_correlations) {
+        [](pm::UserGraph &self,
+           const py::array_t<uint64_t> &detection_events,
+           bool enable_correlations,
+           double reweighting_strength) {
             auto &mwpm = self.get_mwpm_with_search_graph();
+            if (enable_correlations)
+                set_reweighting_strength(mwpm, reweighting_strength);
             std::vector<uint64_t> detection_events_vec(
                 detection_events.data(), detection_events.data() + detection_events.size());
             auto edges = new std::vector<int64_t>();
@@ -216,7 +232,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             return edges_arr;
         },
         "detection_events"_a,
-        "enable_correlations"_a = false);
+        "enable_correlations"_a = false,
+        "reweighting_strength"_a = 1.0);
     g.def(
         "decode_to_matched_detection_events_array",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {
@@ -250,7 +267,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
            const py::array_t<uint8_t> &shots,
            bool bit_packed_shots,
            bool bit_packed_predictions,
-           bool enable_correlations) {
+           bool enable_correlations,
+           double reweighting_strength) {
             if (shots.ndim() != 2)
                 throw std::invalid_argument(
                     "`shots` array should have two dimensions, not " + std::to_string(shots.ndim()));
@@ -286,6 +304,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
             auto ws = weights.mutable_unchecked<1>();
 
             auto &mwpm = enable_correlations ? self.get_mwpm_with_search_graph() : self.get_mwpm();
+            if (enable_correlations)
+                set_reweighting_strength(mwpm, reweighting_strength);
             std::vector<uint64_t> detection_events;
 
             // Vector used to extract predicted observables when decoding if bit_packed_predictions is true
@@ -337,7 +357,8 @@ void pm_pybind::pybind_user_graph_methods(py::module &m, py::class_<pm::UserGrap
         "shots"_a,
         "bit_packed_shots"_a = false,
         "bit_packed_predictions"_a = false,
-        "enable_correlations"_a = false);
+        "enable_correlations"_a = false,
+        "reweighting_strength"_a = 1.0);
     g.def(
         "decode_to_matched_detection_events_dict",
         [](pm::UserGraph &self, const py::array_t<uint64_t> &detection_events) {

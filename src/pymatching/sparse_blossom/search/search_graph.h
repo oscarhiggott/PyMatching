@@ -37,6 +37,7 @@ class SearchGraph {
     // Used to restore weights after reweighting.
     std::vector<PreviousWeight> previous_weights;
     std::map<size_t, std::vector<std::vector<ImpliedWeightUnconverted>>> edges_to_implied_weights_unconverted;
+    double reweighting_strength = 1.0;
 
     SearchGraph();
     explicit SearchGraph(size_t num_nodes);
@@ -53,6 +54,7 @@ class SearchGraph {
         const std::vector<size_t>& observables,
         const std::vector<ImpliedWeightUnconverted>& implied_weights = {});
     void convert_implied_weights(const double normalizing_constant);
+    void set_reweighting_strength(double strength, double normalising_constant);
     void reweight(std::vector<ImpliedWeight>& implied_weights);
     void reweight_for_edge(const int64_t& u, const int64_t& v);
     void reweight_for_edges(const std::vector<int64_t>& edges);

@@ -14,6 +14,7 @@
 
 #include "pymatching/sparse_blossom/flooder/graph.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <map>
@@ -188,11 +189,25 @@ void MatchingGraph::convert_implied_weights(double normalising_constant) {
         const std::vector<std::vector<ImpliedWeightUnconverted>>& rules_for_node =
             edges_to_implied_weights_unconverted[u];
         for (size_t v = 0; v < nodes[u].neighbors.size(); v++) {
-            for (const auto& rule : rules_for_node[v]) {
+            nodes[u].neighbor_implied_weights[v].clear();
+            for (auto rule : rules_for_node[v]) {
+                if (reweighting_strength != 1.0) {
+                    double p = std::min(0.5, reweighting_strength * rule.implied_probability);
+                    rule.implied_weight = std::log((1 - p) / p);
+                }
                 ImpliedWeight converted = convert_rule(nodes, rule, normalising_constant);
                 nodes[u].neighbor_implied_weights[v].push_back(converted);
             }
         }
+    }
+}
+
+void MatchingGraph::set_reweighting_strength(double strength) {
+    if (strength <= 0)
+        throw std::invalid_argument("reweighting_strength must be positive");
+    if (strength != reweighting_strength) {
+        reweighting_strength = strength;
+        convert_implied_weights(normalising_constant);
     }
 }
 
