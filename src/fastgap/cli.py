@@ -73,7 +73,6 @@ def add_index_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--idx", help="prebuilt index file (from build-index)")
     p.add_argument("--strategy", default="auto")
     p.add_argument("--num-landmarks", type=int, default=16)
-    p.add_argument("--table-radius", type=int, default=None, help="internal units; default auto")
 
 
 def get_index(args, dem) -> GapIndex:
@@ -84,7 +83,6 @@ def get_index(args, dem) -> GapIndex:
         observable=args.observable,
         strategy=args.strategy,
         num_landmarks=args.num_landmarks,
-        table_radius=args.table_radius,
     )
 
 
@@ -118,7 +116,6 @@ def cmd_build_index(args) -> int:
         observable=args.observable,
         strategy=args.strategy,
         num_landmarks=args.num_landmarks,
-        table_radius=args.table_radius,
     )
     elapsed = time.perf_counter() - t0
     idx.save(args.out)
@@ -270,7 +267,6 @@ def cmd_bench(args) -> int:
         "strategy": idx.strategy_name,
         "strategy_hash": idx.strategy_hash,
         "num_landmarks": len(idx.landmarks),
-        "table_radius": idx.table_radius,
         "normalising_constant": nc,
         "threads": thread_counts,
         "pinned": args.pin is not None and sys.platform.startswith("linux"),
@@ -419,7 +415,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     add_dem_args(bi)
     bi.add_argument("--strategy", default="auto")
     bi.add_argument("--num-landmarks", type=int, default=16)
-    bi.add_argument("--table-radius", type=int, default=None)
     bi.add_argument("--out", required=True)
     bi.set_defaults(func=cmd_build_index)
 

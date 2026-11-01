@@ -45,7 +45,7 @@ TEST(FastgapInteriorGraph, AStarMatchesDijkstra) {
     std::mt19937_64 rng(3);
     for (int trial = 0; trial < 5; trial++) {
         auto dem = testutil::random_grid_dem(rng, 7, 6);
-        auto idx = testutil::make_index(dem, 0, 3);
+        auto idx = testutil::make_index(dem, 3);
         InteriorGraph::AStarScratch scratch;
         for (uint32_t a = 0; a < idx->graph.num_nodes; a += 5) {
             auto row = idx->graph.dijkstra({{a, 0}});

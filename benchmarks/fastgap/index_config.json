@@ -1,5 +1,5 @@
 {
-  "index": {"strategy": "auto", "num_landmarks": 16, "table_radius": null, "observable": 0},
+  "index": {"strategy": "auto", "num_landmarks": 16, "observable": 0},
   "bench": {"shots": 20000, "warmup": 1000, "threads": [4], "seed": 2026, "e2e_shots": 2000},
   "dems": [
     {"name": "rmx_d5_p5e-3", "task": "surface_code:rotated_memory_x", "d": 5, "p": 0.005},
@@ -7,6 +7,7 @@
     {"name": "rmx_d5_p1e-3", "task": "surface_code:rotated_memory_x", "d": 5, "p": 0.001},
     {"name": "rmx_d9_p1e-3", "task": "surface_code:rotated_memory_x", "d": 9, "p": 0.001},
     {"name": "rmx_d13_p1e-3", "task": "surface_code:rotated_memory_x", "d": 13, "p": 0.001},
+    {"name": "rmx_d15_p1e-3", "task": "surface_code:rotated_memory_x", "d": 15, "p": 0.001},
     {"name": "rmx_d17_p1e-3", "task": "surface_code:rotated_memory_x", "d": 17, "p": 0.001}
   ]
 }

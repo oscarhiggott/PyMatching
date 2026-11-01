@@ -14,14 +14,14 @@ def _shots(dem, n, seed):
 
 
 @pytest.mark.parametrize("seed", range(12))
-@pytest.mark.parametrize("table_radius", [0, None])
-def test_tiny_exact_chain(seed, table_radius):
+@pytest.mark.parametrize("num_landmarks", [0, 3])
+def test_tiny_exact_chain(seed, num_landmarks):
     """gap_lb <= Delta_sigma <= Delta == brute force == two-decode, gap_ub >= Delta when simple,
     with the in-decoder invariants (all-pairs sigma >= 0, relays tight, Sigma y = W*, d_hat <= dist)
     switched on."""
     rng = np.random.default_rng(seed)
     dem = random_grid_dem(rng, 3 + seed % 4, 3 + seed % 3)
-    idx = fastgap.GapIndex.from_dem(dem, strategy="fps", num_landmarks=3, table_radius=table_radius)
+    idx = fastgap.GapIndex.from_dem(dem, strategy="fps", num_landmarks=num_landmarks)
     dec = fastgap.GapDecoder(idx, check=True)
     dets = _shots(dem, 150, seed)
     dets = dets[dets.sum(axis=1) <= 10]

@@ -41,8 +41,8 @@ struct Counts {
 
 /// The full §9.1 chain on one DEM: gap_lb <= Delta_sigma <= Delta == brute force == baseline, and
 /// gap_ub >= Delta whenever the walk is simple.
-Counts tiny_exact_chain(const stim::DetectorErrorModel& dem, size_t shots, uint64_t seed, dist_int table_radius) {
-    auto idx = testutil::make_index(dem, table_radius, 3);
+Counts tiny_exact_chain(const stim::DetectorErrorModel& dem, size_t shots, uint64_t seed, size_t num_landmarks) {
+    auto idx = testutil::make_index(dem, num_landmarks);
     GapDecoder dec(idx, 1);
     ExactBaseline baseline(idx);
     pm::Mwpm upstream = pm::detector_error_model_to_mwpm(dem, pm::NUM_DISTINCT_WEIGHTS);
@@ -134,8 +134,8 @@ TEST(FastgapDecoder, TinyExactRandomGrids) {
     Counts total;
     for (int trial = 0; trial < 16; trial++) {
         auto dem = testutil::random_grid_dem(rng, 3 + trial % 4, 3 + trial % 3, 0.5, 0.02, 0.25);
-        for (dist_int radius : {(dist_int)0, (dist_int)-1}) {
-            auto c = tiny_exact_chain(dem, 80, trial * 31 + radius, radius);
+        for (size_t k : {(size_t)0, (size_t)3}) {
+            auto c = tiny_exact_chain(dem, 80, trial * 31 + k, k);
             total.shots += c.shots;
             total.simple += c.simple;
             total.lb_equals_exact += c.lb_equals_exact;
@@ -147,11 +147,15 @@ TEST(FastgapDecoder, TinyExactRandomGrids) {
     EXPECT_GT(total.simple, total.shots / 2);
 }
 
-TEST(FastgapDecoder, FullTablesGiveExactSigma) {
+TEST(FastgapDecoder, EveryNodeALandmarkGivesExactSigma) {
     std::mt19937_64 rng(77);
     for (int trial = 0; trial < 6; trial++) {
         auto dem = testutil::random_grid_dem(rng, 5, 4, 0.5);
-        auto idx = testutil::make_index(dem, DIST_INF / 4, 2);
+        auto idx = GapIndex::create_from_dem(dem.str(), 0);
+        std::vector<LandmarkSource> sources;
+        for (uint32_t v = 0; v < idx->graph.num_nodes; v++)
+            sources.push_back({"node" + std::to_string(v), {v}});
+        idx->set_landmarks(sources, "{}");
         GapDecoder dec(idx, 1);
         DecodeOptions a, b;
         b.pricing = Pricing::EXACT;
@@ -160,7 +164,6 @@ TEST(FastgapDecoder, FullTablesGiveExactSigma) {
             auto ra = dec.decode(events, a);
             auto rb = dec.decode(events, b);
             EXPECT_EQ(ra.gap_lb, rb.gap_lb);
-            EXPECT_TRUE(ra.all_hops_exact || ra.num_hops == 0);
         }
     }
 }
@@ -224,7 +227,7 @@ TEST(FastgapDecoder, BatchAndThreadsMatchSingleShot) {
             std::vector<GapResult> batch;
             multi.decode_batch(packed.data(), shots.size(), bytes, o, batch);
             for (size_t s = 0; s < shots.size(); s++) {
-                // Unsorted events exercise the table-scan range of each thread.
+                // Unsorted events exercise the target layout of each thread.
                 auto shuffled = shots[s];
                 std::shuffle(shuffled.begin(), shuffled.end(), rng);
                 auto r = single.decode(shots[s], o);

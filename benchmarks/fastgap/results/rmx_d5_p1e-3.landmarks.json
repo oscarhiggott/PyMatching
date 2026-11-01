@@ -1,7 +1,7 @@
 {
   "dem_detectors": 120,
   "strategy": "faces_corners",
-  "strategy_hash": "d4c912a4ebe55092",
+  "strategy_hash": "f71ad74cc2adfd14",
   "landmarks": [
     "face:t=min",
     "face:t=max",
@@ -19,48 +19,45 @@
   "memory": {
     "num_detectors": 120,
     "num_landmarks": 12,
-    "table_radius": 109684448,
-    "table_bytes": 70064,
-    "table_bytes_per_detector": 583.8666666666667,
     "potential_bytes": 20160,
     "potential_bytes_per_detector": 168.0
   },
   "num_shots": 20000,
   "lb_over_dist_on_hops": {
-    "count": 105,
-    "mean": 0.9711675216540866,
-    "fraction_exact": 0.638095238095238,
+    "count": 112,
+    "mean": 0.9443544802418901,
+    "fraction_exact": 0.5803571428571429,
     "quantiles": {
-      "0.01": 0.7098650916460649,
-      "0.1": 0.894409416240985,
+      "0.01": 0.6454724006405105,
+      "0.1": 0.8022741951346226,
       "0.5": 1.0,
       "0.9": 1.0
     }
   },
-  "fraction_gap_lb_equals_delta_sigma": 0.9998,
-  "fraction_gap_lb_equals_gap_exact": 0.9997,
+  "fraction_gap_lb_equals_delta_sigma": 0.97665,
+  "fraction_gap_lb_equals_gap_exact": 0.97655,
   "shortfall_db_histogram": {
     "total": {
-      "[0,1e-09)": 19994,
-      "[1e-09,0.5)": 1,
-      "[0.5,1)": 0,
-      "[1,2)": 0,
-      "[2,3)": 1,
-      "[3,5)": 3,
-      "[5,10)": 1,
-      "[10,20)": 0,
-      "[20,inf)": 0
+      "[0,1e-09)": 19531,
+      "[1e-09,0.5)": 49,
+      "[0.5,1)": 47,
+      "[1,2)": 56,
+      "[2,3)": 64,
+      "[3,5)": 63,
+      "[5,10)": 91,
+      "[10,20)": 51,
+      "[20,inf)": 48
     },
     "lb_part": {
-      "[0,1e-09)": 19996,
-      "[1e-09,0.5)": 0,
-      "[0.5,1)": 0,
-      "[1,2)": 0,
-      "[2,3)": 0,
-      "[3,5)": 3,
-      "[5,10)": 1,
-      "[10,20)": 0,
-      "[20,inf)": 0
+      "[0,1e-09)": 19533,
+      "[1e-09,0.5)": 48,
+      "[0.5,1)": 47,
+      "[1,2)": 56,
+      "[2,3)": 63,
+      "[3,5)": 63,
+      "[5,10)": 91,
+      "[10,20)": 51,
+      "[20,inf)": 48
     },
     "alternation_blossom_part": {
       "[0,1e-09)": 19998,
@@ -74,6 +71,6 @@
       "[20,inf)": 0
     }
   },
-  "us_per_shot": 0.4633270902559161,
+  "us_per_shot": 0.43415625113993883,
   "soundness_violations": 0
 }

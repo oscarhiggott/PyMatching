@@ -35,6 +35,43 @@ and `-DFASTGAP_CHECK` on the test target; `setup.py` builds both extensions from
 Note for macOS (case-insensitive file systems): `cmake -B build` collides with Bazel's `BUILD`
 file. Use another directory name, e.g. `cmake -B cmake-build` (already git-ignored).
 
+## Local tables removed (branch `remove-local-tables`, 2026-11-01)
+
+The exact local distance tables are gone. The index now holds only the boundary potentials and
+the landmark potentials, and hop distances are priced by the landmark bound alone:
+`d̂(u, v) = LB(u, v)`. The sections above that mention tables describe the earlier design.
+
+- `GapIndex::set_landmarks(sources, config)` no longer takes a radius. `table_radius`,
+  `table_bytes`, `table_lookup` and the `--table-radius` CLI flag are removed. The index file
+  format is now version 2.
+- `compute_row` prices a row from the potential-major landmark block only. No node→defect map is
+  needed any more.
+- `exact_distance` (used only for `gap_ub`) is always an A* with the landmark heuristic.
+- `all_hops_exact` is now true only when the walk has no defect–defect hop.
+- Tests: the table tests became `DHatIsALowerBound` and `EveryNodeALandmarkGivesExactSigma`
+  (every node a landmark ⇒ LB = dist ⇒ index pricing equals exact pricing). The phenomenological
+  tightness test now expects > 60% exact shots instead of > 90% (measured: 67%). Every soundness
+  test is unchanged and passes: 30 C++ fastgap tests and 75 Python tests.
+- `GapIndexCore.dual_state(events)` (new binding) returns one shot's final dual state: `y_leaf`,
+  `rho`, `y_blossom`, ancestor blossoms and `mate`. It is used for the paper's figures.
+- Benchmarks were re-run with `--no-upper-bound` (the paper does not report `gap_ub`), with
+  `rmx_d15_p1e-3` added. All 7 DEMs: 0 soundness violations. Gap-stage medians at T = 1 fell
+  (d = 17: 18.9 → 10.1 µs) because there is no table scan and no `gap_ub`. Since rows are now
+  cheaper, T = 4 helps only at d = 17 (10.1 → 8.5 µs); at d = 7 and d = 13 it is slower than
+  T = 1. Both numbers are reported as measured.
+
+Decode that both methods share, after the re-run (median / p99):
+
+| DEM | mean defects | fastgap decode (PyMatching) | baseline decode in the class of M* |
+|---|---|---|---|
+| rmx_d5_p5e-3 | 8.4 | 0.83 / 5.0 µs | 0.88 / 4.7 µs |
+| rmx_d7_p5e-3 | 25.3 | 3.21 / 12.8 µs | 3.33 / 12.0 µs |
+| rmx_d5_p1e-3 | 1.8 | 0.08 / 1.2 µs | 0.12 / 1.2 µs |
+| rmx_d9_p1e-3 | 12.0 | 0.96 / 3.8 µs | 1.04 / 4.0 µs |
+| rmx_d13_p1e-3 | 38.3 | 3.17 / 7.8 µs | 3.50 / 8.7 µs |
+| rmx_d15_p1e-3 | 59.6 | 5.12 / 10.8 µs | 5.50 / 11.8 µs |
+| rmx_d17_p1e-3 | 87.8 | 7.79 / 14.4 µs | 8.42 / 16.3 µs |
+
 ## Phase 1: dual state (§5.1)
 
 - `extract_dual_state` validates and indexes the events first, then calls the upstream

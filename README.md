@@ -24,7 +24,7 @@ circuit = stim.Circuit.generated("surface_code:rotated_memory_x", distance=7, ro
 dem = circuit.detector_error_model(decompose_errors=True)
 
 idx = fastgap.GapIndex.from_dem(dem, observable=0, strategy="auto", num_landmarks=16)
-idx.save("rmx_d7.idx")                      # tables are the expensive part: cache per DEM
+idx.save("rmx_d7.idx")                      # cache the index per DEM
 dec = fastgap.GapDecoder(idx, num_threads=4)  # 4 threads share each shot's gap search
 
 shots = circuit.compile_detector_sampler().sample(10_000, bit_packed=True)
@@ -58,7 +58,7 @@ How it works:
 The baseline runs two PyMatching decodes with the observable as an extra detector, toggled off and
 on. Both methods run one ordinary decode, which gives the prediction (min weight matching).
 The baseline then pays a second, complementary-class decode for the gap, while fastgap pays its gap search,
-which includes `gap_ub`. The table compares only those two costs:
+(without `gap_ub`). The table compares only those two costs:
 speed-up = baseline complementary decode / fastgap gap stage.
 
 Setup: rotated surface-code memory X, `d` rounds, uniform circuit noise `p`, 2×10⁴ shots per DEM,
@@ -66,15 +66,16 @@ compute-only per-shot timers (median / p99), Apple M5 Pro. There were 0 soundnes
 
 | DEM | mean defects | baseline gap (complementary decode) | fastgap gap, T=1 | fastgap gap, T=4 | speed-up T=1 (med / p99) | speed-up T=4 (med / p99) |
 |---|---|---|---|---|---|---|
-| d=5, p=5e-3 | 8.4 | 7.17 / 14.6 µs | 0.75 / 2.5 µs | 0.75 / 2.7 µs | 9.6× / 5.7× | 9.6× / 5.5× |
-| d=7, p=5e-3 | 25.3 | 24.67 / 44.5 µs | 2.75 / 7.1 µs | 2.62 / 5.6 µs | 9.0× / 6.3× | 9.4× / 7.9× |
-| d=5, p=1e-3 | 1.8 | 3.67 / 10.0 µs | 0.12 / 0.9 µs | 0.12 / 0.9 µs | 29.3× / 10.9× | 29.3× / 10.9× |
-| d=9, p=1e-3 | 12.0 | 38.50 / 62.7 µs | 1.50 / 5.9 µs | 1.54 / 5.7 µs | 25.7× / 10.7× | 25.0× / 11.0× |
-| d=13, p=1e-3 | 38.3 | 158.71 / 232.8 µs | 6.71 / 14.8 µs | 5.50 / 13.0 µs | 23.7× / 15.8× | 28.9× / 17.9× |
-| d=17, p=1e-3 | 87.8 | 535.88 / 808.5 µs | 18.88 / 34.2 µs | 11.92 / 21.9 µs | 28.4× / 23.6× | 45.0× / 37.0× |
+| d=5, p=5e-3 | 8.4 | 6.92 / 14.0 µs | 0.62 / 1.7 µs | 0.62 / 2.3 µs | 11.1× / 8.2× | 11.1× / 6.0× |
+| d=7, p=5e-3 | 25.3 | 23.92 / 42.9 µs | 1.67 / 4.0 µs | 2.42 / 4.9 µs | 14.3× / 10.7× | 9.9× / 8.8× |
+| d=5, p=1e-3 | 1.8 | 3.50 / 9.5 µs | 0.12 / 0.8 µs | 0.12 / 0.7 µs | 28.0× / 12.6× | 28.0× / 13.3× |
+| d=9, p=1e-3 | 12.0 | 37.62 / 60.7 µs | 0.83 / 2.2 µs | 0.92 / 3.0 µs | 45.1× / 27.0× | 41.1× / 20.0× |
+| d=13, p=1e-3 | 38.3 | 154.46 / 226.9 µs | 3.04 / 6.7 µs | 3.62 / 6.8 µs | 50.8× / 33.8× | 42.6× / 33.6× |
+| d=15, p=1e-3 | 59.6 | 286.17 / 421.0 µs | 5.58 / 11.5 µs | 5.46 / 10.2 µs | 51.3× / 36.5× | 52.4× / 41.2× |
+| d=17, p=1e-3 | 87.8 | 518.92 / 787.9 µs | 10.12 / 19.6 µs | 8.54 / 15.5 µs | 51.3× / 40.1× | 60.7× / 51.0× |
 
 The shared ordinary decode costs about the same in both methods (e.g. 7.8 µs for fastgap vs
-8.7 µs for the baseline at d=17), so it is left out. Raw per-shot CSVs and summaries are in
+8.4 µs for the baseline at d=17), so it is left out. Raw per-shot CSVs and summaries are in
 `benchmarks/fastgap/results/`; more detail is in `NOTES.md`.
 
 Landmark placement is pluggable (`fastgap.landmarks`). It changes only how tight the bound is,

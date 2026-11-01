@@ -53,8 +53,8 @@ struct LandmarkSource {
 };
 
 /// Per-DEM precomputation (CLAUDE.md §5.3). Built in two steps: `create` canonicalises and builds
-/// the graph and boundary potentials; `set_landmarks` adds landmark potentials and exact local
-/// tables. Immutable afterwards and shared between decoders and threads.
+/// the graph and boundary potentials; `set_landmarks` adds landmark potentials. Immutable
+/// afterwards and shared between decoders and threads.
 class GapIndex {
    public:
     GraphSpec spec;
@@ -74,12 +74,6 @@ class GapIndex {
     /// for pricing.
     std::vector<dist_int> potentials;
     std::vector<int32_t> potentials32;
-    /// Exact local tables: for detector u, entries [table_offset[u], table_offset[u+1]) hold
-    /// (neighbour, dist) for every v != u with dist(u, v) <= table_radius, sorted by neighbour.
-    dist_int table_radius = 0;
-    std::vector<uint64_t> table_offset;
-    std::vector<uint32_t> table_ids;
-    std::vector<dist_int> table_dist;
 
     std::string strategy_config;
     uint64_t strategy_hash = 0;
@@ -89,9 +83,8 @@ class GapIndex {
     static std::shared_ptr<GapIndex> create_from_reference_edges(
         size_t num_detectors, size_t obs_detector, std::vector<RefEdge> edges);
 
-    /// Computes landmark potentials and local tables. `table_radius < 0` means automatic
-    /// (4 * median edge weight, CLAUDE.md §7.4).
-    void set_landmarks(std::vector<LandmarkSource> sources, dist_int table_radius, const std::string& config);
+    /// Computes the landmark potentials.
+    void set_landmarks(std::vector<LandmarkSource> sources, const std::string& config);
 
     size_t potential_stride() const {
         return landmarks.size() + 2;
@@ -108,32 +101,11 @@ class GapIndex {
         return lower_bound_rows(pu, pv, k);
     }
 
-    /// Exact table lookup; returns false if v is not in u's table (so dist(u, v) > table_radius).
-    inline bool table_lookup(uint32_t u, uint32_t v, dist_int& out) const {
-        const uint32_t* begin = table_ids.data() + table_offset[u];
-        const uint32_t* end = table_ids.data() + table_offset[u + 1];
-        const uint32_t* it = std::lower_bound(begin, end, v);
-        if (it != end && *it == v) {
-            out = table_dist[it - table_ids.data()];
-            return true;
-        }
-        return false;
-    }
-
-    /// d_hat(u, v) <= dist(u, v) (CLAUDE.md §3.4). Sets `exact` when it came from a table.
+    /// d_hat(u, v) = LB(u, v) <= dist(u, v). `exact` is set only for u == v; the landmark bound is
+    /// never assumed to be exact.
     inline dist_int d_hat(uint32_t u, uint32_t v, bool& exact) const {
-        dist_int d;
-        if (u == v) {
-            exact = true;
-            return 0;
-        }
-        if (table_lookup(u, v, d)) {
-            exact = true;
-            return d;
-        }
-        exact = false;
-        dist_int lb = lower_bound(u, v);
-        return std::max(lb, table_radius + 1);
+        exact = u == v;
+        return exact ? 0 : lower_bound(u, v);
     }
 
     /// Exact interior distance (A* with the landmark bound as heuristic).
@@ -142,7 +114,6 @@ class GapIndex {
     /// Creates a fresh Mwpm for decoding (one per thread). Identical to what upstream builds.
     pm::Mwpm make_mwpm() const;
 
-    size_t table_bytes() const;
     size_t potential_bytes() const;
 
     void save(const std::string& path) const;

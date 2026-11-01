@@ -2,7 +2,7 @@
 
 fastgap runs the ordinary, untruncated PyMatching (sparse blossom) decode and then computes a
 lower bound on the complementary gap ``W^c - W*`` from the decoder's own final dual state, with a
-dense Dijkstra over reduced costs priced by exact local tables and landmark potentials. It never
+dense Dijkstra over reduced costs priced by landmark potentials. It never
 runs a second decode and never sweeps the empty spacetime volume.
 
 Example::

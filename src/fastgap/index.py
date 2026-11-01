@@ -1,4 +1,4 @@
-"""GapIndex: per-DEM precomputation (canonical graph, boundary and landmark potentials, tables)."""
+"""GapIndex: per-DEM precomputation (canonical graph, boundary and landmark potentials)."""
 
 from __future__ import annotations
 
@@ -37,9 +37,8 @@ class GapIndex:
     """Precomputed data for one (DEM, observable) pair (CLAUDE.md §5.3).
 
     Build with :meth:`from_dem` (or :meth:`from_gap_dem` for an external reference DEM). The
-    index stores the gauge bits, the boundary potentials ``h_L``/``h_R``, the landmark potentials,
-    exact local distance tables and the landmark strategy config with its hash. Building tables is
-    the expensive part, so cache indices with :meth:`save`/:meth:`load`.
+    index stores the gauge bits, the boundary potentials ``h_L``/``h_R``, the landmark potentials
+    and the landmark strategy config with its hash. Cache indices with :meth:`save`/:meth:`load`.
     """
 
     def __init__(self, core):
@@ -56,7 +55,6 @@ class GapIndex:
         observable: int = 0,
         strategy: Union[str, LandmarkStrategy] = "auto",
         num_landmarks: int = 16,
-        table_radius: Optional[int] = None,
         meta: Optional[Dict[str, Any]] = None,
     ) -> "GapIndex":
         """Builds an index from a graphlike stim DEM (``decompose_errors=True``).
@@ -67,8 +65,6 @@ class GapIndex:
             strategy: landmark strategy name (see ``fastgap.landmarks.STRATEGIES``), ``"auto"``,
                 or a ``LandmarkStrategy`` object.
             num_landmarks: landmark budget K (L and R come on top).
-            table_radius: radius of the exact local tables in internal units; None = auto
-                (4 x median edge weight).
             meta: extra information for the strategy.
 
         Raises:
@@ -86,7 +82,7 @@ class GapIndex:
         meta.setdefault("observable", int(observable))
         meta.setdefault("num_landmarks", int(num_landmarks))
         idx = cls(core)
-        idx._place_landmarks(strategy, coords, meta, num_landmarks, table_radius)
+        idx._place_landmarks(strategy, coords, meta, num_landmarks)
         return idx
 
     @classmethod
@@ -96,7 +92,6 @@ class GapIndex:
         obs_detector: Optional[int] = None,
         strategy: Union[str, LandmarkStrategy] = "auto",
         num_landmarks: int = 16,
-        table_radius: Optional[int] = None,
         meta: Optional[Dict[str, Any]] = None,
     ) -> "GapIndex":
         """Builds an index from a reference DEM whose observable is already a detector.
@@ -137,10 +132,10 @@ class GapIndex:
         meta = dict(meta or {})
         meta.setdefault("num_landmarks", int(num_landmarks))
         idx = cls(core)
-        idx._place_landmarks(strategy, coords, meta, num_landmarks, table_radius)
+        idx._place_landmarks(strategy, coords, meta, num_landmarks)
         return idx
 
-    def _place_landmarks(self, strategy, coords, meta, k, table_radius):
+    def _place_landmarks(self, strategy, coords, meta, k):
         graph = self.graph
         strat = resolve(strategy, graph, coords, meta)
         sources: List[LandmarkSource] = dedupe(list(strat.select(graph, coords, meta, int(k))))[: int(k)]
@@ -151,19 +146,17 @@ class GapIndex:
                 "strategy": getattr(strat, "name", type(strat).__name__),
                 "params": strategy_params(strat),
                 "num_landmarks": int(k),
-                "table_radius": "auto" if table_radius is None else int(table_radius),
                 "observable": int(self.observable),
                 "sources": payload,
             },
             sort_keys=True,
         )
-        self._core.set_landmarks(payload, -1 if table_radius is None else int(table_radius), config)
+        self._core.set_landmarks(payload, config)
         mem = self.memory_report()
         logger.info(
-            "fastgap index: %d detectors, strategy %s (%d landmarks, hash %s), table radius %d; "
-            "tables %.0f B/detector, potentials %.0f B/detector",
+            "fastgap index: %d detectors, strategy %s (%d landmarks, hash %s); potentials %.0f B/detector",
             mem["num_detectors"], self.strategy_name, mem["num_landmarks"], self.strategy_hash,
-            mem["table_radius"], mem["table_bytes_per_detector"], mem["potential_bytes_per_detector"],
+            mem["potential_bytes_per_detector"],
         )
 
     # ------------------------------------------------------------------ persistence
@@ -210,10 +203,6 @@ class GapIndex:
         return int(self._core.d_lr)
 
     @property
-    def table_radius(self) -> int:
-        return int(self._core.table_radius)
-
-    @property
     def strategy_config(self) -> Dict[str, Any]:
         return json.loads(self._core.strategy_config)
 
@@ -234,22 +223,15 @@ class GapIndex:
         return self._core.gauge
 
     @property
-    def table_bytes(self) -> int:
-        return int(self._core.table_bytes)
-
-    @property
     def potential_bytes(self) -> int:
         return int(self._core.potential_bytes)
 
     def memory_report(self) -> Dict[str, float]:
-        """Table and potential memory (CLAUDE.md §7.4)."""
+        """Potential memory (CLAUDE.md §7.4)."""
         n = max(1, self.num_detectors)
         return {
             "num_detectors": self.num_detectors,
             "num_landmarks": len(self.landmarks),
-            "table_radius": self.table_radius,
-            "table_bytes": self.table_bytes,
-            "table_bytes_per_detector": self.table_bytes / n,
             "potential_bytes": self.potential_bytes,
             "potential_bytes_per_detector": self.potential_bytes / n,
         }
@@ -276,5 +258,5 @@ class GapIndex:
         return (
             f"fastgap.GapIndex(num_detectors={self.num_detectors}, observable={self.observable}, "
             f"strategy={self.strategy_name!r}, num_landmarks={len(self.landmarks)}, "
-            f"table_radius={self.table_radius}, hash={self.strategy_hash})"
+            f"hash={self.strategy_hash})"
         )

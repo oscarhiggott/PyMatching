@@ -16,7 +16,7 @@ for name in $(cfg "' '.join(d['name'] for d in c['dems'])"); do
       --num-landmarks "$(cfg "c['index']['num_landmarks']")" --out "$idx" > "$HERE/results/$name.index.json"
   "$PY" -m fastgap bench --dem "$dem" --idx "$idx" \
       --shots "$(cfg "c['bench']['shots']")" --warmup "$(cfg "c['bench']['warmup']")" \
-      --threads $(cfg "' '.join(map(str, c['bench']['threads']))") --seed "$(cfg "c['bench']['seed']")" \
+      --threads $(cfg "' '.join(map(str, c['bench']['threads']))") --seed "$(cfg "c['bench']['seed']")" --no-upper-bound \
       --e2e --e2e-shots "$(cfg "c['bench']['e2e_shots']")" \
       --out "$HERE/results/$name.csv" --summary "$HERE/results/$name.summary.json" > /dev/null
   "$PY" -m fastgap landmark-report --dem "$dem" --idx "$idx" --shots "$(cfg "c['bench']['shots']")" \

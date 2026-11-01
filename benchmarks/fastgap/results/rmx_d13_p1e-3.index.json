@@ -1,14 +1,11 @@
 {
   "num_detectors": 2184,
   "num_landmarks": 12,
-  "table_radius": 109684448,
-  "table_bytes": 3868880,
-  "table_bytes_per_detector": 1771.4652014652015,
   "potential_bytes": 366912,
   "potential_bytes_per_detector": 168.0,
   "strategy": "faces_corners",
-  "strategy_hash": "cbd0f961e3c74fa6",
-  "build_seconds": 0.05884483293630183,
+  "strategy_hash": "0cf4420c3f9f8a00",
+  "build_seconds": 0.04462595796212554,
   "landmarks": [
     "face:t=min",
     "face:t=max",

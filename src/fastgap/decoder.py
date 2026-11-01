@@ -163,7 +163,7 @@ class GapDecoder:
                 search stops once every open label is >= tau and reports ``gap_lb = tau`` with
                 ``censored=True``.
             upper_bound: also compute ``gap_ub`` (CLAUDE.md §3.5).
-            pricing: ``"index"`` (tables + landmarks: the reported bound) or ``"exact"`` (exact
+            pricing: ``"index"`` (landmark bound: the reported bound) or ``"exact"`` (exact
                 reduced costs via Dijkstra: the slow reference Delta_sigma).
             keep_walk: return the hops of the walk in ``walk`` as (from, to, price_int, exact),
                 with -1 for L and -2 for R.

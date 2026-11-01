@@ -1,0 +1,24 @@
+{
+  "num_detectors": 3360,
+  "num_landmarks": 12,
+  "potential_bytes": 564480,
+  "potential_bytes_per_detector": 168.0,
+  "strategy": "faces_corners",
+  "strategy_hash": "97e7c43f59062749",
+  "build_seconds": 0.0665401672013104,
+  "landmarks": [
+    "face:t=min",
+    "face:t=max",
+    "face:x1=min",
+    "face:x1=max",
+    "corner:---",
+    "corner:--+",
+    "corner:-+-",
+    "corner:-++",
+    "corner:+--",
+    "corner:+-+",
+    "corner:++-",
+    "corner:+++"
+  ],
+  "out": "/Users/sumeetshirgure/Lab/fastgap/fastgap/benchmarks/fastgap/indices/rmx_d15_p1e-3.idx"
+}

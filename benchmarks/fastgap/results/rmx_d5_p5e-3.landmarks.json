@@ -1,7 +1,7 @@
 {
   "dem_detectors": 120,
   "strategy": "faces_corners",
-  "strategy_hash": "d4c912a4ebe55092",
+  "strategy_hash": "f71ad74cc2adfd14",
   "landmarks": [
     "face:t=min",
     "face:t=max",
@@ -19,48 +19,45 @@
   "memory": {
     "num_detectors": 120,
     "num_landmarks": 12,
-    "table_radius": 103703888,
-    "table_bytes": 71504,
-    "table_bytes_per_detector": 595.8666666666667,
     "potential_bytes": 20160,
     "potential_bytes_per_detector": 168.0
   },
   "num_shots": 20000,
   "lb_over_dist_on_hops": {
-    "count": 1324,
-    "mean": 0.9823401606187921,
-    "fraction_exact": 0.7764350453172205,
+    "count": 1368,
+    "mean": 0.9539770558329174,
+    "fraction_exact": 0.6739766081871345,
     "quantiles": {
-      "0.01": 0.7470922712984686,
-      "0.1": 0.9382117945915559,
+      "0.01": 0.6579590848889553,
+      "0.1": 0.8044598938002259,
       "0.5": 1.0,
       "0.9": 1.0
     }
   },
-  "fraction_gap_lb_equals_delta_sigma": 0.9997,
-  "fraction_gap_lb_equals_gap_exact": 0.9963,
+  "fraction_gap_lb_equals_delta_sigma": 0.79745,
+  "fraction_gap_lb_equals_gap_exact": 0.7952,
   "shortfall_db_histogram": {
     "total": {
-      "[0,1e-09)": 19926,
-      "[1e-09,0.5)": 9,
-      "[0.5,1)": 10,
-      "[1,2)": 13,
-      "[2,3)": 14,
-      "[3,5)": 16,
-      "[5,10)": 8,
-      "[10,20)": 4,
-      "[20,inf)": 0
+      "[0,1e-09)": 15904,
+      "[1e-09,0.5)": 474,
+      "[0.5,1)": 454,
+      "[1,2)": 649,
+      "[2,3)": 541,
+      "[3,5)": 631,
+      "[5,10)": 758,
+      "[10,20)": 542,
+      "[20,inf)": 47
     },
     "lb_part": {
-      "[0,1e-09)": 19994,
-      "[1e-09,0.5)": 0,
-      "[0.5,1)": 1,
-      "[1,2)": 2,
-      "[2,3)": 2,
-      "[3,5)": 1,
-      "[5,10)": 0,
-      "[10,20)": 0,
-      "[20,inf)": 0
+      "[0,1e-09)": 15949,
+      "[1e-09,0.5)": 474,
+      "[0.5,1)": 449,
+      "[1,2)": 640,
+      "[2,3)": 532,
+      "[3,5)": 625,
+      "[5,10)": 748,
+      "[10,20)": 537,
+      "[20,inf)": 46
     },
     "alternation_blossom_part": {
       "[0,1e-09)": 19932,
@@ -74,6 +71,6 @@
       "[20,inf)": 0
     }
   },
-  "us_per_shot": 2.1883207955397666,
+  "us_per_shot": 2.0240854006260633,
   "soundness_violations": 0
 }

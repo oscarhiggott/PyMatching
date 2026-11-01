@@ -83,7 +83,7 @@ std::shared_ptr<GapIndex> GapIndex::create_from_reference_edges(
     return idx;
 }
 
-void GapIndex::set_landmarks(std::vector<LandmarkSource> sources, dist_int radius, const std::string& config) {
+void GapIndex::set_landmarks(std::vector<LandmarkSource> sources, const std::string& config) {
     size_t n = graph.num_nodes;
     for (auto& s : sources) {
         if (s.nodes.empty())
@@ -119,51 +119,6 @@ void GapIndex::set_landmarks(std::vector<LandmarkSource> sources, dist_int radiu
     }
 
     derive_saturated_potentials();
-
-    // Exact local tables by truncated Dijkstra from every detector.
-    table_radius = radius >= 0 ? radius : 4 * graph.median_edge_weight();
-    table_offset.assign(n + 1, 0);
-    table_ids.clear();
-    table_dist.clear();
-    std::vector<dist_int> dist(n, DIST_INF);
-    std::vector<uint32_t> touched;
-    std::vector<std::pair<uint32_t, dist_int>> row;
-    typedef std::pair<dist_int, uint32_t> item;
-    std::priority_queue<item, std::vector<item>, std::greater<item>> pq;
-    for (uint32_t u = 0; u < n; u++) {
-        dist[u] = 0;
-        touched.push_back(u);
-        pq.push({0, u});
-        while (!pq.empty()) {
-            auto [d, x] = pq.top();
-            pq.pop();
-            if (d != dist[x])
-                continue;
-            for (uint32_t e = graph.offsets[x]; e < graph.offsets[x + 1]; e++) {
-                uint32_t y = graph.neighbors[e];
-                dist_int nd = d + graph.weights[e];
-                if (nd <= table_radius && nd < dist[y]) {
-                    if (is_inf(dist[y]))
-                        touched.push_back(y);
-                    dist[y] = nd;
-                    pq.push({nd, y});
-                }
-            }
-        }
-        row.clear();
-        for (auto t : touched) {
-            if (t != u)
-                row.push_back({t, dist[t]});
-            dist[t] = DIST_INF;
-        }
-        touched.clear();
-        std::sort(row.begin(), row.end());
-        for (auto [v, d] : row) {
-            table_ids.push_back(v);
-            table_dist.push_back(d);
-        }
-        table_offset[u + 1] = table_ids.size();
-    }
     finalized = true;
 }
 
@@ -174,22 +129,14 @@ void GapIndex::derive_saturated_potentials() {
 }
 
 dist_int GapIndex::exact_distance(uint32_t u, uint32_t v, InteriorGraph::AStarScratch& scratch) const {
-    dist_int d;
     if (u == v)
         return 0;
-    if (table_lookup(u, v, d))
-        return d;
     return graph.astar(u, v, [&](uint32_t x) { return lower_bound(x, v); }, scratch);
 }
 
 pm::Mwpm GapIndex::make_mwpm() const {
     std::lock_guard<std::mutex> lock(user_graph_mutex);
     return decode_user_graph.to_mwpm(pm::NUM_DISTINCT_WEIGHTS, false);
-}
-
-size_t GapIndex::table_bytes() const {
-    return table_offset.size() * sizeof(uint64_t) + table_ids.size() * sizeof(uint32_t) +
-           table_dist.size() * sizeof(dist_int);
 }
 
 size_t GapIndex::potential_bytes() const {
@@ -203,7 +150,8 @@ size_t GapIndex::potential_bytes() const {
 namespace {
 
 constexpr char MAGIC[8] = {'F', 'A', 'S', 'T', 'G', 'A', 'P', '1'};
-constexpr uint32_t FORMAT_VERSION = 1;
+// Version 2 dropped the local distance tables.
+constexpr uint32_t FORMAT_VERSION = 2;
 
 struct Writer {
     std::ofstream out;
@@ -294,10 +242,6 @@ void GapIndex::save(const std::string& path) const {
         w.vec(s.nodes);
     }
     w.vec(potentials);
-    w.pod<dist_int>(table_radius);
-    w.vec(table_offset);
-    w.vec(table_ids);
-    w.vec(table_dist);
     if (!w.out)
         throw std::runtime_error("error while writing '" + path + "'");
 }
@@ -343,13 +287,8 @@ std::shared_ptr<GapIndex> GapIndex::load(const std::string& path) {
         idx->landmarks.push_back(std::move(s));
     }
     idx->potentials = r.vec<dist_int>();
-    idx->table_radius = r.pod<dist_int>();
-    idx->table_offset = r.vec<uint64_t>();
-    idx->table_ids = r.vec<uint32_t>();
-    idx->table_dist = r.vec<dist_int>();
     size_t n = idx->graph.num_nodes;
-    if (idx->potentials.size() != n * idx->potential_stride() || idx->table_offset.size() != n + 1 ||
-        idx->table_ids.size() != idx->table_dist.size() || idx->table_offset.back() != idx->table_ids.size())
+    if (idx->potentials.size() != n * idx->potential_stride())
         throw std::runtime_error("fastgap index file has inconsistent array sizes");
     for (size_t x = 0; x < n; x++) {
         if (idx->potentials[x * idx->potential_stride()] != idx->h_l[x] ||

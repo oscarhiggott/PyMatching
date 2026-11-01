@@ -53,13 +53,8 @@ struct Pricer {
         w.top.resize(n);
         for (size_t i = 0; i < n; i++)
             w.top[i] = ds.top_blossom(i);
-        if (mode == Pricing::INDEX) {
-            if (w.node_to_defect.size() != idx.graph.num_nodes)
-                w.node_to_defect.assign(idx.graph.num_nodes, -1);
-            for (size_t i = 0; i < n; i++)
-                w.node_to_defect[ds.defects[i]] = (int32_t)i;
+        if (mode == Pricing::INDEX)
             return;
-        }
         // Hops into a defect matched to L only lead back to L, so those are never targets.
         w.act.clear();
         w.pos.assign(n, -1);
@@ -68,12 +63,6 @@ struct Pricer {
                 w.pos[i] = (int32_t)w.act.size();
                 w.act.push_back((int32_t)i);
             }
-        }
-    }
-    ~Pricer() {
-        if (mode == Pricing::INDEX) {
-            for (auto u : ds.defects)
-                w.node_to_defect[u] = -1;
         }
     }
     Pricer(const Pricer&) = delete;
@@ -379,7 +368,6 @@ void compute_row(const GapIndex& idx, const DualState& ds, const Pricer& pricer,
     }
     const size_t stride = idx.potential_stride();
     sc.lb.resize(a);
-    sc.d.resize(a);
     int32_t* lb32 = sc.lb.data();
     std::fill(lb32, lb32 + a, 0);
     uint32_t ux = ds.defects[x];
@@ -393,18 +381,8 @@ void compute_row(const GapIndex& idx, const DualState& ds, const Pricer& pricer,
             lb32[p] = diff > lb32[p] ? diff : lb32[p];
         }
     }
-    const dist_int floor = idx.table_radius + 1;
-    dist_int* d = sc.d.data();
     for (size_t p = 0; p < a; p++)
-        d[p] = std::max<dist_int>(lb32[p], floor);
-    // Exact table hits override the bound.
-    for (uint64_t e = idx.table_offset[ux]; e < idx.table_offset[ux + 1]; e++) {
-        int32_t j = w.node_to_defect[idx.table_ids[e]];
-        if (j >= 0 && c.tgt_pos[j] >= 0)
-            d[c.tgt_pos[j]] = idx.table_dist[e];
-    }
-    for (size_t p = 0; p < a; p++)
-        row[p] = (RowT)std::min(pricer.reduce(x, c.tgt_u[p], d[p]), cap);
+        row[p] = (RowT)std::min(pricer.reduce(x, c.tgt_u[p], lb32[p]), cap);
     if (c.tgt_pos[x] >= 0)
         row[c.tgt_pos[x]] = (RowT)cap;
 }

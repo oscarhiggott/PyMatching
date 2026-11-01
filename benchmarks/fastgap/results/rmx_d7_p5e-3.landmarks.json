@@ -1,7 +1,7 @@
 {
   "dem_detectors": 336,
   "strategy": "faces_corners",
-  "strategy_hash": "e6503050285dae3f",
+  "strategy_hash": "6aaa90a8a7f27725",
   "landmarks": [
     "face:t=min",
     "face:t=max",
@@ -19,48 +19,45 @@
   "memory": {
     "num_detectors": 336,
     "num_landmarks": 12,
-    "table_radius": 103703888,
-    "table_bytes": 360896,
-    "table_bytes_per_detector": 1074.095238095238,
     "potential_bytes": 56448,
     "potential_bytes_per_detector": 168.0
   },
   "num_shots": 20000,
   "lb_over_dist_on_hops": {
-    "count": 3696,
-    "mean": 0.9812991281745104,
-    "fraction_exact": 0.7667748917748918,
+    "count": 3785,
+    "mean": 0.9562849464896042,
+    "fraction_exact": 0.671334214002642,
     "quantiles": {
-      "0.01": 0.7606139892945818,
-      "0.1": 0.9424211944091272,
+      "0.01": 0.661151127765631,
+      "0.1": 0.8044598938002259,
       "0.5": 1.0,
       "0.9": 1.0
     }
   },
-  "fraction_gap_lb_equals_delta_sigma": 0.97265,
-  "fraction_gap_lb_equals_gap_exact": 0.95495,
+  "fraction_gap_lb_equals_delta_sigma": 0.4608,
+  "fraction_gap_lb_equals_gap_exact": 0.4527,
   "shortfall_db_histogram": {
     "total": {
-      "[0,1e-09)": 19099,
-      "[1e-09,0.5)": 60,
-      "[0.5,1)": 96,
-      "[1,2)": 143,
-      "[2,3)": 116,
-      "[3,5)": 190,
-      "[5,10)": 199,
-      "[10,20)": 91,
-      "[20,inf)": 6
+      "[0,1e-09)": 9054,
+      "[1e-09,0.5)": 1176,
+      "[0.5,1)": 1137,
+      "[1,2)": 1396,
+      "[2,3)": 1223,
+      "[3,5)": 1666,
+      "[5,10)": 2633,
+      "[10,20)": 1534,
+      "[20,inf)": 181
     },
     "lb_part": {
-      "[0,1e-09)": 19453,
-      "[1e-09,0.5)": 33,
-      "[0.5,1)": 61,
-      "[1,2)": 77,
-      "[2,3)": 59,
-      "[3,5)": 116,
-      "[5,10)": 128,
-      "[10,20)": 67,
-      "[20,inf)": 6
+      "[0,1e-09)": 9216,
+      "[1e-09,0.5)": 1197,
+      "[0.5,1)": 1152,
+      "[1,2)": 1376,
+      "[2,3)": 1193,
+      "[3,5)": 1623,
+      "[5,10)": 2575,
+      "[10,20)": 1492,
+      "[20,inf)": 176
     },
     "alternation_blossom_part": {
       "[0,1e-09)": 19643,
@@ -74,6 +71,6 @@
       "[20,inf)": 0
     }
   },
-  "us_per_shot": 7.1974083431996405,
+  "us_per_shot": 5.837018741294742,
   "soundness_violations": 0
 }

@@ -23,25 +23,18 @@
 
 using namespace pm::fastgap;
 
-TEST(FastgapIndex, TablesAreExactAndComplete) {
+TEST(FastgapIndex, DHatIsALowerBound) {
     std::mt19937_64 rng(42);
     auto dem = testutil::random_grid_dem(rng, 6, 5, 0.3);
     auto idx = testutil::make_index(dem);
-    ASSERT_GT(idx->table_radius, 0);
     for (uint32_t u = 0; u < idx->graph.num_nodes; u++) {
         auto row = idx->graph.dijkstra({{u, 0}});
         for (uint32_t v = 0; v < idx->graph.num_nodes; v++) {
-            if (u == v)
-                continue;
-            dist_int d;
-            bool in_table = idx->table_lookup(u, v, d);
-            ASSERT_EQ(in_table, row[v] <= idx->table_radius);
-            if (in_table)
-                ASSERT_EQ(d, row[v]);
             bool exact;
             dist_int dh = idx->d_hat(u, v, exact);
             ASSERT_LE(dh, row[v]);
-            ASSERT_EQ(exact, in_table);
+            ASSERT_EQ(dh, idx->lower_bound(u, v));
+            ASSERT_EQ(exact, u == v);
         }
     }
 }
@@ -52,7 +45,7 @@ TEST(FastgapIndex, LandmarkSetsAreLowerBounds) {
     std::vector<LandmarkSource> sources = {{"first_half", {}}, {"single", {7}}};
     for (uint32_t v = 0; v < idx->graph.num_nodes / 2; v++)
         sources[0].nodes.push_back(v);
-    idx->set_landmarks(sources, 0, "{}");
+    idx->set_landmarks(sources, "{}");
     for (uint32_t u = 0; u < idx->graph.num_nodes; u += 3) {
         auto row = idx->graph.dijkstra({{u, 0}});
         for (uint32_t v = 0; v < idx->graph.num_nodes; v++)
@@ -67,8 +60,6 @@ TEST(FastgapIndex, SaveLoadRoundTripIsBitIdentical) {
     idx->save(path);
     auto loaded = GapIndex::load(path);
     EXPECT_EQ(loaded->potentials, idx->potentials);
-    EXPECT_EQ(loaded->table_ids, idx->table_ids);
-    EXPECT_EQ(loaded->table_dist, idx->table_dist);
     EXPECT_EQ(loaded->strategy_hash, idx->strategy_hash);
     EXPECT_EQ(loaded->strategy_config, idx->strategy_config);
     EXPECT_EQ(loaded->d_lr, idx->d_lr);
@@ -106,7 +97,7 @@ TEST(FastgapIndex, ReferenceEdgesPath) {
         {SIZE_MAX, SIZE_MAX, false, 3.0, -1},
     };
     auto idx = GapIndex::create_from_reference_edges(3, 2, edges);
-    idx->set_landmarks({}, -1, "{}");
+    idx->set_landmarks({}, "{}");
     // Bare chain through the interior: 6; direct edge: 3.
     EXPECT_EQ(idx->d_lr, (dist_int)std::llround(3.0 * idx->graph.normalising_constant));
     GapDecoder dec(idx, 1);

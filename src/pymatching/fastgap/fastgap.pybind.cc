@@ -207,15 +207,14 @@ PYBIND11_MODULE(_cpp_fastgap, m) {
         .def("save", &GapIndex::save, "path"_a)
         .def(
             "set_landmarks",
-            [](GapIndex& self, const std::vector<std::pair<std::string, std::vector<uint32_t>>>& sources, int64_t radius,
+            [](GapIndex& self, const std::vector<std::pair<std::string, std::vector<uint32_t>>>& sources,
                const std::string& config) {
                 std::vector<LandmarkSource> ls;
                 for (auto& [label, nodes] : sources)
                     ls.push_back({label, nodes});
-                self.set_landmarks(std::move(ls), radius, config);
+                self.set_landmarks(std::move(ls), config);
             },
             "sources"_a,
-            "table_radius"_a,
             "config"_a)
         .def_property_readonly("kind", [](const GapIndex& s) { return s.spec.kind == GraphSpec::FROM_DEM ? "dem" : "reference"; })
         .def_property_readonly("dem_text", [](const GapIndex& s) { return s.dem_text; })
@@ -229,12 +228,10 @@ PYBIND11_MODULE(_cpp_fastgap, m) {
         .def_property_readonly("num_hyperedges_ignored", [](const GapIndex& s) { return s.spec.num_hyperedges_ignored; })
         .def_property_readonly("normalising_constant", [](const GapIndex& s) { return s.graph.normalising_constant; })
         .def_property_readonly("d_lr", [](const GapIndex& s) { return s.d_lr; })
-        .def_property_readonly("table_radius", [](const GapIndex& s) { return s.table_radius; })
         .def_property_readonly("finalized", [](const GapIndex& s) { return s.finalized; })
         .def_property_readonly("strategy_config", [](const GapIndex& s) { return s.strategy_config; })
         .def_property_readonly("strategy_hash", [](const GapIndex& s) { return s.strategy_hash; })
         .def_property_readonly("fingerprint", [](const GapIndex& s) { return s.graph.fingerprint(); })
-        .def_property_readonly("table_bytes", &GapIndex::table_bytes)
         .def_property_readonly("potential_bytes", &GapIndex::potential_bytes)
         .def_property_readonly("median_edge_weight", [](const GapIndex& s) { return s.graph.median_edge_weight(); })
         .def_property_readonly("gauge", [](const GapIndex& s) { return to_array(s.spec.gauge); })
@@ -302,7 +299,34 @@ PYBIND11_MODULE(_cpp_fastgap, m) {
             },
             "u"_a,
             "v"_a)
-        .def("compare_with_reference_dem", &compare_with_reference_dem, "gap_dem_text"_a);
+        .def("compare_with_reference_dem", &compare_with_reference_dem, "gap_dem_text"_a)
+        .def(
+            "dual_state",
+            [](const GapIndex& s, const py::array_t<uint64_t, py::array::c_style | py::array::forcecast>& events) {
+                // The decoder's final dual state for one shot (for inspection and figures).
+                pm::Mwpm mwpm = s.make_mwpm();
+                DualState ds;
+                DualStateScratch scratch;
+                extract_dual_state(mwpm, to_events(events), s.spec.observable, ds, scratch);
+                py::list ancestors;
+                for (size_t i = 0; i < ds.num_defects(); i++) {
+                    py::list a;
+                    for (uint32_t k = ds.anc_offset[i]; k < ds.anc_offset[i + 1]; k++)
+                        a.append(ds.anc_blossom[k]);
+                    ancestors.append(a);
+                }
+                return py::dict(
+                    "defects"_a = to_array(ds.defects),
+                    "y_leaf"_a = to_array(ds.y_leaf),
+                    "rho"_a = to_array(ds.rho),
+                    "y_blossom"_a = to_array(ds.y_blossom),
+                    "ancestors"_a = ancestors,
+                    "mate"_a = to_array(ds.mate),
+                    "w_star"_a = ds.w_star,
+                    "mate_l"_a = MATE_L,
+                    "mate_r"_a = MATE_R);
+            },
+            "detection_events"_a);
 
     py::class_<GapDecoder>(m, "GapDecoderCore")
         .def(

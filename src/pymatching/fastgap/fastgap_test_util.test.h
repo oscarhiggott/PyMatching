@@ -107,13 +107,13 @@ inline stim::DetectorErrorModel surface_code_dem(uint32_t d, uint64_t rounds, do
 
 /// Index with a few single-node landmarks spread over the graph (enough to exercise LB).
 inline std::shared_ptr<GapIndex> make_index(
-    const stim::DetectorErrorModel& dem, dist_int table_radius = -1, size_t num_landmarks = 4) {
+    const stim::DetectorErrorModel& dem, size_t num_landmarks = 4) {
     auto idx = GapIndex::create_from_dem(dem.str(), 0);
     std::vector<LandmarkSource> sources;
     size_t n = idx->graph.num_nodes;
     for (size_t i = 0; i < num_landmarks && n > 0; i++)
         sources.push_back({"node" + std::to_string(i), {(uint32_t)((i * 7919) % n)}});
-    idx->set_landmarks(sources, table_radius, "{\"strategy\":\"test\"}");
+    idx->set_landmarks(sources, "{\"strategy\":\"test\"}");
     return idx;
 }
 

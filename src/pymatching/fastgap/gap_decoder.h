@@ -28,7 +28,7 @@ namespace pm {
 namespace fastgap {
 
 enum class Pricing : uint8_t {
-    /// sigma_hat from tables and landmarks (CLAUDE.md §3.4): the number fastgap reports.
+    /// sigma_hat from the landmark bound (CLAUDE.md §3.4): the number fastgap reports.
     INDEX = 0,
     /// Exact sigma from a per-shot Dijkstra: the slow reference Delta_sigma (CLAUDE.md §5.2).
     EXACT = 1,
@@ -86,7 +86,6 @@ struct GapWorker {
     std::vector<dist_int> row;  // exact pricing: distances from the current state to all detectors
     InteriorGraph::AStarScratch astar;
     // Per-shot pricing scratch.
-    std::vector<int32_t> node_to_defect;  // index pricing: -1 for non-defects; reset after every shot
     std::vector<int32_t> act;             // exact pricing: active hop targets (defect indices), compacted
     std::vector<int32_t> pos;             // exact pricing: position of each defect in `act`, or -1
     std::vector<int32_t> top;             // top-level blossom of each defect, -1 if none
@@ -142,7 +141,6 @@ struct RowCache {
 /// Per-thread scratch for pricing one row.
 struct alignas(64) RowScratch {
     std::vector<int32_t> lb;
-    std::vector<dist_int> d;
     std::vector<dist_int> row;  // single-threaded search: the current row
 };
 
