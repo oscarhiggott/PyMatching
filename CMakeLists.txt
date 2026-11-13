@@ -94,6 +94,7 @@ set(PERF_FILES
 
 set(PYTHON_API_FILES
         src/pymatching/sparse_blossom/driver/user_graph.pybind.cc
+        src/pymatching/sparse_blossom/driver/persistent.pybind.cc
         src/pymatching/rand/rand_gen.pybind.cc
         src/pymatching/pymatching.pybind.cc
         )
